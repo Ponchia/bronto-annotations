@@ -11,8 +11,16 @@ selections, own chart scales, parse diagram source, or depend on `@ponchia/ui`.
 
 ## From d3-annotation
 
-Use the d3-style helpers when existing annotations already use `x`, `y`, `dx`,
-`dy`, `note`, `subject`, `connector`, and d3-annotation type names.
+This package's d3-style migration path exists because Susie Lu's
+`d3-annotation` and `react-annotation` established a practical annotation
+grammar for web visualization. Use the d3-style helpers when existing
+annotations already use `x`, `y`, `dx`, `dy`, `note`, `subject`, `connector`,
+and d3-annotation type names.
+
+The helpers preserve familiar authoring data and interaction semantics, but
+they do not vendor or wrap d3-annotation. Host charts still own their scales,
+marks, and D3 selections; this package converts annotation data into a
+DOM-free layout model and renderer contract.
 
 ```ts
 import {
