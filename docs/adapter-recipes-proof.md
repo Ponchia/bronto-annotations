@@ -68,6 +68,9 @@ anchors, and host-owned edit patches are browser-proven and test-proven.
 
 ## Remaining Limits
 
-- The current clean dogfood consumer is synthetic. A real host report or app
-  integration should still be used to collect final API-friction feedback
-  before widening `0.1.x` stability promises.
+- The clean generated-surface dogfood consumer still uses invented report
+  content, but `npm run test:dogfood:self-report` now covers a real
+  release-evidence report built from the repository's own readiness and
+  completion data. An external production host integration should still be used
+  to collect final API-friction feedback before widening `0.1.x` stability
+  promises.

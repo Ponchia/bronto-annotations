@@ -31,6 +31,11 @@ has been proven in real consumer use before a public `1.0.0` commitment.
   package beside public `@ponchia/ui` report CSS in a clean Vite consumer,
   annotates rendered report stat cards and a mixed DOM/SVG report figure, and
   records friction in `docs/dogfood-bronto-report.md`.
+- Self dogfood: `npm run test:dogfood:self-report` installs the packed package
+  into a clean Vite consumer, renders a release-evidence report from
+  `docs/readiness-matrix.json`, `docs/completion-audit.json`, and
+  `package.json`, annotates DOM report regions plus generated SVG chart and
+  diagram geometry, and records friction in `docs/dogfood-self-report.md`.
 - API freeze: `docs/api-stability.manifest.json` labels every public export as
   stable or experimental for `0.1.x`, source entrypoints carry `@public` and
   `@experimental` notes, and `npm run test:api-stability` enforces coverage.
@@ -55,10 +60,10 @@ has been proven in real consumer use before a public `1.0.0` commitment.
   `@ponchia/annotations` package name, `Ponchia/bronto-annotations` repository
   policy, public npm access, README positioning, and examples hosting decisions
   for the `0.1.x` lane.
-- Remaining high-value proof: keep widening dogfood into non-synthetic host
-  apps or reports before widening public API stability promises; the current
-  generated-surface recipes are browser-proven but still benefit from more
-  consumer-specific friction reports.
+- Remaining high-value proof: keep widening dogfood into external production
+  host apps or reports before widening public API stability promises; the
+  current generated-surface recipes and self-report dogfood are browser-proven
+  but still benefit from more consumer-specific friction reports.
 
 ## Tracking Documents
 
@@ -68,6 +73,7 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - Dogfood report template: `docs/dogfood-friction-report.md`
 - Clean-consumer dogfood report: `docs/dogfood-clean-consumer-report.md`
 - Bronto report dogfood report: `docs/dogfood-bronto-report.md`
+- Self-dogfood report: `docs/dogfood-self-report.md`
 - Canary release runbook: `docs/canary-release.md`
 - Canary publish evidence: `docs/canary-publish-report.md`
 - Public release decisions: `docs/public-release-decisions.md`

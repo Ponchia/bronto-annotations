@@ -17,6 +17,7 @@
     "test:pack",
     "test:dogfood",
     "test:dogfood:bronto-report",
+    "test:dogfood:self-report",
     "test:browser",
     "test:screenshots",
     "test:readiness",
@@ -1028,6 +1029,7 @@
             "Freeze the `0.1.x` public API contract",
             "Publish a private/canary package",
             "docs/dogfood-clean-consumer-report.md",
+            "docs/dogfood-self-report.md",
             "docs/canary-release.md",
             "docs/canary-publish-report.md",
             "docs/adapter-recipes-proof.md",
@@ -1178,6 +1180,18 @@
           ]
         },
         {
+          "file": "docs/dogfood-self-report.md",
+          "terms": [
+            "Dogfood Self Report",
+            "docs/readiness-matrix.json",
+            "docs/completion-audit.json",
+            "generated SVG readiness chart",
+            "generated SVG release-flow diagram",
+            "npm run test:dogfood:self-report",
+            "Would ship with this API today: yes"
+          ]
+        },
+        {
           "file": "scripts/dogfood-clean-consumer.mjs",
           "terms": [
             "Dogfood clean consumer verified",
@@ -1201,6 +1215,18 @@
             "annotationFrameFromSvg",
             "mixedCoordinateSpaces",
             "dogfood-bronto-report.png"
+          ]
+        },
+        {
+          "file": "scripts/dogfood-self-report.mjs",
+          "terms": [
+            "Self dogfood report verified",
+            "self-dogfood project evidence report",
+            "docs/readiness-matrix.json",
+            "docs/completion-audit.json",
+            "generated-svg-chart",
+            "generated-svg-diagram",
+            "dogfood-self-report.png"
           ]
         },
         {
@@ -1284,6 +1310,7 @@
           "terms": [
             "Pre-release goals verified",
             "docs/public-release-decisions.md",
+            "docs/dogfood-self-report.md",
             "npm run test:performance",
             "Dogfood Friction Report Template"
           ]

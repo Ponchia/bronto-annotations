@@ -11,6 +11,7 @@ const releaseDecisions = await read('docs/public-release-decisions.md');
 const dogfood = await read('docs/dogfood-friction-report.md');
 const dogfoodCleanConsumer = await read('docs/dogfood-clean-consumer-report.md');
 const dogfoodBrontoReport = await read('docs/dogfood-bronto-report.md');
+const dogfoodSelfReport = await read('docs/dogfood-self-report.md');
 const visual = await read('docs/visual-regression.md');
 const performanceDocs = await read('docs/performance.md');
 const accessibility = await read('docs/accessibility.md');
@@ -24,6 +25,7 @@ const canaryCheck = await read('scripts/check-canary-readiness.mjs');
 const canaryWorkflow = await read('.github/workflows/canary.yml');
 const dogfoodScript = await read('scripts/dogfood-clean-consumer.mjs');
 const dogfoodBrontoScript = await read('scripts/dogfood-bronto-report.mjs');
+const dogfoodSelfScript = await read('scripts/dogfood-self-report.mjs');
 const screenshotCheck = await read('scripts/check-browser-screenshots.mjs');
 const visualBaseline = JSON.parse(await read('test/visual-baselines/browser-screenshots.json'));
 
@@ -36,6 +38,7 @@ for (const path of [
   'docs/dogfood-friction-report.md',
   'docs/dogfood-clean-consumer-report.md',
   'docs/dogfood-bronto-report.md',
+  'docs/dogfood-self-report.md',
   'docs/visual-regression.md',
   'docs/performance.md',
   'docs/accessibility.md',
@@ -49,6 +52,7 @@ for (const path of [
   'scripts/benchmark-layout.mjs',
   'scripts/dogfood-clean-consumer.mjs',
   'scripts/dogfood-bronto-report.mjs',
+  'scripts/dogfood-self-report.mjs',
   'test/visual-baselines/browser-screenshots.json'
 ]) {
   await assertPath(path);
@@ -59,12 +63,14 @@ assert.equal(pkg.scripts?.['test:api-stability'], 'node scripts/check-api-stabil
 assert.equal(pkg.scripts?.['test:canary'], 'node scripts/check-canary-readiness.mjs');
 assert.equal(pkg.scripts?.['test:dogfood'], 'npm run build && node scripts/dogfood-clean-consumer.mjs');
 assert.equal(pkg.scripts?.['test:dogfood:bronto-report'], 'npm run build && node scripts/dogfood-bronto-report.mjs');
+assert.equal(pkg.scripts?.['test:dogfood:self-report'], 'npm run build && node scripts/dogfood-self-report.mjs');
 assert.equal(pkg.scripts?.['test:performance'], 'npm run build && node scripts/benchmark-layout.mjs --assert');
 assert.ok(pkg.scripts?.check?.includes('npm run test:pre-release'), 'npm run check must include test:pre-release');
 assert.ok(pkg.scripts?.check?.includes('npm run test:api-stability'), 'npm run check must include test:api-stability');
 assert.ok(pkg.scripts?.check?.includes('npm run test:canary'), 'npm run check must include test:canary');
 assert.ok(pkg.scripts?.check?.includes('npm run test:dogfood'), 'npm run check must include test:dogfood');
 assert.ok(pkg.scripts?.check?.includes('npm run test:dogfood:bronto-report'), 'npm run check must include test:dogfood:bronto-report');
+assert.ok(pkg.scripts?.check?.includes('npm run test:dogfood:self-report'), 'npm run check must include test:dogfood:self-report');
 assert.ok(pkg.scripts?.check?.includes('npm run test:performance'), 'npm run check must include test:performance');
 
 for (const term of [
@@ -74,6 +80,7 @@ for (const term of [
   'docs/canary-publish-report.md',
   'docs/public-release-decisions.md',
   'docs/dogfood-bronto-report.md',
+  'docs/dogfood-self-report.md',
   'createAnnotationEditEvent',
   'createAnnotationEditDelta',
   'visual regression baselines',
@@ -224,6 +231,19 @@ for (const term of [
 }
 
 for (const term of [
+  'Dogfood Self Report',
+  'docs/readiness-matrix.json',
+  'docs/completion-audit.json',
+  'generated SVG readiness chart',
+  'generated SVG release-flow diagram',
+  'npm run test:dogfood:self-report',
+  'Would ship with this API today: yes',
+  'dogfood-self-report.png'
+]) {
+  assertIncludes(dogfoodSelfReport, term, 'docs/dogfood-self-report.md');
+}
+
+for (const term of [
   'Dogfood clean consumer verified',
   'packed tarball clean consumer',
   'prepareVegaScenegraphAnnotations',
@@ -249,6 +269,20 @@ for (const term of [
   'Manual placement uses report-surface pixels'
 ]) {
   assertIncludes(dogfoodBrontoScript, term, 'scripts/dogfood-bronto-report.mjs');
+}
+
+for (const term of [
+  'Self dogfood report verified',
+  'self-dogfood project evidence report',
+  'docs/readiness-matrix.json',
+  'docs/completion-audit.json',
+  'prepareDomAnnotations',
+  'annotationFrameFromSvg',
+  'generated-svg-chart',
+  'generated-svg-diagram',
+  'dogfood-self-report.png'
+]) {
+  assertIncludes(dogfoodSelfScript, term, 'scripts/dogfood-self-report.mjs');
 }
 
 for (const term of [
@@ -342,12 +376,13 @@ for (const term of [
 for (const term of [
   'Pre-Release Hardening',
   'docs/pre-release-roadmap.md',
+  'docs/dogfood-self-report.md',
   'npm run test:performance'
 ]) {
   assertIncludes(readme, term, 'README.md');
 }
 
-console.log('Pre-release goals verified: roadmap, API stability, compatibility, dogfood, visual regression, performance, accessibility, adapter recipes, and public release decisions.');
+console.log('Pre-release goals verified: roadmap, API stability, compatibility, dogfood, self-dogfood, visual regression, performance, accessibility, adapter recipes, and public release decisions.');
 
 async function read(path) {
   return readFile(pathUrl(path), 'utf8');

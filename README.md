@@ -971,6 +971,11 @@ target alignment, and no console errors. The friction report lives in
 it installs the packed annotations tarball with public `@ponchia/ui` report
 CSS in a clean Vite consumer, annotates report stat cards, an SVG chart, and a
 table row, and records friction in `docs/dogfood-bronto-report.md`.
+`npm run test:dogfood:self-report` adds a self-dogfood pass from real project
+evidence: it renders `docs/readiness-matrix.json`,
+`docs/completion-audit.json`, and `package.json` into a clean report consumer,
+then annotates DOM metric cards, a generated SVG chart, and a generated SVG
+flow diagram. The friction report lives in `docs/dogfood-self-report.md`.
 
 `docs/readiness-matrix.json` is a checked map from the promised public surface
 to concrete source files, examples, tests, packed-consumer smoke, browser
@@ -1047,6 +1052,9 @@ the API in real consumers before wider stability promises.
   found by `npm run test:dogfood`.
 - `docs/dogfood-bronto-report.md` records the public `@ponchia/ui` report
   dogfood pass and friction found by `npm run test:dogfood:bronto-report`.
+- `docs/dogfood-self-report.md` records the self-dogfood release-evidence
+  report built from current readiness/audit data and friction found by
+  `npm run test:dogfood:self-report`.
 - `docs/canary-release.md` documents the GitHub Packages canary lane, and
   `docs/canary-publish-report.md` records the verified
   `0.1.0-canary.1.e754177` registry install; `npm run test:canary` verifies the

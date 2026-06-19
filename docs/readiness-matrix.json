@@ -16,6 +16,7 @@
     "test:pack",
     "test:dogfood",
     "test:dogfood:bronto-report",
+    "test:dogfood:self-report",
     "test:browser",
     "test:screenshots",
     "test:readiness",
@@ -888,6 +889,42 @@
       ]
     },
     {
+      "id": "self-dogfood-report",
+      "evidence": [
+        {
+          "file": "package.json",
+          "terms": [
+            "\"test:dogfood:self-report\"",
+            "scripts/dogfood-self-report.mjs",
+            "npm run test:dogfood:self-report"
+          ]
+        },
+        {
+          "file": "scripts/dogfood-self-report.mjs",
+          "terms": [
+            "Self dogfood report verified",
+            "self-dogfood project evidence report",
+            "docs/readiness-matrix.json",
+            "docs/completion-audit.json",
+            "generated-svg-chart",
+            "generated-svg-diagram",
+            "dogfood-self-report.png"
+          ]
+        },
+        {
+          "file": "docs/dogfood-self-report.md",
+          "terms": [
+            "Dogfood Self Report",
+            "docs/readiness-matrix.json",
+            "docs/completion-audit.json",
+            "generated SVG readiness chart",
+            "generated SVG release-flow diagram",
+            "Would ship with this API today: yes"
+          ]
+        }
+      ]
+    },
+    {
       "id": "github-packages-canary",
       "evidence": [
         {
@@ -1344,6 +1381,7 @@
             "Freeze the `0.1.x` public API contract",
             "docs/dogfood-clean-consumer-report.md",
             "docs/dogfood-bronto-report.md",
+            "docs/dogfood-self-report.md",
             "docs/canary-release.md",
             "docs/adapter-recipes-proof.md",
             "docs/public-release-decisions.md",
@@ -1416,6 +1454,26 @@
             "public @ponchia/ui static report grammar",
             "mixedCoordinateSpaces",
             "dogfood-bronto-report.png"
+          ]
+        },
+        {
+          "file": "docs/dogfood-self-report.md",
+          "terms": [
+            "Dogfood Self Report",
+            "npm run test:dogfood:self-report",
+            "docs/readiness-matrix.json",
+            "docs/completion-audit.json",
+            "dogfood-self-report.png"
+          ]
+        },
+        {
+          "file": "scripts/dogfood-self-report.mjs",
+          "terms": [
+            "Self dogfood report verified",
+            "projectEvidence",
+            "renderChartHost",
+            "renderFlowHost",
+            "targetAlignmentOk"
           ]
         },
         {
@@ -1527,6 +1585,7 @@
           "terms": [
             "Pre-release goals verified",
             "docs/public-release-decisions.md",
+            "docs/dogfood-self-report.md",
             "Dogfood Friction Report Template",
             "npm run test:performance"
           ]
