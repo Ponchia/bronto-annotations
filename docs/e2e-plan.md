@@ -169,8 +169,9 @@ targets such as unmeasured React Flow handles.
 - `vega-basic`: annotations extracted from generated Vega scenegraph geometry
   with generated axis obstacles. Vega-Lite consumers use the same adapter after
   public Vega-Lite-to-Vega compilation or rendering.
-- `mermaid-basic`: annotations extracted from rendered Mermaid SVG labels and
-  edge paths.
+- `mermaid-basic`: annotations extracted from rendered Mermaid flowchart labels
+  and edge paths plus rendered sequence participants, message labels, and
+  message routes.
 - `d2-basic`: annotations extracted from compiled D2 diagram geometry, with
   rendered D2 SVG obstacles included in placement.
 - `react-flow-basic`: annotations and node/handle/edge obstacles extracted
@@ -308,7 +309,8 @@ note text, connector ends, and evidence badges in the report example, full
 variant/tone/motion class coverage in the style gallery example, clean
 adapter validation reports for generated host targets, and adapter evidence
 that host geometry was rendered and used. Vega must prove the generated mark
-name/type, Mermaid must prove rendered label and edge anchors, and D2 must prove compiled
+name/type, Mermaid must prove rendered label, edge, sequence participant, message
+label, and message route anchors, and D2 must prove compiled
 shape and connection-route ids plus rendered SVG obstacle extraction. React
 Flow must prove rendered node/handle/edge DOM selectors, node/handle/edge
 provenance from public flow state, and generated node/edge obstacles. The verifier also compares

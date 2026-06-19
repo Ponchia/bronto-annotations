@@ -15,9 +15,9 @@ unstarted work.
 
 ## Mermaid
 
-- Flowchart node and edge recipe.
-- Sequence diagram participant/message recipe.
-- Class/data-selector recipe for diagrams with translated labels.
+- Proven: Flowchart node and edge recipe.
+- Proven: Sequence diagram participant/message/route recipe.
+- Remaining: Class/data-selector recipe for diagrams with translated labels.
 
 ## D2
 

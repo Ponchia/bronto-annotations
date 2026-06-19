@@ -301,6 +301,27 @@ describe('DOM and SVG anchor utilities', () => {
     });
   });
 
+  it('transforms zero-height SVG route boxes into the requested SVG coordinate space', () => {
+    installDomPoint();
+    document.body.innerHTML = `
+      <svg id="surface" viewBox="0 0 320 200">
+        <line id="route" />
+      </svg>
+    `;
+    const svg = document.querySelector('svg') as SVGSVGElement;
+    const route = document.querySelector('#route') as SVGGraphicsElement;
+    svg.getScreenCTM = () => matrix();
+    route.getScreenCTM = () => matrix({ e: 120, f: 64 });
+    route.getBBox = () => ({ x: 0, y: 0, width: 180, height: 0 }) as DOMRect;
+
+    expect(boxFromElement(route, { coordinateSpace: svg })).toEqual({
+      x: 120,
+      y: 64,
+      width: 180,
+      height: 0
+    });
+  });
+
   it('transforms sampled SVG path anchors into the requested SVG coordinate space', () => {
     installDomPoint();
     document.body.innerHTML = `

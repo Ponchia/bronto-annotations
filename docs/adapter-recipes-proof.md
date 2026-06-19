@@ -18,16 +18,21 @@ Status: proven in adapter tests and browser example coverage.
 
 ## Mermaid Flowchart And Sequence SVG
 
-Status: flowchart browser-proven; sequence SVG fixture proven in adapter tests.
+Status: flowchart and sequence browser-proven; sequence SVG fixture coverage is
+also kept in adapter tests.
 
-- `examples/mermaid-basic` renders a real Mermaid flowchart, annotates rendered
-  node labels and a rendered edge route, and browser verification checks target
-  alignment against actual Mermaid SVG nodes and paths.
+- `examples/mermaid-basic` renders real Mermaid flowchart and sequence diagrams,
+  annotates rendered flowchart node labels, a rendered flowchart edge route,
+  a sequence actor, a sequence message label, and `mermaid-sequence-route`.
+  Browser verification checks target alignment against actual Mermaid SVG nodes,
+  paths, actor elements, message labels, and `line.messageLine0`/path message
+  routes.
 - `test/adapters/mermaid.test.ts` covers a Mermaid sequence-style SVG fixture
   with participant, message label, and message route anchors using labels,
   `data-message-id`, and `data-edge-id`.
 - `src/adapters/mermaid.ts` treats common sequence classes such as `actor`,
-  `messageText`, `messageLine0`, and `messageLine1` as default obstacles.
+  `messageText`, `path.messageLine0`, `line.messageLine0`, and `messageLine1`
+  as default obstacles and route candidates.
 
 ## D2 Nested Diagrams And Routes
 
@@ -58,8 +63,6 @@ anchors, and host-owned edit patches are browser-proven and test-proven.
 
 ## Remaining Limits
 
-- Mermaid sequence diagrams are not yet represented as a browser example; they
-  are currently verified through a rendered SVG fixture.
 - The current clean dogfood consumer is synthetic. A real host report or app
   integration should still be used to collect final API-friction feedback
   before widening `0.1.x` stability promises.

@@ -283,8 +283,12 @@ for (const term of [
   'React Flow Viewport, Handles, And Editing',
   'non-identity React Flow viewport',
   'host-owned annotation patch',
+  'examples/mermaid-basic',
+  'mermaid-sequence-route',
+  'flowchart and sequence browser-proven',
   'test/adapters/mermaid.test.ts',
   'data-message-id',
+  'line.messageLine0',
   'messageLine0',
   'Remaining Limits'
 ]) {

@@ -342,7 +342,10 @@
         "source: 'mermaid-svg'",
         "mermaidLabel",
         "mermaidId: 'api-report'",
-        "mermaid-edge"
+        "mermaidDataSelector",
+        "mermaidId: 'api-report-request'",
+        "mermaid-edge",
+        "mermaid-sequence-route"
       ],
       "packedTerms": [
         "renderMermaid",
@@ -351,7 +354,8 @@
       ],
       "docsTerms": [
         "`mermaid-basic`",
-        "source/target endpoint ids"
+        "source/target endpoint ids",
+        "rendered sequence participants, message labels, and"
       ]
     },
     {
@@ -1079,7 +1083,8 @@
           "terms": [
             "g.actor",
             "path.messageLine0",
-            "line.messageLine1"
+            "line.messageLine1",
+            "line[class*=\"messageLine\"]"
           ]
         },
         {
@@ -1087,6 +1092,7 @@
           "terms": [
             "sequence participant, message, and route anchors",
             "data-message-id",
+            "line class=\"messageLine0\"",
             "messageLine0"
           ]
         },
@@ -1121,7 +1127,10 @@
             "generatedSurfaceLayoutDefaults",
             "anchorLabel: 'Mermaid anchors'",
             "prepareMermaidAnnotations",
-            "resolvePreparedAnnotationLayout"
+            "resolvePreparedAnnotationLayout",
+            "sequenceSource",
+            "mermaid-sequence-route",
+            "renderedSequenceActors"
           ]
         },
         {
@@ -1194,6 +1203,8 @@
             "React Flow Viewport, Handles, And Editing",
             "non-identity React Flow viewport",
             "host-owned annotation patch",
+            "flowchart and sequence browser-proven",
+            "mermaid-sequence-route",
             "Remaining Limits"
           ]
         },
@@ -1445,6 +1456,8 @@
             "Mermaid Flowchart And Sequence SVG",
             "D2 Nested Diagrams And Routes",
             "React Flow Viewport, Handles, And Editing",
+            "flowchart and sequence browser-proven",
+            "mermaid-sequence-route",
             "Remaining Limits"
           ]
         },

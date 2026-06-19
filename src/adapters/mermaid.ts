@@ -402,17 +402,29 @@ function findMermaidEdgePath(root: ParentNode, edgeId: string): Element | undefi
 
   return root.querySelector([
     `path[id*="${id}"]`,
+    `line[id*="${id}"]`,
     `path[data-id="${id}"]`,
+    `line[data-id="${id}"]`,
     `path[data-edge-id="${id}"]`,
+    `line[data-edge-id="${id}"]`,
     `path[data-mermaid-edge-id="${id}"]`,
+    `line[data-mermaid-edge-id="${id}"]`,
     `.edgePath[id*="${id}"] path`,
+    `.edgePath[id*="${id}"] line`,
     `g.edgePath[id*="${id}"] path`,
+    `g.edgePath[id*="${id}"] line`,
     `.edgePath[data-id="${id}"] path`,
+    `.edgePath[data-id="${id}"] line`,
     `g.edgePath[data-id="${id}"] path`,
+    `g.edgePath[data-id="${id}"] line`,
     `.edgePath[data-edge-id="${id}"] path`,
+    `.edgePath[data-edge-id="${id}"] line`,
     `g.edgePath[data-edge-id="${id}"] path`,
+    `g.edgePath[data-edge-id="${id}"] line`,
     `.edgePath[data-mermaid-edge-id="${id}"] path`,
-    `g.edgePath[data-mermaid-edge-id="${id}"] path`
+    `.edgePath[data-mermaid-edge-id="${id}"] line`,
+    `g.edgePath[data-mermaid-edge-id="${id}"] path`,
+    `g.edgePath[data-mermaid-edge-id="${id}"] line`
   ].join(', ')) ?? undefined;
 }
 
@@ -423,10 +435,15 @@ function findMermaidEdgeElementByEndpoints(
 ): Element | undefined {
   const candidates = Array.from(root.querySelectorAll([
     'path.flowchart-link',
+    'line[class*="messageLine"]',
     'path[id]',
+    'line[id]',
     'path[data-id]',
+    'line[data-id]',
     'path[data-edge-id]',
+    'line[data-edge-id]',
     'path[data-mermaid-edge-id]',
+    'line[data-mermaid-edge-id]',
     '.edgePath',
     'g.edgePath',
     '[data-edge-id]',
@@ -443,7 +460,7 @@ function findMermaidEdgeElementByEndpoints(
   }
 
   if (preferPath && match.tagName.toLowerCase() !== 'path') {
-    return match.querySelector('path.flowchart-link, path') ?? match;
+    return match.querySelector('path.flowchart-link, path, line[class*="messageLine"], line') ?? match;
   }
 
   return match;
@@ -521,7 +538,7 @@ function partialMermaidIdSelector(id: string, kind: 'node' | 'edge' | 'cluster' 
   }
 
   if (kind === 'edge') {
-    return `.edgePath[id*="${attr}"], g.edgePath[id*="${attr}"], path[id*="${attr}"]`;
+    return `.edgePath[id*="${attr}"], g.edgePath[id*="${attr}"], path[id*="${attr}"], line[id*="${attr}"]`;
   }
 
   if (kind === 'cluster') {

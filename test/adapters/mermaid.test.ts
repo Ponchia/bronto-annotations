@@ -176,7 +176,7 @@ describe('Mermaid adapter', () => {
       <svg viewBox="0 0 480 260">
         <g class="actor" id="actor-api" data-participant-id="api"><rect /><text>API</text></g>
         <g class="actor" id="actor-report" data-participant-id="report"><rect /><text>Report</text></g>
-        <path class="messageLine0" data-edge-id="api-report-call" />
+        <line class="messageLine0" data-edge-id="api-report-call" />
         <g class="messageText" data-message-id="api-report-call"><text>call report</text></g>
       </svg>
     `;
@@ -184,7 +184,7 @@ describe('Mermaid adapter', () => {
     const api = document.querySelector('#actor-api') as SVGGraphicsElement;
     const report = document.querySelector('#actor-report') as SVGGraphicsElement;
     const message = document.querySelector('[data-message-id="api-report-call"]') as SVGGraphicsElement;
-    const route = document.querySelector('[data-edge-id="api-report-call"]') as SVGPathElement;
+    const route = document.querySelector('[data-edge-id="api-report-call"]') as SVGGeometryElement;
     api.getBBox = () => ({ x: 48, y: 24, width: 72, height: 42 }) as DOMRect;
     report.getBBox = () => ({ x: 320, y: 24, width: 88, height: 42 }) as DOMRect;
     message.getBBox = () => ({ x: 176, y: 96, width: 112, height: 24 }) as DOMRect;

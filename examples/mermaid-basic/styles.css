@@ -22,22 +22,52 @@ body {
   border: 1px solid #d5deea;
   border-radius: 8px;
   box-shadow: 0 18px 48px rgb(15 23 42 / 10%);
-  height: min(70vh, 420px);
+  height: min(82vh, 620px);
   overflow: hidden;
   position: relative;
-  width: min(100%, 780px);
+  width: min(100%, 860px);
 }
 
-.diagram,
 .annotation-host,
-.diagram > svg,
+.annotation-coordinate-space,
 .pa-annotation-layer {
   inset: 0;
   position: absolute;
 }
 
-.diagram > svg {
+.diagram {
+  display: grid;
+  gap: 18px;
+  grid-template-rows: minmax(0, 0.86fr) minmax(0, 1.14fr);
+  inset: 0;
+  padding: 58px 150px;
+  position: absolute;
+}
+
+.diagram-panel {
+  min-height: 0;
+  position: relative;
+}
+
+.diagram-panel > svg,
+.annotation-coordinate-space,
+.pa-annotation-layer {
   height: 100%;
   max-width: none !important;
   width: 100%;
+}
+
+@media (max-width: 560px) {
+  .example-shell {
+    padding: 18px;
+  }
+
+  .diagram-shell {
+    height: min(86vh, 720px);
+  }
+
+  .diagram {
+    gap: 22px;
+    padding: 98px 24px 118px;
+  }
 }

@@ -47,16 +47,27 @@ const examples = [
     minObstacles: 3,
     validateAnchors: true,
     validateTargetAlignment: true,
-    hostLayerSelector: '#diagram > svg',
     requiredEvidence: [
       { mermaidKind: 'label', mermaidLabel: 'API' },
       { mermaidKind: 'label', mermaidLabel: 'Report' },
-      { mermaidKind: 'edge', mermaidId: 'api-report' }
+      { mermaidKind: 'edge', mermaidId: 'api-report' },
+      { mermaidKind: 'data', mermaidDataSelector: '[data-participant-id="sequence-api"]' },
+      { mermaidKind: 'data', mermaidDataSelector: '[data-message-id="api-report-request"]' },
+      { mermaidKind: 'edge', mermaidId: 'api-report-request' }
+    ],
+    requiredSelectors: [
+      '#flowchart svg g.node',
+      '#sequence svg [data-participant-id="sequence-api"]',
+      '#sequence svg [data-message-id="api-report-request"]',
+      '#sequence svg [data-edge-id="api-report-request"]'
     ],
     anchorTargetChecks: [
-      { annotationId: 'mermaid-api', selector: '#diagram svg g.node', text: 'API', maxCenterDistance: 10 },
-      { annotationId: 'mermaid-report', selector: '#diagram svg g.node', text: 'Report', maxCenterDistance: 10 },
-      { annotationId: 'mermaid-edge', selector: '#diagram svg path[data-edge-id="api-report"]', maxCenterDistance: 14 }
+      { annotationId: 'mermaid-api', selector: '#flowchart svg g.node', text: 'API', maxCenterDistance: 10 },
+      { annotationId: 'mermaid-report', selector: '#flowchart svg g.node', text: 'Report', maxCenterDistance: 10 },
+      { annotationId: 'mermaid-edge', selector: '#flowchart svg path[data-edge-id="api-report"]', maxCenterDistance: 14 },
+      { annotationId: 'mermaid-sequence-api', selector: '#sequence svg [data-participant-id="sequence-api"]', maxCenterDistance: 10 },
+      { annotationId: 'mermaid-sequence-message', selector: '#sequence svg [data-message-id="api-report-request"]', maxCenterDistance: 10 },
+      { annotationId: 'mermaid-sequence-route', selector: '#sequence svg [data-edge-id="api-report-request"]', maxCenterDistance: 14 }
     ]
   },
   {

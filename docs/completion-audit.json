@@ -335,6 +335,7 @@
             "findMermaidElement",
             "findMermaidEdgeElementByEndpoints",
             "path.messageLine0",
+            "line[class*=\"messageLine\"]",
             "edgeSourceId",
             "edgeTargetId",
             "formatAnchorValidationReport"
@@ -346,6 +347,7 @@
             "extracts Mermaid edge paths from rendered source and target node ids",
             "sequence participant, message, and route anchors",
             "data-message-id",
+            "line class=\"messageLine0\"",
             "api-report-route",
             "mermaidEdgeSourceId",
             "mermaidEdgeTargetId"
@@ -453,7 +455,10 @@
             "generatedSurfaceLayoutDefaults",
             "anchorLabel: 'Mermaid anchors'",
             "prepareMermaidAnnotations",
-            "resolvePreparedAnnotationLayout"
+            "resolvePreparedAnnotationLayout",
+            "sequenceSource",
+            "mermaid-sequence-route",
+            "renderedSequenceActors"
           ]
         },
         {
@@ -1214,6 +1219,8 @@
             "React Flow Viewport, Handles, And Editing",
             "non-identity React Flow viewport",
             "host-owned annotation patch",
+            "flowchart and sequence browser-proven",
+            "mermaid-sequence-route",
             "Remaining Limits"
           ]
         },

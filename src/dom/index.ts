@@ -567,7 +567,7 @@ function elementBBox(element: Element): Box | undefined {
 function transformedElementBBox(element: Element, svg: SVGSVGElement): Box | undefined {
   const box = elementBBox(element);
 
-  if (!box || box.width <= 0 || box.height <= 0) {
+  if (!box || box.width < 0 || box.height < 0) {
     return box;
   }
 

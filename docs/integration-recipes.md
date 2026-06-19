@@ -308,8 +308,10 @@ or data attributes over label text.
 For sequence diagrams, use rendered SVG hooks after Mermaid has produced the
 diagram: participant labels or ids for actors, `data-message-id` or selectors
 for message labels, and `data-edge-id` or explicit path selectors for message
-routes. The default Mermaid obstacle extraction includes common sequence
-participant and message classes.
+routes. Mermaid 11 sequence routes may render as `line.messageLine0` or
+`line.messageLine1`, while older/exported SVG can use path equivalents; the
+adapter handles both. The default Mermaid obstacle extraction includes common
+sequence participant and message classes.
 
 ## D2
 
