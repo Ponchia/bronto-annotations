@@ -45,6 +45,9 @@ has been proven in real consumer use before a public `1.0.0` commitment.
   200 annotation layouts.
 - Adapter recipes: `docs/adapter-recipes-proof.md` records which deeper
   generated-surface recipes are already test-proven or browser-proven.
+- Authoring UX: `createAnnotationEditEvent` and `createAnnotationEditDelta`
+  provide DOM-free note-drag and anchor-move suggestions for React and custom
+  authoring surfaces; hosts still own state and persistence.
 - Remaining high-value proof: widen dogfood into richer real generated
   surfaces before widening public API stability promises, especially
   Vega-Lite, Mermaid sequence diagrams, nested D2 diagrams, and React Flow

@@ -35,7 +35,9 @@ const required = [
       'formatLayoutQualityReport',
       'generatedSurfaceLayoutDefaults',
       'resolvePreparedAnnotationLayout',
-      'annotationClassName'
+      'annotationClassName',
+      'createAnnotationEditEvent',
+      'createAnnotationEditDelta'
     ]
   },
   {

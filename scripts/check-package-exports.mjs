@@ -216,6 +216,22 @@ assert.deepEqual(core.annotationEditPatch({
   annotationId: 'export-check',
   placement: { manual: { x: 40, y: 44 } }
 });
+const exportEditHandle = core.annotationEditHandles(layout)[0];
+const exportEditEvent = core.createAnnotationEditEvent({
+  annotation: layout.annotations[0],
+  handle: exportEditHandle,
+  origin: exportEditHandle.point,
+  point: { x: exportEditHandle.point.x + 4, y: exportEditHandle.point.y + 6 },
+  phase: 'move'
+});
+assert.equal(exportEditEvent.suggestedPlacement.manual.x, layout.annotations[0].noteBox.x + 4);
+assert.equal(core.annotationEditPatch(exportEditEvent).placement.manual.y, layout.annotations[0].noteBox.y + 6);
+assert.equal(core.createAnnotationEditDelta({
+  annotation: layout.annotations[0],
+  handle: exportEditHandle,
+  delta: { x: 2, y: 3 },
+  phase: 'end'
+}).phase, 'end');
 assert.equal(core.applyAnnotationEdit(layout.annotations[0].annotation, {
   annotationId: 'export-check',
   suggestedAnchor: { type: 'point', point: { x: 18, y: 30 } }

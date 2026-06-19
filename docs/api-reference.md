@@ -74,6 +74,7 @@ Primary groups:
   `editHandleTabIndex` can do the same for static SVG edit handles when the
   host wires authoring behavior.
 - Edit helpers: `annotationEditHandles`, `annotationEditPatch`,
+  `createAnnotationEditEvent`, `createAnnotationEditDelta`,
   `applyAnnotationEdit`, `applyAnnotationEdits`, `translateAnchor`.
 - Adapter diagnostics: `formatAnchorValidationReport`,
   `assertAnchorValidationReport`, `assertAnchorValidationReportIfRequested`,

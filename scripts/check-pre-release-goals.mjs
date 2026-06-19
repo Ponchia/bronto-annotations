@@ -71,6 +71,8 @@ for (const term of [
   'Publish a private/canary package',
   'docs/canary-publish-report.md',
   'docs/dogfood-bronto-report.md',
+  'createAnnotationEditEvent',
+  'createAnnotationEditDelta',
   'visual regression baselines',
   'Performance',
   'Accessibility',
@@ -87,6 +89,8 @@ for (const term of [
   'docs/api-stability.manifest.json',
   '@public',
   '@experimental',
+  'createAnnotationEditEvent',
+  'createAnnotationEditDelta',
   'npm run test:api-stability'
 ]) {
   assertIncludes(apiStability, term, 'docs/api-stability.md');
@@ -189,7 +193,9 @@ for (const term of [
   'report table row',
   'npm run test:dogfood:bronto-report',
   'Would ship with this API today: yes',
-  'Manual coordinates are top-left note coordinates'
+  'Manual coordinates are top-left note coordinates',
+  'createAnnotationEditEvent',
+  'createAnnotationEditDelta'
 ]) {
   assertIncludes(dogfoodBrontoReport, term, 'docs/dogfood-bronto-report.md');
 }

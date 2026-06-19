@@ -195,6 +195,39 @@ export function AnnotatedSurface({ initial }: { initial: Annotation[] }) {
 }
 ```
 
+For a non-React authoring surface, keep the active handle in host state and use
+the root helpers to build the same commit-ready edit suggestion:
+
+```ts
+import {
+  annotationEditHandles,
+  applyAnnotationEdits,
+  createAnnotationEditDelta,
+  createAnnotationEditEvent,
+  resolveAnnotationLayout
+} from '@ponchia/annotations';
+
+const layout = resolveAnnotationLayout({ annotations, bounds, noteSizes });
+const handle = annotationEditHandles(layout, { includeAnchor: true })[0]!;
+
+const dragEnd = createAnnotationEditEvent({
+  annotation: layout.annotations[0]!,
+  handle,
+  origin: handle.point,
+  point: { x: handle.point.x + 18, y: handle.point.y + 10 },
+  phase: 'end'
+});
+const keyboardNudge = createAnnotationEditDelta({
+  annotation: layout.annotations[0]!,
+  handle,
+  delta: { x: 2, y: 0 },
+  phase: 'end'
+});
+
+const afterDrag = applyAnnotationEdits(annotations, dragEnd);
+const afterNudge = applyAnnotationEdits(afterDrag, keyboardNudge);
+```
+
 ## Vega And Vega-Lite
 
 For Vega, prefer scenegraph anchors after the view has run, because they reflect

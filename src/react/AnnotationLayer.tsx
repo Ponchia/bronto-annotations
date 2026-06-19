@@ -16,7 +16,11 @@ import {
   expandBox,
   resolvePadding
 } from '../core/anchors.js';
-import { annotationEditHandles, translateAnchor } from '../core/edit.js';
+import {
+  annotationEditHandles,
+  createAnnotationEditDelta,
+  createAnnotationEditEvent
+} from '../core/edit.js';
 import { subjectPath } from '../core/annotation-geometry.js';
 import { estimateNoteSize, resolveAnnotationLayout } from '../core/layout.js';
 import { annotationsForPaint } from '../core/order.js';
@@ -56,7 +60,6 @@ const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : us
 type ActiveEdit = {
   annotation: ResolvedAnnotation;
   handle: AnnotationEditHandle;
-  noteBox: Box;
   origin: { x: number; y: number };
   pointerId: number;
 };
@@ -212,50 +215,13 @@ export function AnnotationLayer({
     active: ActiveEdit,
     phase: AnnotationLayerEditEvent['phase'],
     point: { x: number; y: number }
-  ): AnnotationLayerEditEvent => {
-    const delta = {
-      x: round(point.x - active.origin.x),
-      y: round(point.y - active.origin.y)
-    };
-    const event: AnnotationLayerEditEvent = {
-      annotationId: active.annotation.id,
-      handle: active.handle,
-      phase,
-      origin: active.origin,
-      point,
-      delta
-    };
-
-    if (active.handle.kind === 'note') {
-      const suggestedPlacement = {
-        ...(active.annotation.annotation.placement ?? {}),
-        manual: {
-          x: round(active.noteBox.x + delta.x),
-          y: round(active.noteBox.y + delta.y),
-          side: active.annotation.placement.side,
-          align: active.annotation.placement.align
-        }
-      };
-
-      event.suggestedPlacement = suggestedPlacement;
-      event.suggestedAnnotation = {
-        ...active.annotation.annotation,
-        placement: suggestedPlacement
-      };
-    }
-
-    if (active.handle.kind === 'anchor') {
-      const suggestedAnchor = translateAnchor(active.annotation.annotation.anchor, delta);
-
-      event.suggestedAnchor = suggestedAnchor;
-      event.suggestedAnnotation = {
-        ...active.annotation.annotation,
-        anchor: suggestedAnchor
-      };
-    }
-
-    return event;
-  }, []);
+  ): AnnotationLayerEditEvent => createAnnotationEditEvent({
+    annotation: active.annotation,
+    handle: active.handle,
+    phase,
+    origin: active.origin,
+    point
+  }), []);
 
   const clientPoint = useCallback((event: ReactPointerEvent<SVGElement>) => {
     return clientToSvgPoint(event, svgRef.current, bounds);
@@ -279,7 +245,6 @@ export function AnnotationLayer({
     const active = {
       annotation,
       handle,
-      noteBox: annotation.noteBox,
       origin: point,
       pointerId: event.pointerId
     };
@@ -335,16 +300,16 @@ export function AnnotationLayer({
     const active = {
       annotation,
       handle,
-      noteBox: annotation.noteBox,
       origin: handle.point,
       pointerId: -1
     };
-    const point = {
-      x: round(handle.point.x + delta.x),
-      y: round(handle.point.y + delta.y)
-    };
     const startEvent = makeEditEvent(active, 'start', handle.point);
-    const endEvent = makeEditEvent(active, 'end', point);
+    const endEvent = createAnnotationEditDelta({
+      annotation,
+      handle,
+      delta,
+      phase: 'end'
+    });
 
     onEditStart?.(startEvent);
     onEdit?.(startEvent);

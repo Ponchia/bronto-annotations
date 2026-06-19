@@ -340,9 +340,10 @@ without connector marker ID collisions.
 - The Bronto bridge is CSS-only and intentionally not a design-system dependency.
 - Geometry helpers are deterministic SVG-building helpers. They are not a D3
   lifecycle, source-parser, or persistence layer.
-- React edit handles are an authoring adapter surface, not persisted state. The
-  host app decides whether and where to store suggested manual placement or
-  translated anchor geometry.
+- Edit helpers are an authoring adapter surface, not persisted state.
+  `createAnnotationEditEvent` and `createAnnotationEditDelta` compute suggested
+  manual placement or translated anchor geometry for React and custom
+  authoring surfaces; the host app decides whether and where to store it.
 
 ## Future Work
 

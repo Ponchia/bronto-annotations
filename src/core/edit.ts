@@ -36,11 +36,21 @@ export type AnnotationEditHandle = {
   data: DataAttributes;
 };
 
+export type AnnotationEditPhase = 'start' | 'move' | 'end';
+
 export type AnnotationEditSuggestion = {
   annotationId: string;
   suggestedAnchor?: Anchor;
   suggestedAnnotation?: Annotation;
   suggestedPlacement?: PlacementPreference & { manual: ManualPlacement };
+};
+
+export type AnnotationEditEvent = AnnotationEditSuggestion & {
+  handle: AnnotationEditHandle;
+  phase: AnnotationEditPhase;
+  origin: Point;
+  point: Point;
+  delta: Point;
 };
 
 export type AnnotationEditPatch = {
@@ -51,6 +61,22 @@ export type AnnotationEditPatch = {
 
 export type ApplyAnnotationEditOptions = {
   missing?: 'ignore' | 'throw';
+};
+
+export type CreateAnnotationEditEventOptions = {
+  annotation: ResolvedAnnotation;
+  handle: AnnotationEditHandle;
+  origin: Point;
+  point: Point;
+  phase?: AnnotationEditPhase;
+};
+
+export type CreateAnnotationEditDeltaOptions = {
+  annotation: ResolvedAnnotation;
+  handle: AnnotationEditHandle;
+  delta: Point;
+  origin?: Point;
+  phase?: AnnotationEditPhase;
 };
 
 const DEFAULT_HANDLE_RADIUS = 5;
@@ -108,13 +134,74 @@ export function translateAnchor(anchor: Anchor, delta: Point): Anchor {
   }
 }
 
+export function createAnnotationEditEvent(options: CreateAnnotationEditEventOptions): AnnotationEditEvent {
+  if (options.handle.annotationId !== options.annotation.id) {
+    throw new Error(`Edit handle for annotation "${options.handle.annotationId}" cannot edit "${options.annotation.id}".`);
+  }
+
+  const origin = finitePoint(options.origin, 'origin');
+  const point = finitePoint(options.point, 'point');
+  const delta = {
+    x: round(point.x - origin.x),
+    y: round(point.y - origin.y)
+  };
+  const event: AnnotationEditEvent = {
+    annotationId: options.annotation.id,
+    handle: options.handle,
+    phase: options.phase ?? 'move',
+    origin,
+    point,
+    delta
+  };
+
+  if (options.handle.kind === 'note') {
+    const suggestedPlacement = notePlacementEdit(options.annotation, delta);
+
+    event.suggestedPlacement = suggestedPlacement;
+    event.suggestedAnnotation = {
+      ...options.annotation.annotation,
+      placement: suggestedPlacement
+    };
+  }
+
+  if (options.handle.kind === 'anchor') {
+    const suggestedAnchor = translateAnchor(options.annotation.annotation.anchor, delta);
+
+    event.suggestedAnchor = suggestedAnchor;
+    event.suggestedAnnotation = {
+      ...options.annotation.annotation,
+      anchor: suggestedAnchor
+    };
+  }
+
+  return event;
+}
+
+export function createAnnotationEditDelta(options: CreateAnnotationEditDeltaOptions): AnnotationEditEvent {
+  const delta = finitePoint(options.delta, 'delta');
+  const origin = options.origin ? finitePoint(options.origin, 'origin') : finitePoint(options.handle.point, 'handle.point');
+
+  return createAnnotationEditEvent({
+    annotation: options.annotation,
+    handle: options.handle,
+    origin,
+    point: {
+      x: round(origin.x + delta.x),
+      y: round(origin.y + delta.y)
+    },
+    ...(options.phase ? { phase: options.phase } : {})
+  });
+}
+
 export function annotationEditPatch(edit: AnnotationEditSuggestion | AnnotationEditPatch): AnnotationEditPatch {
   if (isAnnotationEditPatch(edit)) {
     return edit;
   }
 
-  const anchor = edit.suggestedAnchor ?? edit.suggestedAnnotation?.anchor;
-  const placement = edit.suggestedPlacement ?? edit.suggestedAnnotation?.placement;
+  const anchor = edit.suggestedAnchor
+    ?? (edit.suggestedPlacement ? undefined : edit.suggestedAnnotation?.anchor);
+  const placement = edit.suggestedPlacement
+    ?? (edit.suggestedAnchor ? undefined : edit.suggestedAnnotation?.placement);
 
   return {
     annotationId: edit.annotationId,
@@ -232,6 +319,25 @@ function isAnnotationEditPatch(edit: AnnotationEditSuggestion | AnnotationEditPa
   return 'anchor' in edit || 'placement' in edit;
 }
 
+function notePlacementEdit(
+  annotation: ResolvedAnnotation,
+  delta: Point
+): PlacementPreference & { manual: ManualPlacement } {
+  const existingPlacement = annotation.annotation.placement ?? {};
+  const existingManual = existingPlacement.manual ?? {};
+
+  return {
+    ...existingPlacement,
+    manual: {
+      ...existingManual,
+      x: round(annotation.noteBox.x + delta.x),
+      y: round(annotation.noteBox.y + delta.y),
+      side: annotation.placement.side,
+      align: annotation.placement.align
+    }
+  };
+}
+
 function noteHandlePoint(box: Box, position: AnnotationEditHandlePosition): Point {
   switch (position) {
     case 'top-left':
@@ -270,6 +376,13 @@ function translatePoint(point: Point, dx: number, dy: number): Point {
   return {
     x: round(point.x + dx),
     y: round(point.y + dy)
+  };
+}
+
+function finitePoint(point: Point, name: string): Point {
+  return {
+    x: finite(point.x, `${name}.x`),
+    y: finite(point.y, `${name}.y`)
   };
 }
 

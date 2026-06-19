@@ -4,6 +4,8 @@ import {
   annotationEditHandles,
   applyAnnotationEdit,
   applyAnnotationEdits,
+  createAnnotationEditDelta,
+  createAnnotationEditEvent,
   resolveAnnotationLayout,
   translateAnchor
 } from '../../src/index.js';
@@ -144,6 +146,129 @@ describe('annotation edit handles', () => {
       type: 'path',
       points: [{ x: 1, y: 2 }, { x: 11, y: 22 }]
     });
+  });
+
+  it('creates commit-ready note drag edit events for custom authoring surfaces', () => {
+    const layout = resolveAnnotationLayout({
+      annotations: [
+        {
+          id: 'note-drag',
+          anchor: { type: 'point', point: { x: 40, y: 40 } },
+          note: { title: 'Dragged note' },
+          placement: { manual: { x: 80, y: 24, clamp: false } }
+        }
+      ],
+      bounds: { x: 0, y: 0, width: 240, height: 160 },
+      noteSizes: {
+        'note-drag': { width: 100, height: 48 }
+      }
+    });
+    const annotation = layout.annotations[0]!;
+    const handle = annotationEditHandles(layout)[0]!;
+    const event = createAnnotationEditEvent({
+      annotation,
+      handle,
+      phase: 'move',
+      origin: handle.point,
+      point: { x: handle.point.x + 12.3456, y: handle.point.y - 3.8766 }
+    });
+
+    expect(event).toMatchObject({
+      annotationId: 'note-drag',
+      handle,
+      phase: 'move',
+      origin: { x: 180, y: 24 },
+      point: { x: 192.3456, y: 20.1234 },
+      delta: { x: 12.346, y: -3.877 }
+    });
+    expect(event.suggestedPlacement?.manual).toEqual({
+      x: 92.346,
+      y: 20.123,
+      side: 'right',
+      align: 'center',
+      clamp: false
+    });
+    expect(annotationEditPatch(event)).toEqual({
+      annotationId: 'note-drag',
+      placement: event.suggestedPlacement
+    });
+  });
+
+  it('creates translated anchor edit events from only a delta', () => {
+    const layout = resolveAnnotationLayout({
+      annotations: [
+        {
+          id: 'anchor-drag',
+          anchor: { type: 'point', point: { x: 40, y: 40 } },
+          note: { title: 'Dragged anchor' },
+          placement: { manual: { x: 80, y: 24 } }
+        }
+      ],
+      bounds: { x: 0, y: 0, width: 240, height: 160 },
+      noteSizes: {
+        'anchor-drag': { width: 100, height: 48 }
+      }
+    });
+    const annotation = layout.annotations[0]!;
+    const handle = annotationEditHandles(layout, { includeAnchor: true })
+      .find((item) => item.kind === 'anchor')!;
+    const event = createAnnotationEditDelta({
+      annotation,
+      handle,
+      delta: { x: 3.25, y: 4.75 },
+      phase: 'end'
+    });
+
+    expect(event).toMatchObject({
+      annotationId: 'anchor-drag',
+      phase: 'end',
+      origin: { x: 40, y: 40 },
+      point: { x: 43.25, y: 44.75 },
+      delta: { x: 3.25, y: 4.75 },
+      suggestedAnchor: {
+        type: 'point',
+        point: { x: 43.25, y: 44.75 }
+      }
+    });
+    expect(annotationEditPatch(event)).toEqual({
+      annotationId: 'anchor-drag',
+      anchor: event.suggestedAnchor
+    });
+    expect(applyAnnotationEdit(annotation.annotation, event).anchor).toEqual(event.suggestedAnchor);
+  });
+
+  it('rejects mismatched authoring handles', () => {
+    const layout = resolveAnnotationLayout({
+      annotations: [
+        {
+          id: 'first',
+          anchor: { type: 'point', point: { x: 40, y: 40 } },
+          note: { title: 'First' },
+          placement: { manual: { x: 80, y: 24 } }
+        },
+        {
+          id: 'second',
+          anchor: { type: 'point', point: { x: 48, y: 48 } },
+          note: { title: 'Second' },
+          placement: { manual: { x: 92, y: 32 } }
+        }
+      ],
+      bounds: { x: 0, y: 0, width: 240, height: 160 },
+      noteSizes: {
+        first: { width: 100, height: 48 },
+        second: { width: 100, height: 48 }
+      }
+    });
+    const first = layout.annotations.find((annotation) => annotation.id === 'first')!;
+    const secondHandle = annotationEditHandles(layout)
+      .find((handle) => handle.annotationId === 'second')!;
+
+    expect(() => createAnnotationEditEvent({
+      annotation: first,
+      handle: secondHandle,
+      origin: secondHandle.point,
+      point: secondHandle.point
+    })).toThrow('Edit handle for annotation "second" cannot edit "first".');
   });
 
   it('builds edit patches from React-style suggestions', () => {

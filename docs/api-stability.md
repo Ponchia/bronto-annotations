@@ -40,7 +40,8 @@ subpath is listed exactly once as stable or experimental.
 ## Experimental During `0.x`
 
 - d3-style builder mutation helpers and custom annotation type definitions.
-- Edit-patch authoring ergonomics beyond emitted suggested edits.
+- Edit-patch authoring ergonomics, including `createAnnotationEditEvent` and
+  `createAnnotationEditDelta`.
 - React edit-handle authoring options and edit events until the authoring UX
   layer is hardened.
 - Dense-layout tuning constants and scoring weights.

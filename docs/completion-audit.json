@@ -107,6 +107,14 @@
           ]
         },
         {
+          "file": "src/core/edit.ts",
+          "terms": [
+            "createAnnotationEditEvent",
+            "createAnnotationEditDelta",
+            "AnnotationEditEvent"
+          ]
+        },
+        {
           "file": "src/adapters/layout.ts",
           "terms": [
             "generatedSurfaceLayoutDefaults",
@@ -129,6 +137,14 @@
           "terms": [
             "failOnWarnings",
             "below required minimum"
+          ]
+        },
+        {
+          "file": "test/core/edit.test.ts",
+          "terms": [
+            "custom authoring surfaces",
+            "translated anchor edit events",
+            "annotationEditPatch(event)"
           ]
         }
       ]
@@ -992,6 +1008,8 @@
             "docs/canary-release.md",
             "docs/canary-publish-report.md",
             "docs/adapter-recipes-proof.md",
+            "createAnnotationEditEvent",
+            "createAnnotationEditDelta",
             "visual regression baselines",
             "test/visual-baselines/browser-screenshots.json",
             "Performance",

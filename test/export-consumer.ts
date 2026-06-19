@@ -26,6 +26,8 @@ import {
   applyAnnotationEdit,
   applyAnnotationEdits,
   brontoAnnotationClassName,
+  createAnnotationEditDelta,
+  createAnnotationEditEvent,
   createD3StyleAnnotationBuilder,
   d3StyleAnnotationCollectionEditPatch,
   defineD3StyleAnnotationType,
@@ -70,9 +72,13 @@ import {
   type GeneratedSurfaceLayoutDefaults,
   type GeneratedSurfaceLayoutDefaultsOptions,
   type AnnotationEditHandle,
+  type AnnotationEditEvent,
   type AnnotationEditHandlePosition,
+  type AnnotationEditPhase,
   type AnnotationEditPatch,
   type AnnotationEditSuggestion,
+  type CreateAnnotationEditDeltaOptions,
+  type CreateAnnotationEditEventOptions,
   type AnnotationClassNameInput,
   type AnnotationClassNameValue,
   type ApplyAnnotationEditOptions,
@@ -697,8 +703,25 @@ const layout = resolveAnnotationLayout({
 });
 refineAnnotationLayout(layout, true);
 const editHandles: AnnotationEditHandle[] = annotationEditHandles(layout);
+const editPhase: AnnotationEditPhase = 'move';
+const editEventOptions: CreateAnnotationEditEventOptions = {
+  annotation: layout.annotations[0]!,
+  handle: editHandles[0]!,
+  origin: editHandles[0]!.point,
+  point: { x: editHandles[0]!.point.x + 4, y: editHandles[0]!.point.y + 6 },
+  phase: editPhase
+};
+const authoringEditEvent: AnnotationEditEvent = createAnnotationEditEvent(editEventOptions);
+const editDeltaOptions: CreateAnnotationEditDeltaOptions = {
+  annotation: layout.annotations[0]!,
+  handle: editHandles[0]!,
+  delta: { x: 2, y: 3 },
+  phase: 'end'
+};
+createAnnotationEditDelta(editDeltaOptions);
 const editedAnnotation = applyAnnotationEdit(annotations[0]!, editPatch);
 applyAnnotationEdits([editedAnnotation], editSuggestion, editApplyOptions);
+applyAnnotationEdits([editedAnnotation], authoringEditEvent, editApplyOptions);
 annotationClassName(annotationClassInput);
 brontoAnnotationClassName({ variant: 'bracket', tone: 'info', motion: 'draw' });
 formatAnchorDiagnostic(typedValidationReport.diagnostics[0]!);

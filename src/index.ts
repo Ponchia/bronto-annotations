@@ -164,15 +164,21 @@ export type {
   AnnotationEditHandleKind,
   AnnotationEditHandleOptions,
   AnnotationEditHandlePosition,
+  AnnotationEditEvent,
+  AnnotationEditPhase,
   AnnotationEditPatch,
   AnnotationEditSuggestion,
-  ApplyAnnotationEditOptions
+  ApplyAnnotationEditOptions,
+  CreateAnnotationEditDeltaOptions,
+  CreateAnnotationEditEventOptions
 } from './core/edit.js';
 export {
   annotationEditHandles,
   annotationEditPatch,
   applyAnnotationEdit,
   applyAnnotationEdits,
+  createAnnotationEditDelta,
+  createAnnotationEditEvent,
   translateAnchor
 } from './core/edit.js';
 export type {

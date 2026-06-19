@@ -84,7 +84,9 @@ async function smokeRootAndAdapters(tarball) {
       brontoAnnotationClassName,
       annotationEditPatch,
       applyAnnotationEdit,
-      applyAnnotationEdits
+      applyAnnotationEdits,
+      createAnnotationEditDelta,
+      createAnnotationEditEvent
     } from '@ponchia/annotations';
     import { anchorFromDOMRect, anchorFromSelector, annotationFrameFromSvg, annotationsFromDomSelectors, boxFromDOMRect, obstaclesFromSelector, prepareDomAnnotations, validateDomAnchors } from '@ponchia/annotations/dom';
     import { anchorsFromVegaView, anchorsFromVegaScales, anchorsFromVegaScenegraph, annotationsFromVegaScenegraph, obstaclesFromVegaView, obstaclesFromVegaScales, obstaclesFromVegaScenegraph, anchorsFromVegaSvg, annotationsFromVegaSvg, obstaclesFromVegaSvg, findVegaSvgElement, prepareVegaViewAnnotations, prepareVegaScaleAnnotations, prepareVegaScenegraphAnnotations, prepareVegaSvgAnnotations, validateVegaViewAnchors, validateVegaSvgAnchors } from '@ponchia/annotations/vega';
@@ -142,12 +144,28 @@ async function smokeRootAndAdapters(tarball) {
     const editableSvg = renderAnnotationsSvg(layout, { includeEditHandles: true, editHandleTabIndex: 0 });
     if (!editableSvg.includes('pa-annotation__edit-handle') || !editableSvg.includes('pa-annotation--manual')) throw new Error('svg edit handles failed');
     if (!editableSvg.includes('role="button"') || !editableSvg.includes('tabindex="0"')) throw new Error('svg edit handle navigation failed');
-    if (annotationEditHandles(layout)[0]?.kind !== 'note') throw new Error('edit handles failed');
+    const editHandle = annotationEditHandles(layout)[0];
+    if (editHandle?.kind !== 'note') throw new Error('edit handles failed');
     if (annotationClassName({ variant: 'badge', tone: 'warning', motion: 'pulse' }) !== 'pa-annotation pa-annotation--badge pa-annotation--warning pa-annotation--pulse') throw new Error('annotation class recipe failed');
     if (brontoAnnotationClassName({ variant: 'bracket', tone: 'info', motion: 'draw' }) !== 'ui-annotation ui-annotation--bracket ui-annotation--info ui-annotation--draw') throw new Error('legacy bronto class recipe failed');
     if (annotationStyleVariables({ color: '#d12f6a' })['--pa-annotation-accent'] !== '#d12f6a') throw new Error('annotation style variables failed');
     const editPatch = annotationEditPatch({ annotationId: 'smoke', suggestedPlacement: { manual: { x: 72, y: 64 } } });
     if (editPatch.placement?.manual?.x !== 72) throw new Error('edit patch failed');
+    const editEvent = createAnnotationEditEvent({
+      annotation: layout.annotations[0],
+      handle: editHandle,
+      origin: editHandle.point,
+      point: { x: editHandle.point.x + 4, y: editHandle.point.y + 6 },
+      phase: 'move'
+    });
+    if (editEvent.suggestedPlacement?.manual?.x !== layout.annotations[0].noteBox.x + 4) throw new Error('edit event failed');
+    if (annotationEditPatch(editEvent).placement?.manual?.y !== layout.annotations[0].noteBox.y + 6) throw new Error('edit event patch failed');
+    if (createAnnotationEditDelta({
+      annotation: layout.annotations[0],
+      handle: editHandle,
+      delta: { x: 2, y: 3 },
+      phase: 'end'
+    }).phase !== 'end') throw new Error('edit delta failed');
     if (applyAnnotationEdit(layout.annotations[0].annotation, { annotationId: 'smoke', suggestedAnchor: { type: 'point', point: { x: 30, y: 40 } } }).anchor.point.y !== 40) throw new Error('single edit apply failed');
     if (applyAnnotationEdits([layout.annotations[0].annotation], editPatch)[0]?.placement?.manual?.y !== 64) throw new Error('array edit apply failed');
     if (translateAnchor({ type: 'box', box: { x: 1, y: 2, width: 3, height: 4 } }, { x: 5, y: 6 }).box.x !== 6) throw new Error('translate anchor failed');

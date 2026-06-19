@@ -468,6 +468,22 @@
           "terms": [
             "can route straight connectors around rectangular obstacles"
           ]
+        },
+        {
+          "file": "src/core/edit.ts",
+          "terms": [
+            "createAnnotationEditEvent",
+            "createAnnotationEditDelta",
+            "AnnotationEditEvent"
+          ]
+        },
+        {
+          "file": "test/core/edit.test.ts",
+          "terms": [
+            "custom authoring surfaces",
+            "translated anchor edit events",
+            "annotationEditPatch(event)"
+          ]
         }
       ]
     },
@@ -517,6 +533,8 @@
             "assertTargetAlignment",
             "debug",
             "svgPointFromClient",
+            "createAnnotationEditEvent",
+            "createAnnotationEditDelta",
             "aria-hidden"
           ]
         },
@@ -1279,6 +1297,8 @@
             "docs/dogfood-bronto-report.md",
             "docs/canary-release.md",
             "docs/adapter-recipes-proof.md",
+            "createAnnotationEditEvent",
+            "createAnnotationEditDelta",
             "visual regression baselines",
             "test/visual-baselines/browser-screenshots.json",
             "Performance",

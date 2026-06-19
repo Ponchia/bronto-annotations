@@ -1,15 +1,11 @@
 import type { ReactNode } from 'react';
 import type {
-  Anchor,
-  Annotation,
   LayoutOptions,
-  ManualPlacement,
-  PlacementPreference,
-  Point,
   ResolvedAnnotation,
   ResolvedLayout
 } from '../core/model.js';
 import type {
+  AnnotationEditEvent,
   AnnotationEditHandle,
   AnnotationEditHandleOptions
 } from '../core/edit.js';
@@ -33,17 +29,7 @@ export type AnnotationLayerEditOptions = AnnotationEditHandleOptions & {
   keyboardStep?: number;
 };
 
-export type AnnotationLayerEditEvent = {
-  annotationId: string;
-  handle: AnnotationEditHandle;
-  phase: 'start' | 'move' | 'end';
-  origin: Point;
-  point: Point;
-  delta: Point;
-  suggestedAnchor?: Anchor;
-  suggestedAnnotation?: Annotation;
-  suggestedPlacement?: PlacementPreference & { manual: ManualPlacement };
-};
+export type AnnotationLayerEditEvent = AnnotationEditEvent;
 
 export type AnnotationLayerQualityEvent = {
   layout: ResolvedLayout;

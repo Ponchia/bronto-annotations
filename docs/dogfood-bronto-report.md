@@ -62,7 +62,7 @@ static report surface built with `@ponchia/ui` report classes.
 
 | Area | Observation | Severity | Proposed Fix |
 | --- | --- | --- | --- |
-| Manual placement | Manual coordinates are top-left note coordinates, which is precise but easy to place over the target on the first attempt. | medium | Add an authoring/debug affordance that shows the note box while dragging and reports overlap warnings inline. |
+| Manual placement | Manual coordinates are top-left note coordinates, which is precise but easy to place over the target on the first attempt. | medium | Partially addressed by DOM-free `createAnnotationEditEvent` and `createAnnotationEditDelta` helpers that let custom authoring surfaces drag notes or anchors and commit patches consistently. A future visual debug affordance can still show overlap warnings inline. |
 | Mixed DOM/SVG roots | A single `prepareDomAnnotations` call can mix DOM and SVG anchors, but the root must contain every selector while each spec still carries the right coordinate space. | medium | Add a combined report recipe that explicitly shows mixed roots and per-anchor coordinate spaces. |
 | Report styling | `@ponchia/annotations/bronto.css` coexists with public `@ponchia/ui` report, dataviz, and legend CSS without a hard UI dependency. | low | No package change required. |
 | API stability | The prepared-layout API remains the right path for report builds because it centralizes validation, target alignment, and quality assertions. | low | Keep this as the recommended report integration path. |
@@ -72,6 +72,6 @@ static report surface built with `@ponchia/ui` report classes.
 - Would ship with this API today: yes for `0.1.x` report dogfood and canary use
 - Required package changes before public release: none blocking from this pass
 - Changes that should happen before a broader public release: combined report
-  recipe and optional authoring/debug layer for manual note placement
+  recipe and optional visual debug affordance for overlap warnings
 - Screenshots or browser evidence: `.tmp-dogfood/dogfood-bronto-report.png`
   from `npm run test:dogfood:bronto-report`
