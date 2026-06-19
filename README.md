@@ -1043,7 +1043,8 @@ the API in real consumers before wider stability promises.
 - `docs/dogfood-friction-report.md` is the required template for the first real
   consumer integration report.
 - `docs/dogfood-clean-consumer-report.md` records the clean-consumer dogfood
-  pass and friction found by `npm run test:dogfood`.
+  pass, including the external note-list accessibility recipe, and friction
+  found by `npm run test:dogfood`.
 - `docs/dogfood-bronto-report.md` records the public `@ponchia/ui` report
   dogfood pass and friction found by `npm run test:dogfood:bronto-report`.
 - `docs/canary-release.md` documents the GitHub Packages canary lane, and
@@ -1076,3 +1077,5 @@ the API in real consumers before wider stability promises.
 - More host-specific recipes for common chart and diagram outputs.
 - Optional renderer bridges for non-SVG canvases.
 - Additional dense-layout recipes for very heavily annotated reports.
+- Additional accessibility patterns beyond the proven host-owned external note
+  list and screen-reader summary recipe.

@@ -1125,6 +1125,8 @@
             "Vega-Lite generated chart",
             "Mermaid generated diagram",
             "npm run test:dogfood",
+            "external note list",
+            "screen-reader summary",
             "Would ship with this API today: yes"
           ]
         },
@@ -1150,7 +1152,10 @@
             "prepareDomAnnotations",
             "prepareVegaScenegraphAnnotations",
             "prepareMermaidAnnotations",
-            "compiledFromVegaLite"
+            "compiledFromVegaLite",
+            "setupExternalNoteList",
+            "screenReaderSummary",
+            "rovingFocus"
           ]
         },
         {
@@ -1199,7 +1204,10 @@
           "terms": [
             "Static SVG",
             "External Note Lists",
-            "roving focus"
+            "roving focus",
+            "screenReaderSummary",
+            "keyboard activation",
+            "npm run test:dogfood"
           ]
         },
         {

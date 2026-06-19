@@ -179,6 +179,8 @@ for (const term of [
   'Mermaid generated diagram',
   'npm run test:dogfood',
   'Would ship with this API today: yes',
+  'external note list',
+  'screen-reader summary',
   'Coordinate space',
   'Generated geometry timing'
 ]) {
@@ -209,6 +211,9 @@ for (const term of [
   'prepareMermaidAnnotations',
   'prepareDomAnnotations',
   'compiledFromVegaLite',
+  'setupExternalNoteList',
+  'screenReaderSummary',
+  'rovingFocus',
   '.tmp-dogfood/dogfood-report.png'
 ]) {
   assertIncludes(dogfoodScript, term, 'scripts/dogfood-clean-consumer.mjs');
@@ -262,7 +267,10 @@ for (const term of [
   'Static SVG',
   'React',
   'External Note Lists',
-  'roving focus'
+  'roving focus',
+  'screenReaderSummary',
+  'keyboard activation',
+  'npm run test:dogfood'
 ]) {
   assertIncludes(accessibility, term, 'docs/accessibility.md');
 }

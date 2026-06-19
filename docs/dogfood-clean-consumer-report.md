@@ -53,6 +53,9 @@ a separate Vite consumer rather than package examples or workspace imports.
 - Verifying five rendered annotation notes and connectors
 - Verifying DOM, Vega-Lite, and Mermaid anchor validation
 - Verifying generated-target alignment for every dogfood surface
+- Verifying an external note list with roving focus, note focus sync, keyboard
+  activation, and a screen-reader summary from validation and layout-quality
+  results
 - Capturing `.tmp-dogfood/dogfood-report.png`
 
 ## Friction
@@ -63,7 +66,7 @@ a separate Vite consumer rather than package examples or workspace imports.
 | Coordinate space | Matching host `viewBox`, overlay bounds, and DOM pixel coordinates remains the main thing a consumer must get right. | medium | Keep emphasizing `annotationFrameFromSvg()` and same-coordinate manual placement in recipes. |
 | Generated geometry timing | Vega-Lite must compile and Vega must run before scenegraph anchors exist; Mermaid must render before SVG anchors exist. | low | Add timing callouts to generated-surface recipes. |
 | Styling | `@ponchia/annotations/bronto.css` worked from a clean package install without `@ponchia/ui`. | low | No package change required. |
-| Accessibility | `noteTabIndex` made SVG notes focusable, but a production report would still want an external note list. | low | Keep external note lists in accessibility recipes and optional authoring work. |
+| Accessibility | `noteTabIndex` made SVG notes focusable, and the clean dogfood now verifies a host-owned external note list with roving focus, note focus sync, keyboard activation, and a screen-reader summary. | low | Keep the recipe backed by `npm run test:dogfood`; broader production apps can still add their own command palettes or workflows. |
 | Performance | Five annotations across three surfaces resolved quickly in Chromium. | low | Keep separate 10/50/200 stress benchmark as the practical limit signal. |
 | Docs/examples | Existing examples are strong per adapter, and the mixed DOM/SVG report recipe now reduces first-use uncertainty for combined report surfaces. | low | Keep the recipe backed by `npm run test:dogfood:bronto-report`. |
 
@@ -71,7 +74,6 @@ a separate Vite consumer rather than package examples or workspace imports.
 
 - Would ship with this API today: yes for `0.1.x` dogfood and canary use
 - Required package changes before public release: none blocking from this pass
-- Changes that can wait: external note-list recipe, canary registry install,
-  and API stability annotations
+- Changes that can wait: app-specific command palettes or workflows
 - Screenshots or browser evidence: `.tmp-dogfood/dogfood-report.png` from
   `npm run test:dogfood`

@@ -103,6 +103,15 @@ async function writeConsumerFiles(workdir) {
           <div id="diagram-annotations" class="annotation-layer" aria-label="Mermaid diagram annotations"></div>
         </div>
       </section>
+
+      <section id="annotation-index" class="surface note-list-surface" aria-labelledby="annotation-index-title">
+        <div>
+          <p class="eyebrow">Annotation index</p>
+          <h2 id="annotation-index-title">External Note List</h2>
+          <p id="annotation-summary" class="note-list-summary" role="status" aria-live="polite">Preparing annotation summary.</p>
+        </div>
+        <ol id="annotation-list" class="note-list" aria-label="External annotation notes"></ol>
+      </section>
     </main>
     <script type="module" src="/src/main.js"></script>
   </body>
@@ -232,6 +241,62 @@ h2 {
   pointer-events: none;
 }
 
+.note-list-surface {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 18px;
+  padding: 20px;
+}
+
+.note-list-summary {
+  margin-bottom: 0;
+  color: #566873;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.note-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.note-list-button {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  min-height: 70px;
+  padding: 12px;
+  border: 1px solid #cbd8de;
+  border-radius: 8px;
+  background: #f8fbfc;
+  color: #17202a;
+  font: inherit;
+  text-align: left;
+}
+
+.note-list-button:focus-visible {
+  outline: 3px solid #2680a6;
+  outline-offset: 2px;
+}
+
+.note-list-button[aria-current="true"] {
+  border-color: #0d5963;
+  background: #e7f2f3;
+}
+
+.note-list-label {
+  font-weight: 800;
+}
+
+.note-list-source {
+  color: #566873;
+  font-size: 12px;
+}
+
 .pa-annotation__note {
   filter: drop-shadow(0 5px 10px rgb(23 32 42 / 16%));
 }
@@ -284,10 +349,14 @@ async function main() {
   evidence.surfaces.push(renderDomReportAnnotations());
   evidence.surfaces.push(await renderVegaLiteAnnotations());
   evidence.surfaces.push(await renderMermaidAnnotations());
+  evidence.accessibility = setupExternalNoteList();
   evidence.annotationCount = document.querySelectorAll('.pa-annotation').length;
   evidence.connectorCount = document.querySelectorAll('.pa-annotation__connector').length;
   evidence.noteCount = document.querySelectorAll('.pa-annotation__note').length;
-  evidence.ready = evidence.surfaces.every((surface) => surface.validationOk && surface.targetAlignmentOk && surface.qualityOk);
+  evidence.ready = evidence.surfaces.every((surface) => surface.validationOk && surface.targetAlignmentOk && surface.qualityOk)
+    && evidence.accessibility.externalNoteList
+    && evidence.accessibility.rovingFocus
+    && evidence.accessibility.screenReaderSummary.includes('Layout-quality failures: 0');
   window.__dogfood = evidence;
 }
 
@@ -571,6 +640,123 @@ function surfaceEvidence(id, resolved, extra) {
   };
 }
 
+function setupExternalNoteList() {
+  const list = requiredElement('#annotation-list');
+  const summary = requiredElement('#annotation-summary');
+  const noteGroups = Array.from(document.querySelectorAll('.pa-annotation__note[data-annotation-id]'));
+  const annotationSurface = new Map();
+
+  for (const surface of evidence.surfaces) {
+    for (const id of surface.annotationIds) {
+      annotationSurface.set(id, surface.id);
+    }
+  }
+
+  const validationFailures = evidence.surfaces.filter((surface) => !surface.validationOk).length;
+  const qualityFailures = evidence.surfaces.filter((surface) => !surface.qualityOk).length;
+  const targetFailures = evidence.surfaces.filter((surface) => !surface.targetAlignmentOk).length;
+  const summaryText = [
+    noteGroups.length + ' annotations indexed.',
+    'Validation failures: ' + validationFailures + '.',
+    'Layout-quality failures: ' + qualityFailures + '.',
+    'Target-alignment failures: ' + targetFailures + '.'
+  ].join(' ');
+  summary.textContent = summaryText;
+
+  for (const [index, note] of noteGroups.entries()) {
+    const id = note.getAttribute('data-annotation-id');
+    const label = note.getAttribute('aria-label') ?? id ?? 'Annotation';
+    const noteId = 'dogfood-note-' + id;
+    const item = document.createElement('li');
+    const button = document.createElement('button');
+    const labelText = document.createElement('span');
+    const sourceText = document.createElement('span');
+
+    note.id = noteId;
+    button.type = 'button';
+    button.className = 'note-list-button';
+    button.dataset.noteListId = id ?? '';
+    button.setAttribute('aria-controls', noteId);
+    button.setAttribute('aria-current', index === 0 ? 'true' : 'false');
+    button.tabIndex = index === 0 ? 0 : -1;
+    labelText.className = 'note-list-label';
+    labelText.textContent = label;
+    sourceText.className = 'note-list-source';
+    sourceText.textContent = annotationSurface.get(id) ?? 'annotation';
+    button.append(labelText, sourceText);
+    item.append(button);
+    list.append(item);
+  }
+
+  const buttons = Array.from(list.querySelectorAll('[data-note-list-id]'));
+
+  function selectButton(id, options = {}) {
+    const target = buttons.find((button) => button.dataset.noteListId === id);
+
+    if (!target) {
+      return;
+    }
+
+    for (const button of buttons) {
+      const selected = button === target;
+      button.setAttribute('aria-current', selected ? 'true' : 'false');
+      button.tabIndex = selected ? 0 : -1;
+    }
+
+    if (options.focusButton) {
+      target.focus();
+    }
+
+    if (options.focusNote) {
+      document.querySelector('.pa-annotation__note[data-annotation-id="' + id + '"]')?.focus({ preventScroll: true });
+    }
+  }
+
+  for (const button of buttons) {
+    button.addEventListener('click', () => {
+      selectButton(button.dataset.noteListId, { focusNote: true });
+    });
+    button.addEventListener('keydown', (event) => {
+      const currentIndex = buttons.indexOf(button);
+      const lastIndex = buttons.length - 1;
+      let nextIndex = currentIndex;
+
+      if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+        nextIndex = Math.min(lastIndex, currentIndex + 1);
+      } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+        nextIndex = Math.max(0, currentIndex - 1);
+      } else if (event.key === 'Home') {
+        nextIndex = 0;
+      } else if (event.key === 'End') {
+        nextIndex = lastIndex;
+      } else if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        selectButton(button.dataset.noteListId, { focusNote: true });
+        return;
+      } else {
+        return;
+      }
+
+      event.preventDefault();
+      selectButton(buttons[nextIndex].dataset.noteListId, { focusButton: true });
+    });
+  }
+
+  for (const note of noteGroups) {
+    note.addEventListener('focus', () => {
+      selectButton(note.getAttribute('data-annotation-id'));
+    });
+  }
+
+  return {
+    externalNoteList: true,
+    rovingFocus: true,
+    keyboardNavigation: true,
+    screenReaderSummary: summaryText,
+    listedAnnotationIds: buttons.map((button) => button.dataset.noteListId)
+  };
+}
+
 function targetFromElement(root, id, selector, expected) {
   const element = requiredElement(selector, root);
 
@@ -679,11 +865,36 @@ async function verifyDogfoodConsumer(workdir) {
 
     assert.ok(evidence.surfaces.some((surface) => surface.compiledFromVegaLite), 'dogfood report should prove a Vega-Lite compiled chart');
     assert.ok(evidence.surfaces.some((surface) => surface.anchorSource === 'mermaid-svg' && surface.renderedEdgeCount >= 2), 'dogfood report should prove rendered Mermaid edge anchors');
+    assert.equal(evidence.accessibility?.externalNoteList, true, 'dogfood report should expose an external note list');
+    assert.equal(evidence.accessibility?.rovingFocus, true, 'dogfood report should expose roving focus metadata');
+    assert.equal(evidence.accessibility?.keyboardNavigation, true, 'dogfood report should expose keyboard navigation metadata');
+    assert.match(evidence.accessibility?.screenReaderSummary ?? '', /Validation failures: 0/);
+    assert.match(evidence.accessibility?.screenReaderSummary ?? '', /Layout-quality failures: 0/);
+    assert.equal(evidence.accessibility?.listedAnnotationIds?.length, evidence.annotationCount, 'external note list should mirror every rendered annotation');
 
     const visibleNotes = await page.locator('.pa-annotation__note').count();
     const visibleConnectors = await page.locator('.pa-annotation__connector').count();
+    const noteListButtons = page.locator('#annotation-list [data-note-list-id]');
+    const noteListCount = await noteListButtons.count();
     assert.ok(visibleNotes >= 5, 'dogfood browser should contain rendered note groups');
     assert.ok(visibleConnectors >= 5, 'dogfood browser should contain rendered connectors');
+    assert.equal(noteListCount, evidence.annotationCount, 'dogfood browser should render one external list item per annotation');
+
+    const firstId = await noteListButtons.first().getAttribute('data-note-list-id');
+    assert.ok(firstId, 'first external note list item should expose an annotation id');
+    await noteListButtons.first().focus();
+    await page.keyboard.press('ArrowDown');
+    const rovedId = await page.evaluate(() => document.activeElement?.getAttribute('data-note-list-id'));
+    assert.ok(rovedId && rovedId !== firstId, 'arrow-key roving focus should move to another list item');
+    await page.keyboard.press('Enter');
+    const focusedNoteId = await page.evaluate(() => document.activeElement?.getAttribute('data-annotation-id'));
+    assert.equal(focusedNoteId, rovedId, 'activating a list item should focus the matching annotation note');
+    await page.locator(`.pa-annotation__note[data-annotation-id="${firstId}"]`).focus();
+    assert.equal(
+      await page.locator(`#annotation-list [data-note-list-id="${firstId}"]`).getAttribute('aria-current'),
+      'true',
+      'focusing an annotation note should update external list selection'
+    );
     assert.deepEqual(consoleErrors, [], 'dogfood browser should not emit console errors');
 
     await page.screenshot({ path: screenshotPath, fullPage: true });

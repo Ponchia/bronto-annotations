@@ -839,6 +839,9 @@
             "prepareVegaScenegraphAnnotations",
             "prepareMermaidAnnotations",
             "compiledFromVegaLite",
+            "setupExternalNoteList",
+            "screenReaderSummary",
+            "rovingFocus",
             ".tmp-dogfood/dogfood-report.png"
           ]
         },
@@ -849,6 +852,8 @@
             "clean Vite report",
             "Vega-Lite generated chart",
             "Mermaid generated diagram",
+            "external note list",
+            "screen-reader summary",
             "Would ship with this API today: yes"
           ]
         },
@@ -1341,6 +1346,8 @@
           "terms": [
             "Dogfood Clean Consumer Report",
             "npm run test:dogfood",
+            "external note list",
+            "screen-reader summary",
             "Coordinate space",
             "Generated geometry timing"
           ]
@@ -1351,6 +1358,9 @@
             "Annotation Readiness Report",
             "Vega-Lite",
             "Mermaid",
+            "setupExternalNoteList",
+            "screenReaderSummary",
+            "rovingFocus",
             "targetAlignmentOk"
           ]
         },

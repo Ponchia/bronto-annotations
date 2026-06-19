@@ -354,5 +354,5 @@ without connector marker ID collisions.
 - More adapter recipes for common SVG mark and diagram structures.
 - Optional editor/authoring affordances for interactive annotation creation.
 - Optional canvas/WebGL render helpers for consumers that cannot use SVG.
-- Advanced accessibility recipes for host apps that need custom roving focus or
-  synchronized external note lists.
+- Additional accessibility patterns beyond the browser-proven external note
+  list, roving focus, note focus sync, and screen-reader summary recipe.
