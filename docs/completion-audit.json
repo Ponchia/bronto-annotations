@@ -25,6 +25,7 @@
     "test:completion-audit",
     "test:repo",
     "test:release",
+    "test:security-automation",
     "test:pre-release",
     "test:compatibility",
     "test:compatibility:lanes",
@@ -934,7 +935,7 @@
     {
       "id": "repo-operations-readiness",
       "status": "proven",
-      "claim": "The repository has release-grade package metadata, CI, release provenance workflow, dependency update automation, issue and PR templates, security policy, contribution guide, changelog, release runbook, and an enforced repository-readiness check.",
+      "claim": "The repository has release-grade package metadata, CI, release provenance workflow, public security automation, dependency update automation, issue and PR templates, security policy, contribution guide, changelog, release runbook, and enforced repository-readiness checks.",
       "evidence": [
         {
           "file": "package.json",
@@ -943,6 +944,7 @@
             "\"repository\"",
             "\"publishConfig\"",
             "\"test:repo\"",
+            "\"test:security-automation\"",
             "\"packageManager\""
           ]
         },
@@ -974,11 +976,52 @@
           ]
         },
         {
+          "file": ".github/workflows/codeql.yml",
+          "terms": [
+            "name: CodeQL",
+            "security-events: write",
+            "github/codeql-action/init@v4",
+            "config-file: ./.github/codeql/codeql-config.yml",
+            "languages: javascript-typescript",
+            "security-extended,security-and-quality"
+          ]
+        },
+        {
+          "file": ".github/codeql/codeql-config.yml",
+          "terms": [
+            "@ponchia/annotations CodeQL config",
+            "query-filters:",
+            "js/html-constructed-from-input",
+            "escaped SVG string renderers"
+          ]
+        },
+        {
+          "file": ".github/workflows/dependency-review.yml",
+          "terms": [
+            "name: Dependency Review",
+            "actions/dependency-review-action@v5",
+            "fail-on-severity: high",
+            "warn-only: false"
+          ]
+        },
+        {
+          "file": ".github/workflows/scorecard.yml",
+          "terms": [
+            "name: Scorecard",
+            "ossf/scorecard-action@v2.4.3",
+            "results_format: sarif",
+            "github/codeql-action/upload-sarif@v4"
+          ]
+        },
+        {
           "file": "scripts/check-repo-readiness.mjs",
           "terms": [
             "Repository readiness verified",
             "package-lock root version must match package.json",
-            "npm publish --ignore-scripts --provenance --access public --tag \"$dist_tag\""
+            "npm publish --ignore-scripts --provenance --access public --tag \"$dist_tag\"",
+            "CodeQL",
+            "Dependency Review",
+            "OpenSSF Scorecard"
           ]
         },
         {
@@ -993,7 +1036,22 @@
           "file": "SECURITY.md",
           "terms": [
             "Reporting a Vulnerability",
-            "Security Boundary"
+            "Security Boundary",
+            "CodeQL",
+            "Dependency Review",
+            "OpenSSF Scorecard"
+          ]
+        },
+        {
+          "file": "docs/security-automation.md",
+          "terms": [
+            "Security Automation",
+            "CodeQL",
+            "js/html-constructed-from-input",
+            "Dependency Review",
+            "OpenSSF Scorecard",
+            "Dependabot security updates",
+            "Secret scanning push protection"
           ]
         },
         {

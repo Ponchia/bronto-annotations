@@ -14,6 +14,13 @@ and adapters for rendered chart, diagram, and flow systems. That kind of work
 would introduce its own model, algorithms, adapter contracts, optional peers,
 and examples.
 
+The product direction is directly inspired by Susie Lu's `d3-annotation` and
+`react-annotation` work. In particular, the subject/connector/note grammar,
+callout vocabulary, and `x`/`y` plus `dx`/`dy` authoring bridge are treated as
+the primary prior art. This project intentionally takes that idea into a
+DOM-free TypeScript core for host-supplied geometry instead of wrapping the D3
+selection runtime.
+
 Keeping that inside `@ponchia/ui` would blur the current package boundary.
 `@ponchia/ui` is CSS-first, zero-runtime by default, and deliberately refuses
 application logic, chart scales, renderer ownership, and framework component
