@@ -19,6 +19,21 @@ require consumer credentials or a long-lived npm token.
   weekly schedule, and manual dispatch. It publishes Scorecard results and
   uploads SARIF into GitHub code scanning.
 
+## Runner Policy
+
+This repository is public. Public pull-request validation stays on standard
+GitHub-hosted runners because each job runs on an isolated clean VM, and
+standard GitHub-hosted runner usage is free for public repositories. Do not move
+`pull_request` jobs such as CI, CodeQL, or Dependency Review to a self-hosted,
+ARC, or VPS runner label.
+
+Some private or deploy-focused repositories may use repository-scoped
+self-hosted runner scale sets for trusted build and deploy jobs. If this package
+ever needs a self-hosted runner, create a dedicated repository-scoped runner and
+use it only for trusted `push`, tag, or `workflow_dispatch` jobs after reviewing
+token, secret, network, and filesystem exposure. Keep public PR and security
+validation on `ubuntu-latest`.
+
 ## Repository Settings
 
 The GitHub repository should keep these security settings enabled:

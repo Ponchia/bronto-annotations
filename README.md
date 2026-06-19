@@ -1051,6 +1051,9 @@ This repository is set up as a release-ready package, not only a local scaffold.
 - CodeQL, Dependency Review, and OpenSSF Scorecard run as public-repo security
   automation; see `docs/security-automation.md` for workflow and GitHub setting
   details.
+- Public pull-request validation intentionally stays on standard GitHub-hosted
+  runners; `docs/security-automation.md` documents the self-hosted runner
+  boundary for this public repository.
 - `CONTRIBUTING.md` documents product boundaries, verification expectations,
   adapter requirements, and release handoff.
 - Security policy: `SECURITY.md` defines the vulnerability reporting path and
