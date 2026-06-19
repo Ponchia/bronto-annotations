@@ -979,6 +979,25 @@ This repository is set up as a release-ready package, not only a local scaffold.
 - `scripts/check-repo-readiness.mjs` keeps package metadata, workflows,
   templates, lifecycle docs, and release guardrails wired into `npm run check`.
 
+## Pre-Release Hardening
+
+The package is ready to dogfood, but the next public-release step is proving
+the API in real consumers before wider stability promises.
+
+- `docs/pre-release-roadmap.md` tracks dogfood, API freeze, canary publishing,
+  visual baselines, adapter recipes, authoring UX, performance, accessibility,
+  compatibility, and naming/release decisions.
+- `docs/api-stability.md` defines which APIs are stable for `0.1.x` and which
+  remain experimental during `0.x`.
+- `docs/compatibility.md` records supported Node, TypeScript, React, Vega,
+  Mermaid, D2, and React Flow ranges.
+- `docs/dogfood-friction-report.md` is the required template for the first real
+  consumer integration report.
+- `npm run test:performance` runs deterministic 10, 50, and 200 annotation
+  stress layouts against the real engine.
+- `scripts/check-pre-release-goals.mjs` keeps these hardening docs and gates
+  wired into `npm run check`.
+
 ## Known Limits
 
 - Placement is deterministic multi-candidate scoring with optional bounded

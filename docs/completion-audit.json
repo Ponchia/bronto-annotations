@@ -18,6 +18,8 @@
     "test:readiness",
     "test:completion-audit",
     "test:repo",
+    "test:pre-release",
+    "test:performance",
     "test:hygiene"
   ],
   "requirements": [
@@ -929,6 +931,106 @@
             "Release Runbook",
             "npm pack --dry-run",
             "npm provenance"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pre-release-hardening",
+      "status": "proven",
+      "claim": "The project now tracks and enforces the next pre-release goals: real-consumer dogfood reporting, API stability policy, canary publishing preparation, visual baseline planning, deeper adapter recipes, authoring UX direction, performance stress checks, accessibility recipes, compatibility matrix, and public release naming decisions.",
+      "evidence": [
+        {
+          "file": "docs/pre-release-roadmap.md",
+          "terms": [
+            "Dogfood in a real consumer",
+            "Freeze the `0.1.x` public API contract",
+            "Publish a private/canary package",
+            "visual regression baselines",
+            "Performance",
+            "Accessibility",
+            "Compatibility matrix",
+            "public package/repository naming"
+          ]
+        },
+        {
+          "file": "docs/api-stability.md",
+          "terms": [
+            "Stable for `0.1.x`",
+            "Experimental",
+            "Root imports must remain DOM-free"
+          ]
+        },
+        {
+          "file": "docs/compatibility.md",
+          "terms": [
+            "Node.js",
+            "TypeScript",
+            "Vega",
+            "Mermaid",
+            "D2",
+            "React Flow",
+            "optional peers"
+          ]
+        },
+        {
+          "file": "docs/dogfood-friction-report.md",
+          "terms": [
+            "Dogfood Friction Report Template",
+            "Coordinate space",
+            "Generated geometry timing",
+            "Would ship with this API today"
+          ]
+        },
+        {
+          "file": "docs/visual-regression.md",
+          "terms": [
+            "visual baselines",
+            "CI compares new screenshots",
+            "non-empty screenshot evidence"
+          ]
+        },
+        {
+          "file": "docs/performance.md",
+          "terms": [
+            "npm run test:performance",
+            "10 annotations",
+            "50 annotations",
+            "200 annotations"
+          ]
+        },
+        {
+          "file": "docs/accessibility.md",
+          "terms": [
+            "Static SVG",
+            "External Note Lists",
+            "roving focus"
+          ]
+        },
+        {
+          "file": "docs/adapter-recipes-roadmap.md",
+          "terms": [
+            "Vega-Lite",
+            "Sequence diagram",
+            "Nested diagram",
+            "Zoom/pan"
+          ]
+        },
+        {
+          "file": "scripts/benchmark-layout.mjs",
+          "terms": [
+            "layout-stress",
+            "annotations: 200",
+            "evaluateAnnotationLayout",
+            "maxMedianMs"
+          ]
+        },
+        {
+          "file": "scripts/check-pre-release-goals.mjs",
+          "terms": [
+            "Pre-release goals verified",
+            "npm run test:performance",
+            "Dogfood Friction Report Template"
           ]
         }
       ]

@@ -26,6 +26,7 @@ const requiredRequirementIds = [
   'public-hygiene',
   'docs-api-boundaries-and-known-limits',
   'repo-operations-readiness',
+  'pre-release-hardening',
   'product-boundaries'
 ];
 

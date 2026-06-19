@@ -17,6 +17,8 @@
     "test:readiness",
     "test:completion-audit",
     "test:repo",
+    "test:pre-release",
+    "test:performance",
     "test:hygiene"
   ],
   "publicExports": [
@@ -1057,6 +1059,54 @@
             "Repository Quality",
             "CI runs `npm run check`",
             "Security policy"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pre-release-hardening",
+      "evidence": [
+        {
+          "file": "docs/pre-release-roadmap.md",
+          "terms": [
+            "Dogfood in a real consumer",
+            "Freeze the `0.1.x` public API contract",
+            "visual regression baselines",
+            "Performance",
+            "Compatibility matrix"
+          ]
+        },
+        {
+          "file": "docs/api-stability.md",
+          "terms": [
+            "Stable for `0.1.x`",
+            "Experimental",
+            "Root imports must remain DOM-free"
+          ]
+        },
+        {
+          "file": "docs/compatibility.md",
+          "terms": [
+            "Node.js",
+            "TypeScript",
+            "React Flow",
+            "optional peers"
+          ]
+        },
+        {
+          "file": "scripts/benchmark-layout.mjs",
+          "terms": [
+            "layout-stress",
+            "annotations: 200",
+            "evaluateAnnotationLayout"
+          ]
+        },
+        {
+          "file": "scripts/check-pre-release-goals.mjs",
+          "terms": [
+            "Pre-release goals verified",
+            "Dogfood Friction Report Template",
+            "npm run test:performance"
           ]
         }
       ]
