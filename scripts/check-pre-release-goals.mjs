@@ -20,6 +20,7 @@ const adapterRecipesProof = await read('docs/adapter-recipes-proof.md');
 const benchmark = await read('scripts/benchmark-layout.mjs');
 const apiStabilityCheck = await read('scripts/check-api-stability.mjs');
 const compatibilityCheck = await read('scripts/check-compatibility-matrix.mjs');
+const compatibilityLaneSmoke = await read('scripts/smoke-compatibility-lanes.mjs');
 const canaryDocs = await read('docs/canary-release.md');
 const canaryPublishReport = await read('docs/canary-publish-report.md');
 const canaryCheck = await read('scripts/check-canary-readiness.mjs');
@@ -50,6 +51,7 @@ for (const path of [
   '.github/workflows/canary.yml',
   'scripts/check-api-stability.mjs',
   'scripts/check-compatibility-matrix.mjs',
+  'scripts/smoke-compatibility-lanes.mjs',
   'scripts/check-canary-readiness.mjs',
   'scripts/benchmark-layout.mjs',
   'scripts/dogfood-clean-consumer.mjs',
@@ -67,6 +69,7 @@ assert.equal(pkg.scripts?.['test:dogfood'], 'npm run build && node scripts/dogfo
 assert.equal(pkg.scripts?.['test:dogfood:bronto-report'], 'npm run build && node scripts/dogfood-bronto-report.mjs');
 assert.equal(pkg.scripts?.['test:dogfood:self-report'], 'npm run build && node scripts/dogfood-self-report.mjs');
 assert.equal(pkg.scripts?.['test:compatibility'], 'node scripts/check-compatibility-matrix.mjs');
+assert.equal(pkg.scripts?.['test:compatibility:lanes'], 'npm run build && node scripts/smoke-compatibility-lanes.mjs');
 assert.equal(pkg.scripts?.['test:performance'], 'npm run build && node scripts/benchmark-layout.mjs --assert');
 assert.ok(pkg.scripts?.check?.includes('npm run test:pre-release'), 'npm run check must include test:pre-release');
 assert.ok(pkg.scripts?.check?.includes('npm run test:api-stability'), 'npm run check must include test:api-stability');
@@ -75,6 +78,7 @@ assert.ok(pkg.scripts?.check?.includes('npm run test:dogfood'), 'npm run check m
 assert.ok(pkg.scripts?.check?.includes('npm run test:dogfood:bronto-report'), 'npm run check must include test:dogfood:bronto-report');
 assert.ok(pkg.scripts?.check?.includes('npm run test:dogfood:self-report'), 'npm run check must include test:dogfood:self-report');
 assert.ok(pkg.scripts?.check?.includes('npm run test:compatibility'), 'npm run check must include test:compatibility');
+assert.ok(pkg.scripts?.check?.includes('npm run test:compatibility:lanes'), 'npm run check must include test:compatibility:lanes');
 assert.ok(pkg.scripts?.check?.includes('npm run test:performance'), 'npm run check must include test:performance');
 
 for (const term of [
@@ -184,11 +188,14 @@ for (const term of [
   'Node.js',
   'TypeScript',
   'npm run test:compatibility',
+  'npm run test:compatibility:lanes',
   'React 18',
+  'React 18 clean consumer',
   'React 19',
   'React',
   'Vega',
   'Vega 5',
+  'Vega 5 clean consumer',
   'Vega 6',
   'Mermaid',
   'D2',
@@ -207,6 +214,17 @@ for (const term of [
   'Node 22'
 ]) {
   assertIncludes(compatibilityCheck, term, 'scripts/check-compatibility-matrix.mjs');
+}
+
+for (const term of [
+  'Compatibility lane smoke verified',
+  'React 18 clean consumer',
+  'Vega 5 clean consumer',
+  'react@18.2.0',
+  'vega@5',
+  'prepareVegaScenegraphAnnotations'
+]) {
+  assertIncludes(compatibilityLaneSmoke, term, 'scripts/smoke-compatibility-lanes.mjs');
 }
 
 for (const term of [
@@ -398,6 +416,7 @@ for (const term of [
   'docs/pre-release-roadmap.md',
   'docs/dogfood-self-report.md',
   'npm run test:compatibility',
+  'npm run test:compatibility:lanes',
   'npm run test:performance'
 ]) {
   assertIncludes(readme, term, 'README.md');

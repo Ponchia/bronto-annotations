@@ -50,7 +50,8 @@ has been proven in real consumer use before a public `1.0.0` commitment.
   200 annotation layouts.
 - Compatibility: `npm run test:compatibility` checks package peer ranges,
   optional-peer metadata, CI Node lanes, and docs against
-  `docs/compatibility.md`.
+  `docs/compatibility.md`; `npm run test:compatibility:lanes` installs clean
+  consumers for the declared React 18 and Vega 5 lanes.
 - Accessibility: `npm run test:dogfood` verifies an external note list with
   roving focus, note focus sync, keyboard activation, and a screen-reader
   summary derived from validation and layout-quality results.
@@ -76,6 +77,7 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - API stability manifest: `docs/api-stability.manifest.json`
 - Compatibility matrix: `docs/compatibility.md`
 - Compatibility gate: `npm run test:compatibility`
+- Compatibility lane smoke: `npm run test:compatibility:lanes`
 - Dogfood report template: `docs/dogfood-friction-report.md`
 - Clean-consumer dogfood report: `docs/dogfood-clean-consumer-report.md`
 - Bronto report dogfood report: `docs/dogfood-bronto-report.md`

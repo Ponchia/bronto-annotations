@@ -5,6 +5,7 @@ const pkg = JSON.parse(await read('package.json'));
 const compatibility = await read('docs/compatibility.md');
 const ciWorkflow = await read('.github/workflows/ci.yml');
 const packedSmoke = await read('scripts/smoke-packed-consumer.mjs');
+const laneSmoke = await read('scripts/smoke-compatibility-lanes.mjs');
 
 const expectedPeers = {
   '@terrastruct/d2': '>=0.1.0',
@@ -28,7 +29,9 @@ const expectedNodeLaneLabels = ['Node 20', 'Node 22'];
 
 assert.equal(pkg.engines?.node, '>=20.19.0', 'package.json must declare the supported Node floor');
 assert.equal(pkg.scripts?.['test:compatibility'], 'node scripts/check-compatibility-matrix.mjs');
+assert.equal(pkg.scripts?.['test:compatibility:lanes'], 'npm run build && node scripts/smoke-compatibility-lanes.mjs');
 assert.ok(pkg.scripts?.check?.includes('npm run test:compatibility'), 'npm run check must include test:compatibility');
+assert.ok(pkg.scripts?.check?.includes('npm run test:compatibility:lanes'), 'npm run check must include test:compatibility:lanes');
 assert.equal(pkg.dependencies, undefined, 'root runtime dependencies must stay absent');
 assert.equal(pkg.peerDependencies?.['@ponchia/ui'], undefined, '@ponchia/ui must not be a peer dependency');
 assert.equal(pkg.devDependencies?.['@ponchia/ui'], undefined, '@ponchia/ui must not be a dev dependency');
@@ -60,12 +63,15 @@ for (const nodeVersion of expectedNodeLaneLabels.map((label) => label.replace('N
 for (const term of [
   '# Compatibility Matrix',
   'npm run test:compatibility',
+  'npm run test:compatibility:lanes',
   'Node.js',
   'TypeScript',
   'React 18',
+  'React 18 clean consumer',
   'React 19',
   'React DOM',
   'Vega 5',
+  'Vega 5 clean consumer',
   'Vega 6',
   'Mermaid',
   'D2',
@@ -90,6 +96,22 @@ for (const term of [
   '@ponchia/annotations/react-flow'
 ]) {
   assertIncludes(packedSmoke, term, 'scripts/smoke-packed-consumer.mjs');
+}
+
+for (const term of [
+  'Compatibility lane smoke verified',
+  'React 18 clean consumer',
+  'Vega 5 clean consumer',
+  'react@18.2.0',
+  'react-dom@18.2.0',
+  'vega@5',
+  'renderToStaticMarkup',
+  'createRoot',
+  'prepareVegaViewAnnotations',
+  'prepareVegaScenegraphAnnotations',
+  'resolvePreparedAnnotationLayout'
+]) {
+  assertIncludes(laneSmoke, term, 'scripts/smoke-compatibility-lanes.mjs');
 }
 
 console.log('Compatibility matrix verified: package peers, optional metadata, CI Node lanes, docs, and packed-smoke evidence are aligned.');

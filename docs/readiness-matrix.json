@@ -24,6 +24,7 @@
     "test:repo",
     "test:pre-release",
     "test:compatibility",
+    "test:compatibility:lanes",
     "test:performance",
     "test:hygiene"
   ],
@@ -1550,9 +1551,12 @@
             "Node.js",
             "TypeScript",
             "npm run test:compatibility",
+            "npm run test:compatibility:lanes",
             "React 18",
+            "React 18 clean consumer",
             "React 19",
             "Vega 5",
+            "Vega 5 clean consumer",
             "Vega 6",
             "React Flow",
             "optional peers"
@@ -1567,6 +1571,17 @@
             "clean root consumer unexpectedly installed optional peers",
             "Node 20",
             "Node 22"
+          ]
+        },
+        {
+          "file": "scripts/smoke-compatibility-lanes.mjs",
+          "terms": [
+            "Compatibility lane smoke verified",
+            "React 18 clean consumer",
+            "Vega 5 clean consumer",
+            "react@18.2.0",
+            "vega@5",
+            "prepareVegaScenegraphAnnotations"
           ]
         },
         {
@@ -1611,6 +1626,7 @@
             "docs/dogfood-self-report.md",
             "Dogfood Friction Report Template",
             "npm run test:compatibility",
+            "npm run test:compatibility:lanes",
             "npm run test:performance"
           ]
         }
