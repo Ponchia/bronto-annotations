@@ -317,6 +317,7 @@
             "validateMermaidSvgAnchors",
             "findMermaidElement",
             "findMermaidEdgeElementByEndpoints",
+            "path.messageLine0",
             "edgeSourceId",
             "edgeTargetId",
             "formatAnchorValidationReport"
@@ -326,6 +327,8 @@
           "file": "test/adapters/mermaid.test.ts",
           "terms": [
             "extracts Mermaid edge paths from rendered source and target node ids",
+            "sequence participant, message, and route anchors",
+            "data-message-id",
             "api-report-route",
             "mermaidEdgeSourceId",
             "mermaidEdgeTargetId"
@@ -987,6 +990,7 @@
             "docs/dogfood-clean-consumer-report.md",
             "docs/canary-release.md",
             "docs/canary-publish-report.md",
+            "docs/adapter-recipes-proof.md",
             "visual regression baselines",
             "test/visual-baselines/browser-screenshots.json",
             "Performance",
@@ -1154,7 +1158,19 @@
             "Vega-Lite",
             "Sequence diagram",
             "Nested diagram",
-            "Zoom/pan"
+            "Zoom/pan",
+            "docs/adapter-recipes-proof.md"
+          ]
+        },
+        {
+          "file": "docs/adapter-recipes-proof.md",
+          "terms": [
+            "Deep Adapter Recipes Proof",
+            "Vega-Lite Compile-To-Vega",
+            "Mermaid Flowchart And Sequence SVG",
+            "D2 Nested Diagrams And Routes",
+            "React Flow Viewport, Handles, And Editing",
+            "Remaining Limits"
           ]
         },
         {

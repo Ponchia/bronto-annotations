@@ -13,6 +13,7 @@ const visual = await read('docs/visual-regression.md');
 const performanceDocs = await read('docs/performance.md');
 const accessibility = await read('docs/accessibility.md');
 const adapterRecipes = await read('docs/adapter-recipes-roadmap.md');
+const adapterRecipesProof = await read('docs/adapter-recipes-proof.md');
 const benchmark = await read('scripts/benchmark-layout.mjs');
 const apiStabilityCheck = await read('scripts/check-api-stability.mjs');
 const canaryDocs = await read('docs/canary-release.md');
@@ -34,6 +35,7 @@ for (const path of [
   'docs/performance.md',
   'docs/accessibility.md',
   'docs/adapter-recipes-roadmap.md',
+  'docs/adapter-recipes-proof.md',
   'docs/canary-release.md',
   'docs/canary-publish-report.md',
   '.github/workflows/canary.yml',
@@ -229,9 +231,24 @@ for (const term of [
   'Sequence diagram',
   'Nested diagram',
   'Zoom/pan',
+  'docs/adapter-recipes-proof.md',
   'Acceptance Criteria'
 ]) {
   assertIncludes(adapterRecipes, term, 'docs/adapter-recipes-roadmap.md');
+}
+
+for (const term of [
+  'Deep Adapter Recipes Proof',
+  'Vega-Lite Compile-To-Vega',
+  'Mermaid Flowchart And Sequence SVG',
+  'D2 Nested Diagrams And Routes',
+  'React Flow Viewport, Handles, And Editing',
+  'test/adapters/mermaid.test.ts',
+  'data-message-id',
+  'messageLine0',
+  'Remaining Limits'
+]) {
+  assertIncludes(adapterRecipesProof, term, 'docs/adapter-recipes-proof.md');
 }
 
 for (const term of [

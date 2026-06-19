@@ -1028,6 +1028,22 @@
           ]
         },
         {
+          "file": "src/adapters/mermaid.ts",
+          "terms": [
+            "g.actor",
+            "path.messageLine0",
+            "line.messageLine1"
+          ]
+        },
+        {
+          "file": "test/adapters/mermaid.test.ts",
+          "terms": [
+            "sequence participant, message, and route anchors",
+            "data-message-id",
+            "messageLine0"
+          ]
+        },
+        {
           "file": "test/adapters/react-flow.test.ts",
           "terms": [
             "node, handle, and edge obstacles",
@@ -1119,6 +1135,17 @@
             "edgePoints",
             "kind: 'path'",
             "child route `<path>`"
+          ]
+        },
+        {
+          "file": "docs/adapter-recipes-proof.md",
+          "terms": [
+            "Deep Adapter Recipes Proof",
+            "Vega-Lite Compile-To-Vega",
+            "Mermaid Flowchart And Sequence SVG",
+            "D2 Nested Diagrams And Routes",
+            "React Flow Viewport, Handles, And Editing",
+            "Remaining Limits"
           ]
         },
         {
@@ -1227,6 +1254,7 @@
             "Freeze the `0.1.x` public API contract",
             "docs/dogfood-clean-consumer-report.md",
             "docs/canary-release.md",
+            "docs/adapter-recipes-proof.md",
             "visual regression baselines",
             "test/visual-baselines/browser-screenshots.json",
             "Performance",
@@ -1328,6 +1356,27 @@
             "TypeScript",
             "React Flow",
             "optional peers"
+          ]
+        },
+        {
+          "file": "docs/adapter-recipes-roadmap.md",
+          "terms": [
+            "Vega-Lite",
+            "Sequence diagram",
+            "Nested diagram",
+            "Zoom/pan",
+            "docs/adapter-recipes-proof.md"
+          ]
+        },
+        {
+          "file": "docs/adapter-recipes-proof.md",
+          "terms": [
+            "Deep Adapter Recipes Proof",
+            "Vega-Lite Compile-To-Vega",
+            "Mermaid Flowchart And Sequence SVG",
+            "D2 Nested Diagrams And Routes",
+            "React Flow Viewport, Handles, And Editing",
+            "Remaining Limits"
           ]
         },
         {

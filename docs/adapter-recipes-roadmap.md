@@ -3,6 +3,10 @@
 The existing examples prove the adapter paths. These deeper recipes should be
 added before a broad public release.
 
+Current proof lives in `docs/adapter-recipes-proof.md`. Keep this roadmap for
+the remaining browser/live coverage gaps rather than treating every bullet as
+unstarted work.
+
 ## Vega/Vega-Lite
 
 - Vega-Lite compile-to-Vega recipe with scenegraph anchors.

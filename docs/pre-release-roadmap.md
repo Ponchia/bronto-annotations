@@ -39,6 +39,8 @@ has been proven in real consumer use before a public `1.0.0` commitment.
   consumer, and `npm run test:screenshots` compares new output against it.
 - Performance: `npm run test:performance` exercises deterministic 10, 50, and
   200 annotation layouts.
+- Adapter recipes: `docs/adapter-recipes-proof.md` records which deeper
+  generated-surface recipes are already test-proven or browser-proven.
 - Remaining high-value proof: widen dogfood into richer real generated
   surfaces before widening public API stability promises, especially
   Vega-Lite, Mermaid sequence diagrams, nested D2 diagrams, and React Flow
@@ -57,3 +59,4 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - Performance expectations: `docs/performance.md`
 - Accessibility recipes: `docs/accessibility.md`
 - Adapter recipe roadmap: `docs/adapter-recipes-roadmap.md`
+- Adapter recipe proof: `docs/adapter-recipes-proof.md`

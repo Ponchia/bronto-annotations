@@ -171,6 +171,63 @@ describe('Mermaid adapter', () => {
     ]);
   });
 
+  it('extracts sequence participant, message, and route anchors from rendered Mermaid SVG hooks', () => {
+    document.body.innerHTML = `
+      <svg viewBox="0 0 480 260">
+        <g class="actor" id="actor-api" data-participant-id="api"><rect /><text>API</text></g>
+        <g class="actor" id="actor-report" data-participant-id="report"><rect /><text>Report</text></g>
+        <path class="messageLine0" data-edge-id="api-report-call" />
+        <g class="messageText" data-message-id="api-report-call"><text>call report</text></g>
+      </svg>
+    `;
+    const svg = document.querySelector('svg') as SVGSVGElement;
+    const api = document.querySelector('#actor-api') as SVGGraphicsElement;
+    const report = document.querySelector('#actor-report') as SVGGraphicsElement;
+    const message = document.querySelector('[data-message-id="api-report-call"]') as SVGGraphicsElement;
+    const route = document.querySelector('[data-edge-id="api-report-call"]') as SVGPathElement;
+    api.getBBox = () => ({ x: 48, y: 24, width: 72, height: 42 }) as DOMRect;
+    report.getBBox = () => ({ x: 320, y: 24, width: 88, height: 42 }) as DOMRect;
+    message.getBBox = () => ({ x: 176, y: 96, width: 112, height: 24 }) as DOMRect;
+    route.getBBox = () => ({ x: 120, y: 108, width: 200, height: 8 }) as DOMRect;
+    route.getTotalLength = () => 200;
+    route.getPointAtLength = (distance: number) => ({ x: 120 + distance, y: 112 }) as DOMPoint;
+
+    const prepared = prepareMermaidAnnotations(svg, [
+      {
+        id: 'sequence-api',
+        label: 'API',
+        coordinateSpace: svg,
+        note: { title: 'Participant' }
+      },
+      {
+        id: 'sequence-message',
+        data: { messageId: 'api-report-call' },
+        coordinateSpace: svg,
+        note: { title: 'Message label' }
+      },
+      {
+        id: 'sequence-route',
+        edgeId: 'api-report-call',
+        kind: 'path',
+        coordinateSpace: svg,
+        note: { title: 'Message route' }
+      }
+    ], {
+      obstacles: { coordinateSpace: svg, inflate: 2 }
+    });
+
+    expect(prepared.validation.ok).toBe(true);
+    expect(prepared.annotations.map((annotation) => annotation.anchor.type)).toEqual(['box', 'box', 'path']);
+    expect(prepared.annotations.map((annotation) => annotation.data?.mermaidKind)).toEqual(['label', 'data', 'edge']);
+    expect(prepared.annotations[0]?.data?.mermaidLabel).toBe('API');
+    expect(prepared.annotations[1]?.data?.mermaidDataSelector).toBe('[data-message-id="api-report-call"]');
+    expect(prepared.annotations[2]?.data?.mermaidId).toBe('api-report-call');
+    expect(prepared.obstacles).toContainEqual({ x: 46, y: 22, width: 76, height: 46 });
+    expect(prepared.obstacles).toContainEqual({ x: 318, y: 22, width: 92, height: 46 });
+    expect(prepared.obstacles).toContainEqual({ x: 174, y: 94, width: 116, height: 28 });
+    expect(prepared.obstacles).toContainEqual({ x: 118, y: 106, width: 204, height: 12 });
+  });
+
   it('extracts anchors from classes, data attributes, edge child paths, and partial labels', () => {
     document.body.innerHTML = `
       <svg viewBox="0 0 420 260">

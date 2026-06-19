@@ -232,7 +232,21 @@ export function findMermaidElement(root: ParentNode, spec: MermaidAnchorSpec): E
 }
 
 export function obstaclesFromMermaidSvg(root: ParentNode, options: MermaidObstacleOptions = {}): Box[] {
-  const selector = options.selector ?? 'g.node, g.cluster, g.edgeLabel, .edgePath path, path.flowchart-link';
+  const selector = options.selector ?? [
+    'g.node',
+    'g.cluster',
+    'g.edgeLabel',
+    '.edgePath path',
+    'path.flowchart-link',
+    'g.actor',
+    '.actor',
+    'g.messageText',
+    '.messageText',
+    'path.messageLine0',
+    'path.messageLine1',
+    'line.messageLine0',
+    'line.messageLine1'
+  ].join(', ');
 
   return obstaclesFromElements(root.querySelectorAll(selector), {
     ...options,
