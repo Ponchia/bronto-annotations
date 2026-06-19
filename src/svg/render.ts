@@ -53,6 +53,15 @@ export type SvgRenderOptions = {
 
 const DEFAULT_CLASS_PREFIX = 'pa-annotation';
 
+/**
+ * Render a complete SVG annotation layer as a string.
+ *
+ * Text content, attribute values, class names, data attributes, IDs, and inline
+ * style text are escaped before insertion. This helper still returns markup:
+ * consumers must treat untrusted host chart, diagram, report, path, style, and
+ * annotation text data according to their own sanitization boundary before
+ * assigning the result to `innerHTML`.
+ */
 export function renderAnnotationsSvg(layout: ResolvedLayout, options: SvgRenderOptions = {}): string {
   const prefix = options.classPrefix ?? DEFAULT_CLASS_PREFIX;
   const markerPrefix = options.markerIdPrefix ?? prefix;

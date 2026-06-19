@@ -4,5 +4,6 @@ dist/
 .tmp-packed-screenshots/
 .tmp-dogfood/
 .playwright-cli/
+.codeql/
 *.tgz
 .DS_Store

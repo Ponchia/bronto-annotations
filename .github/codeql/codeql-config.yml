@@ -1,0 +1,8 @@
+name: "@ponchia/annotations CodeQL config"
+
+query-filters:
+  # The package intentionally exposes escaped SVG string renderers for host
+  # geometry. The public renderer docs and SECURITY.md define the sanitization
+  # boundary; keep the rest of CodeQL's security and quality queries enabled.
+  - exclude:
+      id: js/html-constructed-from-input
