@@ -29,7 +29,7 @@ has been proven in real consumer use before a public `1.0.0` commitment.
   friction in `docs/dogfood-clean-consumer-report.md`.
 - Real report dogfood: `npm run test:dogfood:bronto-report` installs the packed
   package beside public `@ponchia/ui` report CSS in a clean Vite consumer,
-  annotates rendered report stat cards, an SVG chart, and a table row, and
+  annotates rendered report stat cards and a mixed DOM/SVG report figure, and
   records friction in `docs/dogfood-bronto-report.md`.
 - API freeze: `docs/api-stability.manifest.json` labels every public export as
   stable or experimental for `0.1.x`, source entrypoints carry `@public` and

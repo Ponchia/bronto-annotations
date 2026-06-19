@@ -165,6 +165,41 @@ const prepared = prepareDomAnnotations(surface, [
 });
 ```
 
+### Mixed DOM/SVG Report Surface
+
+A report can use one `prepareDomAnnotations` call for both DOM regions and SVG
+marks when every selector lives under the same root. Keep the root broad enough
+to find all targets, and set `coordinateSpace` per spec and obstacle.
+
+```ts
+import { prepareDomAnnotations } from '@ponchia/annotations/dom';
+
+const section = document.querySelector('[data-report-section]')!;
+const chart = section.querySelector('svg[data-chart]')!;
+
+const prepared = prepareDomAnnotations(section, [
+  {
+    id: 'chart-bar-note',
+    selector: '[data-series="annotations"]',
+    coordinateSpace: chart,
+    note: { title: 'SVG chart mark' },
+    subject: { shape: 'rect', padding: 4 }
+  },
+  {
+    id: 'table-row-note',
+    selector: '[data-import-row="annotations"]',
+    coordinateSpace: section,
+    note: { title: 'DOM table row' },
+    placement: { manual: { x: 498, y: 348, side: 'top' } }
+  }
+], {
+  obstacles: [
+    { selector: '[data-series]', coordinateSpace: chart, inflate: 3 },
+    { selector: '[data-import-row]', coordinateSpace: section, inflate: 4 }
+  ]
+});
+```
+
 ## React
 
 `AnnotationLayer` runs the same layout engine and adds DOM note measurement,

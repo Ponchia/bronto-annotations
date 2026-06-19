@@ -59,19 +59,19 @@ a separate Vite consumer rather than package examples or workspace imports.
 
 | Area | Observation | Severity | Proposed Fix |
 | --- | --- | --- | --- |
-| API naming | The prepared-layout flow is coherent, but first use requires learning several assertion option names. | low | Keep `resolvePreparedAnnotationLayout` as the recommended path and add one combined report recipe. |
+| API naming | The prepared-layout flow is coherent, but first use requires learning several assertion option names. | low | Keep `resolvePreparedAnnotationLayout` as the recommended path; the mixed DOM/SVG report recipe now covers the combined report path. |
 | Coordinate space | Matching host `viewBox`, overlay bounds, and DOM pixel coordinates remains the main thing a consumer must get right. | medium | Keep emphasizing `annotationFrameFromSvg()` and same-coordinate manual placement in recipes. |
 | Generated geometry timing | Vega-Lite must compile and Vega must run before scenegraph anchors exist; Mermaid must render before SVG anchors exist. | low | Add timing callouts to generated-surface recipes. |
 | Styling | `@ponchia/annotations/bronto.css` worked from a clean package install without `@ponchia/ui`. | low | No package change required. |
 | Accessibility | `noteTabIndex` made SVG notes focusable, but a production report would still want an external note list. | low | Keep external note lists in accessibility recipes and optional authoring work. |
 | Performance | Five annotations across three surfaces resolved quickly in Chromium. | low | Keep separate 10/50/200 stress benchmark as the practical limit signal. |
-| Docs/examples | Existing examples are strong per adapter, but a combined consumer report recipe reduces first-use uncertainty. | medium | Add a public combined report recipe before `0.1.0` canary publishing. |
+| Docs/examples | Existing examples are strong per adapter, and the mixed DOM/SVG report recipe now reduces first-use uncertainty for combined report surfaces. | low | Keep the recipe backed by `npm run test:dogfood:bronto-report`. |
 
 ## Outcome
 
 - Would ship with this API today: yes for `0.1.x` dogfood and canary use
 - Required package changes before public release: none blocking from this pass
-- Changes that can wait: combined report recipe, external note-list recipe,
-  canary registry install, and API stability annotations
+- Changes that can wait: external note-list recipe, canary registry install,
+  and API stability annotations
 - Screenshots or browser evidence: `.tmp-dogfood/dogfood-report.png` from
   `npm run test:dogfood`

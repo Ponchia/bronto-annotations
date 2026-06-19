@@ -860,6 +860,7 @@
             "@ponchia/ui@0.6.8",
             "prepareDomAnnotations",
             "annotationFrameFromSvg",
+            "mixedCoordinateSpaces",
             "dogfood-bronto-report.png"
           ]
         },
@@ -871,6 +872,8 @@
             "report stat cards",
             "SVG report chart",
             "report table row",
+            "mixed DOM/SVG report figure",
+            "mixedCoordinateSpaces",
             "Would ship with this API today: yes"
           ]
         }
@@ -1357,7 +1360,8 @@
             "Dogfood Bronto Report",
             "public `@ponchia/ui` report CSS",
             "npm run test:dogfood:bronto-report",
-            "Manual coordinates are top-left note coordinates"
+            "Manual coordinates are top-left note coordinates",
+            "mixedCoordinateSpaces"
           ]
         },
         {
@@ -1365,6 +1369,7 @@
           "terms": [
             "Bronto report dogfood verified",
             "public @ponchia/ui static report grammar",
+            "mixedCoordinateSpaces",
             "dogfood-bronto-report.png"
           ]
         },

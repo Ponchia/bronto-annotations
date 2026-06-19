@@ -405,7 +405,9 @@ function renderChartAnnotations() {
 
   return surfaceEvidence('report-chart-and-table', resolved, {
     anchorSource: 'dom-svg',
+    coordinateSpaces: ['section', 'svg'],
     hostClasses: ['ui-report__figure', 'ui-legend', 'ui-table'],
+    mixedCoordinateSpaces: true,
     manualPlacement: true
   });
 }
@@ -524,6 +526,7 @@ async function verifyConsumer(workdir) {
 
     assert.ok(evidence.surfaces.some((surface) => surface.hostClasses?.includes('ui-statgrid')), 'dogfood should prove report stat-grid anchors');
     assert.ok(evidence.surfaces.some((surface) => surface.hostClasses?.includes('ui-table')), 'dogfood should prove report table anchors');
+    assert.ok(evidence.surfaces.some((surface) => surface.anchorSource === 'dom-svg' && surface.mixedCoordinateSpaces === true && surface.coordinateSpaces?.includes('section') && surface.coordinateSpaces?.includes('svg')), 'dogfood should prove mixed DOM/SVG coordinate spaces');
     assert.deepEqual(consoleErrors, [], 'dogfood browser should not emit console errors');
 
     await page.screenshot({ path: screenshotPath, fullPage: true });

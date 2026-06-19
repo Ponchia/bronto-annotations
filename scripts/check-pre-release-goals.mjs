@@ -191,6 +191,8 @@ for (const term of [
   'report stat cards',
   'SVG report chart',
   'report table row',
+  'mixed DOM/SVG report figure',
+  'mixedCoordinateSpaces',
   'npm run test:dogfood:bronto-report',
   'Would ship with this API today: yes',
   'Manual coordinates are top-left note coordinates',
@@ -219,6 +221,7 @@ for (const term of [
   'prepareDomAnnotations',
   'annotationFrameFromSvg',
   'dogfood-bronto-report.png',
+  'mixedCoordinateSpaces',
   'Manual placement uses report-surface pixels'
 ]) {
   assertIncludes(dogfoodBrontoScript, term, 'scripts/dogfood-bronto-report.mjs');
