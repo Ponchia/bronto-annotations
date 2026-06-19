@@ -29,6 +29,7 @@ assert.equal(pkg.repository?.url, 'git+https://github.com/Ponchia/bronto-annotat
 assert.equal(pkg.homepage, 'https://github.com/Ponchia/bronto-annotations#readme');
 assert.equal(pkg.bugs?.url, 'https://github.com/Ponchia/bronto-annotations/issues');
 assert.equal(pkg.publishConfig?.access, 'public', 'scoped package publish access must be explicit');
+assert.equal(pkg.publishConfig?.provenance, true, 'npm provenance must be explicit');
 assert.match(pkg.engines?.node ?? '', /^>=20\./, 'package must document the Node support floor');
 assert.match(pkg.packageManager ?? '', /^npm@\d+\.\d+\.\d+$/, 'package must pin the package manager family/version');
 
@@ -48,7 +49,9 @@ for (const keyword of [
 }
 
 assert.equal(pkg.scripts?.['test:repo'], 'node scripts/check-repo-readiness.mjs');
+assert.equal(pkg.scripts?.['test:release'], 'node scripts/check-release.mjs');
 assert.ok(pkg.scripts?.check?.includes('npm run test:repo'), 'npm run check must include test:repo');
+assert.ok(pkg.scripts?.check?.includes('npm run test:release'), 'npm run check must include test:release');
 
 for (const path of [
   '.github/workflows/ci.yml',
@@ -89,17 +92,18 @@ for (const term of [
 }
 
 for (const term of [
-  'release:',
-  'types:',
-  '- published',
-  'workflow_dispatch:',
+  'push:',
+  "      - 'v*'",
   'id-token: write',
+  'Verify tag commit is on main',
+  'Verify tag matches package.json version',
   'npm run check',
-  'npx playwright install --with-deps chromium',
-  'npm pack --json',
-  'npm publish --provenance --access public',
-  'NODE_AUTH_TOKEN',
-  'environment: npm'
+  'npm pack --dry-run --json --ignore-scripts',
+  'environment: npm-publish',
+  'npm publish --ignore-scripts --provenance --access public --tag "$dist_tag"',
+  'dist_tag=next',
+  'dist_tag=latest',
+  'node scripts/changelog-section.mjs "$REF_NAME"'
 ]) {
   assertIncludes(release, term, '.github/workflows/release.yml');
 }
@@ -176,6 +180,7 @@ for (const term of [
 for (const term of [
   'Release Runbook',
   'npm pack --dry-run',
+  'Tag-Driven Public Release',
   'Canary / Private Registry',
   'docs/canary-publish-report.md',
   'docs/public-release-decisions.md',
@@ -194,7 +199,8 @@ for (const term of [
   'make the repository public',
   'do not rename before `0.1.0`',
   '`publishConfig.access` is `public`',
-  'npm publish --provenance --access public',
+  'npm publish --ignore-scripts --provenance --access public --tag "$dist_tag"',
+  'npm Trusted Publishing',
   'README headline stays `# @ponchia/annotations`',
   'No separate hosted examples site is required before `0.1.0`'
 ]) {
@@ -230,7 +236,8 @@ for (const term of [
 for (const term of [
   'Repository Quality',
   'CI runs `npm run check`',
-  'Release publishing uses npm provenance',
+  'Release publishing is tag-driven',
+  'npm-publish',
   'Security policy'
 ]) {
   assertIncludes(readme, term, 'README.md');
