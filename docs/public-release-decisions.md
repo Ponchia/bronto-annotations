@@ -28,8 +28,8 @@ decisions so package metadata, docs, and release automation do not drift.
 ## Repository Name And Visibility
 
 - Repository for `0.1.x`: `Ponchia/bronto-annotations`
-- Policy: keep the repository private for the initial canary and `0.1.x`
-  hardening lane while publishing the npm package publicly.
+- Policy: make the repository public for the real `0.1.0` npm release after
+  final git-history, tarball, metadata, CI, and clean-consumer checks pass.
 - Rename policy: do not rename before `0.1.0`.
 - If the repository is renamed later, update `package.json` repository,
   homepage, and bugs metadata; canary linkage checks; release docs; README

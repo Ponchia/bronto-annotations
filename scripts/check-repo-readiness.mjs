@@ -23,7 +23,7 @@ const codeowners = await read('.github/CODEOWNERS');
 assert.notEqual(pkg.version, '0.0.0', 'package version must be release-shaped, not 0.0.0');
 assert.equal(lock.version, pkg.version, 'package-lock root version must match package.json');
 assert.equal(lock.packages?.['']?.version, pkg.version, 'package-lock package version must match package.json');
-assert.equal(pkg.private, false, 'package must remain publishable even if the GitHub repository is private');
+assert.equal(pkg.private, false, 'package must remain publishable for the public npm release');
 assert.equal(pkg.repository?.type, 'git', 'package must declare git repository metadata');
 assert.equal(pkg.repository?.url, 'git+https://github.com/Ponchia/bronto-annotations.git');
 assert.equal(pkg.homepage, 'https://github.com/Ponchia/bronto-annotations#readme');
@@ -191,7 +191,7 @@ for (const term of [
   'GitHub owner: `Ponchia`',
   'Package owner/scope: `@ponchia`',
   'Repository for `0.1.x`: `Ponchia/bronto-annotations`',
-  'keep the repository private',
+  'make the repository public',
   'do not rename before `0.1.0`',
   '`publishConfig.access` is `public`',
   'npm publish --provenance --access public',

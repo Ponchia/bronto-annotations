@@ -1,6 +1,7 @@
 # Release Runbook
 
-This repository is private, but the package is shaped for public npm release.
+This repository is public for the real `0.1.0` npm release, and the package
+boundary is shaped for public npm consumption.
 
 ## Preconditions
 
