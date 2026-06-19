@@ -22,7 +22,7 @@ const expectedDevDependencyTerms = {
   mermaid: '11.',
   react: '19.',
   'react-dom': '19.',
-  typescript: '5.8',
+  typescript: '6.0',
   vega: '6.'
 };
 const expectedNodeLaneLabels = ['Node 20', 'Node 22'];
@@ -66,6 +66,8 @@ for (const term of [
   'npm run test:compatibility:lanes',
   'Node.js',
   'TypeScript',
+  'TypeScript 5.8 clean consumer',
+  'TypeScript 6.0',
   'React 18',
   'React 18 clean consumer',
   'React 19',
@@ -100,6 +102,9 @@ for (const term of [
 
 for (const term of [
   'Compatibility lane smoke verified',
+  'TypeScript 5.8 clean consumer',
+  'typescript@5.8.3',
+  'tsc',
   'React 18 clean consumer',
   'Vega 5 clean consumer',
   'react@18.2.0',

@@ -56,7 +56,7 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - Compatibility: `npm run test:compatibility` checks package peer ranges,
   optional-peer metadata, CI Node lanes, and docs against
   `docs/compatibility.md`; `npm run test:compatibility:lanes` installs clean
-  consumers for the declared React 18 and Vega 5 lanes.
+  consumers for the TypeScript 5.8, React 18, and Vega 5 lanes.
 - Accessibility: `npm run test:dogfood` verifies an external note list with
   roving focus, note focus sync, keyboard activation, and a screen-reader
   summary derived from validation and layout-quality results.

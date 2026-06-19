@@ -10,7 +10,7 @@ peer lanes.
 | Surface | Supported Range | Verification |
 | --- | --- | --- |
 | Node.js | `>=20.19.0`, CI on Node 20 and Node 22 | `npm run test:compatibility`, GitHub CI, `npm run check` |
-| TypeScript | `>=5.8` | `npm run test:compatibility`, `npm run test:types` |
+| TypeScript | `>=5.8` | TypeScript 6.0 build/types gate, TypeScript 5.8 clean consumer, `npm run test:compatibility` |
 | React | `>=18.2.0 || >=19.0.0` | React 18 clean consumer, React 19 packed smoke, React unit tests, browser examples |
 | React DOM | `>=18.2.0 || >=19.0.0` | React SSR/client smoke |
 | Vega | `>=5.0.0 || >=6.0.0` | Vega 5 clean consumer, Vega 6 packed smoke, Vega unit tests, Vega-Lite compile test, browser example |
@@ -25,7 +25,10 @@ without React, Vega, Mermaid, D2, React Flow, or `@ponchia/ui` installed.
 ## Checked Lanes
 
 - Node 20 and Node 22 run the full GitHub CI `npm run check` job.
-- TypeScript 5.8 is the declaration and export-check lane.
+- TypeScript 6.0 is the declaration and export-check lane.
+- TypeScript 5.8 is covered by `npm run test:compatibility:lanes`, which
+  installs `typescript@5.8.3` in a clean consumer and compiles the packed root,
+  DOM, Mermaid, and Vega declarations.
 - React 18 is covered by `npm run test:compatibility:lanes`, which installs
   `react@18.2.0` and `react-dom@18.2.0` in a clean consumer and verifies SSR,
   client rendering, layout events, and quality events.

@@ -14,6 +14,7 @@ try {
   tarball = new URL(`../${packResult.filename}`, import.meta.url).pathname;
 
   await rm(consumersDir, { recursive: true, force: true });
+  await smokeTypeScript58(tarball);
   await smokeReact18(tarball);
   await smokeVega5(tarball);
 } finally {
@@ -22,7 +23,80 @@ try {
   }
 }
 
-console.log('Compatibility lane smoke verified: React 18 clean consumer and Vega 5 clean consumer.');
+console.log('Compatibility lane smoke verified: TypeScript 5.8 clean consumer, React 18 clean consumer, and Vega 5 clean consumer.');
+
+async function smokeTypeScript58(packageTarball) {
+  const workdir = await consumerWorkdir('typescript58-');
+  await install(workdir, [
+    packageTarball,
+    'typescript@5.8.3'
+  ]);
+
+  await writeFile(join(workdir, 'tsconfig.json'), JSON.stringify({
+    compilerOptions: {
+      target: 'ES2022',
+      module: 'ESNext',
+      moduleResolution: 'Bundler',
+      strict: true,
+      skipLibCheck: false,
+      lib: ['ES2022', 'DOM'],
+      types: []
+    },
+    include: ['index.ts']
+  }, null, 2));
+
+  await writeFile(join(workdir, 'index.ts'), `
+    import {
+      renderAnnotationsSvg,
+      resolveAnnotationLayout,
+      type Annotation
+    } from '@ponchia/annotations';
+    import { anchorFromDOMRect } from '@ponchia/annotations/dom';
+    import type { MermaidAnchorSpec } from '@ponchia/annotations/mermaid';
+    import type { VegaViewAnchorSpec } from '@ponchia/annotations/vega';
+
+    type Datum = { id: string; x: number; y: number };
+
+    const annotations: Annotation[] = [{
+      id: 'typescript58-lane',
+      anchor: { type: 'point', point: { x: 40, y: 44 } },
+      note: { title: 'TypeScript 5.8 lane' },
+      placement: { manual: { x: 84, y: 48 } }
+    }];
+
+    const layout = resolveAnnotationLayout({
+      annotations,
+      bounds: { x: 0, y: 0, width: 240, height: 180 }
+    });
+    const svg: string = renderAnnotationsSvg(layout);
+
+    const domAnchor = anchorFromDOMRect({
+      left: 4,
+      top: 8,
+      right: 24,
+      bottom: 28
+    });
+
+    const mermaidSpec: MermaidAnchorSpec = {
+      id: 'typescript58-mermaid',
+      nodeId: 'a',
+      note: { title: 'Mermaid declaration lane' }
+    };
+
+    const vegaSpec: VegaViewAnchorSpec<Datum> = {
+      id: 'typescript58-vega',
+      data: 'table',
+      datum: (datum) => datum.id === 'a',
+      x: 'x',
+      y: 'y',
+      note: { title: 'Vega declaration lane' }
+    };
+
+    void [svg, domAnchor, mermaidSpec, vegaSpec];
+  `);
+
+  await exec('npx', ['tsc', '--noEmit'], { cwd: workdir, maxBuffer: 1024 * 1024 });
+}
 
 async function smokeReact18(packageTarball) {
   const workdir = await consumerWorkdir('react18-');
