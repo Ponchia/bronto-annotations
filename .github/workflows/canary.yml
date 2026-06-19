@@ -63,7 +63,7 @@ jobs:
         run: npm pack --json
 
       - name: Upload canary tarball
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: github-packages-canary-${{ steps.canary.outputs.version }}
           path: "*.tgz"
