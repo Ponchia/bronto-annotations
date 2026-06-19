@@ -17,6 +17,7 @@
     "test:screenshots",
     "test:readiness",
     "test:completion-audit",
+    "test:repo",
     "test:hygiene"
   ],
   "requirements": [
@@ -849,6 +850,85 @@
             "renderAnnotationsSvg",
             "failOnWarnings",
             "AnnotationLayerProps"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "repo-operations-readiness",
+      "status": "proven",
+      "claim": "The repository has release-grade package metadata, CI, release provenance workflow, dependency update automation, issue and PR templates, security policy, contribution guide, changelog, release runbook, and an enforced repository-readiness check.",
+      "evidence": [
+        {
+          "file": "package.json",
+          "terms": [
+            "\"version\": \"0.1.0\"",
+            "\"repository\"",
+            "\"publishConfig\"",
+            "\"test:repo\"",
+            "\"packageManager\""
+          ]
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "terms": [
+            "npm run check",
+            "node-version:",
+            "actions/upload-artifact@v4"
+          ]
+        },
+        {
+          "file": ".github/workflows/release.yml",
+          "terms": [
+            "id-token: write",
+            "npm publish --provenance --access public",
+            "environment: npm"
+          ]
+        },
+        {
+          "file": ".github/dependabot.yml",
+          "terms": [
+            "package-ecosystem: npm",
+            "github-actions",
+            "optional-peers"
+          ]
+        },
+        {
+          "file": "scripts/check-repo-readiness.mjs",
+          "terms": [
+            "Repository readiness verified",
+            "package-lock root version must match package.json",
+            "npm publish --provenance --access public"
+          ]
+        },
+        {
+          "file": "CONTRIBUTING.md",
+          "terms": [
+            "Product Boundaries",
+            "npm run check",
+            "Adapter Changes"
+          ]
+        },
+        {
+          "file": "SECURITY.md",
+          "terms": [
+            "Reporting a Vulnerability",
+            "Security Boundary"
+          ]
+        },
+        {
+          "file": "CHANGELOG.md",
+          "terms": [
+            "0.1.0 - 2026-06-19",
+            "Repository"
+          ]
+        },
+        {
+          "file": "docs/release.md",
+          "terms": [
+            "Release Runbook",
+            "npm pack --dry-run",
+            "npm provenance"
           ]
         }
       ]

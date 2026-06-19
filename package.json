@@ -1,10 +1,37 @@
 {
   "name": "@ponchia/annotations",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Headless annotation placement and rendering helpers for charts, diagrams, reports, and UI surfaces.",
+  "keywords": [
+    "annotations",
+    "svg",
+    "react",
+    "vega",
+    "mermaid",
+    "d2",
+    "react-flow",
+    "data-visualization",
+    "diagram",
+    "layout"
+  ],
+  "homepage": "https://github.com/Ponchia/bronto-annotations#readme",
+  "bugs": {
+    "url": "https://github.com/Ponchia/bronto-annotations/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ponchia/bronto-annotations.git"
+  },
   "type": "module",
   "license": "MIT",
   "private": false,
+  "packageManager": "npm@10.9.3",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "sideEffects": [
     "./dist/bronto.css"
   ],
@@ -67,8 +94,9 @@
     "test:screenshots": "node scripts/check-browser-screenshots.mjs",
     "test:readiness": "node scripts/check-readiness-matrix.mjs",
     "test:completion-audit": "node scripts/check-completion-audit.mjs",
+    "test:repo": "node scripts/check-repo-readiness.mjs",
     "test:hygiene": "node scripts/public-hygiene.mjs",
-    "check": "npm run build && npm test && npm run test:docs-snippets && npm run test:types && npm run test:exports && npm run test:api-reference && npm run test:d3-parity && npm run test:bronto-parity && npm run test:bronto-upstream && npm run test:examples && npm run test:pack && npm run test:browser && npm run test:screenshots && npm run test:readiness && npm run test:completion-audit && npm run test:hygiene"
+    "check": "npm run build && npm test && npm run test:docs-snippets && npm run test:types && npm run test:exports && npm run test:api-reference && npm run test:d3-parity && npm run test:bronto-parity && npm run test:bronto-upstream && npm run test:examples && npm run test:pack && npm run test:browser && npm run test:screenshots && npm run test:readiness && npm run test:completion-audit && npm run test:repo && npm run test:hygiene"
   },
   "peerDependencies": {
     "@terrastruct/d2": ">=0.1.0",

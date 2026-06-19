@@ -962,6 +962,23 @@ helper exports.
 `docs/migration-guide.md` also covers moving existing Bronto static SVG snippets
 and helper usage onto this package.
 
+## Repository Quality
+
+This repository is set up as a release-ready package, not only a local scaffold.
+
+- CI runs `npm run check` on Node 20 and Node 22 for pushes and pull requests.
+- Release publishing uses npm provenance through the GitHub Release workflow.
+- Dependabot tracks npm and GitHub Actions updates, with optional peers grouped
+  separately from tooling.
+- `CONTRIBUTING.md` documents product boundaries, verification expectations,
+  adapter requirements, and release handoff.
+- Security policy: `SECURITY.md` defines the vulnerability reporting path and
+  security boundary.
+- Pull request and issue templates require reproduction details, verification,
+  and product-boundary checks.
+- `scripts/check-repo-readiness.mjs` keeps package metadata, workflows,
+  templates, lifecycle docs, and release guardrails wired into `npm run check`.
+
 ## Known Limits
 
 - Placement is deterministic multi-candidate scoring with optional bounded

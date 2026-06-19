@@ -1,0 +1,34 @@
+name: Feature Request
+description: Propose a package capability while keeping product boundaries clear.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What annotation workflow should become easier or more robust?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API or behavior
+      description: Include the public subpath and a small usage sketch when possible.
+      render: ts
+    validations:
+      required: true
+  - type: dropdown
+    id: boundary
+    attributes:
+      label: Product boundary check
+      options:
+        - Fits annotation models, anchors, placement, render helpers, or adapter contracts.
+        - Might cross into chart rendering, diagram rendering, graph layout, app state, persistence, routing, or design-system ownership.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

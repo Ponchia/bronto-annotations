@@ -3,8 +3,15 @@ import { readFile, readdir } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname;
-const includeRoots = ['src', 'examples', 'docs', 'scripts', 'test'];
-const includeFiles = ['README.md', 'LICENSE', 'package.json'];
+const includeRoots = ['src', 'examples', 'docs', 'scripts', 'test', '.github'];
+const includeFiles = [
+  'README.md',
+  'LICENSE',
+  'package.json',
+  'CHANGELOG.md',
+  'CONTRIBUTING.md',
+  'SECURITY.md'
+];
 const privateNames = [
   ['home', 'tolotto'],
   ['agent', '-', 'world'],
@@ -52,9 +59,9 @@ async function collectFiles(paths) {
 
       if (entry.isDirectory()) {
         result.push(...await collectFiles([fullPath]));
-      } else if (/\.(css|html|js|jsx|mjs|ts|tsx|md|json)$/.test(entry.name)) {
-        result.push(fullPath);
-      }
+    } else if (/\.(css|html|js|jsx|mjs|ts|tsx|md|json|ya?ml)$/.test(entry.name)) {
+      result.push(fullPath);
+    }
     }
   }
 

@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      dev-tooling:
+        patterns:
+          - "@types/*"
+          - typescript
+          - vite
+          - vitest
+          - playwright
+      optional-peers:
+        patterns:
+          - react
+          - react-dom
+          - vega
+          - mermaid
+          - "@terrastruct/d2"
+          - "@xyflow/react"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

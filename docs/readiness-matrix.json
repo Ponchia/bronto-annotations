@@ -16,6 +16,7 @@
     "test:screenshots",
     "test:readiness",
     "test:completion-audit",
+    "test:repo",
     "test:hygiene"
   ],
   "publicExports": [
@@ -1009,6 +1010,53 @@
             "targetHandle",
             "edgePoints",
             "do not own host rendering, parsing, scales, graph layout, state"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "repo-operations-readiness",
+      "evidence": [
+        {
+          "file": "package.json",
+          "terms": [
+            "\"version\": \"0.1.0\"",
+            "\"repository\"",
+            "\"publishConfig\"",
+            "\"test:repo\"",
+            "\"packageManager\""
+          ]
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "terms": [
+            "npm run check",
+            "node-version:",
+            "actions/upload-artifact@v4"
+          ]
+        },
+        {
+          "file": ".github/workflows/release.yml",
+          "terms": [
+            "id-token: write",
+            "npm publish --provenance --access public",
+            "environment: npm"
+          ]
+        },
+        {
+          "file": "scripts/check-repo-readiness.mjs",
+          "terms": [
+            "Repository readiness verified",
+            "package-lock root version must match package.json",
+            "npm publish --provenance --access public"
+          ]
+        },
+        {
+          "file": "README.md",
+          "terms": [
+            "Repository Quality",
+            "CI runs `npm run check`",
+            "Security policy"
           ]
         }
       ]

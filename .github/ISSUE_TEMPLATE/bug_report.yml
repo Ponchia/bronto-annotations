@@ -1,0 +1,57 @@
+name: Bug Report
+description: Report incorrect annotation behavior or package integration issues.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an annotation issue. Include enough geometry and package context for the problem to be reproduced without private app code.
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Host surface
+      options:
+        - Core/SVG
+        - React
+        - DOM/report
+        - Vega/Vega-Lite
+        - Mermaid
+        - D2
+        - React Flow
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include annotations, anchors, bounds, obstacles, and renderer/adapter calls.
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Diagnostics
+      description: Paste validation summaries, target-alignment summaries, layout-quality reports, or screenshots if available.

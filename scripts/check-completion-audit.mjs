@@ -25,6 +25,7 @@ const requiredRequirementIds = [
   'packed-consumer-and-browser-verification',
   'public-hygiene',
   'docs-api-boundaries-and-known-limits',
+  'repo-operations-readiness',
   'product-boundaries'
 ];
 
