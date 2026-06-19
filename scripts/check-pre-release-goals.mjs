@@ -15,6 +15,9 @@ const accessibility = await read('docs/accessibility.md');
 const adapterRecipes = await read('docs/adapter-recipes-roadmap.md');
 const benchmark = await read('scripts/benchmark-layout.mjs');
 const apiStabilityCheck = await read('scripts/check-api-stability.mjs');
+const canaryDocs = await read('docs/canary-release.md');
+const canaryCheck = await read('scripts/check-canary-readiness.mjs');
+const canaryWorkflow = await read('.github/workflows/canary.yml');
 const dogfoodScript = await read('scripts/dogfood-clean-consumer.mjs');
 const screenshotCheck = await read('scripts/check-browser-screenshots.mjs');
 const visualBaseline = JSON.parse(await read('test/visual-baselines/browser-screenshots.json'));
@@ -30,7 +33,10 @@ for (const path of [
   'docs/performance.md',
   'docs/accessibility.md',
   'docs/adapter-recipes-roadmap.md',
+  'docs/canary-release.md',
+  '.github/workflows/canary.yml',
   'scripts/check-api-stability.mjs',
+  'scripts/check-canary-readiness.mjs',
   'scripts/benchmark-layout.mjs',
   'scripts/dogfood-clean-consumer.mjs',
   'test/visual-baselines/browser-screenshots.json'
@@ -40,10 +46,12 @@ for (const path of [
 
 assert.equal(pkg.scripts?.['test:pre-release'], 'node scripts/check-pre-release-goals.mjs');
 assert.equal(pkg.scripts?.['test:api-stability'], 'node scripts/check-api-stability.mjs');
+assert.equal(pkg.scripts?.['test:canary'], 'node scripts/check-canary-readiness.mjs');
 assert.equal(pkg.scripts?.['test:dogfood'], 'npm run build && node scripts/dogfood-clean-consumer.mjs');
 assert.equal(pkg.scripts?.['test:performance'], 'npm run build && node scripts/benchmark-layout.mjs --assert');
 assert.ok(pkg.scripts?.check?.includes('npm run test:pre-release'), 'npm run check must include test:pre-release');
 assert.ok(pkg.scripts?.check?.includes('npm run test:api-stability'), 'npm run check must include test:api-stability');
+assert.ok(pkg.scripts?.check?.includes('npm run test:canary'), 'npm run check must include test:canary');
 assert.ok(pkg.scripts?.check?.includes('npm run test:dogfood'), 'npm run check must include test:dogfood');
 assert.ok(pkg.scripts?.check?.includes('npm run test:performance'), 'npm run check must include test:performance');
 
@@ -84,6 +92,33 @@ for (const term of [
   'collectPublicExports'
 ]) {
   assertIncludes(apiStabilityCheck, term, 'scripts/check-api-stability.mjs');
+}
+
+for (const term of [
+  'GitHub Packages Canary',
+  'gh workflow run canary.yml -f publish=true',
+  'clean registry consumer',
+  'npm run test:canary'
+]) {
+  assertIncludes(canaryDocs, term, 'docs/canary-release.md');
+}
+
+for (const term of [
+  'Canary readiness verified',
+  'prepare-github-canary',
+  'smoke-registry-consumer',
+  'npm.pkg.github.com'
+]) {
+  assertIncludes(canaryCheck, term, 'scripts/check-canary-readiness.mjs');
+}
+
+for (const term of [
+  'workflow_dispatch:',
+  'packages: write',
+  'npm publish --tag canary --registry https://npm.pkg.github.com',
+  'node scripts/smoke-registry-consumer.mjs'
+]) {
+  assertIncludes(canaryWorkflow, term, '.github/workflows/canary.yml');
 }
 
 for (const term of [

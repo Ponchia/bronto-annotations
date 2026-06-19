@@ -1,0 +1,81 @@
+name: Canary
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Set to true to publish a canary to GitHub Packages and run a registry install smoke.
+        required: true
+        default: "false"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: canary-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  github-packages:
+    name: GitHub Packages canary
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Check
+        run: npm run check
+
+      - name: Setup GitHub Packages registry
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          scope: '@ponchia'
+          always-auth: true
+
+      - name: Prepare canary version
+        id: canary
+        run: |
+          version="$(node scripts/prepare-github-canary.mjs)"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "Prepared ${version}"
+
+      - name: Build canary package
+        run: npm run build
+
+      - name: Pack canary package
+        run: npm pack --json
+
+      - name: Upload canary tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-packages-canary-${{ steps.canary.outputs.version }}
+          path: "*.tgz"
+
+      - name: Publish GitHub Packages canary
+        if: github.event.inputs.publish == 'true'
+        run: npm publish --tag canary --registry https://npm.pkg.github.com
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Smoke registry consumer
+        if: github.event.inputs.publish == 'true'
+        run: node scripts/smoke-registry-consumer.mjs --version "${{ steps.canary.outputs.version }}" --registry https://npm.pkg.github.com --scope @ponchia
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

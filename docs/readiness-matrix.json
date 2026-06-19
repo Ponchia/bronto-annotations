@@ -8,6 +8,7 @@
     "test:exports",
     "test:api-reference",
     "test:api-stability",
+    "test:canary",
     "test:d3-parity",
     "test:bronto-parity",
     "test:bronto-upstream",
@@ -825,6 +826,58 @@
       ]
     },
     {
+      "id": "github-packages-canary",
+      "evidence": [
+        {
+          "file": "package.json",
+          "terms": [
+            "\"test:canary\"",
+            "scripts/check-canary-readiness.mjs",
+            "npm run test:canary"
+          ]
+        },
+        {
+          "file": ".github/workflows/canary.yml",
+          "terms": [
+            "workflow_dispatch:",
+            "packages: write",
+            "registry-url: https://npm.pkg.github.com",
+            "npm publish --tag canary --registry https://npm.pkg.github.com",
+            "node scripts/smoke-registry-consumer.mjs"
+          ]
+        },
+        {
+          "file": "scripts/prepare-github-canary.mjs",
+          "terms": [
+            "CANARY_VERSION",
+            "-canary.",
+            "https://npm.pkg.github.com",
+            "publishConfig"
+          ]
+        },
+        {
+          "file": "scripts/smoke-registry-consumer.mjs",
+          "terms": [
+            "Registry consumer smoke verified",
+            "@ponchia/annotations/bronto.css",
+            "prepareVegaScenegraphAnnotations",
+            "prepareMermaidAnnotations",
+            "prepareD2DiagramAnnotations",
+            "prepareReactFlowAnnotations"
+          ]
+        },
+        {
+          "file": "docs/canary-release.md",
+          "terms": [
+            "GitHub Packages Canary",
+            "gh workflow run canary.yml -f publish=true",
+            "clean registry consumer",
+            "npm run test:canary"
+          ]
+        }
+      ]
+    },
+    {
       "id": "completion-audit",
       "evidence": [
         {
@@ -1116,11 +1169,21 @@
           ]
         },
         {
+          "file": ".github/workflows/canary.yml",
+          "terms": [
+            "packages: write",
+            "registry-url: https://npm.pkg.github.com",
+            "npm publish --tag canary --registry https://npm.pkg.github.com",
+            "node scripts/smoke-registry-consumer.mjs"
+          ]
+        },
+        {
           "file": "scripts/check-repo-readiness.mjs",
           "terms": [
             "Repository readiness verified",
             "package-lock root version must match package.json",
-            "npm publish --provenance --access public"
+            "npm publish --provenance --access public",
+            "GitHub Packages Canary"
           ]
         },
         {
@@ -1142,6 +1205,7 @@
             "Dogfood in a real consumer",
             "Freeze the `0.1.x` public API contract",
             "docs/dogfood-clean-consumer-report.md",
+            "docs/canary-release.md",
             "visual regression baselines",
             "test/visual-baselines/browser-screenshots.json",
             "Performance",
@@ -1173,6 +1237,24 @@
             "Vega-Lite",
             "Mermaid",
             "targetAlignmentOk"
+          ]
+        },
+        {
+          "file": "docs/canary-release.md",
+          "terms": [
+            "GitHub Packages Canary",
+            "gh workflow run canary.yml -f publish=true",
+            "clean registry consumer",
+            "npm run test:canary"
+          ]
+        },
+        {
+          "file": "scripts/check-canary-readiness.mjs",
+          "terms": [
+            "Canary readiness verified",
+            "prepare-github-canary",
+            "smoke-registry-consumer",
+            "npm.pkg.github.com"
           ]
         },
         {

@@ -875,6 +875,7 @@ npm run test:screenshots
 npm run test:readiness
 npm run test:completion-audit
 npm run test:api-stability
+npm run test:canary
 npm run test:d3-parity
 npm run test:bronto-parity
 npm run test:bronto-upstream
@@ -1006,6 +1007,9 @@ the API in real consumers before wider stability promises.
   consumer integration report.
 - `docs/dogfood-clean-consumer-report.md` records the clean-consumer dogfood
   pass and friction found by `npm run test:dogfood`.
+- `docs/canary-release.md` documents the GitHub Packages canary lane; `npm run
+  test:canary` verifies the canary workflow, version prep, and registry-consumer
+  smoke wiring.
 - `docs/visual-regression.md` documents the screenshot baseline update workflow.
 - `npm run test:performance` runs deterministic 10, 50, and 200 annotation
   stress layouts against the real engine.

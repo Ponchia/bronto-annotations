@@ -8,8 +8,10 @@ const changelog = await read('CHANGELOG.md');
 const contributing = await read('CONTRIBUTING.md');
 const security = await read('SECURITY.md');
 const releaseDocs = await read('docs/release.md');
+const canaryDocs = await read('docs/canary-release.md');
 const ci = await read('.github/workflows/ci.yml');
 const release = await read('.github/workflows/release.yml');
+const canary = await read('.github/workflows/canary.yml');
 const dependabot = await read('.github/dependabot.yml');
 const prTemplate = await read('.github/pull_request_template.md');
 const bugTemplate = await read('.github/ISSUE_TEMPLATE/bug_report.yml');
@@ -49,6 +51,7 @@ assert.ok(pkg.scripts?.check?.includes('npm run test:repo'), 'npm run check must
 for (const path of [
   '.github/workflows/ci.yml',
   '.github/workflows/release.yml',
+  '.github/workflows/canary.yml',
   '.github/dependabot.yml',
   '.github/CODEOWNERS',
   '.github/pull_request_template.md',
@@ -57,6 +60,7 @@ for (const path of [
   'CHANGELOG.md',
   'CONTRIBUTING.md',
   'SECURITY.md',
+  'docs/canary-release.md',
   'docs/release.md'
 ]) {
   await assertPath(path);
@@ -94,6 +98,17 @@ for (const term of [
   'environment: npm'
 ]) {
   assertIncludes(release, term, '.github/workflows/release.yml');
+}
+
+for (const term of [
+  'workflow_dispatch:',
+  'packages: write',
+  'registry-url: https://npm.pkg.github.com',
+  'npm publish --tag canary --registry https://npm.pkg.github.com',
+  'node scripts/smoke-registry-consumer.mjs',
+  'NODE_AUTH_TOKEN'
+]) {
+  assertIncludes(canary, term, '.github/workflows/canary.yml');
 }
 
 for (const term of [
@@ -157,10 +172,20 @@ for (const term of [
 for (const term of [
   'Release Runbook',
   'npm pack --dry-run',
+  'Canary / Private Registry',
   'npm provenance',
   'Root imports work without optional peers'
 ]) {
   assertIncludes(releaseDocs, term, 'docs/release.md');
+}
+
+for (const term of [
+  'GitHub Packages Canary',
+  'gh workflow run canary.yml -f publish=true',
+  'clean registry consumer',
+  'npm run test:canary'
+]) {
+  assertIncludes(canaryDocs, term, 'docs/canary-release.md');
 }
 
 for (const term of [

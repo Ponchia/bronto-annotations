@@ -9,6 +9,7 @@
     "test:exports",
     "test:api-reference",
     "test:api-stability",
+    "test:canary",
     "test:d3-parity",
     "test:bronto-parity",
     "test:bronto-upstream",
@@ -965,6 +966,7 @@
           "terms": [
             "Release Runbook",
             "npm pack --dry-run",
+            "Canary / Private Registry",
             "npm provenance"
           ]
         }
@@ -973,7 +975,7 @@
     {
       "id": "pre-release-hardening",
       "status": "proven",
-      "claim": "The project now tracks and enforces the next pre-release goals: clean-consumer dogfood reporting, API stability policy, canary publishing preparation, visual baseline enforcement, deeper adapter recipes, authoring UX direction, performance stress checks, accessibility recipes, compatibility matrix, and public release naming decisions.",
+      "claim": "The project now tracks and enforces the next pre-release goals: clean-consumer dogfood reporting, API stability policy, GitHub Packages canary publishing, visual baseline enforcement, deeper adapter recipes, authoring UX direction, performance stress checks, accessibility recipes, compatibility matrix, and public release naming decisions.",
       "evidence": [
         {
           "file": "docs/pre-release-roadmap.md",
@@ -982,6 +984,7 @@
             "Freeze the `0.1.x` public API contract",
             "Publish a private/canary package",
             "docs/dogfood-clean-consumer-report.md",
+            "docs/canary-release.md",
             "visual regression baselines",
             "test/visual-baselines/browser-screenshots.json",
             "Performance",
@@ -1019,6 +1022,35 @@
             "docs/api-stability.manifest.json",
             "collectPublicExports",
             "isExperimentalExport"
+          ]
+        },
+        {
+          "file": "docs/canary-release.md",
+          "terms": [
+            "GitHub Packages Canary",
+            "gh workflow run canary.yml -f publish=true",
+            "0.1.0-canary.",
+            "clean registry consumer",
+            "npm run test:canary"
+          ]
+        },
+        {
+          "file": ".github/workflows/canary.yml",
+          "terms": [
+            "workflow_dispatch:",
+            "packages: write",
+            "registry-url: https://npm.pkg.github.com",
+            "npm publish --tag canary --registry https://npm.pkg.github.com",
+            "node scripts/smoke-registry-consumer.mjs"
+          ]
+        },
+        {
+          "file": "scripts/check-canary-readiness.mjs",
+          "terms": [
+            "Canary readiness verified",
+            "prepare-github-canary",
+            "smoke-registry-consumer",
+            "npm.pkg.github.com"
           ]
         },
         {

@@ -24,6 +24,18 @@ Inspect the tarball list. It should include `dist`, `README.md`, `LICENSE`, and
 `docs`, and should not include source, examples, tests, temporary files,
 screenshots, or local caches.
 
+## Canary / Private Registry
+
+Use the GitHub Packages canary workflow before publishing `0.1.0` publicly:
+
+```bash
+gh workflow run canary.yml -f publish=true
+```
+
+The workflow publishes a unique `0.1.0-canary.*` version to GitHub Packages
+with the `canary` tag, then installs that exact version from a clean registry
+consumer. See `docs/canary-release.md` for the full runbook.
+
 ## Publish
 
 1. Create a GitHub release for the version tag, for example `v0.1.0`.
