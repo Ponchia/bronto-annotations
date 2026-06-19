@@ -967,6 +967,7 @@
             "Release Runbook",
             "npm pack --dry-run",
             "Canary / Private Registry",
+            "docs/canary-publish-report.md",
             "npm provenance"
           ]
         }
@@ -985,6 +986,7 @@
             "Publish a private/canary package",
             "docs/dogfood-clean-consumer-report.md",
             "docs/canary-release.md",
+            "docs/canary-publish-report.md",
             "visual regression baselines",
             "test/visual-baselines/browser-screenshots.json",
             "Performance",
@@ -1030,8 +1032,21 @@
             "GitHub Packages Canary",
             "gh workflow run canary.yml -f publish=true",
             "0.1.0-canary.",
+            "docs/canary-publish-report.md",
             "clean registry consumer",
             "npm run test:canary"
+          ]
+        },
+        {
+          "file": "docs/canary-publish-report.md",
+          "terms": [
+            "Canary Publish Report",
+            "Workflow run: `27827132524`",
+            "0.1.0-canary.1.e754177",
+            "Publish GitHub Packages canary`: success",
+            "Smoke registry consumer`: success",
+            "Registry consumer smoke verified",
+            "@ponchia/annotations@0.1.0-canary.1.e754177"
           ]
         },
         {

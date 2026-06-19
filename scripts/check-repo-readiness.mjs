@@ -9,6 +9,7 @@ const contributing = await read('CONTRIBUTING.md');
 const security = await read('SECURITY.md');
 const releaseDocs = await read('docs/release.md');
 const canaryDocs = await read('docs/canary-release.md');
+const canaryPublishReport = await read('docs/canary-publish-report.md');
 const ci = await read('.github/workflows/ci.yml');
 const release = await read('.github/workflows/release.yml');
 const canary = await read('.github/workflows/canary.yml');
@@ -61,6 +62,7 @@ for (const path of [
   'CONTRIBUTING.md',
   'SECURITY.md',
   'docs/canary-release.md',
+  'docs/canary-publish-report.md',
   'docs/release.md'
 ]) {
   await assertPath(path);
@@ -173,6 +175,7 @@ for (const term of [
   'Release Runbook',
   'npm pack --dry-run',
   'Canary / Private Registry',
+  'docs/canary-publish-report.md',
   'npm provenance',
   'Root imports work without optional peers'
 ]) {
@@ -182,10 +185,23 @@ for (const term of [
 for (const term of [
   'GitHub Packages Canary',
   'gh workflow run canary.yml -f publish=true',
+  'docs/canary-publish-report.md',
   'clean registry consumer',
   'npm run test:canary'
 ]) {
   assertIncludes(canaryDocs, term, 'docs/canary-release.md');
+}
+
+for (const term of [
+  'Canary Publish Report',
+  'Workflow run: `27827132524`',
+  '0.1.0-canary.1.e754177',
+  'Publish GitHub Packages canary`: success',
+  'Smoke registry consumer`: success',
+  'Registry consumer smoke verified',
+  '@ponchia/annotations@0.1.0-canary.1.e754177'
+]) {
+  assertIncludes(canaryPublishReport, term, 'docs/canary-publish-report.md');
 }
 
 for (const term of [

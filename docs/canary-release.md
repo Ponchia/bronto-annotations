@@ -41,6 +41,19 @@ The workflow uses the repository `GITHUB_TOKEN` and `packages: write`. The
 package remains linked to the repository through package metadata and GitHub
 Packages access control.
 
+## Verified Publish Evidence
+
+The first verified canary publish is recorded in
+`docs/canary-publish-report.md`:
+
+- Workflow run: `27827132524`
+- Published version: `0.1.0-canary.1.e754177`
+- Publish step: `Publish GitHub Packages canary` succeeded.
+- Registry smoke: `Smoke registry consumer` succeeded.
+- Registry output: `Registry consumer smoke verified:
+  @ponchia/annotations@0.1.0-canary.1.e754177 from
+  https://npm.pkg.github.com.`
+
 ## Local Verification
 
 ```bash

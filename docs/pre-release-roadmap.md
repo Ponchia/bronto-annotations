@@ -30,17 +30,19 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - API freeze: `docs/api-stability.manifest.json` labels every public export as
   stable or experimental for `0.1.x`, source entrypoints carry `@public` and
   `@experimental` notes, and `npm run test:api-stability` enforces coverage.
-- Canary publishing: `.github/workflows/canary.yml` can publish a unique
-  GitHub Packages `0.1.0-canary.*` version and then install it from a clean
-  registry consumer; `npm run test:canary` verifies the lane without publishing.
+- Canary publishing: `.github/workflows/canary.yml` published
+  `0.1.0-canary.1.e754177` to GitHub Packages and installed it from a clean
+  registry consumer; `docs/canary-publish-report.md` records the evidence and
+  `npm run test:canary` keeps the lane wired.
 - Visual regression: `test/visual-baselines/browser-screenshots.json` stores
   approved browser metrics for every example viewport and packed browser
   consumer, and `npm run test:screenshots` compares new output against it.
 - Performance: `npm run test:performance` exercises deterministic 10, 50, and
   200 annotation layouts.
-- Remaining high-value proof: run the canary workflow with `publish=true` and
-  keep the resulting registry install evidence before widening public API
-  stability promises.
+- Remaining high-value proof: widen dogfood into richer real generated
+  surfaces before widening public API stability promises, especially
+  Vega-Lite, Mermaid sequence diagrams, nested D2 diagrams, and React Flow
+  zoom/pan/editing.
 
 ## Tracking Documents
 
@@ -50,6 +52,7 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - Dogfood report template: `docs/dogfood-friction-report.md`
 - Clean-consumer dogfood report: `docs/dogfood-clean-consumer-report.md`
 - Canary release runbook: `docs/canary-release.md`
+- Canary publish evidence: `docs/canary-publish-report.md`
 - Visual regression baselines: `docs/visual-regression.md`
 - Performance expectations: `docs/performance.md`
 - Accessibility recipes: `docs/accessibility.md`

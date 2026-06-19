@@ -16,6 +16,7 @@ const adapterRecipes = await read('docs/adapter-recipes-roadmap.md');
 const benchmark = await read('scripts/benchmark-layout.mjs');
 const apiStabilityCheck = await read('scripts/check-api-stability.mjs');
 const canaryDocs = await read('docs/canary-release.md');
+const canaryPublishReport = await read('docs/canary-publish-report.md');
 const canaryCheck = await read('scripts/check-canary-readiness.mjs');
 const canaryWorkflow = await read('.github/workflows/canary.yml');
 const dogfoodScript = await read('scripts/dogfood-clean-consumer.mjs');
@@ -34,6 +35,7 @@ for (const path of [
   'docs/accessibility.md',
   'docs/adapter-recipes-roadmap.md',
   'docs/canary-release.md',
+  'docs/canary-publish-report.md',
   '.github/workflows/canary.yml',
   'scripts/check-api-stability.mjs',
   'scripts/check-canary-readiness.mjs',
@@ -59,6 +61,7 @@ for (const term of [
   'Dogfood in a real consumer',
   'Freeze the `0.1.x` public API contract',
   'Publish a private/canary package',
+  'docs/canary-publish-report.md',
   'visual regression baselines',
   'Performance',
   'Accessibility',
@@ -97,10 +100,23 @@ for (const term of [
 for (const term of [
   'GitHub Packages Canary',
   'gh workflow run canary.yml -f publish=true',
+  'docs/canary-publish-report.md',
   'clean registry consumer',
   'npm run test:canary'
 ]) {
   assertIncludes(canaryDocs, term, 'docs/canary-release.md');
+}
+
+for (const term of [
+  'Canary Publish Report',
+  'Workflow run: `27827132524`',
+  '0.1.0-canary.1.e754177',
+  'Publish GitHub Packages canary`: success',
+  'Smoke registry consumer`: success',
+  'Registry consumer smoke verified',
+  '@ponchia/annotations@0.1.0-canary.1.e754177'
+]) {
+  assertIncludes(canaryPublishReport, term, 'docs/canary-publish-report.md');
 }
 
 for (const term of [

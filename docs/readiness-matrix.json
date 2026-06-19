@@ -871,8 +871,21 @@
           "terms": [
             "GitHub Packages Canary",
             "gh workflow run canary.yml -f publish=true",
+            "docs/canary-publish-report.md",
             "clean registry consumer",
             "npm run test:canary"
+          ]
+        },
+        {
+          "file": "docs/canary-publish-report.md",
+          "terms": [
+            "Canary Publish Report",
+            "Workflow run: `27827132524`",
+            "0.1.0-canary.1.e754177",
+            "Publish GitHub Packages canary`: success",
+            "Smoke registry consumer`: success",
+            "Registry consumer smoke verified",
+            "@ponchia/annotations@0.1.0-canary.1.e754177"
           ]
         }
       ]
@@ -1178,6 +1191,14 @@
           ]
         },
         {
+          "file": "docs/canary-publish-report.md",
+          "terms": [
+            "Canary Publish Report",
+            "0.1.0-canary.1.e754177",
+            "Registry consumer smoke verified"
+          ]
+        },
+        {
           "file": "scripts/check-repo-readiness.mjs",
           "terms": [
             "Repository readiness verified",
@@ -1244,8 +1265,20 @@
           "terms": [
             "GitHub Packages Canary",
             "gh workflow run canary.yml -f publish=true",
+            "docs/canary-publish-report.md",
             "clean registry consumer",
             "npm run test:canary"
+          ]
+        },
+        {
+          "file": "docs/canary-publish-report.md",
+          "terms": [
+            "Canary Publish Report",
+            "Workflow run: `27827132524`",
+            "0.1.0-canary.1.e754177",
+            "Publish GitHub Packages canary`: success",
+            "Smoke registry consumer`: success",
+            "Registry consumer smoke verified"
           ]
         },
         {

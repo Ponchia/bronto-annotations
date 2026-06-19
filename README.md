@@ -1007,9 +1007,10 @@ the API in real consumers before wider stability promises.
   consumer integration report.
 - `docs/dogfood-clean-consumer-report.md` records the clean-consumer dogfood
   pass and friction found by `npm run test:dogfood`.
-- `docs/canary-release.md` documents the GitHub Packages canary lane; `npm run
-  test:canary` verifies the canary workflow, version prep, and registry-consumer
-  smoke wiring.
+- `docs/canary-release.md` documents the GitHub Packages canary lane, and
+  `docs/canary-publish-report.md` records the verified
+  `0.1.0-canary.1.e754177` registry install; `npm run test:canary` verifies the
+  canary workflow, version prep, and registry-consumer smoke wiring.
 - `docs/visual-regression.md` documents the screenshot baseline update workflow.
 - `npm run test:performance` runs deterministic 10, 50, and 200 annotation
   stress layouts against the real engine.

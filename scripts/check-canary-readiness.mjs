@@ -7,6 +7,7 @@ const exec = promisify(execFile);
 const pkg = JSON.parse(await read('package.json'));
 const workflow = await read('.github/workflows/canary.yml');
 const docs = await read('docs/canary-release.md');
+const publishReport = await read('docs/canary-publish-report.md');
 const releaseDocs = await read('docs/release.md');
 const prepareScript = await read('scripts/prepare-github-canary.mjs');
 const smokeScript = await read('scripts/smoke-registry-consumer.mjs');
@@ -14,6 +15,7 @@ const smokeScript = await read('scripts/smoke-registry-consumer.mjs');
 for (const path of [
   '.github/workflows/canary.yml',
   'docs/canary-release.md',
+  'docs/canary-publish-report.md',
   'scripts/prepare-github-canary.mjs',
   'scripts/smoke-registry-consumer.mjs'
 ]) {
@@ -41,6 +43,7 @@ for (const term of [
   'GitHub Packages Canary',
   'gh workflow run canary.yml -f publish=true',
   '0.1.0-canary.',
+  'docs/canary-publish-report.md',
   'clean registry consumer',
   'npm run test:canary'
 ]) {
@@ -48,9 +51,23 @@ for (const term of [
 }
 
 for (const term of [
+  'Canary Publish Report',
+  'Workflow run: `27827132524`',
+  '0.1.0-canary.1.e754177',
+  'Publish GitHub Packages canary`: success',
+  'Smoke registry consumer`: success',
+  'Registry consumer smoke verified',
+  '@ponchia/annotations@0.1.0-canary.1.e754177',
+  'https://npm.pkg.github.com'
+]) {
+  assertIncludes(publishReport, term, 'docs/canary-publish-report.md');
+}
+
+for (const term of [
   'Canary / Private Registry',
   'GitHub Packages',
-  'docs/canary-release.md'
+  'docs/canary-release.md',
+  'docs/canary-publish-report.md'
 ]) {
   assertIncludes(releaseDocs, term, 'docs/release.md');
 }

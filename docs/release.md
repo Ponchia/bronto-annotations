@@ -34,7 +34,8 @@ gh workflow run canary.yml -f publish=true
 
 The workflow publishes a unique `0.1.0-canary.*` version to GitHub Packages
 with the `canary` tag, then installs that exact version from a clean registry
-consumer. See `docs/canary-release.md` for the full runbook.
+consumer. See `docs/canary-release.md` for the full runbook and
+`docs/canary-publish-report.md` for the latest verified publish evidence.
 
 ## Publish
 
