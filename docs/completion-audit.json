@@ -24,6 +24,7 @@
     "test:completion-audit",
     "test:repo",
     "test:pre-release",
+    "test:compatibility",
     "test:performance",
     "test:hygiene"
   ],
@@ -1141,11 +1142,27 @@
           "terms": [
             "Node.js",
             "TypeScript",
+            "npm run test:compatibility",
+            "React 18",
+            "React 19",
+            "Vega 5",
+            "Vega 6",
             "Vega",
             "Mermaid",
             "D2",
             "React Flow",
             "optional peers"
+          ]
+        },
+        {
+          "file": "scripts/check-compatibility-matrix.mjs",
+          "terms": [
+            "Compatibility matrix verified",
+            "expectedPeers",
+            "peerDependenciesMeta",
+            "clean root consumer unexpectedly installed optional peers",
+            "Node 20",
+            "Node 22"
           ]
         },
         {
@@ -1316,6 +1333,7 @@
             "Pre-release goals verified",
             "docs/public-release-decisions.md",
             "docs/dogfood-self-report.md",
+            "npm run test:compatibility",
             "npm run test:performance",
             "Dogfood Friction Report Template"
           ]

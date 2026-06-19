@@ -101,9 +101,10 @@
     "test:completion-audit": "node scripts/check-completion-audit.mjs",
     "test:repo": "node scripts/check-repo-readiness.mjs",
     "test:pre-release": "node scripts/check-pre-release-goals.mjs",
+    "test:compatibility": "node scripts/check-compatibility-matrix.mjs",
     "test:performance": "npm run build && node scripts/benchmark-layout.mjs --assert",
     "test:hygiene": "node scripts/public-hygiene.mjs",
-    "check": "npm run build && npm test && npm run test:docs-snippets && npm run test:types && npm run test:exports && npm run test:api-reference && npm run test:api-stability && npm run test:canary && npm run test:d3-parity && npm run test:bronto-parity && npm run test:bronto-upstream && npm run test:examples && npm run test:pack && npm run test:dogfood && npm run test:dogfood:bronto-report && npm run test:dogfood:self-report && npm run test:browser && npm run test:screenshots && npm run test:readiness && npm run test:completion-audit && npm run test:repo && npm run test:pre-release && npm run test:performance && npm run test:hygiene"
+    "check": "npm run build && npm test && npm run test:docs-snippets && npm run test:types && npm run test:exports && npm run test:api-reference && npm run test:api-stability && npm run test:canary && npm run test:d3-parity && npm run test:bronto-parity && npm run test:bronto-upstream && npm run test:examples && npm run test:pack && npm run test:dogfood && npm run test:dogfood:bronto-report && npm run test:dogfood:self-report && npm run test:browser && npm run test:screenshots && npm run test:readiness && npm run test:completion-audit && npm run test:repo && npm run test:pre-release && npm run test:compatibility && npm run test:performance && npm run test:hygiene"
   },
   "peerDependencies": {
     "@terrastruct/d2": ">=0.1.0",
