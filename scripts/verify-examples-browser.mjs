@@ -85,8 +85,11 @@ const examples = [
     minRendered: 'renderedNodes',
     minGeneratedObstacles: 5,
     minObstacles: 5,
+    minEditHandles: 3,
     validateAnchors: true,
     validateTargetAlignment: true,
+    verifyViewportTransform: true,
+    verifyReactFlowEditDrag: true,
     requiredEvidence: [
       { reactFlowKind: 'node', reactFlowNodeId: 'review' },
       { reactFlowKind: 'edge', reactFlowEdgeId: 'review-publish' },
@@ -572,6 +575,10 @@ try {
         throw new Error(`${label} expected source ${example.source}, got ${evidence.exampleData?.anchorSource}`);
       }
 
+      if (example.verifyViewportTransform && evidence.exampleData?.viewportTransformActive !== true) {
+        throw new Error(`${label} did not prove a transformed generated-surface viewport: ${JSON.stringify(evidence.exampleData)}`);
+      }
+
       if (example.minRendered && Number(evidence.exampleData?.[example.minRendered] ?? 0) < 1) {
         throw new Error(`${label} did not report rendered host geometry: ${JSON.stringify(evidence.exampleData)}`);
       }
@@ -807,6 +814,10 @@ try {
         await verifyEditDrag(page, label);
       }
 
+      if (example.verifyReactFlowEditDrag) {
+        await verifyReactFlowEditDrag(page, label);
+      }
+
       await page.screenshot({
         path: resolve(screenshotsDir, viewport.name === 'desktop'
           ? `${example.name}.png`
@@ -819,6 +830,89 @@ try {
 } finally {
   await browser.close();
   await server.close();
+}
+
+async function verifyReactFlowEditDrag(page, label) {
+  const handle = page.locator('.pa-annotation__edit-handle--note[data-annotation-id="flow-review"]').first();
+  const handleBox = await handle.boundingBox();
+  const before = await page.evaluate(() => {
+    const note = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box');
+    const exampleData = window.__annotationsExample;
+    const review = Array.isArray(exampleData?.annotations)
+      ? exampleData.annotations.find((annotation) => annotation.id === 'flow-review')
+      : undefined;
+    const rect = note?.getBoundingClientRect();
+
+    return {
+      viewport: exampleData?.viewport,
+      viewportTransformActive: exampleData?.viewportTransformActive,
+      noteBox: rect ? {
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height
+      } : undefined,
+      manual: review?.manual
+    };
+  });
+
+  if (!handleBox || !before.noteBox || before.viewportTransformActive !== true) {
+    throw new Error(`${label} could not locate transformed editable React Flow note handle: ${JSON.stringify({ handleBox, before })}`);
+  }
+
+  const start = {
+    x: handleBox.x + handleBox.width / 2,
+    y: handleBox.y + handleBox.height / 2
+  };
+  const delta = { x: 14, y: 10 };
+
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x + delta.x, start.y + delta.y, { steps: 4 });
+  await page.mouse.up();
+
+  await page.waitForFunction(() => {
+    const lastEdit = window.__annotationsLastEdit;
+    const exampleData = window.__annotationsExample;
+    const review = Array.isArray(exampleData?.annotations)
+      ? exampleData.annotations.find((annotation) => annotation.id === 'flow-review')
+      : undefined;
+
+    return lastEdit?.annotationId === 'flow-review'
+      && lastEdit.phase === 'end'
+      && lastEdit.manual
+      && review?.manual
+      && Array.isArray(exampleData?.editPatchIds)
+      && exampleData.editPatchIds.includes('flow-review');
+  }, null, { timeout: 5000 });
+
+  const after = await page.evaluate(() => {
+    const note = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box');
+    const rect = note?.getBoundingClientRect();
+    const exampleData = window.__annotationsExample;
+    const review = Array.isArray(exampleData?.annotations)
+      ? exampleData.annotations.find((annotation) => annotation.id === 'flow-review')
+      : undefined;
+
+    return {
+      lastEdit: window.__annotationsLastEdit,
+      editPatchIds: exampleData?.editPatchIds,
+      viewport: exampleData?.viewport,
+      noteBox: rect ? {
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height
+      } : undefined,
+      manual: review?.manual
+    };
+  });
+  const moved = after.noteBox
+    && (Math.abs(after.noteBox.x - before.noteBox.x) > 2 || Math.abs(after.noteBox.y - before.noteBox.y) > 2);
+
+  if (!after.lastEdit?.manual || !after.manual || !moved) {
+    throw new Error(`${label} did not persist a React Flow annotation edit through host patch state: ${JSON.stringify({ before, after })}`);
+  }
 }
 
 async function verifyMotionMedia(page, label) {

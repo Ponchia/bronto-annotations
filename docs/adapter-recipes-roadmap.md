@@ -27,9 +27,12 @@ unstarted work.
 
 ## React Flow
 
-- Zoom/pan coordinate recipe using public viewport state.
-- Measured handle recipe with fallback diagnostics.
-- Edit-patch recipe for moving notes and anchors.
+- Proven: Zoom/pan coordinate recipe using public viewport state.
+- Proven: measured handle recipe with fallback diagnostics.
+- Proven: edit-patch recipe for moving notes through host-owned annotation
+  patches. Anchor movement remains covered by the shared authoring helper and
+  React basic example because generated graph anchors should usually stay tied
+  to React Flow state.
 
 ## Acceptance Criteria
 

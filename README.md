@@ -763,7 +763,9 @@ data attributes deliberately.
   by default, while `obstaclesFromReactFlow` exposes `includeHandles` and
   `includeEdges` for custom obstacle sets.
   Annotations expose node ids, handle ids/types/sides, edge ids, edge endpoint
-  ids, and source/target handle ids.
+  ids, and source/target handle ids. The `react-flow-basic` example runs
+  against a transformed viewport and stores dragged note edits as host-owned
+  annotation patches, leaving graph state in React Flow.
 
 Adapters also provide obstacle helpers where useful, so host-generated axes,
 diagram nodes, edge labels, shapes, and routes can participate in placement

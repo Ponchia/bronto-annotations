@@ -50,8 +50,7 @@ has been proven in real consumer use before a public `1.0.0` commitment.
   authoring surfaces; hosts still own state and persistence.
 - Remaining high-value proof: widen dogfood into richer real generated
   surfaces before widening public API stability promises, especially
-  Vega-Lite, Mermaid sequence diagrams, nested D2 diagrams, and React Flow
-  zoom/pan/editing.
+  Vega-Lite, Mermaid sequence diagrams, and nested D2 diagrams.
 
 ## Tracking Documents
 

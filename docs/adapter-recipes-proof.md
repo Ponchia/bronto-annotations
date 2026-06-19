@@ -43,24 +43,23 @@ anchors are browser-proven in the basic example.
 
 ## React Flow Viewport, Handles, And Editing
 
-Status: public state, viewport transforms, measured handles, edge anchors, and
-edit patches are test-proven; the browser example proves rendered node, handle,
-and edge alignment.
+Status: public state, transformed viewport coordinates, measured handles, edge
+anchors, and host-owned edit patches are browser-proven and test-proven.
 
 - `test/adapters/react-flow.test.ts` normalizes node boxes through viewport
   `x`, `y`, and `zoom`, uses measured handle geometry before fallback side
   anchors, and extracts node, handle, and edge obstacles.
-- `examples/react-flow-basic` verifies rendered React Flow nodes, edges, and
-  handles against public adapter output in the browser.
-- `test/adapters/authoring-contract.test.ts` and `examples/react-basic` cover
-  edit-patch preservation and note/anchor movement contracts.
+- `examples/react-flow-basic` runs with a non-identity React Flow viewport,
+  verifies rendered nodes, edges, and handles against public adapter output in
+  the browser, and persists a dragged note edit as a host-owned annotation patch.
+- `test/adapters/authoring-contract.test.ts`, `test/core/edit.test.ts`, and
+  `examples/react-basic` cover edit-patch preservation and note/anchor movement
+  contracts.
 
 ## Remaining Limits
 
 - Mermaid sequence diagrams are not yet represented as a browser example; they
   are currently verified through a rendered SVG fixture.
-- React Flow zoom/pan is verified by public viewport-state tests, but the
-  browser example keeps interaction disabled for deterministic screenshots.
 - The current clean dogfood consumer is synthetic. A real host report or app
   integration should still be used to collect final API-friction feedback
   before widening `0.1.x` stability promises.

@@ -1,6 +1,8 @@
 import { AnnotationLayer } from '@ponchia/annotations/react';
 import {
+  annotationEditPatch,
   generatedSurfaceLayoutDefaults,
+  type AnnotationEditPatch,
   type AnchorAlignmentReport,
   type AnchorAlignmentTarget
 } from '@ponchia/annotations';
@@ -50,6 +52,7 @@ function FlowAnnotations({ bounds }: { bounds: LayerBounds }) {
   const flowNodes = useNodes<Node>();
   const flowEdges = useEdges<Edge>();
   const viewport = useViewport();
+  const [editPatches, setEditPatches] = useState<Record<string, AnnotationEditPatch>>({});
   const hasMeasuredNodes = flowNodes.some((node) => node.id === 'review'
     && ((node.measured?.width ?? node.width ?? 0) > 0)
     && ((node.measured?.height ?? node.height ?? 0) > 0));
@@ -83,7 +86,7 @@ function FlowAnnotations({ bounds }: { bounds: LayerBounds }) {
     targetAlignment?: AnchorAlignmentReport;
     targetAlignmentSummary: string;
   }>({ targetAlignmentSummary: '' });
-  const annotationSpecs = useMemo(() => [
+  const baseAnnotationSpecs = useMemo(() => [
     {
       id: 'flow-review',
       nodeId: 'review',
@@ -133,6 +136,11 @@ function FlowAnnotations({ bounds }: { bounds: LayerBounds }) {
       tone: 'info' as const
     }
   ], [compact]);
+  const annotationSpecs = useMemo(() => baseAnnotationSpecs.map((spec) => {
+    const patch = editPatches[spec.id];
+
+    return patch?.placement ? { ...spec, placement: patch.placement } : spec;
+  }), [baseAnnotationSpecs, editPatches]);
   const prepared = useMemo(() => {
     if (!hasMeasuredNodes) {
       return undefined;
@@ -200,6 +208,8 @@ function FlowAnnotations({ bounds }: { bounds: LayerBounds }) {
       measure="estimate"
       padding={12}
       noteTabIndex={0}
+      editable={{ noteHandlePosition: 'bottom-right' }}
+      editHandleTabIndex={0}
       obstacles={obstacles}
       refinement={{ passes: 2, maxCandidatesPerAnnotation: 64 }}
       assertQuality={flowLayoutDefaults.assertQuality}
@@ -234,6 +244,26 @@ function FlowAnnotations({ bounds }: { bounds: LayerBounds }) {
           targetAlignmentSummary: summary
         };
       }}
+      onEdit={(event) => {
+        Object.assign(window, {
+          __annotationsLastEdit: {
+            annotationId: event.annotationId,
+            phase: event.phase,
+            manual: event.suggestedPlacement?.manual,
+            anchor: event.suggestedAnchor
+          }
+        });
+      }}
+      onEditEnd={(event) => {
+        if (!event.suggestedPlacement) {
+          return;
+        }
+
+        setEditPatches((current) => ({
+          ...current,
+          [event.annotationId]: annotationEditPatch(event)
+        }));
+      }}
       onQuality={({ layout, quality, summary }) => {
         window.requestAnimationFrame(() => {
           const targetAlignmentEvidence = targetAlignmentRef.current;
@@ -252,13 +282,23 @@ function FlowAnnotations({ bounds }: { bounds: LayerBounds }) {
               validation: prepared?.validation,
               anchorEvidence: annotations.map((annotation) => annotation.data),
               anchorIds: annotations.map((annotation) => annotation.id),
+              annotations: layout.annotations.map((annotation) => ({
+                id: annotation.id,
+                manual: annotation.annotation.placement?.manual,
+                anchor: annotation.annotation.anchor
+              })),
+              editPatchIds: Object.keys(editPatches),
+              viewport,
+              viewportTransformActive: Math.abs(viewport.zoom - 1) > 0.01
+                || Math.abs(viewport.x) > 0.5
+                || Math.abs(viewport.y) > 0.5,
               bounds,
               obstacles
             }
           });
         });
       }}
-      style={{ inset: 0, position: 'absolute', width: '100%', height: '100%', pointerEvents: 'none' }}
+      style={{ inset: 0, position: 'absolute', width: '100%', height: '100%', pointerEvents: 'none', zIndex: 8 }}
     />
   );
 }

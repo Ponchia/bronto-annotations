@@ -281,6 +281,8 @@ for (const term of [
   'Mermaid Flowchart And Sequence SVG',
   'D2 Nested Diagrams And Routes',
   'React Flow Viewport, Handles, And Editing',
+  'non-identity React Flow viewport',
+  'host-owned annotation patch',
   'test/adapters/mermaid.test.ts',
   'data-message-id',
   'messageLine0',

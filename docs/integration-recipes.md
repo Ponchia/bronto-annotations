@@ -354,7 +354,14 @@ provide `edgePoints` when the host wants annotations to follow a custom routed
 edge path.
 
 ```ts
+import {
+  annotationEditPatch,
+  type AnnotationEditEvent,
+  type AnnotationEditPatch
+} from '@ponchia/annotations';
 import { prepareReactFlowAnnotations } from '@ponchia/annotations/react-flow';
+
+const editPatches: Record<string, AnnotationEditPatch> = {};
 
 const prepared = prepareReactFlowAnnotations({
   nodes,
@@ -371,16 +378,25 @@ const prepared = prepareReactFlowAnnotations({
     id: 'manual-handle-note',
     handle: { nodeId: 'review', id: 'approved', type: 'source', side: 'bottom' },
     note: { title: 'Approved path' },
-    placement: { manual: { x: 380, y: 184, side: 'left' } }
+    placement: editPatches['manual-handle-note']?.placement ?? {
+      manual: { x: 380, y: 184, side: 'left' }
+    }
   }
 ], {
   obstacles: { includeEdges: true, padding: 4 }
 });
+
+function onAnnotationEditEnd(event: AnnotationEditEvent) {
+  editPatches[event.annotationId] = annotationEditPatch(event);
+}
 ```
 
 Handle specs can fall back to the requested node side before React Flow has
 measured handle bounds. Treat fallback diagnostics as warnings during initial
-render and rerun after the graph has measured.
+render and rerun after the graph has measured. For zoom/pan, pass React Flow's
+public viewport state into the adapter on each layout. For editing, persist the
+suggested patch in host state and merge the `placement` back into the annotation
+spec; keep graph node/edge state in React Flow.
 
 ## First-Use Checklist
 

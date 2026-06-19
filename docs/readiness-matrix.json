@@ -404,7 +404,11 @@
         "source: 'react-flow-state'",
         "reactFlowNodeId",
         "reactFlowHandleType",
-        "flow-handle"
+        "flow-handle",
+        "verifyViewportTransform",
+        "verifyReactFlowEditDrag",
+        "viewportTransformActive",
+        "editPatchIds"
       ],
       "packedTerms": [
         "prepareReactFlowAnnotations",
@@ -414,7 +418,9 @@
       ],
       "docsTerms": [
         "`react-flow-basic`",
-        "source/target handle ids"
+        "source/target handle ids",
+        "public viewport state",
+        "annotation patch"
       ]
     }
   ],
@@ -1186,6 +1192,8 @@
             "Mermaid Flowchart And Sequence SVG",
             "D2 Nested Diagrams And Routes",
             "React Flow Viewport, Handles, And Editing",
+            "non-identity React Flow viewport",
+            "host-owned annotation patch",
             "Remaining Limits"
           ]
         },
