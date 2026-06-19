@@ -874,6 +874,7 @@ npm run test:browser
 npm run test:screenshots
 npm run test:readiness
 npm run test:completion-audit
+npm run test:api-stability
 npm run test:d3-parity
 npm run test:bronto-parity
 npm run test:bronto-upstream
@@ -997,7 +998,8 @@ the API in real consumers before wider stability promises.
   visual baselines, adapter recipes, authoring UX, performance, accessibility,
   compatibility, and naming/release decisions.
 - `docs/api-stability.md` defines which APIs are stable for `0.1.x` and which
-  remain experimental during `0.x`.
+  remain experimental during `0.x`; `docs/api-stability.manifest.json` labels
+  every public export and `npm run test:api-stability` enforces it.
 - `docs/compatibility.md` records supported Node, TypeScript, React, Vega,
   Mermaid, D2, and React Flow ranges.
 - `docs/dogfood-friction-report.md` is the required template for the first real

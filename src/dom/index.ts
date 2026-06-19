@@ -1,3 +1,11 @@
+/**
+ * DOM/SVG utility API stability.
+ *
+ * @public Stable for `0.1.x`: DOMRect, selector, SVG element, coordinate
+ * conversion, validation, and prepared DOM annotation helpers.
+ * @experimental No DOM subpath exports are experimental in the current `0.1.x`
+ * contract; keep this note so new exports must be classified intentionally.
+ */
 import {
   boxCenter,
   expandBox,

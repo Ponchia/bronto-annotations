@@ -1,3 +1,12 @@
+/**
+ * Root API stability for `@ponchia/annotations`.
+ *
+ * @public Stable for `0.1.x`: DOM-free models, layout, geometry helpers,
+ * renderer helpers, prepared-layout diagnostics, presets, and Bronto class/CSS
+ * helpers.
+ * @experimental During `0.x`: d3-style migration helpers, edit/authoring
+ * helpers, and low-level placement candidate scoring exports.
+ */
 export type {
   Anchor,
   Annotation,

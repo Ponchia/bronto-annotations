@@ -193,6 +193,9 @@ targets such as unmeasured React Flow handles.
 - Type checks for every public subpath, including public-import docs recipe
   snippets for React, DOM, Vega, Mermaid, D2, React Flow, and `bronto.css`.
 - Runtime export checks for every public subpath and declaration file.
+- API stability checks that every public export in every subpath is labeled
+  stable or experimental for `0.1.x`, with matching `@public` and
+  `@experimental` source notes.
 - D3-annotation parity checks for the supported Susie Lu-style authoring
   aliases, note/subject/connector fields, custom d3-style conversion helpers,
   accessors, inverse edit mapping, and explicit no-D3-selection/runtime

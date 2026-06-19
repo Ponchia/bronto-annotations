@@ -1,3 +1,12 @@
+/**
+ * D2 adapter API stability.
+ *
+ * @public Stable for `0.1.x`: compiled diagram and rendered SVG anchor
+ * extraction, prepared annotation helpers, obstacle helpers, validation, and
+ * target-alignment diagnostics.
+ * @experimental During `0.x`: low-level diagram traversal and rendered SVG
+ * finder helpers.
+ */
 import {
   extractedAnchorFromElement,
   obstaclesFromElements,

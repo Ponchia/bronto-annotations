@@ -1,3 +1,11 @@
+/**
+ * React Flow adapter API stability.
+ *
+ * @public Stable for `0.1.x`: node, handle, edge, viewport, prepared annotation,
+ * obstacle, validation, and target-alignment helpers.
+ * @experimental During `0.x`: low-level node, handle, and edge geometry helper
+ * exports.
+ */
 import type {
   Anchor,
   Annotation,

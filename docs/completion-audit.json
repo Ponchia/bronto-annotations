@@ -8,6 +8,7 @@
     "test:types",
     "test:exports",
     "test:api-reference",
+    "test:api-stability",
     "test:d3-parity",
     "test:bronto-parity",
     "test:bronto-upstream",
@@ -838,6 +839,25 @@
           ]
         },
         {
+          "file": "docs/api-stability.manifest.json",
+          "terms": [
+            "\"policy\": \"0.1.x\"",
+            "\"./react\"",
+            "\"./vega\"",
+            "\"stable\"",
+            "\"experimental\""
+          ]
+        },
+        {
+          "file": "scripts/check-api-stability.mjs",
+          "terms": [
+            "API stability verified",
+            "collectPublicExports",
+            "@public",
+            "@experimental"
+          ]
+        },
+        {
           "file": "test/docs/snippets.test.ts",
           "terms": [
             "documentation snippets",
@@ -975,7 +995,30 @@
           "terms": [
             "Stable for `0.1.x`",
             "Experimental",
-            "Root imports must remain DOM-free"
+            "Root imports must remain DOM-free",
+            "docs/api-stability.manifest.json",
+            "@public",
+            "@experimental",
+            "npm run test:api-stability"
+          ]
+        },
+        {
+          "file": "docs/api-stability.manifest.json",
+          "terms": [
+            "\"schemaVersion\": 1",
+            "\"policy\": \"0.1.x\"",
+            "\"./bronto.css\"",
+            "\"stable\"",
+            "\"experimental\""
+          ]
+        },
+        {
+          "file": "scripts/check-api-stability.mjs",
+          "terms": [
+            "API stability verified",
+            "docs/api-stability.manifest.json",
+            "collectPublicExports",
+            "isExperimentalExport"
           ]
         },
         {

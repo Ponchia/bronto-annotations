@@ -12,6 +12,12 @@ shape is still allowed to evolve before `1.0.0`.
 - Internal: not exported from package subpaths and not part of the public
   contract.
 
+The machine-readable contract lives in
+`docs/api-stability.manifest.json`. Public entrypoints carry matching source
+comments with `@public` and, where applicable, `@experimental` notes.
+`npm run test:api-stability` verifies that every exported name in every public
+subpath is listed exactly once as stable or experimental.
+
 ## Stable For `0.1.x`
 
 - Core models: `Point`, `Box`, `Anchor`, `Annotation`, note metadata,
@@ -27,7 +33,7 @@ shape is still allowed to evolve before `1.0.0`.
   `resolvePreparedAnnotationLayout`, validation reports, target-alignment
   reports, and layout quality summaries.
 - React layer: `AnnotationLayer`, `useAnnotations`, custom note rendering,
-  measurement, quality events, target-alignment events, and edit events.
+  measurement, quality events, and target-alignment events.
 - Bronto CSS bridge: `@ponchia/annotations/bronto.css` and legacy
   `ui-annotation*` compatibility selectors.
 
@@ -35,7 +41,11 @@ shape is still allowed to evolve before `1.0.0`.
 
 - d3-style builder mutation helpers and custom annotation type definitions.
 - Edit-patch authoring ergonomics beyond emitted suggested edits.
+- React edit-handle authoring options and edit events until the authoring UX
+  layer is hardened.
 - Dense-layout tuning constants and scoring weights.
+- Low-level adapter finder/traversal helpers such as rendered SVG finders, D2
+  traversal helpers, and React Flow geometry helpers.
 - Visual regression baseline file format, which is an internal verification
   fixture and not a package API.
 - Any canary-only package publishing workflow before the first public release.

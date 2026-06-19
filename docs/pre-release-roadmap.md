@@ -27,6 +27,9 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - Dogfood: `npm run test:dogfood` installs the packed package into a clean Vite
   report consumer, renders DOM, Vega-Lite, and Mermaid surfaces, and records
   friction in `docs/dogfood-clean-consumer-report.md`.
+- API freeze: `docs/api-stability.manifest.json` labels every public export as
+  stable or experimental for `0.1.x`, source entrypoints carry `@public` and
+  `@experimental` notes, and `npm run test:api-stability` enforces coverage.
 - Visual regression: `test/visual-baselines/browser-screenshots.json` stores
   approved browser metrics for every example viewport and packed browser
   consumer, and `npm run test:screenshots` compares new output against it.
@@ -38,6 +41,7 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 ## Tracking Documents
 
 - API stability: `docs/api-stability.md`
+- API stability manifest: `docs/api-stability.manifest.json`
 - Compatibility matrix: `docs/compatibility.md`
 - Dogfood report template: `docs/dogfood-friction-report.md`
 - Clean-consumer dogfood report: `docs/dogfood-clean-consumer-report.md`
