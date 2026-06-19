@@ -1,8 +1,11 @@
 {
   "schemaVersion": 1,
   "sourcePackage": "d3-svg-annotation@2.5.1",
+  "sourceAuthor": "Susie Lu",
   "sourceRepository": "https://github.com/susielu/d3-annotation",
-  "purpose": "Track the d3-annotation authoring ergonomics that @ponchia/annotations intentionally supports without importing D3 or mutating selections.",
+  "sourceDocumentation": "https://d3-annotation.susielu.com/",
+  "sourceContext": "https://susielu.com/data-viz/annotations",
+  "purpose": "Track the Susie Lu d3-annotation authoring ergonomics that @ponchia/annotations intentionally supports without importing D3 or mutating selections.",
   "sourceExports": [
     "annotation",
     "annotationTypeBase",
