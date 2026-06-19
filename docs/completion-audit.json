@@ -188,7 +188,7 @@
     {
       "id": "svg-renderer",
       "status": "proven",
-      "claim": "The SVG renderer outputs subjects, connectors, notes, optional focusable notes, optional focusable edit handles, debug boxes, classes, data attributes, and accessible labels.",
+      "claim": "The SVG renderer outputs subjects, connectors, notes, optional focusable notes, optional focusable edit handles, debug boxes, layout-quality issue boxes, classes, data attributes, and accessible labels.",
       "evidence": [
         {
           "file": "src/svg/render.ts",
@@ -199,7 +199,8 @@
             "aria-hidden",
             "noteTabIndex",
             "editHandleTabIndex",
-            "includeDebugBoxes"
+            "includeDebugBoxes",
+            "includeQualityIssues"
           ]
         },
         {
@@ -207,6 +208,7 @@
           "terms": [
             "data-annotation-id",
             "data-debug-kind=\"candidate\"",
+            "pa-annotation__quality-issue--note-overlap",
             "role=\"group\" aria-label",
             "tabindex",
             "aria-hidden=\"true\"",
@@ -218,7 +220,7 @@
     {
       "id": "react-adapter",
       "status": "proven",
-      "claim": "The React adapter provides AnnotationLayer, useAnnotations, ResizeObserver measurement, renderNote, onLayout, onQuality, quality assertions, target-alignment assertions, debug mode, optional focusable notes, edit callbacks, and SSR-safe behavior.",
+      "claim": "The React adapter provides AnnotationLayer, useAnnotations, ResizeObserver measurement, renderNote, onLayout, onQuality, quality assertions, target-alignment assertions, debug mode, quality issue rendering, optional focusable notes, edit callbacks, and SSR-safe behavior.",
       "evidence": [
         {
           "file": "src/react/AnnotationLayer.tsx",
@@ -233,6 +235,7 @@
             "onTargetAlignment",
             "assertTargetAlignment",
             "debug",
+            "qualityDebug",
             "svgPointFromClient",
             "aria-hidden",
             "typeof window"
@@ -1036,6 +1039,8 @@
             "docs/public-release-decisions.md",
             "createAnnotationEditEvent",
             "createAnnotationEditDelta",
+            "includeQualityIssues",
+            "qualityDebug",
             "visual regression baselines",
             "test/visual-baselines/browser-screenshots.json",
             "Performance",

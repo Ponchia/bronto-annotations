@@ -514,7 +514,8 @@
             "aria-hidden",
             "noteTabIndex",
             "editHandleTabIndex",
-            "includeDebugBoxes"
+            "includeDebugBoxes",
+            "includeQualityIssues"
           ]
         },
         {
@@ -522,6 +523,7 @@
           "terms": [
             "data-annotation-id",
             "data-debug-kind=\"candidate\"",
+            "pa-annotation__quality-issue--note-overlap",
             "renders lower-priority annotations before higher-priority",
             "role=\"group\" aria-label",
             "tabindex",
@@ -546,6 +548,7 @@
             "onTargetAlignment",
             "assertTargetAlignment",
             "debug",
+            "qualityDebug",
             "svgPointFromClient",
             "createAnnotationEditEvent",
             "createAnnotationEditDelta",
@@ -559,6 +562,7 @@
             "onLayout",
             "onQuality",
             "onTargetAlignment",
+            "qualityDebug",
             "React target alignment",
             "tabindex",
             "keyboard",
@@ -1387,6 +1391,8 @@
             "docs/public-release-decisions.md",
             "createAnnotationEditEvent",
             "createAnnotationEditDelta",
+            "includeQualityIssues",
+            "qualityDebug",
             "visual regression baselines",
             "test/visual-baselines/browser-screenshots.json",
             "Performance",

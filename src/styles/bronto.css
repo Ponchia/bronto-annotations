@@ -285,6 +285,26 @@ svg rect.pa-annotation__note-box {
   stroke-width: 1;
 }
 
+.pa-annotation__quality-issue {
+  fill: rgb(225 29 72 / 8%);
+  pointer-events: none;
+  stroke: #e11d48;
+  stroke-dasharray: 6 3;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.pa-annotation__quality-issue--warning {
+  fill: rgb(180 83 9 / 10%);
+  stroke: var(--bronto-warning, var(--warning, #b45309));
+}
+
+.pa-annotation__quality-issue--info {
+  fill: rgb(37 99 235 / 7%);
+  stroke: var(--pa-annotation-accent, #2563eb);
+  stroke-dasharray: 3 3;
+}
+
 .pa-annotation--manual .pa-annotation__connector {
   stroke-dasharray: 5 3;
 }

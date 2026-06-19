@@ -7,6 +7,7 @@ import type {
   Box,
   DataAttributes,
   Padding,
+  PaddingInput,
   PlacementCandidate,
   Point,
   ResolvedAnnotation,
@@ -22,17 +23,25 @@ import type {
 } from '../core/edit.js';
 import {
   boxCenter,
+  boxUnion,
   expandBox,
   resolvePadding
 } from '../core/anchors.js';
 import { annotationEditHandles } from '../core/edit.js';
 import { annotationsForPaint } from '../core/order.js';
 import { wrapNoteText } from '../core/text.js';
+import {
+  evaluateAnnotationLayout,
+  type LayoutQualityIssue,
+  type LayoutQualityReport
+} from '../core/quality.js';
 
 export type SvgRenderOptions = {
   classPrefix?: string;
   includeSubjects?: boolean;
   includeDebugBoxes?: boolean;
+  includeQualityIssues?: boolean | LayoutQualityReport;
+  qualityIssuePadding?: PaddingInput;
   includeEditHandles?: boolean | AnnotationEditHandleOptions;
   editHandleTabIndex?: number;
   markerIdPrefix?: string;
@@ -55,6 +64,9 @@ export function renderAnnotationsSvg(layout: ResolvedLayout, options: SvgRenderO
   const debugBoxes = options.includeDebugBoxes
     ? paintAnnotations.flatMap((item) => renderDebugBoxes(item, prefix)).join('')
     : '';
+  const qualityIssues = options.includeQualityIssues
+    ? renderQualityIssues(layout, qualityReportForLayout(layout, options.includeQualityIssues), prefix, options.qualityIssuePadding)
+    : '';
   const editHandles = options.includeEditHandles
     ? renderEditHandles(layout, prefix, options.includeEditHandles === true ? {} : options.includeEditHandles, options.editHandleTabIndex)
     : '';
@@ -68,6 +80,7 @@ export function renderAnnotationsSvg(layout: ResolvedLayout, options: SvgRenderO
     markerDefs,
     paintAnnotations.map((item) => renderResolvedAnnotationSvg(item, prefix, includeSubjects, markerPrefix, options.noteTabIndex)).join(''),
     debugBoxes,
+    qualityIssues,
     editHandles,
     '</svg>'
   ].join('');
@@ -182,6 +195,83 @@ function renderDebugBoxes(item: ResolvedAnnotation, prefix: string): string[] {
   const candidates = item.placement.candidates.map((candidate, index) => renderCandidateDebugBox(item, candidate, index, prefix));
 
   return [winner, ...candidates];
+}
+
+function renderQualityIssues(
+  layout: ResolvedLayout,
+  report: LayoutQualityReport,
+  prefix: string,
+  padding: PaddingInput | undefined
+): string {
+  const boxes = report.issues
+    .map((issue, index) => renderQualityIssue(layout, issue, index, prefix, padding))
+    .filter(Boolean);
+
+  return boxes.length > 0
+    ? `<g class="${escapeAttribute(`${prefix}__quality-issues`)}">${boxes.join('')}</g>`
+    : '';
+}
+
+function renderQualityIssue(
+  layout: ResolvedLayout,
+  issue: LayoutQualityIssue,
+  index: number,
+  prefix: string,
+  padding: PaddingInput | undefined
+): string {
+  const box = qualityIssueBox(layout, issue);
+
+  if (!box) {
+    return '';
+  }
+
+  const expanded = expandBox(box, padding ?? 4);
+  const className = classNames(
+    `${prefix}__quality-issue`,
+    `${prefix}__quality-issue--${issue.severity}`,
+    `${prefix}__quality-issue--${issue.type}`
+  );
+
+  return [
+    `<g class="${escapeAttribute(className)}" aria-hidden="true" data-quality-issue="${escapeAttribute(issue.type)}" data-quality-severity="${escapeAttribute(issue.severity)}" data-quality-index="${index}"${qualityIssueData(issue)}>`,
+    `<title>${escapeText(issue.message)}</title>`,
+    `<rect x="${expanded.x}" y="${expanded.y}" width="${expanded.width}" height="${expanded.height}" />`,
+    '</g>'
+  ].join('');
+}
+
+function qualityIssueBox(layout: ResolvedLayout, issue: LayoutQualityIssue): Box | undefined {
+  if (issue.annotationId) {
+    return layout.annotations.find((item) => item.id === issue.annotationId)?.noteBox;
+  }
+
+  if (issue.annotationIds) {
+    const boxes = issue.annotationIds
+      .map((id) => layout.annotations.find((item) => item.id === id)?.noteBox)
+      .filter((box): box is Box => Boolean(box));
+
+    return boxes.length > 0 ? boxUnion(boxes) : undefined;
+  }
+
+  return undefined;
+}
+
+function qualityReportForLayout(
+  layout: ResolvedLayout,
+  input: true | LayoutQualityReport
+): LayoutQualityReport {
+  return input === true ? evaluateAnnotationLayout(layout) : input;
+}
+
+function qualityIssueData(issue: LayoutQualityIssue): string {
+  return dataAttributes({
+    annotationId: issue.annotationId,
+    annotationIds: issue.annotationIds?.join(' '),
+    obstacleIndex: issue.obstacleIndex,
+    segmentIndex: issue.segmentIndex,
+    area: issue.area,
+    amount: issue.amount
+  });
 }
 
 function renderEditHandles(

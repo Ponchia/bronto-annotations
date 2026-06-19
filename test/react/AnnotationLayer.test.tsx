@@ -474,6 +474,41 @@ describe('React adapter', () => {
     expect(qualityEvents[0]?.layout).toBe(layouts[0]);
   });
 
+  it('renders opt-in layout-quality issue boxes through the React adapter', () => {
+    render(
+      <AnnotationLayer
+        annotations={[
+          {
+            id: 'first',
+            anchor: { type: 'point', point: { x: 80, y: 80 } },
+            note: { title: 'First' },
+            placement: { manual: { x: 120, y: 40, side: 'right' } }
+          },
+          {
+            id: 'second',
+            anchor: { type: 'point', point: { x: 90, y: 90 } },
+            note: { title: 'Second' },
+            placement: { manual: { x: 140, y: 56, side: 'right' } }
+          }
+        ]}
+        bounds={{ x: 0, y: 0, width: 360, height: 220 }}
+        noteSizes={{
+          first: { width: 120, height: 60 },
+          second: { width: 120, height: 60 }
+        }}
+        qualityDebug
+      />
+    );
+
+    const issue = document.querySelector('.pa-annotation__quality-issue--note-overlap');
+
+    expect(issue).toBeTruthy();
+    expect(issue?.getAttribute('data-quality-issue')).toBe('note-overlap');
+    expect(issue?.getAttribute('data-quality-severity')).toBe('error');
+    expect(issue?.getAttribute('data-annotation-ids')).toBe('first second');
+    expect(issue?.querySelector('title')?.textContent).toBe('Annotations "first" and "second" overlap.');
+  });
+
   it('reports and asserts target alignment through the React adapter', () => {
     const targetAlignmentEvents: AnnotationLayerTargetAlignmentEvent[] = [];
 

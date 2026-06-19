@@ -68,7 +68,7 @@ as its data source.
 | --- | --- | --- | --- |
 | Real report data | Using current repository JSON made the host report more representative than static demo values and caught that `prepareDomAnnotations` obstacle specs must stay array-shaped. | low | Keep the self-dogfood harness in `npm run check` so API drift in clean consumers is caught quickly. |
 | Generated SVG surfaces | The chart and diagram behaved like ordinary host-owned SVG: generate the marks first, call `annotationFrameFromSvg()`, then resolve annotations in the same viewBox. | low | Keep this as the preferred recipe for host-generated SVG that is not owned by a vendor adapter. |
-| Manual editorial placement | Manual notes remain useful for audit rows and flow edges, but the author must think in the surface coordinate system. | medium | Pair manual placement with edit handles or a debug/authoring overlay when integrating into a production host. |
+| Manual editorial placement | Manual notes remain useful for audit rows and flow edges, but the author must think in the surface coordinate system. | medium | Pair manual placement with edit handles and the opt-in static SVG `includeQualityIssues` or React `qualityDebug` issue overlay when integrating into a production host. |
 
 ## Outcome
 

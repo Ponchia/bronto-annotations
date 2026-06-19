@@ -53,6 +53,7 @@ const required = [
       'AnnotationLayerTargetAlignmentEvent',
       'onQuality',
       'assertQuality',
+      'qualityDebug',
       'onTargetAlignment',
       'assertTargetAlignment',
       'editHandleTabIndex'
@@ -153,6 +154,7 @@ const required = [
     terms: [
       '.pa-annotation-layer',
       '.pa-annotation__edit-handle',
+      '.pa-annotation__quality-issue',
       '.ui-annotation',
       '.ui-annotation__connector-end'
     ]
@@ -185,5 +187,6 @@ for (const boundary of [
   assert.ok(api.includes(boundary), `API reference must include boundary ${boundary}`);
 }
 assert.ok(api.includes('annotationData'), 'API reference must include annotationData');
+assert.ok(api.includes('includeQualityIssues'), 'API reference must include includeQualityIssues');
 
 console.log(`API reference verified: ${required.length} public subpaths.`);

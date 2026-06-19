@@ -56,6 +56,7 @@ export type AnnotationLayerProps = LayoutOptions & {
   editHandleTabIndex?: number;
   noteTabIndex?: number;
   preserveAspectRatio?: string;
+  qualityDebug?: boolean;
   qualityFormat?: LayoutQualityFormatOptions;
   renderNote?: (annotation: ResolvedAnnotation) => ReactNode;
   targetAlignmentFormat?: AnchorAlignmentFormatOptions;

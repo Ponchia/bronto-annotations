@@ -61,6 +61,42 @@ describe('SVG renderer', () => {
     expect(svg).toMatch(/class="pa-annotation__note-box"[^>]+aria-hidden="true"/);
   });
 
+  it('can render layout-quality issue boxes for manual placement debugging', () => {
+    const layout = resolveAnnotationLayout({
+      annotations: [
+        {
+          id: 'first',
+          anchor: { type: 'point', point: { x: 80, y: 80 } },
+          note: { title: 'First' },
+          placement: { manual: { x: 120, y: 40, side: 'right' } }
+        },
+        {
+          id: 'second',
+          anchor: { type: 'point', point: { x: 90, y: 90 } },
+          note: { title: 'Second' },
+          placement: { manual: { x: 140, y: 56, side: 'right' } }
+        }
+      ],
+      bounds: { x: 0, y: 0, width: 360, height: 220 },
+      noteSizes: {
+        first: { width: 120, height: 60 },
+        second: { width: 120, height: 60 }
+      }
+    });
+    const svg = renderAnnotationsSvg(layout, {
+      includeQualityIssues: true,
+      qualityIssuePadding: 2
+    });
+
+    expect(svg).toContain('pa-annotation__quality-issues');
+    expect(svg).toContain('pa-annotation__quality-issue--error');
+    expect(svg).toContain('pa-annotation__quality-issue--note-overlap');
+    expect(svg).toContain('data-quality-issue="note-overlap"');
+    expect(svg).toContain('data-quality-severity="error"');
+    expect(svg).toContain('data-annotation-ids="first second"');
+    expect(svg).toContain('<title>Annotations "first" and "second" overlap.</title>');
+  });
+
   it('emits typed variant, tone, and motion classes', () => {
     const layout = resolveAnnotationLayout({
       annotations: [

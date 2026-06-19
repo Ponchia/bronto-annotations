@@ -72,7 +72,9 @@ Primary groups:
   `SvgRenderOptions`. `SvgRenderOptions.noteTabIndex` makes visible SVG notes
   keyboard-focusable for host-provided note navigation, and
   `editHandleTabIndex` can do the same for static SVG edit handles when the
-  host wires authoring behavior.
+  host wires authoring behavior. `includeQualityIssues` renders opt-in
+  layout-quality issue boxes from `evaluateAnnotationLayout()` so manual
+  placement and collision problems can be inspected visually.
 - Edit helpers: `annotationEditHandles`, `annotationEditPatch`,
   `createAnnotationEditEvent`, `createAnnotationEditDelta`,
   `applyAnnotationEdit`, `applyAnnotationEdits`, `translateAnchor`.
@@ -140,6 +142,8 @@ for editable layers and can be set to `-1` when the host wants programmatic
 focus only.
 `assertQuality`, `qualityFormat`, and `onQuality` use the same layout-quality
 reporting path as the DOM-free core after each resolved React layout.
+`qualityDebug` renders the same opt-in layout-quality issue boxes in the React
+SVG layer for authoring and manual-placement review.
 `targetAlignmentTargets`, `targetAlignmentOptions`, `targetAlignmentFormat`,
 `assertTargetAlignment`, and `onTargetAlignment` use the same generated-target
 alignment diagnostics as prepared layouts, which is useful when React renders an
@@ -373,7 +377,8 @@ Styled class families:
   `.pa-annotation__subject`, `.pa-annotation__connector`,
   `.pa-annotation__note`, `.pa-annotation__note-line`,
   `.pa-annotation__title`, `.pa-annotation__label`,
-  `.pa-annotation__badge`, `.pa-annotation__edit-handle`.
+  `.pa-annotation__badge`, `.pa-annotation__quality-issue`,
+  `.pa-annotation__edit-handle`.
 - Legacy Bronto classes: `.ui-annotation`, `.ui-annotation__subject`,
   `.ui-annotation__connector`, `.ui-annotation__connector-end`,
   `.ui-annotation__note`, `.ui-annotation__note-line`,

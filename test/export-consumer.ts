@@ -737,6 +737,7 @@ assertAnchorAlignmentReportIfRequested(typedAlignmentReport, alignmentAssertInpu
 renderAnnotationsSvg(layout, {
   editHandleTabIndex: 0,
   includeEditHandles: true,
+  includeQualityIssues: true,
   markerIdPrefix: 'typed-layer',
   noteTabIndex: 0,
   preserveAspectRatio: 'xMinYMin meet'
@@ -858,6 +859,7 @@ const props: AnnotationLayerProps = {
   bounds: { x: 0, y: 0, width: 100, height: 100 },
   editable: { includeAnchor: true, noteHandlePosition: editHandlePosition, keyboardStep: 2, keyboardLargeStep: 12 },
   editHandleTabIndex: -1,
+  qualityDebug: true,
   onEdit: (event: AnnotationLayerEditEvent) => {
     void event.suggestedPlacement?.manual.x;
     void event.suggestedAnchor?.type;

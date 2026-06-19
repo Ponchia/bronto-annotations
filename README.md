@@ -885,8 +885,9 @@ Variants include `label`, `callout`, `elbow`, `curve`, `circle`, `rect`,
 `threshold`, `badge`, `bracket`, `band`, `slope`, `compare`, `cluster`, `axis`,
 `timeline`, and `evidence`. Tones are `accent`, `muted`, `success`, `warning`,
 `danger`, and `info`; motion hints are `draw`, `reveal`, `pulse`, and `focus`.
-The CSS bridge styles notes, debug boxes, edit handles, and subject/connector
-parts, including compact badge markers and Bronto-compatible note rule lines.
+The CSS bridge styles notes, debug boxes, layout-quality issue boxes, edit
+handles, and subject/connector parts, including compact badge markers and
+Bronto-compatible note rule lines.
 Annotation overlays are pointer-transparent by default so host charts and
 diagrams keep receiving clicks; edit handles opt back into pointer events for
 authoring. Static SVG output can expose tabbable notes via `noteTabIndex` and
@@ -1055,6 +1056,8 @@ the API in real consumers before wider stability promises.
 - `docs/dogfood-self-report.md` records the self-dogfood release-evidence
   report built from current readiness/audit data and friction found by
   `npm run test:dogfood:self-report`.
+- Static SVG `includeQualityIssues` and React `qualityDebug` render
+  layout-quality issue boxes for manual-placement and overlap debugging.
 - `docs/canary-release.md` documents the GitHub Packages canary lane, and
   `docs/canary-publish-report.md` records the verified
   `0.1.0-canary.1.e754177` registry install; `npm run test:canary` verifies the
