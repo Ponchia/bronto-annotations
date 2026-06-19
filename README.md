@@ -1048,6 +1048,9 @@ This repository is set up as a release-ready package, not only a local scaffold.
   to npm with provenance.
 - Dependabot tracks npm and GitHub Actions updates, with optional peers grouped
   separately from tooling.
+- CodeQL, Dependency Review, and OpenSSF Scorecard run as public-repo security
+  automation; see `docs/security-automation.md` for workflow and GitHub setting
+  details.
 - `CONTRIBUTING.md` documents product boundaries, verification expectations,
   adapter requirements, and release handoff.
 - Security policy: `SECURITY.md` defines the vulnerability reporting path and
@@ -1055,7 +1058,8 @@ This repository is set up as a release-ready package, not only a local scaffold.
 - Pull request and issue templates require reproduction details, verification,
   and product-boundary checks.
 - `scripts/check-repo-readiness.mjs` keeps package metadata, workflows,
-  templates, lifecycle docs, and release guardrails wired into `npm run check`.
+  security automation, templates, lifecycle docs, and release guardrails wired
+  into `npm run check`.
 
 ## Pre-Release Hardening
 

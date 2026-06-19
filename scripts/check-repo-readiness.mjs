@@ -14,11 +14,16 @@ const canaryPublishReport = await read('docs/canary-publish-report.md');
 const ci = await read('.github/workflows/ci.yml');
 const release = await read('.github/workflows/release.yml');
 const canary = await read('.github/workflows/canary.yml');
+const codeql = await read('.github/workflows/codeql.yml');
+const codeqlConfig = await read('.github/codeql/codeql-config.yml');
+const dependencyReview = await read('.github/workflows/dependency-review.yml');
+const scorecard = await read('.github/workflows/scorecard.yml');
 const dependabot = await read('.github/dependabot.yml');
 const prTemplate = await read('.github/pull_request_template.md');
 const bugTemplate = await read('.github/ISSUE_TEMPLATE/bug_report.yml');
 const featureTemplate = await read('.github/ISSUE_TEMPLATE/feature_request.yml');
 const codeowners = await read('.github/CODEOWNERS');
+const securityAutomationDocs = await read('docs/security-automation.md');
 
 assert.notEqual(pkg.version, '0.0.0', 'package version must be release-shaped, not 0.0.0');
 assert.equal(lock.version, pkg.version, 'package-lock root version must match package.json');
@@ -50,13 +55,19 @@ for (const keyword of [
 
 assert.equal(pkg.scripts?.['test:repo'], 'node scripts/check-repo-readiness.mjs');
 assert.equal(pkg.scripts?.['test:release'], 'node scripts/check-release.mjs');
+assert.equal(pkg.scripts?.['test:security-automation'], 'node scripts/check-security-automation.mjs');
 assert.ok(pkg.scripts?.check?.includes('npm run test:repo'), 'npm run check must include test:repo');
 assert.ok(pkg.scripts?.check?.includes('npm run test:release'), 'npm run check must include test:release');
+assert.ok(pkg.scripts?.check?.includes('npm run test:security-automation'), 'npm run check must include test:security-automation');
 
 for (const path of [
   '.github/workflows/ci.yml',
   '.github/workflows/release.yml',
   '.github/workflows/canary.yml',
+  '.github/workflows/codeql.yml',
+  '.github/codeql/codeql-config.yml',
+  '.github/workflows/dependency-review.yml',
+  '.github/workflows/scorecard.yml',
   '.github/dependabot.yml',
   '.github/CODEOWNERS',
   '.github/pull_request_template.md',
@@ -68,6 +79,7 @@ for (const path of [
   'docs/canary-release.md',
   'docs/canary-publish-report.md',
   'docs/public-release-decisions.md',
+  'docs/security-automation.md',
   'docs/release.md'
 ]) {
   await assertPath(path);
@@ -117,6 +129,55 @@ for (const term of [
   'NODE_AUTH_TOKEN'
 ]) {
   assertIncludes(canary, term, '.github/workflows/canary.yml');
+}
+
+for (const term of [
+  'name: CodeQL',
+  'pull_request:',
+  'push:',
+  'schedule:',
+  'workflow_dispatch:',
+  'security-events: write',
+  'github/codeql-action/init@v4',
+  'languages: javascript-typescript',
+  'config-file: ./.github/codeql/codeql-config.yml',
+  'queries: security-extended,security-and-quality',
+  'github/codeql-action/analyze@v4'
+]) {
+  assertIncludes(codeql, term, '.github/workflows/codeql.yml');
+}
+
+for (const term of [
+  '@ponchia/annotations CodeQL config',
+  'query-filters:',
+  'js/html-constructed-from-input',
+  'escaped SVG string renderers'
+]) {
+  assertIncludes(codeqlConfig, term, '.github/codeql/codeql-config.yml');
+}
+
+for (const term of [
+  'name: Dependency Review',
+  'pull_request:',
+  'pull-requests: read',
+  'actions/dependency-review-action@v5',
+  'fail-on-severity: high',
+  'warn-only: false'
+]) {
+  assertIncludes(dependencyReview, term, '.github/workflows/dependency-review.yml');
+}
+
+for (const term of [
+  'name: Scorecard',
+  'branch_protection_rule:',
+  'schedule:',
+  'id-token: write',
+  'security-events: write',
+  'ossf/scorecard-action@v2.4.3',
+  'results_format: sarif',
+  'github/codeql-action/upload-sarif@v4'
+]) {
+  assertIncludes(scorecard, term, '.github/workflows/scorecard.yml');
 }
 
 for (const term of [
@@ -172,9 +233,22 @@ for (const term of [
 for (const term of [
   'Reporting a Vulnerability',
   'Security Boundary',
-  'Host apps are responsible'
+  'Host apps are responsible',
+  'private vulnerability reporting'
 ]) {
   assertIncludes(security, term, 'SECURITY.md');
+}
+
+for (const term of [
+  'Security Automation',
+  'CodeQL',
+  'js/html-constructed-from-input',
+  'Dependency Review',
+  'OpenSSF Scorecard',
+  'Dependabot alerts',
+  'Secret scanning push protection'
+]) {
+  assertIncludes(securityAutomationDocs, term, 'docs/security-automation.md');
 }
 
 for (const term of [
@@ -238,6 +312,9 @@ for (const term of [
   'CI runs `npm run check`',
   'Release publishing is tag-driven',
   'npm-publish',
+  'CodeQL',
+  'Dependency Review',
+  'OpenSSF Scorecard',
   'Security policy'
 ]) {
   assertIncludes(readme, term, 'README.md');
