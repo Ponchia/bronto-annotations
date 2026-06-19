@@ -9,6 +9,20 @@ diagrams, D2 diagrams, React Flow graphs, and report surfaces. It does not
 render charts, parse diagram languages, lay out graphs, own app state, persist
 annotations, or provide a design system.
 
+## Prior Art And Inspiration
+
+This package is directly and intentionally inspired by Susie Lu's
+[d3-annotation](https://d3-annotation.susielu.com/) and
+[react-annotation](https://susielu.com/data-viz/annotations) work. The
+subject/connector/note grammar, practical callout types, and familiar
+`x`/`y` plus `dx`/`dy` authoring model exist here because that work made
+annotations a first-class part of web visualization.
+
+`@ponchia/annotations` is a new DOM-free TypeScript implementation for
+host-supplied geometry and optional adapters. It does not vendor, wrap, or
+depend on d3-annotation; the root package keeps D3, React, Vega, Mermaid, D2,
+React Flow, and `@ponchia/ui` optional and outside the core runtime.
+
 ## Install
 
 ```bash
@@ -309,8 +323,8 @@ when the badge should also carry a visible callout note. Presets accept the same
 
 ## D3-Style Migration
 
-For teams used to d3-annotation's `x`/`y` plus `dx`/`dy` authoring model, the
-root package includes a DOM-free conversion helper. It does not import D3,
+For teams used to Susie Lu's d3-annotation `x`/`y` plus `dx`/`dy` authoring
+model, the root package includes a DOM-free conversion helper. It does not import D3,
 mutate selections, or own chart scales; it only maps familiar annotation data
 into this package's `Annotation` model.
 
@@ -472,10 +486,10 @@ teams migrating from `annotation().annotations(...).type(...).accessors(...)`.
 This is a
 migration/ergonomics bridge, not a D3 component replacement.
 
-`docs/d3-annotation-parity.json` tracks the supported surface from
-`d3-svg-annotation@2.5.1`: type aliases, familiar note/subject/connector fields,
-custom d3-style conversion helpers, datum accessors, inverse edit mapping, and
-explicit non-goals. `npm run
+`docs/d3-annotation-parity.json` tracks the supported surface inspired by Susie
+Lu's `d3-svg-annotation@2.5.1`: type aliases, familiar
+note/subject/connector fields, custom d3-style conversion helpers, datum
+accessors, inverse edit mapping, and explicit non-goals. `npm run
 test:d3-parity` proves those helpers still work and that the root package does
 not export the D3 selection adapter, D3 type base, or D3 runtime custom type
 component.

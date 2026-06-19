@@ -10,6 +10,8 @@ reasonable.
 
 ### Changed
 
+- Added explicit public acknowledgement that Susie Lu's d3-annotation and
+  react-annotation work are the primary inspiration for the package.
 - Switched future npm releases to the tag-driven, protected-environment CI/CD
   lane used by the public Ponchia packages.
 
