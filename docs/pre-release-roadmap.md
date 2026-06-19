@@ -62,11 +62,11 @@ has been proven in real consumer use before a public `1.0.0` commitment.
   summary derived from validation and layout-quality results.
 - Adapter recipes: `docs/adapter-recipes-proof.md` records which deeper
   generated-surface recipes are already test-proven or browser-proven.
-- Authoring UX: `createAnnotationEditEvent` and `createAnnotationEditDelta`
-  provide DOM-free note-drag and anchor-move suggestions for React and custom
-  authoring surfaces; `includeQualityIssues` and `qualityDebug` provide
-  opt-in visual issue boxes for manual-placement review; hosts still own state
-  and persistence.
+- Authoring UX: `createAnnotationEditSession`, `createAnnotationEditEvent`,
+  and `createAnnotationEditDelta` provide DOM-free note-drag, keyboard nudge,
+  and anchor-move suggestions for React and custom authoring surfaces;
+  `includeQualityIssues` and `qualityDebug` provide opt-in visual issue boxes
+  for manual-placement review; hosts still own state and persistence.
 - Public release decisions: `docs/public-release-decisions.md` fixes the
   `@ponchia/annotations` package name, `Ponchia/bronto-annotations` repository
   policy, public npm access, README positioning, and examples hosting decisions

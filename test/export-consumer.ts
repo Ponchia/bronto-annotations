@@ -28,6 +28,7 @@ import {
   brontoAnnotationClassName,
   createAnnotationEditDelta,
   createAnnotationEditEvent,
+  createAnnotationEditSession,
   createD3StyleAnnotationBuilder,
   d3StyleAnnotationCollectionEditPatch,
   defineD3StyleAnnotationType,
@@ -76,9 +77,11 @@ import {
   type AnnotationEditHandlePosition,
   type AnnotationEditPhase,
   type AnnotationEditPatch,
+  type AnnotationEditSession,
   type AnnotationEditSuggestion,
   type CreateAnnotationEditDeltaOptions,
   type CreateAnnotationEditEventOptions,
+  type CreateAnnotationEditSessionOptions,
   type AnnotationClassNameInput,
   type AnnotationClassNameValue,
   type ApplyAnnotationEditOptions,
@@ -719,6 +722,12 @@ const editDeltaOptions: CreateAnnotationEditDeltaOptions = {
   phase: 'end'
 };
 createAnnotationEditDelta(editDeltaOptions);
+const editSessionOptions: CreateAnnotationEditSessionOptions = {
+  layout,
+  handle: editHandles[0]!
+};
+const editSession: AnnotationEditSession = createAnnotationEditSession(editSessionOptions);
+applyAnnotationEdits(annotations, editSession.end({ x: editSession.origin.x + 2, y: editSession.origin.y + 3 }));
 const editedAnnotation = applyAnnotationEdit(annotations[0]!, editPatch);
 applyAnnotationEdits([editedAnnotation], editSuggestion, editApplyOptions);
 applyAnnotationEdits([editedAnnotation], authoringEditEvent, editApplyOptions);

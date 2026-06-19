@@ -67,7 +67,7 @@ static report surface built with `@ponchia/ui` report classes.
 
 | Area | Observation | Severity | Proposed Fix |
 | --- | --- | --- | --- |
-| Manual placement | Manual coordinates are top-left note coordinates, which is precise but easy to place over the target on the first attempt. | medium | Addressed for `0.1.x` by DOM-free `createAnnotationEditEvent` / `createAnnotationEditDelta` helpers plus opt-in visual issue boxes through static SVG `includeQualityIssues` and React `qualityDebug`. Production hosts can still layer richer authoring UI on top. |
+| Manual placement | Manual coordinates are top-left note coordinates, which is precise but easy to place over the target on the first attempt. | medium | Addressed for `0.1.x` by DOM-free `createAnnotationEditSession`, `createAnnotationEditEvent`, and `createAnnotationEditDelta` helpers plus opt-in visual issue boxes through static SVG `includeQualityIssues` and React `qualityDebug`. Production hosts can still layer richer authoring UI on top. |
 | Mixed DOM/SVG roots | A single `prepareDomAnnotations` call can mix DOM and SVG anchors, but the root must contain every selector while each spec still carries the right coordinate space. | low | Addressed by `docs/integration-recipes.md` and enforced by `npm run test:dogfood:bronto-report`, which records `mixedCoordinateSpaces`. |
 | Report styling | `@ponchia/annotations/bronto.css` coexists with public `@ponchia/ui` report, dataviz, and legend CSS without a hard UI dependency. | low | No package change required. |
 | API stability | The prepared-layout API remains the right path for report builds because it centralizes validation, target alignment, and quality assertions. | low | Keep this as the recommended report integration path. |

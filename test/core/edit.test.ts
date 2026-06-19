@@ -6,6 +6,7 @@ import {
   applyAnnotationEdits,
   createAnnotationEditDelta,
   createAnnotationEditEvent,
+  createAnnotationEditSession,
   resolveAnnotationLayout,
   translateAnchor
 } from '../../src/index.js';
@@ -235,6 +236,62 @@ describe('annotation edit handles', () => {
       anchor: event.suggestedAnchor
     });
     expect(applyAnnotationEdit(annotation.annotation, event).anchor).toEqual(event.suggestedAnchor);
+  });
+
+  it('creates an authoring session for drag and nudge workflows', () => {
+    const layout = resolveAnnotationLayout({
+      annotations: [
+        {
+          id: 'session-edit',
+          anchor: { type: 'point', point: { x: 40, y: 40 } },
+          note: { title: 'Session edit' },
+          placement: { manual: { x: 80, y: 24 } }
+        }
+      ],
+      bounds: { x: 0, y: 0, width: 240, height: 160 },
+      noteSizes: {
+        'session-edit': { width: 100, height: 48 }
+      }
+    });
+    const handle = annotationEditHandles(layout)[0]!;
+    const session = createAnnotationEditSession({ layout, handle });
+    const start = session.start();
+    const move = session.move({ x: handle.point.x + 9, y: handle.point.y + 5 });
+    const end = session.end({ x: handle.point.x + 12, y: handle.point.y + 8 });
+    const nudge = session.delta({ x: -2, y: 3 }, 'end');
+
+    expect(session.annotationId).toBe('session-edit');
+    expect(session.origin).toEqual(handle.point);
+    expect(start.phase).toBe('start');
+    expect(start.delta).toEqual({ x: 0, y: 0 });
+    expect(move.phase).toBe('move');
+    expect(move.suggestedPlacement?.manual).toMatchObject({ x: 89, y: 29 });
+    expect(end.phase).toBe('end');
+    expect(end.suggestedPlacement?.manual).toMatchObject({ x: 92, y: 32 });
+    expect(nudge.phase).toBe('end');
+    expect(nudge.suggestedPlacement?.manual).toMatchObject({ x: 78, y: 27 });
+    expect(applyAnnotationEdits([layout.annotations[0]!.annotation], end)[0]?.placement)
+      .toEqual(end.suggestedPlacement);
+  });
+
+  it('rejects edit sessions for handles that are not in the layout', () => {
+    const layout = resolveAnnotationLayout({
+      annotations: [
+        {
+          id: 'session-edit',
+          anchor: { type: 'point', point: { x: 40, y: 40 } },
+          note: { title: 'Session edit' }
+        }
+      ],
+      bounds: { x: 0, y: 0, width: 240, height: 160 }
+    });
+    const handle = {
+      ...annotationEditHandles(layout)[0]!,
+      annotationId: 'missing'
+    };
+
+    expect(() => createAnnotationEditSession({ layout, handle }))
+      .toThrow('Edit handle target not found in layout: missing.');
   });
 
   it('rejects mismatched authoring handles', () => {

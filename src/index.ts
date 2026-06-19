@@ -168,9 +168,11 @@ export type {
   AnnotationEditPhase,
   AnnotationEditPatch,
   AnnotationEditSuggestion,
+  AnnotationEditSession,
   ApplyAnnotationEditOptions,
   CreateAnnotationEditDeltaOptions,
-  CreateAnnotationEditEventOptions
+  CreateAnnotationEditEventOptions,
+  CreateAnnotationEditSessionOptions
 } from './core/edit.js';
 export {
   annotationEditHandles,
@@ -179,6 +181,7 @@ export {
   applyAnnotationEdits,
   createAnnotationEditDelta,
   createAnnotationEditEvent,
+  createAnnotationEditSession,
   translateAnchor
 } from './core/edit.js';
 export type {

@@ -237,27 +237,16 @@ the root helpers to build the same commit-ready edit suggestion:
 import {
   annotationEditHandles,
   applyAnnotationEdits,
-  createAnnotationEditDelta,
-  createAnnotationEditEvent,
+  createAnnotationEditSession,
   resolveAnnotationLayout
 } from '@ponchia/annotations';
 
 const layout = resolveAnnotationLayout({ annotations, bounds, noteSizes });
 const handle = annotationEditHandles(layout, { includeAnchor: true })[0]!;
+const edit = createAnnotationEditSession({ layout, handle });
 
-const dragEnd = createAnnotationEditEvent({
-  annotation: layout.annotations[0]!,
-  handle,
-  origin: handle.point,
-  point: { x: handle.point.x + 18, y: handle.point.y + 10 },
-  phase: 'end'
-});
-const keyboardNudge = createAnnotationEditDelta({
-  annotation: layout.annotations[0]!,
-  handle,
-  delta: { x: 2, y: 0 },
-  phase: 'end'
-});
+const dragEnd = edit.end({ x: edit.origin.x + 18, y: edit.origin.y + 10 });
+const keyboardNudge = edit.delta({ x: 2, y: 0 }, 'end');
 
 const afterDrag = applyAnnotationEdits(annotations, dragEnd);
 const afterNudge = applyAnnotationEdits(afterDrag, keyboardNudge);

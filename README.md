@@ -558,28 +558,27 @@ math without React:
 import {
   annotationEditHandles,
   applyAnnotationEdits,
-  createAnnotationEditEvent,
+  createAnnotationEditSession,
   resolveAnnotationLayout
 } from '@ponchia/annotations';
 
 const layout = resolveAnnotationLayout({ annotations, bounds, noteSizes });
 const handle = annotationEditHandles(layout, { includeAnchor: true })[0]!;
-const event = createAnnotationEditEvent({
-  annotation: layout.annotations[0]!,
+const edit = createAnnotationEditSession({
+  layout,
   handle,
-  origin: handle.point,
-  point: { x: handle.point.x + 12, y: handle.point.y + 8 },
-  phase: 'end'
 });
+const event = edit.end({ x: edit.origin.x + 12, y: edit.origin.y + 8 });
 
 const nextAnnotations = applyAnnotationEdits(annotations, event);
 ```
 
-`createAnnotationEditEvent` accepts start/current coordinates in the overlay
-coordinate system. `createAnnotationEditDelta` is the keyboard or nudge
-variant when the host already has a delta. Both helpers emit the same
-commit-ready suggestion shape as the React adapter and still leave persistence
-to the host app.
+`createAnnotationEditSession` wraps start/move/end drag events and delta-based
+keyboard nudges for one handle. `createAnnotationEditEvent` accepts
+start/current coordinates directly, and `createAnnotationEditDelta` is the
+lower-level keyboard or nudge variant when the host already has a delta. All
+helpers emit the same commit-ready suggestion shape as the React adapter and
+still leave persistence to the host app.
 
 ## DOM And SVG Utilities
 

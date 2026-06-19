@@ -343,9 +343,10 @@ without connector marker ID collisions.
 - Geometry helpers are deterministic SVG-building helpers. They are not a D3
   lifecycle, source-parser, or persistence layer.
 - Edit helpers are an authoring adapter surface, not persisted state.
-  `createAnnotationEditEvent` and `createAnnotationEditDelta` compute suggested
-  manual placement or translated anchor geometry for React and custom
-  authoring surfaces; the host app decides whether and where to store it.
+  `createAnnotationEditSession`, `createAnnotationEditEvent`, and
+  `createAnnotationEditDelta` compute suggested manual placement or translated
+  anchor geometry for React and custom authoring surfaces; the host app decides
+  whether and where to store it.
 
 ## Future Work
 

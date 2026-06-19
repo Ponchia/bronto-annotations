@@ -113,6 +113,7 @@
         {
           "file": "src/core/edit.ts",
           "terms": [
+            "createAnnotationEditSession",
             "createAnnotationEditEvent",
             "createAnnotationEditDelta",
             "AnnotationEditEvent"
@@ -147,6 +148,7 @@
           "file": "test/core/edit.test.ts",
           "terms": [
             "custom authoring surfaces",
+            "authoring session for drag and nudge workflows",
             "translated anchor edit events",
             "annotationEditPatch(event)"
           ]
@@ -1041,6 +1043,7 @@
             "docs/canary-publish-report.md",
             "docs/adapter-recipes-proof.md",
             "docs/public-release-decisions.md",
+            "createAnnotationEditSession",
             "createAnnotationEditEvent",
             "createAnnotationEditDelta",
             "includeQualityIssues",

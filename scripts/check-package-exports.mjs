@@ -40,6 +40,7 @@ assert.equal(typeof core.brontoAnnotationClassName, 'function');
 assert.equal(typeof core.annotationStyleVariables, 'function');
 assert.equal(typeof core.applyAnnotationEdit, 'function');
 assert.equal(typeof core.applyAnnotationEdits, 'function');
+assert.equal(typeof core.createAnnotationEditSession, 'function');
 assert.equal(typeof core.annotationParts, 'function');
 assert.equal(typeof core.annotationTransform, 'function');
 assert.equal(typeof core.circleSubjectPath, 'function');

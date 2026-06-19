@@ -79,6 +79,23 @@ export type CreateAnnotationEditDeltaOptions = {
   phase?: AnnotationEditPhase;
 };
 
+export type CreateAnnotationEditSessionOptions = {
+  layout: ResolvedLayout;
+  handle: AnnotationEditHandle;
+  origin?: Point;
+};
+
+export type AnnotationEditSession = {
+  annotationId: string;
+  handle: AnnotationEditHandle;
+  origin: Point;
+  annotation: ResolvedAnnotation;
+  start(point?: Point): AnnotationEditEvent;
+  move(point: Point): AnnotationEditEvent;
+  end(point?: Point): AnnotationEditEvent;
+  delta(delta: Point, phase?: AnnotationEditPhase): AnnotationEditEvent;
+};
+
 const DEFAULT_HANDLE_RADIUS = 5;
 const DEFAULT_HIT_RADIUS = 10;
 
@@ -191,6 +208,40 @@ export function createAnnotationEditDelta(options: CreateAnnotationEditDeltaOpti
     },
     ...(options.phase ? { phase: options.phase } : {})
   });
+}
+
+export function createAnnotationEditSession(options: CreateAnnotationEditSessionOptions): AnnotationEditSession {
+  const annotation = options.layout.annotations.find((item) => item.id === options.handle.annotationId);
+
+  if (!annotation) {
+    throw new Error(`Edit handle target not found in layout: ${options.handle.annotationId}.`);
+  }
+
+  const origin = options.origin ? finitePoint(options.origin, 'origin') : finitePoint(options.handle.point, 'handle.point');
+  const event = (point: Point, phase: AnnotationEditPhase) => createAnnotationEditEvent({
+    annotation,
+    handle: options.handle,
+    origin,
+    point,
+    phase
+  });
+
+  return {
+    annotationId: annotation.id,
+    handle: options.handle,
+    origin,
+    annotation,
+    start: (point = origin) => event(point, 'start'),
+    move: (point) => event(point, 'move'),
+    end: (point = origin) => event(point, 'end'),
+    delta: (delta, phase = 'move') => createAnnotationEditDelta({
+      annotation,
+      handle: options.handle,
+      origin,
+      delta,
+      phase
+    })
+  };
 }
 
 export function annotationEditPatch(edit: AnnotationEditSuggestion | AnnotationEditPatch): AnnotationEditPatch {

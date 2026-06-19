@@ -96,6 +96,7 @@ for (const term of [
   'docs/dogfood-bronto-report.md',
   'docs/dogfood-self-report.md',
   'docs/dogfood-external-consumer-report.md',
+  'createAnnotationEditSession',
   'createAnnotationEditEvent',
   'createAnnotationEditDelta',
   'visual regression baselines',
@@ -130,6 +131,7 @@ for (const term of [
   'docs/api-stability.manifest.json',
   '@public',
   '@experimental',
+  'createAnnotationEditSession',
   'createAnnotationEditEvent',
   'createAnnotationEditDelta',
   'npm run test:api-stability'
@@ -269,6 +271,7 @@ for (const term of [
   'npm run test:dogfood:bronto-report',
   'Would ship with this API today: yes',
   'Manual coordinates are top-left note coordinates',
+  'createAnnotationEditSession',
   'createAnnotationEditEvent',
   'createAnnotationEditDelta'
 ]) {

@@ -37,7 +37,8 @@ const required = [
       'resolvePreparedAnnotationLayout',
       'annotationClassName',
       'createAnnotationEditEvent',
-      'createAnnotationEditDelta'
+      'createAnnotationEditDelta',
+      'createAnnotationEditSession'
     ]
   },
   {

@@ -77,7 +77,8 @@ Primary groups:
   placement and collision problems can be inspected visually.
 - Edit helpers: `annotationEditHandles`, `annotationEditPatch`,
   `createAnnotationEditEvent`, `createAnnotationEditDelta`,
-  `applyAnnotationEdit`, `applyAnnotationEdits`, `translateAnchor`.
+  `createAnnotationEditSession`, `applyAnnotationEdit`,
+  `applyAnnotationEdits`, `translateAnchor`.
 - Adapter diagnostics: `formatAnchorValidationReport`,
   `assertAnchorValidationReport`, `assertAnchorValidationReportIfRequested`,
   `formatAnchorDiagnostic`, `evaluateAnchorAlignment`,
