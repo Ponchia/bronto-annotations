@@ -8,23 +8,25 @@ import { createServer } from 'vite';
 const exec = promisify(execFile);
 const root = new URL('..', import.meta.url);
 const packedScreenshotsDir = new URL('../.tmp-packed-screenshots/', import.meta.url).pathname;
-const workdirs = [];
+const packedConsumersDir = new URL('../.tmp/packed-consumers/', import.meta.url).pathname;
+let tarball;
 
 try {
   const { stdout } = await exec('npm', ['pack', '--json'], { cwd: root });
   const packResult = JSON.parse(stdout)[0];
-  const tarball = new URL(`../${packResult.filename}`, import.meta.url).pathname;
+  tarball = new URL(`../${packResult.filename}`, import.meta.url).pathname;
 
   await rm(packedScreenshotsDir, { recursive: true, force: true });
+  await rm(packedConsumersDir, { recursive: true, force: true });
   assertPackContents(packResult);
   await smokeRootAndAdapters(tarball);
   await smokeReact(tarball);
   await smokeBrowserBundle(tarball);
   await smokeBrowserAdapters(tarball);
-
-  await rm(tarball, { force: true });
 } finally {
-  await Promise.all(workdirs.map((workdir) => rm(workdir, { recursive: true, force: true })));
+  if (tarball) {
+    await rm(tarball, { force: true });
+  }
 }
 
 async function smokeRootAndAdapters(tarball) {
@@ -1742,12 +1744,9 @@ async function smokeBrowserAdapters(tarball) {
 }
 
 async function consumerWorkdir() {
-  const parent = new URL('../.tmp/packed-consumers/', import.meta.url).pathname;
+  await mkdir(packedConsumersDir, { recursive: true });
 
-  await mkdir(parent, { recursive: true });
-
-  const workdir = await mkdtemp(join(parent, 'consumer-'));
-  workdirs.push(workdir);
+  const workdir = await mkdtemp(join(packedConsumersDir, 'consumer-'));
   await writeFile(join(workdir, 'package.json'), JSON.stringify({
     type: 'module',
     private: true
