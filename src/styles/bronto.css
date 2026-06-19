@@ -1,0 +1,773 @@
+.pa-annotation-layer-wrap {
+  color: var(--pa-annotation-ink, var(--text, #1f2937));
+  font-family: var(--pa-annotation-font-family, var(--mono, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif));
+  pointer-events: none;
+}
+
+.pa-annotation-layer {
+  display: block;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  width: 100%;
+}
+
+.pa-annotation {
+  --pa-annotation-accent: var(--bronto-accent, var(--accent, #2563eb));
+  --pa-annotation-paper: var(--bronto-surface, var(--panel, #ffffff));
+  --pa-annotation-border: var(--bronto-border, var(--line, #cbd5e1));
+  --pa-annotation-ink: var(--text, #111827);
+  --pa-annotation-line: var(--line-strong, var(--pa-annotation-accent));
+  --pa-annotation-muted: var(--bronto-muted, var(--text-dim, #64748b));
+  --pa-annotation-subject-fill: var(--bronto-accent-soft, var(--accent-soft, color-mix(in srgb, var(--pa-annotation-accent) 10%, transparent)));
+  --pa-annotation-stroke-width: 1.5;
+  pointer-events: none;
+}
+
+.pa-annotation--accent {
+  --pa-annotation-accent: var(--bronto-accent, var(--accent, #2563eb));
+  --pa-annotation-line: var(--line-strong, var(--pa-annotation-accent));
+}
+
+.pa-annotation--muted {
+  --pa-annotation-accent: var(--bronto-muted, var(--text-dim, #64748b));
+  --pa-annotation-line: var(--bronto-border, var(--line, #cbd5e1));
+}
+
+.pa-annotation--success {
+  --pa-annotation-accent: var(--bronto-success, var(--success, #15803d));
+  --pa-annotation-subject-fill: rgba(21, 128, 61, 0.1);
+}
+
+.pa-annotation--warning {
+  --pa-annotation-accent: var(--bronto-warning, var(--warning, #b45309));
+  --pa-annotation-subject-fill: rgba(180, 83, 9, 0.12);
+}
+
+.pa-annotation--danger {
+  --pa-annotation-accent: var(--bronto-danger, var(--danger, #be123c));
+  --pa-annotation-subject-fill: rgba(190, 18, 60, 0.1);
+}
+
+.pa-annotation--info {
+  --pa-annotation-accent: var(--bronto-info, var(--info, #0369a1));
+  --pa-annotation-subject-fill: rgba(3, 105, 161, 0.1);
+}
+
+.pa-annotation--focus {
+  --pa-annotation-stroke-width: 2;
+  --pa-annotation-subject-fill: color-mix(in srgb, var(--pa-annotation-accent) 14%, transparent);
+}
+
+.pa-annotation__subject {
+  fill: var(--pa-annotation-subject-fill);
+  stroke: var(--pa-annotation-accent);
+  stroke-linejoin: miter;
+  stroke-width: var(--pa-annotation-stroke-width);
+  vector-effect: non-scaling-stroke;
+}
+
+.pa-annotation__badge,
+.pa-annotation__badge-pointer {
+  fill: var(--pa-annotation-accent);
+  stroke: var(--pa-annotation-accent);
+  stroke-linejoin: miter;
+  stroke-width: var(--pa-annotation-stroke-width);
+  vector-effect: non-scaling-stroke;
+}
+
+.pa-annotation__badge-label {
+  fill: var(--button-text, #ffffff);
+  font-size: var(--text-xs, 12px);
+  font-weight: 700;
+  paint-order: normal;
+  stroke: none;
+}
+
+.pa-annotation__subject--path {
+  fill: none;
+}
+
+.pa-annotation__connector {
+  fill: none;
+  stroke: var(--pa-annotation-line);
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  stroke-width: var(--pa-annotation-stroke-width);
+  vector-effect: non-scaling-stroke;
+}
+
+svg .pa-annotation__note-line {
+  fill: none;
+  stroke: var(--pa-annotation-line);
+  stroke-linecap: square;
+  stroke-width: var(--pa-annotation-stroke-width);
+  vector-effect: non-scaling-stroke;
+}
+
+.pa-annotation__marker {
+  fill: var(--pa-annotation-line);
+  stroke: none;
+}
+
+.pa-annotation--label .pa-annotation__subject,
+.pa-annotation--label .pa-annotation__connector,
+.pa-annotation--badge .pa-annotation__connector {
+  display: none;
+}
+
+.pa-annotation--callout .pa-annotation__note-line,
+.pa-annotation--elbow .pa-annotation__note-line,
+.pa-annotation--curve .pa-annotation__note-line {
+  stroke: var(--pa-annotation-accent);
+}
+
+.pa-annotation--elbow .pa-annotation__connector {
+  stroke-linejoin: bevel;
+}
+
+.pa-annotation--curve .pa-annotation__connector {
+  stroke-linecap: round;
+}
+
+.pa-annotation--circle .pa-annotation__subject,
+.pa-annotation--cluster .pa-annotation__subject {
+  stroke-dasharray: 0.01 5;
+  stroke-linecap: round;
+}
+
+.pa-annotation--rect .pa-annotation__subject,
+.pa-annotation--band .pa-annotation__subject {
+  stroke-dasharray: 5 3;
+}
+
+.pa-annotation--threshold .pa-annotation__subject {
+  fill: none;
+  stroke: var(--pa-annotation-accent);
+  stroke-dasharray: 6 4;
+}
+
+.pa-annotation--axis .pa-annotation__subject,
+.pa-annotation--timeline .pa-annotation__subject,
+.pa-annotation--bracket .pa-annotation__subject,
+.pa-annotation--compare .pa-annotation__subject {
+  fill: none;
+  stroke: var(--pa-annotation-accent);
+  stroke-linecap: square;
+}
+
+.pa-annotation--band .pa-annotation__subject {
+  fill: var(--pa-annotation-subject-fill);
+  stroke: var(--pa-annotation-accent);
+}
+
+.pa-annotation--slope .pa-annotation__subject {
+  fill: none;
+  stroke: var(--pa-annotation-accent);
+  stroke-linecap: round;
+}
+
+.pa-annotation--cluster .pa-annotation__subject {
+  fill: var(--pa-annotation-subject-fill);
+  stroke: var(--pa-annotation-accent);
+}
+
+.pa-annotation--cluster .pa-annotation__subject--geometry-encircle,
+.pa-annotation__subject--geometry-encircle {
+  fill: var(--pa-annotation-subject-fill);
+  stroke-dasharray: none;
+  stroke-linecap: round;
+}
+
+.pa-annotation--badge .pa-annotation__subject,
+.pa-annotation--badge .pa-annotation__badge,
+.pa-annotation--badge .pa-annotation__badge-pointer {
+  fill: var(--pa-annotation-accent);
+}
+
+.pa-annotation--evidence .pa-annotation__subject,
+.pa-annotation--evidence .pa-annotation__badge,
+.pa-annotation--evidence .pa-annotation__badge-pointer {
+  fill: var(--pa-annotation-paper);
+  stroke: var(--pa-annotation-accent);
+}
+
+.pa-annotation--evidence .pa-annotation__title {
+  fill: var(--pa-annotation-accent);
+}
+
+.pa-annotation__note {
+  overflow: visible;
+}
+
+.pa-annotation-layer-wrap .pa-annotation__note-box,
+.pa-annotation-layer__measurer .pa-annotation__note-box {
+  background: var(--pa-annotation-paper);
+  border: 1px solid var(--pa-annotation-border);
+  border-radius: var(--radius-xl, 4px);
+  box-shadow: var(--shadow-raised, 0 10px 30px rgb(15 23 42 / 12%));
+  box-sizing: border-box;
+  color: var(--pa-annotation-ink, var(--text, #1f2937));
+  display: flex;
+  flex-direction: column;
+  font-size: var(--text-xs, 13px);
+  gap: 4px;
+  height: 100%;
+  line-height: 1.35;
+  padding: 10px 12px;
+  width: 100%;
+  overflow-wrap: anywhere;
+  text-align: start;
+}
+
+.pa-annotation-layer-wrap .pa-annotation__note-box--align-center,
+.pa-annotation-layer__measurer .pa-annotation__note-box--align-center {
+  text-align: center;
+}
+
+.pa-annotation-layer-wrap .pa-annotation__note-box--align-end,
+.pa-annotation-layer__measurer .pa-annotation__note-box--align-end {
+  text-align: end;
+}
+
+svg rect.pa-annotation__note-box {
+  fill: var(--pa-annotation-paper);
+  stroke: var(--pa-annotation-border);
+  stroke-width: 1;
+}
+
+.pa-annotation__title {
+  color: var(--pa-annotation-ink, var(--text, #111827));
+  fill: var(--pa-annotation-ink, var(--text, #111827));
+  font-size: var(--text-xs, 13px);
+  font-weight: 700;
+}
+
+.pa-annotation__badge-label.pa-annotation__title {
+  fill: var(--button-text, #ffffff);
+  font-size: var(--text-xs, 12px);
+  paint-order: normal;
+  stroke: none;
+}
+
+.pa-annotation-layer-wrap .pa-annotation__note-line,
+.pa-annotation-layer__measurer .pa-annotation__note-line {
+  border-block-start: var(--pa-annotation-stroke-width) solid var(--pa-annotation-line);
+  display: block;
+  flex: 0 0 auto;
+  inline-size: 100%;
+  margin-block: 0 2px;
+}
+
+.pa-annotation-layer-wrap .pa-annotation__note-line--vertical,
+.pa-annotation-layer__measurer .pa-annotation__note-line--vertical {
+  align-self: flex-start;
+  block-size: 100%;
+  border-block-start: 0;
+  border-inline-start: var(--pa-annotation-stroke-width) solid var(--pa-annotation-line);
+  inline-size: 0;
+  margin-block: 0;
+  margin-inline: 0 6px;
+}
+
+.pa-annotation__body,
+.pa-annotation__label {
+  color: var(--pa-annotation-muted);
+  fill: var(--pa-annotation-muted);
+  font-size: var(--text-xs, 12px);
+}
+
+.pa-annotation__debug-box {
+  fill: none;
+  pointer-events: none;
+  stroke: #e11d48;
+  stroke-dasharray: 4 3;
+  stroke-width: 1;
+}
+
+.pa-annotation--manual .pa-annotation__connector {
+  stroke-dasharray: 5 3;
+}
+
+.pa-annotation__edit-handles {
+  pointer-events: auto;
+}
+
+.pa-annotation__edit-hit {
+  fill: transparent;
+  pointer-events: auto;
+  stroke: none;
+}
+
+.pa-annotation__edit-handle {
+  fill: var(--pa-annotation-paper, #ffffff);
+  outline: none;
+  pointer-events: auto;
+  stroke: var(--pa-annotation-accent, #2563eb);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.pa-annotation__edit-handle--anchor {
+  fill: var(--pa-annotation-accent, #2563eb);
+}
+
+.pa-annotation__edit-handle:focus-visible {
+  stroke: var(--focus-ring, var(--pa-annotation-ink, #111827));
+  stroke-width: 3;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pa-annotation--draw .pa-annotation__connector {
+    animation: paAnnotationDraw var(--pa-annotation-duration, var(--duration-slow, 600ms)) var(--pa-annotation-ease, var(--ease-out, ease-out)) both;
+    animation-delay: var(--pa-annotation-delay, 0ms);
+    stroke-dasharray: var(--pa-annotation-dash, 360);
+    stroke-dashoffset: var(--pa-annotation-dash, 360);
+  }
+
+  .pa-annotation--draw .pa-annotation__note-line {
+    animation: paAnnotationDraw var(--pa-annotation-duration, var(--duration-slow, 600ms)) var(--pa-annotation-ease, var(--ease-out, ease-out)) both;
+    animation-delay: var(--pa-annotation-delay, 0ms);
+    stroke-dasharray: var(--pa-annotation-dash, 360);
+    stroke-dashoffset: var(--pa-annotation-dash, 360);
+  }
+
+  .pa-annotation--draw .pa-annotation__subject {
+    animation: paAnnotationSubjectReveal var(--pa-annotation-duration, var(--duration-slow, 600ms)) var(--pa-annotation-ease, var(--ease-out, ease-out)) both;
+    animation-delay: var(--pa-annotation-delay, 0ms);
+  }
+
+  .pa-annotation--draw .pa-annotation__badge,
+  .pa-annotation--draw .pa-annotation__badge-pointer {
+    animation: paAnnotationSubjectReveal var(--pa-annotation-duration, var(--duration-slow, 600ms)) var(--pa-annotation-ease, var(--ease-out, ease-out)) both;
+    animation-delay: var(--pa-annotation-delay, 0ms);
+  }
+
+  .pa-annotation--reveal .pa-annotation__note {
+    animation: paAnnotationReveal var(--pa-annotation-duration, var(--duration-slow, 600ms)) var(--pa-annotation-ease, var(--ease-out, ease-out)) both;
+    animation-delay: var(--pa-annotation-delay, 0ms);
+  }
+
+  .pa-annotation--pulse .pa-annotation__subject,
+  .pa-annotation--pulse .pa-annotation__badge,
+  .pa-annotation--pulse .pa-annotation__badge-pointer {
+    animation: paAnnotationPulse 1.6s var(--pa-annotation-ease, var(--ease-out, ease-out)) infinite;
+    animation-delay: var(--pa-annotation-delay, 0ms);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+}
+
+@keyframes paAnnotationDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes paAnnotationSubjectReveal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes paAnnotationReveal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes paAnnotationPulse {
+  50% {
+    opacity: 0.62;
+    transform: scale(1.06);
+  }
+}
+
+@media print {
+  .pa-annotation__subject,
+  .pa-annotation__connector,
+  .pa-annotation__note-line,
+  .pa-annotation__badge,
+  .pa-annotation__badge-pointer,
+  .pa-annotation__note,
+  .pa-annotation__marker,
+  .pa-annotation__edit-handle {
+    animation: none !important;
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+
+  .pa-annotation--draw .pa-annotation__connector,
+  .pa-annotation--draw .pa-annotation__note-line {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  .pa-annotation {
+    --pa-annotation-accent: CanvasText !important;
+    --pa-annotation-line: CanvasText !important;
+    --pa-annotation-paper: Canvas !important;
+    --pa-annotation-border: CanvasText !important;
+    --pa-annotation-ink: CanvasText !important;
+    --pa-annotation-muted: CanvasText !important;
+    --pa-annotation-subject-fill: Canvas !important;
+  }
+
+  .pa-annotation__note-box {
+    background: Canvas !important;
+    border-color: CanvasText !important;
+    fill: Canvas !important;
+    stroke: CanvasText !important;
+  }
+
+  .pa-annotation__connector,
+  .pa-annotation__note-line,
+  .pa-annotation__subject {
+    stroke: CanvasText !important;
+  }
+
+  .pa-annotation__subject {
+    fill: Canvas !important;
+  }
+
+  .pa-annotation__title,
+  .pa-annotation__body,
+  .pa-annotation__label {
+    color: CanvasText !important;
+    fill: CanvasText !important;
+  }
+
+  .pa-annotation__edit-handle {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+}
+
+.pa-annotation-layer__measurer {
+  left: -10000px;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  visibility: hidden;
+  width: max-content;
+}
+
+/* Legacy Bronto report annotation aliases.
+   These keep existing static SVG snippets styled while hosts migrate from
+   @ponchia/ui/annotations to @ponchia/annotations renderers. */
+
+.ui-annotation {
+  --annotation-color: var(--accent, #2563eb);
+  --annotation-line: var(--line-strong, var(--annotation-color));
+  --annotation-note-bg: var(--panel, #ffffff);
+  --annotation-subject-fill: color-mix(in srgb, var(--annotation-color) 8%, transparent);
+  --annotation-stroke-width: 1.5;
+
+  color: var(--annotation-color);
+  font-family: var(--mono, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  font-size: var(--text-xs, 12px);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.ui-annotation--muted {
+  --annotation-color: var(--text-dim, #64748b);
+  --annotation-line: var(--line, #cbd5e1);
+}
+
+.ui-annotation--accent {
+  --annotation-color: var(--accent, #2563eb);
+  --annotation-line: var(--line-strong, var(--accent, #2563eb));
+}
+
+.ui-annotation--success {
+  --annotation-color: var(--success, #15803d);
+}
+
+.ui-annotation--warning {
+  --annotation-color: var(--warning, #b45309);
+}
+
+.ui-annotation--danger {
+  --annotation-color: var(--danger, #be123c);
+}
+
+.ui-annotation--info {
+  --annotation-color: var(--info, #0369a1);
+}
+
+.ui-annotation__subject,
+.ui-annotation__connector,
+.ui-annotation__connector-end,
+.ui-annotation__note-line,
+.ui-annotation__badge,
+.ui-annotation__badge-pointer {
+  vector-effect: non-scaling-stroke;
+}
+
+.ui-annotation__subject {
+  fill: var(--annotation-subject-fill);
+  stroke: var(--annotation-color);
+  stroke-linejoin: miter;
+  stroke-width: var(--annotation-stroke-width);
+}
+
+.ui-annotation__connector,
+.ui-annotation__note-line {
+  fill: none;
+  stroke: var(--annotation-line);
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  stroke-opacity: 0.86;
+  stroke-width: var(--annotation-stroke-width);
+}
+
+.ui-annotation__connector-end {
+  fill: var(--annotation-line);
+  stroke: none;
+}
+
+.ui-annotation__note {
+  color: var(--text-soft, #475569);
+  fill: currentColor;
+}
+
+.ui-annotation__note > rect {
+  fill: var(--annotation-note-bg);
+  stroke: var(--line, #cbd5e1);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.ui-annotation__title {
+  fill: var(--text, #111827);
+  font-size: var(--text-xs, 12px);
+  font-weight: 700;
+  letter-spacing: 0;
+  paint-order: stroke fill;
+  stroke: var(--annotation-note-bg);
+  stroke-linejoin: round;
+  stroke-width: 3;
+  text-transform: uppercase;
+}
+
+.ui-annotation__label {
+  fill: var(--text-soft, #475569);
+  font-size: var(--text-xs, 12px);
+  letter-spacing: 0;
+  paint-order: stroke fill;
+  stroke: var(--annotation-note-bg);
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.ui-annotation__badge,
+.ui-annotation__badge-pointer {
+  fill: var(--annotation-note-bg);
+  stroke: var(--annotation-color);
+  stroke-linejoin: miter;
+  stroke-width: var(--annotation-stroke-width);
+}
+
+.ui-annotation--label .ui-annotation__subject,
+.ui-annotation--badge .ui-annotation__connector,
+.ui-annotation--badge .ui-annotation__note-line {
+  display: none;
+}
+
+.ui-annotation--callout .ui-annotation__note-line,
+.ui-annotation--elbow .ui-annotation__note-line,
+.ui-annotation--curve .ui-annotation__note-line {
+  stroke: var(--annotation-color);
+}
+
+.ui-annotation--elbow .ui-annotation__connector {
+  stroke-linejoin: bevel;
+}
+
+.ui-annotation--curve .ui-annotation__connector {
+  stroke-linecap: round;
+}
+
+.ui-annotation--circle .ui-annotation__subject {
+  stroke-dasharray: 0.01 4;
+  stroke-linecap: round;
+}
+
+.ui-annotation--rect .ui-annotation__subject {
+  stroke-dasharray: 5 3;
+}
+
+.ui-annotation--threshold .ui-annotation__subject {
+  fill: none;
+  stroke: var(--annotation-color);
+  stroke-dasharray: 6 4;
+}
+
+.ui-annotation--badge .ui-annotation__subject,
+.ui-annotation--badge .ui-annotation__badge,
+.ui-annotation--badge .ui-annotation__badge-pointer {
+  fill: var(--annotation-color);
+}
+
+.ui-annotation--badge .ui-annotation__title,
+.ui-annotation--badge .ui-annotation__label {
+  fill: var(--button-text, #ffffff);
+  stroke: none;
+}
+
+.ui-annotation--bracket .ui-annotation__subject,
+.ui-annotation--compare .ui-annotation__subject,
+.ui-annotation--axis .ui-annotation__subject,
+.ui-annotation--timeline .ui-annotation__subject {
+  fill: none;
+  stroke: var(--annotation-color);
+  stroke-linecap: square;
+}
+
+.ui-annotation--band .ui-annotation__subject {
+  fill: var(--annotation-subject-fill);
+  stroke: var(--annotation-color);
+  stroke-dasharray: 5 3;
+}
+
+.ui-annotation--slope .ui-annotation__subject {
+  fill: none;
+  stroke: var(--annotation-color);
+  stroke-linecap: round;
+}
+
+.ui-annotation--cluster .ui-annotation__subject {
+  fill: var(--annotation-subject-fill);
+  stroke: var(--annotation-color);
+  stroke-dasharray: 0.01 5;
+  stroke-linecap: round;
+}
+
+.ui-annotation--evidence .ui-annotation__badge,
+.ui-annotation--evidence .ui-annotation__badge-pointer {
+  fill: var(--annotation-note-bg);
+  stroke: var(--annotation-color);
+}
+
+.ui-annotation--evidence .ui-annotation__title {
+  fill: var(--annotation-color);
+  stroke: none;
+}
+
+.ui-annotation--focus {
+  --annotation-stroke-width: 2;
+  --annotation-subject-fill: color-mix(in srgb, var(--annotation-color) 14%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ui-annotation--draw .ui-annotation__connector,
+  .ui-annotation--draw .ui-annotation__note-line {
+    animation: uiAnnotationDraw var(--duration-slow, 600ms) var(--ease-out, ease-out) both;
+    animation-delay: var(--annotation-delay, 0ms);
+    stroke-dasharray: var(--annotation-dash, 360);
+    stroke-dashoffset: var(--annotation-dash, 360);
+  }
+
+  .ui-annotation--draw .ui-annotation__subject,
+  .ui-annotation--draw .ui-annotation__badge,
+  .ui-annotation--draw .ui-annotation__badge-pointer {
+    animation: uiAnnotationSubjectReveal var(--duration-slow, 600ms) var(--ease-out, ease-out) both;
+    animation-delay: var(--annotation-delay, 0ms);
+  }
+
+  .ui-annotation--reveal .ui-annotation__note {
+    animation: uiAnnotationReveal var(--duration-slow, 600ms) var(--ease-out, ease-out) both;
+    animation-delay: var(--annotation-delay, 0ms);
+  }
+
+  .ui-annotation--pulse .ui-annotation__subject,
+  .ui-annotation--pulse .ui-annotation__badge,
+  .ui-annotation--pulse .ui-annotation__badge-pointer {
+    animation: uiAnnotationPulse 1.6s var(--ease-out, ease-out) infinite;
+    animation-delay: var(--annotation-delay, 0ms);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+}
+
+@keyframes uiAnnotationDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes uiAnnotationSubjectReveal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes uiAnnotationReveal {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes uiAnnotationPulse {
+  50% {
+    opacity: 0.62;
+    transform: scale(1.06);
+  }
+}
+
+@media print {
+  .ui-annotation__subject,
+  .ui-annotation__connector,
+  .ui-annotation__connector-end,
+  .ui-annotation__note,
+  .ui-annotation__note-line,
+  .ui-annotation__badge,
+  .ui-annotation__badge-pointer {
+    animation: none !important;
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+
+  .ui-annotation__subject,
+  .ui-annotation__connector,
+  .ui-annotation__connector-end,
+  .ui-annotation__note-line,
+  .ui-annotation__badge,
+  .ui-annotation__badge-pointer {
+    transform: none;
+  }
+
+  .ui-annotation--draw .ui-annotation__connector,
+  .ui-annotation--draw .ui-annotation__note-line {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  .ui-annotation {
+    --annotation-color: CanvasText;
+    --annotation-line: CanvasText;
+    --annotation-note-bg: Canvas;
+    --annotation-subject-fill: Canvas;
+  }
+}

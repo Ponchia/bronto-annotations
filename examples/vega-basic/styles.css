@@ -1,0 +1,42 @@
+body {
+  background: #f6f8fb;
+  margin: 0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.example-shell {
+  display: grid;
+  min-height: 100vh;
+  padding: 24px;
+  place-items: center;
+  width: 100%;
+}
+
+.chart-shell {
+  background: #ffffff;
+  border: 1px solid #d5deea;
+  border-radius: 8px;
+  box-shadow: 0 18px 48px rgb(15 23 42 / 10%);
+  height: min(72vh, 430px);
+  padding: 16px;
+  position: relative;
+  width: min(100%, 780px);
+}
+
+.chart,
+.annotation-host,
+.chart > svg,
+.pa-annotation-layer {
+  inset: 0;
+  position: absolute;
+}
+
+.chart > svg {
+  height: 100%;
+  width: 100%;
+}

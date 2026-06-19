@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DOM Basic - @ponchia/annotations</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="example-shell">
+      <section class="dom-surface" aria-label="DOM annotation example">
+        <article class="panel panel--primary" id="primary-region" data-anchor-id="primary-region">
+          <span>Primary region</span>
+          <strong>42k</strong>
+        </article>
+        <article class="panel panel--secondary" id="secondary-region" data-anchor-id="secondary-region">
+          <span>Secondary region</span>
+          <strong>18k</strong>
+        </article>
+        <div id="annotations" class="annotation-host"></div>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

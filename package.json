@@ -1,0 +1,120 @@
+{
+  "name": "@ponchia/annotations",
+  "version": "0.0.0",
+  "description": "Headless annotation placement and rendering helpers for charts, diagrams, reports, and UI surfaces.",
+  "type": "module",
+  "license": "MIT",
+  "private": false,
+  "sideEffects": [
+    "./dist/bronto.css"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "docs"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js"
+    },
+    "./dom": {
+      "types": "./dist/dom/index.d.ts",
+      "import": "./dist/dom/index.js"
+    },
+    "./vega": {
+      "types": "./dist/adapters/vega.d.ts",
+      "import": "./dist/adapters/vega.js"
+    },
+    "./mermaid": {
+      "types": "./dist/adapters/mermaid.d.ts",
+      "import": "./dist/adapters/mermaid.js"
+    },
+    "./d2": {
+      "types": "./dist/adapters/d2.d.ts",
+      "import": "./dist/adapters/d2.js"
+    },
+    "./react-flow": {
+      "types": "./dist/adapters/react-flow.d.ts",
+      "import": "./dist/adapters/react-flow.js"
+    },
+    "./bronto.css": {
+      "types": "./dist/bronto.css.d.ts",
+      "default": "./dist/bronto.css"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf dist .tmp",
+    "build": "npm run clean && tsc -p tsconfig.build.json && cp src/styles/bronto.css dist/bronto.css && cp src/styles/bronto.css.d.ts dist/bronto.css.d.ts",
+    "test": "vitest run",
+    "test:docs-snippets": "vitest run test/docs/snippets.test.ts",
+    "test:types": "npm run build && tsc -p test/tsconfig.exports.json --noEmit",
+    "test:exports": "npm run build && node scripts/check-package-exports.mjs",
+    "test:api-reference": "node scripts/check-api-reference.mjs",
+    "test:d3-parity": "npm run build && node scripts/check-d3-parity.mjs",
+    "test:bronto-parity": "npm run build && node scripts/check-bronto-parity.mjs",
+    "test:bronto-upstream": "npm run build && node scripts/check-bronto-upstream-parity.mjs",
+    "test:pack": "npm run build && node scripts/smoke-packed-consumer.mjs",
+    "test:examples": "npm run build && node scripts/build-examples.mjs",
+    "test:browser": "npm run build && node scripts/verify-examples-browser.mjs",
+    "test:screenshots": "node scripts/check-browser-screenshots.mjs",
+    "test:readiness": "node scripts/check-readiness-matrix.mjs",
+    "test:completion-audit": "node scripts/check-completion-audit.mjs",
+    "test:hygiene": "node scripts/public-hygiene.mjs",
+    "check": "npm run build && npm test && npm run test:docs-snippets && npm run test:types && npm run test:exports && npm run test:api-reference && npm run test:d3-parity && npm run test:bronto-parity && npm run test:bronto-upstream && npm run test:examples && npm run test:pack && npm run test:browser && npm run test:screenshots && npm run test:readiness && npm run test:completion-audit && npm run test:hygiene"
+  },
+  "peerDependencies": {
+    "@terrastruct/d2": ">=0.1.0",
+    "@xyflow/react": ">=12.0.0",
+    "mermaid": ">=11.0.0",
+    "react": ">=18.2.0 || >=19.0.0",
+    "react-dom": ">=18.2.0 || >=19.0.0",
+    "vega": ">=5.0.0 || >=6.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@terrastruct/d2": {
+      "optional": true
+    },
+    "@xyflow/react": {
+      "optional": true
+    },
+    "mermaid": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    },
+    "vega": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@terrastruct/d2": "^0.1.33",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@xyflow/react": "^12.11.0",
+    "jsdom": "^26.1.0",
+    "mermaid": "^11.15.0",
+    "playwright": "^1.61.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "typescript": "^5.8.3",
+    "vega": "^6.2.0",
+    "vega-embed": "^7.1.0",
+    "vega-lite": "^6.4.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
+  }
+}

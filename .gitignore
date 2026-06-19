@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.tmp/
+.tmp-packed-screenshots/
+.playwright-cli/
+*.tgz
+.DS_Store

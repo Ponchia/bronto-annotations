@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bronto Report - @ponchia/annotations</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="report">
+      <header class="report__header">
+        <p class="report__eyebrow">Operational Snapshot</p>
+        <h1>Annotation layer over report geometry</h1>
+      </header>
+      <section class="report__figure">
+        <div class="metric metric--primary">
+          <span>Throughput</span>
+          <strong>84%</strong>
+        </div>
+        <div class="metric">
+          <span>Latency</span>
+          <strong>128ms</strong>
+        </div>
+        <div class="metric">
+          <span>Coverage</span>
+          <strong>7/9</strong>
+        </div>
+        <svg
+          class="legacy-report-annotation"
+          viewBox="0 0 240 96"
+          role="img"
+          aria-label="Migrated Bronto static SVG annotation"
+        >
+          <g class="ui-annotation ui-annotation--callout ui-annotation--draw" transform="translate(22 54)">
+            <path class="ui-annotation__subject" d="M-12,-7H12V7H-12Z" />
+            <path class="ui-annotation__connector" d="M12,-2L74,-28" />
+            <path class="ui-annotation__connector-end" d="M74,-28L64,-32L67,-21Z" />
+            <g class="ui-annotation__note" transform="translate(80 -32)">
+              <rect width="132" height="44" rx="4" />
+              <text class="ui-annotation__title" x="10" y="17">Legacy</text>
+              <text class="ui-annotation__label" x="10" y="34">Styled by bridge</text>
+            </g>
+          </g>
+          <g class="ui-annotation ui-annotation--evidence ui-annotation--info" transform="translate(26 20)">
+            <circle class="ui-annotation__badge" r="10" />
+            <text class="ui-annotation__title" text-anchor="middle" dominant-baseline="central">E</text>
+          </g>
+        </svg>
+        <div id="annotations" class="report__annotations"></div>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

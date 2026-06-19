@@ -1,0 +1,67 @@
+body {
+  background: #f8fafc;
+  margin: 0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.example-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  width: 100%;
+}
+
+.figure {
+  background: white;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  box-shadow: 0 18px 50px rgb(15 23 42 / 10%);
+  padding: 20px;
+  width: min(100%, 802px);
+}
+
+.chart {
+  height: min(70vh, 420px);
+  position: relative;
+  width: 100%;
+}
+
+.base-chart,
+.pa-annotation-layer {
+  height: 100%;
+  inset: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.base-chart__plot {
+  fill: #f8fafc;
+  stroke: #dbe3ef;
+}
+
+.base-chart__grid {
+  fill: none;
+  stroke: #e2e8f0;
+}
+
+.base-chart__line {
+  fill: none;
+  stroke: #0f766e;
+  stroke-linecap: round;
+  stroke-width: 4;
+}
+
+.base-chart__point {
+  fill: #0f766e;
+}
+
+.base-chart__band {
+  fill: rgb(37 99 235 / 10%);
+  stroke: rgb(37 99 235 / 35%);
+}

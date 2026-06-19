@@ -1,0 +1,51 @@
+body {
+  background: #f6f8fb;
+  margin: 0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.example-shell {
+  display: grid;
+  min-height: 100vh;
+  padding: 24px;
+  place-items: center;
+  width: 100%;
+}
+
+.flow-shell {
+  background: #ffffff;
+  border: 1px solid #d5deea;
+  border-radius: 8px;
+  box-shadow: 0 18px 48px rgb(15 23 42 / 10%);
+  height: min(70vh, 420px);
+  overflow: hidden;
+  position: relative;
+  width: min(100%, 760px);
+}
+
+.react-flow {
+  background: #f8fafc;
+}
+
+.react-flow__node-default {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  color: #334155;
+  display: flex;
+  font: 700 14px/1.2 Inter, ui-sans-serif, system-ui, sans-serif;
+  height: 58px;
+  justify-content: center;
+  width: 142px;
+}
+
+.react-flow__edge-path {
+  stroke: #64748b;
+  stroke-width: 2;
+}

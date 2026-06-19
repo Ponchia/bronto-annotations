@@ -1,0 +1,887 @@
+{
+  "schemaVersion": 1,
+  "status": "usable-public-package-with-known-limits",
+  "scope": "public annotation package readiness against the requested product scope",
+  "requiredScripts": [
+    "test",
+    "test:docs-snippets",
+    "test:types",
+    "test:exports",
+    "test:api-reference",
+    "test:d3-parity",
+    "test:bronto-parity",
+    "test:bronto-upstream",
+    "test:examples",
+    "test:pack",
+    "test:browser",
+    "test:screenshots",
+    "test:readiness",
+    "test:completion-audit",
+    "test:hygiene"
+  ],
+  "requirements": [
+    {
+      "id": "typescript-esm-scaffold",
+      "status": "proven",
+      "claim": "The package keeps the TypeScript ESM scaffold, public exports, declarations, examples, and umbrella check script.",
+      "evidence": [
+        {
+          "file": "package.json",
+          "terms": [
+            "\"type\": \"module\"",
+            "\"exports\"",
+            "\"types\": \"./dist/index.d.ts\"",
+            "\"check\""
+          ]
+        },
+        {
+          "file": "scripts/check-package-exports.mjs",
+          "terms": [
+            "dist/index.d.ts",
+            "dist/adapters/react-flow.d.ts",
+            "dist/bronto.css",
+            "dist/bronto.css.d.ts"
+          ]
+        },
+        {
+          "file": "test/export-consumer.ts",
+          "terms": [
+            "@ponchia/annotations/react",
+            "@ponchia/annotations/vega",
+            "@ponchia/annotations/bronto.css"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dom-free-core-engine",
+      "status": "proven",
+      "claim": "The core owns DOM-free models, anchors, placement, collision scoring, connector geometry, priorities, priority-aware paint ordering, note sizing, bounds, padding, debug candidates, and layout quality diagnostics.",
+      "evidence": [
+        {
+          "file": "src/core/model.ts",
+          "terms": [
+            "export type Point",
+            "export type Box",
+            "export type Anchor",
+            "export type Annotation",
+            "ManualPlacement",
+            "PlacementCandidate"
+          ]
+        },
+        {
+          "file": "src/core/layout.ts",
+          "terms": [
+            "resolveAnnotationLayout",
+            "estimateNoteSize",
+            "refineAnnotationLayout"
+          ]
+        },
+        {
+          "file": "src/core/order.ts",
+          "terms": [
+            "annotationsForPaint"
+          ]
+        },
+        {
+          "file": "src/core/placement.ts",
+          "terms": [
+            "allPlacementCandidates",
+            "scorePlacementCandidate",
+            "scoreBreakdown"
+          ]
+        },
+        {
+          "file": "src/core/quality.ts",
+          "terms": [
+            "evaluateAnnotationLayout",
+            "assertAnnotationLayoutQuality",
+            "formatLayoutQualityReport"
+          ]
+        },
+        {
+          "file": "src/adapters/layout.ts",
+          "terms": [
+            "generatedSurfaceLayoutDefaults",
+            "resolvePreparedAnnotationLayout",
+            "assertQuality",
+            "assertValidation",
+            "validationSummary",
+            "qualitySummary"
+          ]
+        },
+        {
+          "file": "test/core/placement.test.ts",
+          "terms": [
+            "debug candidates",
+            "obstacle"
+          ]
+        },
+        {
+          "file": "test/core/quality.test.ts",
+          "terms": [
+            "failOnWarnings",
+            "below required minimum"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "root-import-purity",
+      "status": "proven",
+      "claim": "The root package remains free of required React, Vega, Mermaid, D2, React Flow, and @ponchia/ui runtime dependencies.",
+      "evidence": [
+        {
+          "file": "package.json",
+          "terms": [
+            "\"peerDependenciesMeta\"",
+            "\"optional\": true"
+          ]
+        },
+        {
+          "file": "test/package/optional-peers.test.ts",
+          "terms": [
+            "root import",
+            "optional"
+          ]
+        },
+        {
+          "file": "scripts/smoke-packed-consumer.mjs",
+          "terms": [
+            "assertOptionalPeersAbsent(workdir)",
+            "clean root consumer unexpectedly installed optional peers"
+          ]
+        },
+        {
+          "file": "scripts/check-readiness-matrix.mjs",
+          "terms": [
+            "runtime dependencies must stay absent",
+            "@ponchia/ui must not be a dev dependency"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "svg-renderer",
+      "status": "proven",
+      "claim": "The SVG renderer outputs subjects, connectors, notes, optional focusable notes, optional focusable edit handles, debug boxes, classes, data attributes, and accessible labels.",
+      "evidence": [
+        {
+          "file": "src/svg/render.ts",
+          "terms": [
+            "renderSubjectSvg",
+            "${prefix}__connector",
+            "aria-label",
+            "aria-hidden",
+            "noteTabIndex",
+            "editHandleTabIndex",
+            "includeDebugBoxes"
+          ]
+        },
+        {
+          "file": "test/svg/render.test.ts",
+          "terms": [
+            "data-annotation-id",
+            "data-debug-kind=\"candidate\"",
+            "role=\"group\" aria-label",
+            "tabindex",
+            "aria-hidden=\"true\"",
+            "pa-annotation__connector"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "react-adapter",
+      "status": "proven",
+      "claim": "The React adapter provides AnnotationLayer, useAnnotations, ResizeObserver measurement, renderNote, onLayout, onQuality, quality assertions, target-alignment assertions, debug mode, optional focusable notes, edit callbacks, and SSR-safe behavior.",
+      "evidence": [
+        {
+          "file": "src/react/AnnotationLayer.tsx",
+          "terms": [
+            "ResizeObserver",
+            "renderNote",
+            "noteTabIndex",
+            "editHandleTabIndex",
+            "onLayout",
+            "onQuality",
+            "assertQuality",
+            "onTargetAlignment",
+            "assertTargetAlignment",
+            "debug",
+            "svgPointFromClient",
+            "aria-hidden",
+            "typeof window"
+          ]
+        },
+        {
+          "file": "src/react/useAnnotations.ts",
+          "terms": [
+            "useAnnotations",
+            "useMemo"
+          ]
+        },
+        {
+          "file": "test/react/AnnotationLayer.test.tsx",
+          "terms": [
+            "renderNote",
+            "onLayout",
+            "onQuality",
+            "onTargetAlignment",
+            "React target alignment",
+            "tabindex",
+            "keyboard",
+            "allows hosts to control React edit handle tab order",
+            "aria-hidden",
+            "preserveAspectRatio letterboxing"
+          ]
+        },
+        {
+          "file": "scripts/smoke-packed-consumer.mjs",
+          "terms": [
+            "async function smokeReact",
+            "Packed React target alignment",
+            "react target alignment event failed"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dom-svg-utilities",
+      "status": "proven",
+      "claim": "DOM/SVG utilities support DOMRects, SVG elements, selectors, ids, getBBox, getBoundingClientRect, and coordinate conversion.",
+      "evidence": [
+        {
+          "file": "src/dom/index.ts",
+          "terms": [
+            "anchorFromDOMRect",
+            "annotationFrameFromSvg",
+            "boxFromSvgElement",
+            "svgPointFromClient",
+            "prepareDomAnnotations"
+          ]
+        },
+        {
+          "file": "test/dom/dom.test.ts",
+          "terms": [
+            "coordinateSpace",
+            "prepareDomAnnotations"
+          ]
+        },
+        {
+          "file": "examples/dom-basic/main.ts",
+          "terms": [
+            "extractedAnchorFromElement",
+            "coordinateSpace"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "generated-surface-adapters",
+      "status": "proven",
+      "claim": "Vega/Vega-Lite, Mermaid, D2, and React Flow adapters extract generated host geometry through public APIs or rendered SVG and preserve normal annotation authoring fields.",
+      "evidence": [
+        {
+          "file": "src/adapters/vega.ts",
+          "terms": [
+            "prepareVegaScenegraphAnnotations",
+            "prepareVegaSvgAnnotations",
+            "obstaclesFromVegaView",
+            "obstaclesFromVegaScales",
+            "validateVegaScenegraphAnchors",
+            "vegaSvgAnchorGeometryElement",
+            "formatAnchorValidationReport"
+          ]
+        },
+        {
+          "file": "test/adapters/vega.test.ts",
+          "terms": [
+            "extracts rendered Vega SVG anchors by mark metadata without a selector",
+            "extracts and prepares obstacles from Vega view data geometry",
+            "extracts and prepares obstacles from Vega scale geometry",
+            "keeps multi-mark Vega SVG metadata anchors",
+            "expect(anchors[0]?.element).toBe(path)"
+          ]
+        },
+        {
+          "file": "src/adapters/mermaid.ts",
+          "terms": [
+            "prepareMermaidAnnotations",
+            "validateMermaidSvgAnchors",
+            "findMermaidElement",
+            "findMermaidEdgeElementByEndpoints",
+            "edgeSourceId",
+            "edgeTargetId",
+            "formatAnchorValidationReport"
+          ]
+        },
+        {
+          "file": "test/adapters/mermaid.test.ts",
+          "terms": [
+            "extracts Mermaid edge paths from rendered source and target node ids",
+            "api-report-route",
+            "mermaidEdgeSourceId",
+            "mermaidEdgeTargetId"
+          ]
+        },
+        {
+          "file": "src/adapters/d2.ts",
+          "terms": [
+            "prepareD2DiagramAnnotations",
+            "prepareD2SvgAnnotations",
+            "validateD2DiagramAnchors",
+            "findD2ConnectionPath",
+            "spec.connectionId && spec.kind === 'path'",
+            "formatAnchorValidationReport"
+          ]
+        },
+        {
+          "file": "test/adapters/d2.test.ts",
+          "terms": [
+            "prefers rendered D2 child paths",
+            "connection-route",
+            "expect(anchors[0]?.element).toBe(path)"
+          ]
+        },
+        {
+          "file": "src/adapters/react-flow.ts",
+          "terms": [
+            "prepareReactFlowAnnotations",
+            "validateReactFlowAnchors",
+            "resolveEdgeHandleAnchor",
+            "includeHandles",
+            "sourceHandleId",
+            "targetHandleId",
+            "handlePoint",
+            "formatAnchorValidationReport"
+          ]
+        },
+        {
+          "file": "test/adapters/react-flow.test.ts",
+          "terms": [
+            "uses measured source and target handles",
+            "node, handle, and edge obstacles",
+            "reactFlowSourceHandleId",
+            "reactFlowTargetHandleId"
+          ]
+        },
+        {
+          "file": "test/adapters/authoring-contract.test.ts",
+          "terms": [
+            "preserves manual placement",
+            "adapter-contract"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "generated-placement-quality",
+      "status": "proven",
+      "claim": "Generated-surface adapters are verified through target-alignment diagnostics, layout with automatic placement, manual placement, generated obstacles, and layout quality checks.",
+      "evidence": [
+        {
+          "file": "test/adapters/generated-placement.test.ts",
+          "terms": [
+            "generated-surface placement contract",
+            "automatic placement should stay automatic",
+            "manual placement",
+            "targetAlignmentTargets",
+            "assertTargetAlignment",
+            "target alignment",
+            "resolvePreparedAnnotationLayout",
+            "assertValidation",
+            "assertQuality"
+          ]
+        },
+        {
+          "file": "test/adapters/prepared-layout.test.ts",
+          "terms": [
+            "resolvePreparedAnnotationLayout",
+            "additionalObstacles",
+            "Generated graph annotations",
+            "assertValidation",
+            "assertTargetAlignment"
+          ]
+        },
+        {
+          "file": "test/adapters/prepare-assert.test.ts",
+          "terms": [
+            "prepare helper validation assertions",
+            "fail fast for missing generated and DOM anchors",
+            "failOnWarnings"
+          ]
+        },
+        {
+          "file": "examples/vega-basic/main.ts",
+          "terms": [
+            "generatedSurfaceLayoutDefaults",
+            "anchorLabel: 'Vega anchors'",
+            "prepareVegaScenegraphAnnotations",
+            "resolvePreparedAnnotationLayout"
+          ]
+        },
+        {
+          "file": "examples/mermaid-basic/main.ts",
+          "terms": [
+            "generatedSurfaceLayoutDefaults",
+            "anchorLabel: 'Mermaid anchors'",
+            "prepareMermaidAnnotations",
+            "resolvePreparedAnnotationLayout"
+          ]
+        },
+        {
+          "file": "examples/d2-basic/main.ts",
+          "terms": [
+            "generatedSurfaceLayoutDefaults",
+            "anchorLabel: 'D2 anchors'",
+            "prepareD2DiagramAnnotations",
+            "resolvePreparedAnnotationLayout"
+          ]
+        },
+        {
+          "file": "examples/react-flow-basic/main.tsx",
+          "terms": [
+            "generatedSurfaceLayoutDefaults",
+            "anchorLabel: 'React Flow anchors'",
+            "assert: flowLayoutDefaults.assertValidation",
+            "assertQuality={flowLayoutDefaults.assertQuality}",
+            "onQuality",
+            "prepareReactFlowAnnotations"
+          ]
+        },
+        {
+          "file": "scripts/verify-examples-browser.mjs",
+          "terms": [
+            "anchorTargetChecks",
+            "validateTargetAlignment",
+            "clean generated target alignment diagnostics",
+            "did not prove generated adapter anchors",
+            "annotation subject is not aligned to rendered target geometry",
+            "passing package layout-quality report",
+            "qualitySummary",
+            "reactFlowHandleType",
+            "flow-handle",
+            "mermaidId: 'api-report'",
+            "mermaid-edge"
+          ]
+        },
+        {
+          "file": "docs/integration-recipes.md",
+          "terms": [
+            "Automatic placement",
+            "Manual placement",
+            "Validate generated targets before layout",
+            "concrete child mark",
+            "multi-mark layers",
+            "edgeSourceId",
+            "edgeTargetId",
+            "sourceHandle",
+            "targetHandle",
+            "edgePoints",
+            "kind: 'path'",
+            "child route `<path>`"
+          ]
+        },
+        {
+          "file": "docs/context-quickstart.md",
+          "terms": [
+            "Choose The Adapter",
+            "Generated Surfaces",
+            "prepareVegaScenegraphAnnotations",
+            "prepareMermaidAnnotations",
+            "prepareD2DiagramAnnotations",
+            "prepareReactFlowAnnotations"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bronto-css-and-styling",
+      "status": "proven",
+      "claim": "The Bronto CSS bridge carries the legacy public annotation styling surface and package-prefixed styling without a hard @ponchia/ui dependency.",
+      "evidence": [
+        {
+          "file": "docs/bronto-ui-annotation-parity.json",
+          "terms": [
+            ".ui-annotation__connector-end",
+            ".pa-annotation__body",
+            ".pa-annotation__badge-label",
+            ".pa-annotation__edit-handles",
+            "annotationParts",
+            "@media print"
+          ]
+        },
+        {
+          "file": "src/styles/bronto.css",
+          "terms": [
+            ".pa-annotation__note-box",
+            ".ui-annotation__title",
+            ".ui-annotation__badge-pointer",
+            "pointer-events: none",
+            "pointer-events: auto",
+            "@media (prefers-reduced-motion: no-preference)"
+          ]
+        },
+        {
+          "file": "scripts/check-bronto-parity.mjs",
+          "terms": [
+            "Bronto annotation parity verified",
+            "helperExports"
+          ]
+        },
+        {
+          "file": "scripts/check-bronto-upstream-parity.mjs",
+          "terms": [
+            "Upstream Bronto UI parity verified",
+            "legacy CSS declarations",
+            "PONCHIA_UI_ROOT",
+            "root package export is missing upstream annotation helper functions",
+            "src/styles/bronto.css is missing upstream legacy annotation CSS declarations"
+          ]
+        },
+        {
+          "file": "test/package/bronto-css.test.ts",
+          "terms": [
+            "styles the critical classes emitted by the static SVG renderer",
+            "tracks emitted package text, badge, and edit classes",
+            "--bronto-accent-soft",
+            "pa-annotation__marker",
+            "pa-annotation__edit-hit",
+            "pa-annotation__badge-label"
+          ]
+        },
+        {
+          "file": "scripts/verify-examples-browser.mjs",
+          "terms": [
+            "verifyStyleGallery",
+            "verifyBrontoPackageCss",
+            "brontoPackageCss",
+            "missingVariantClasses",
+            "missingToneClasses",
+            "missingMotionClasses",
+            "badgeStyled",
+            "badgePointerStyled",
+            "badgeLabelStyled"
+          ]
+        },
+        {
+          "file": "docs/migration-guide.md",
+          "terms": [
+            "From Bronto UI Annotations",
+            "Bronto Helper Mapping",
+            "ui-annotation*",
+            "brontoAnnotationClassName"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "susie-lu-d3-style-ergonomics",
+      "status": "proven",
+      "claim": "The package includes a DOM-free d3-annotation-style authoring and edit bridge while explicitly excluding the D3 selection runtime.",
+      "evidence": [
+        {
+          "file": "docs/d3-annotation-parity.json",
+          "terms": [
+            "d3-svg-annotation@2.5.1",
+            "annotationCalloutCircle",
+            "defineD3StyleAnnotationType",
+            "supportedCollectionFields",
+            "supportedBuilderMethods",
+            "annotationData",
+            "annotationCustomType"
+          ]
+        },
+        {
+          "file": "src/presets/index.ts",
+          "terms": [
+            "annotationFromD3Style",
+            "annotationsFromD3Style",
+            "prepareD3StyleAnnotationCollection",
+            "d3StyleAnnotationCollectionEditPatch",
+            "createD3StyleAnnotationBuilder",
+            "defineD3StyleAnnotationType",
+            "applyD3StyleAnnotationEdit",
+            "accessorsInverse",
+            "style: mergeObjects"
+          ]
+        },
+        {
+          "file": "scripts/check-d3-parity.mjs",
+          "terms": [
+            "d3-annotation parity verified",
+            "prepareD3StyleAnnotationCollection",
+            "applyD3StyleAnnotationCollectionEdit",
+            "createD3StyleAnnotationBuilder",
+            "custom d3-style type",
+            "rich.style.noteBackground",
+            "rich.data",
+            "legacy-badge-hook",
+            "intentionallyUnsupportedExports"
+          ]
+        },
+        {
+          "file": "docs/migration-guide.md",
+          "terms": [
+            "From d3-annotation",
+            "d3 Mapping",
+            "annotationFromD3Style",
+            "prepareD3StyleAnnotationCollection",
+            "createD3StyleAnnotationBuilder",
+            "defineD3StyleAnnotationType",
+            "annotationData",
+            "applyD3StyleAnnotationEdit",
+            "No D3 collection selection joins",
+            "No `annotation()` component."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "examples-coverage",
+      "status": "proven",
+      "claim": "The package includes public-import examples for SVG, React, Bronto reports, DOM, Vega, Mermaid, D2, and React Flow.",
+      "evidence": [
+        {
+          "file": "docs/e2e-plan.md",
+          "terms": [
+            "`svg-basic`",
+            "`react-basic`",
+            "`bronto-report`",
+            "`dom-basic`",
+            "`vega-basic`",
+            "`mermaid-basic`",
+            "`d2-basic`",
+            "`react-flow-basic`",
+            "`style-gallery`",
+            "`index`"
+          ]
+        },
+        {
+          "file": "scripts/build-examples.mjs",
+          "terms": [
+            "index",
+            "svg-basic",
+            "react-flow-basic",
+            "style-gallery"
+          ]
+        },
+        {
+          "file": "scripts/verify-examples-browser.mjs",
+          "terms": [
+            "name: 'index'",
+            "verifyExamplesIndex",
+            "missingLinks",
+            "name: 'svg-basic'",
+            "name: 'vega-basic'",
+            "name: 'react-flow-basic'",
+            "name: 'style-gallery'",
+            "verifyStyleGallery"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "packed-consumer-and-browser-verification",
+      "status": "proven",
+      "claim": "Packed tarball clean consumers and browser verification prove root, React, CSS, DOM, Vega, Mermaid, D2, and React Flow subpaths work from the published package shape.",
+      "evidence": [
+        {
+          "file": "scripts/smoke-packed-consumer.mjs",
+          "terms": [
+            "smokeRootAndAdapters(tarball)",
+            "assertOptionalPeersAbsent(workdir)",
+            "smokeBrowserBundle",
+            "smokeBrowserAdapters",
+            "packed adapter browser smoke"
+          ]
+        },
+        {
+          "file": "scripts/check-browser-screenshots.mjs",
+          "terms": [
+            "Browser screenshot evidence verified",
+            "packedScreenshots",
+            "distinctColors",
+            "nonBackgroundSamples",
+            "nonBackgroundRatio",
+            "luminanceRange"
+          ]
+        },
+        {
+          "file": "scripts/verify-examples-browser.mjs",
+          "terms": [
+            "focusableNotes",
+            "keyboard-focusable annotation note",
+            "passing package layout-quality report",
+            "qualitySummary"
+          ]
+        },
+        {
+          "file": "docs/e2e-plan.md",
+          "terms": [
+            "Packed tarball content checks",
+            "Browser screenshot evidence checks"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "public-hygiene",
+      "status": "proven",
+      "claim": "Public hygiene checks guard against private project names, personal data, local absolute paths, internal URLs, secrets, and consumer-specific details.",
+      "evidence": [
+        {
+          "file": "scripts/public-hygiene.mjs",
+          "terms": [
+            "Public hygiene scan failed",
+            "privateNames",
+            "Users",
+            "SECRET_"
+          ]
+        },
+        {
+          "file": "AGENTS.md",
+          "terms": [
+            "Assume the repository will become public",
+            "Public Boundary"
+          ]
+        },
+        {
+          "file": "package.json",
+          "terms": [
+            "\"test:hygiene\""
+          ]
+        }
+      ]
+    },
+    {
+      "id": "docs-api-boundaries-and-known-limits",
+      "status": "proven",
+      "claim": "README and docs describe the API, adapter boundaries, install/use examples, peer dependency rules, completed scope, known limits, and future work.",
+      "evidence": [
+        {
+          "file": "README.md",
+          "terms": [
+            "## Install",
+            "## Adapters",
+            "## Known Limits",
+            "peer packages are optional"
+          ]
+        },
+        {
+          "file": "docs/e2e-plan.md",
+          "terms": [
+            "## Completed Scope",
+            "## Adapter Boundaries",
+            "## Known Limits",
+            "## Future Work"
+          ]
+        },
+        {
+          "file": "docs/integration-recipes.md",
+          "terms": [
+            "## Common Flow",
+            "## First-Use Checklist"
+          ]
+        },
+        {
+          "file": "docs/context-quickstart.md",
+          "terms": [
+            "Context Quickstart",
+            "Choose The Adapter",
+            "Common Mistakes"
+          ]
+        },
+        {
+          "file": "docs/migration-guide.md",
+          "terms": [
+            "Migration Guide",
+            "Recommended Migration Order",
+            "From d3-annotation",
+            "From Bronto UI Annotations"
+          ]
+        },
+        {
+          "file": "docs/api-reference.md",
+          "terms": [
+            "API Reference",
+            "@ponchia/annotations/react",
+            "@ponchia/annotations/vega",
+            "@ponchia/annotations/bronto.css",
+            "Boundary"
+          ]
+        },
+        {
+          "file": "scripts/check-api-reference.mjs",
+          "terms": [
+            "API reference verified",
+            "public subpaths"
+          ]
+        },
+        {
+          "file": "test/docs/snippets.test.ts",
+          "terms": [
+            "documentation snippets",
+            "runs generated-surface quickstart snippets",
+            "prepareVegaScenegraphAnnotations",
+            "prepareMermaidAnnotations",
+            "prepareD2DiagramAnnotations",
+            "prepareReactFlowAnnotations",
+            "Vega docs anchors",
+            "React Flow docs anchors",
+            "AnnotationLayer"
+          ]
+        },
+        {
+          "file": "test/docs-public-snippets.ts",
+          "terms": [
+            "@ponchia/annotations/react",
+            "@ponchia/annotations/vega",
+            "@ponchia/annotations/mermaid",
+            "@ponchia/annotations/d2",
+            "@ponchia/annotations/react-flow",
+            "@ponchia/annotations/bronto.css",
+            "resolveAnnotationLayout",
+            "resolvePreparedAnnotationLayout",
+            "assertAnnotationLayoutQuality",
+            "formatLayoutQualityReport",
+            "renderAnnotationsSvg",
+            "failOnWarnings",
+            "AnnotationLayerProps"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "product-boundaries",
+      "status": "proven",
+      "claim": "The package remains an annotation engine and does not become a chart engine, diagram parser, graph layout engine, app-state layer, persistence layer, router, workflow engine, or design system.",
+      "evidence": [
+        {
+          "file": "README.md",
+          "terms": [
+            "It does not",
+            "provide a design system"
+          ]
+        },
+        {
+          "file": "docs/e2e-plan.md",
+          "terms": [
+            "It does not create chart",
+            "parse Mermaid source or own diagram layout",
+            "It does not parse D2",
+            "It does not own graph"
+          ]
+        },
+        {
+          "file": "AGENTS.md",
+          "terms": [
+            "Product Boundary",
+            "This package owns annotation models"
+          ]
+        }
+      ]
+    }
+  ]
+}
