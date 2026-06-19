@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 const pkg = JSON.parse(await read('package.json'));
+const ci = await read('.github/workflows/ci.yml');
 const codeql = await read('.github/workflows/codeql.yml');
 const codeqlConfig = await read('.github/codeql/codeql-config.yml');
 const dependencyReview = await read('.github/workflows/dependency-review.yml');
@@ -13,6 +14,15 @@ const readme = await read('README.md');
 
 assert.equal(pkg.scripts?.['test:security-automation'], 'node scripts/check-security-automation.mjs');
 assert.ok(pkg.scripts?.check?.includes('npm run test:security-automation'), 'npm run check must include test:security-automation');
+
+for (const term of [
+  'name: CI',
+  'pull_request:',
+  'runs-on: ubuntu-latest',
+  'npm run check'
+]) {
+  assertIncludes(ci, term, '.github/workflows/ci.yml');
+}
 
 for (const term of [
   'name: CodeQL',
@@ -54,6 +64,15 @@ for (const term of [
 }
 
 assert.ok(!dependencyReview.includes('workflow_dispatch:'), 'Dependency Review should run only with pull request base/head context');
+
+for (const [workflow, label] of [
+  [ci, '.github/workflows/ci.yml'],
+  [codeql, '.github/workflows/codeql.yml'],
+  [dependencyReview, '.github/workflows/dependency-review.yml']
+]) {
+  assertIncludes(workflow, 'runs-on: ubuntu-latest', label);
+  assertNoPublicSelfHostedRunner(workflow, label);
+}
 
 for (const term of [
   'name: Scorecard',
@@ -98,6 +117,11 @@ for (const term of [
   'Automated security fixes',
   'Private vulnerability reporting',
   'Secret scanning push protection',
+  'Runner Policy',
+  'GitHub-hosted runners',
+  'Do not move',
+  'self-hosted runner',
+  'ubuntu-latest',
   'npm run test:security-automation'
 ]) {
   assertIncludes(docs, term, 'docs/security-automation.md');
@@ -107,12 +131,13 @@ for (const term of [
   'CodeQL',
   'Dependency Review',
   'OpenSSF Scorecard',
+  'standard GitHub-hosted',
   'docs/security-automation.md'
 ]) {
   assertIncludes(readme, term, 'README.md');
 }
 
-console.log('Security automation verified: CodeQL, Dependency Review, Scorecard, Dependabot docs, and public security settings guidance.');
+console.log('Security automation verified: CodeQL, Dependency Review, Scorecard, Dependabot docs, public runner policy, and public security settings guidance.');
 
 async function read(path) {
   return readFile(new URL(`../${path}`, import.meta.url), 'utf8');
@@ -120,4 +145,8 @@ async function read(path) {
 
 function assertIncludes(text, term, label) {
   assert.ok(text.includes(term), `${label} must include ${JSON.stringify(term)}`);
+}
+
+function assertNoPublicSelfHostedRunner(text, label) {
+  assert.ok(!/\bruns-on:\s*(?:self-hosted|arc-vps-[\w-]+)/.test(text), `${label} public pull_request jobs must stay on GitHub-hosted runners`);
 }
