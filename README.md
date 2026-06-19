@@ -880,6 +880,7 @@ npm run test:d3-parity
 npm run test:bronto-parity
 npm run test:bronto-upstream
 npm run test:dogfood
+npm run test:dogfood:bronto-report
 ```
 
 Examples:
@@ -934,6 +935,10 @@ tarball. It renders DOM report regions, a Vega-Lite chart compiled through
 Vega, and a Mermaid diagram, then verifies visible notes/connectors, generated
 target alignment, and no console errors. The friction report lives in
 `docs/dogfood-clean-consumer-report.md`.
+`npm run test:dogfood:bronto-report` adds a real public-report grammar pass:
+it installs the packed annotations tarball with public `@ponchia/ui` report
+CSS in a clean Vite consumer, annotates report stat cards, an SVG chart, and a
+table row, and records friction in `docs/dogfood-bronto-report.md`.
 
 `docs/readiness-matrix.json` is a checked map from the promised public surface
 to concrete source files, examples, tests, packed-consumer smoke, browser
@@ -1007,6 +1012,8 @@ the API in real consumers before wider stability promises.
   consumer integration report.
 - `docs/dogfood-clean-consumer-report.md` records the clean-consumer dogfood
   pass and friction found by `npm run test:dogfood`.
+- `docs/dogfood-bronto-report.md` records the public `@ponchia/ui` report
+  dogfood pass and friction found by `npm run test:dogfood:bronto-report`.
 - `docs/canary-release.md` documents the GitHub Packages canary lane, and
   `docs/canary-publish-report.md` records the verified
   `0.1.0-canary.1.e754177` registry install; `npm run test:canary` verifies the

@@ -9,6 +9,7 @@ const apiStabilityManifest = JSON.parse(await read('docs/api-stability.manifest.
 const compatibility = await read('docs/compatibility.md');
 const dogfood = await read('docs/dogfood-friction-report.md');
 const dogfoodCleanConsumer = await read('docs/dogfood-clean-consumer-report.md');
+const dogfoodBrontoReport = await read('docs/dogfood-bronto-report.md');
 const visual = await read('docs/visual-regression.md');
 const performanceDocs = await read('docs/performance.md');
 const accessibility = await read('docs/accessibility.md');
@@ -21,6 +22,7 @@ const canaryPublishReport = await read('docs/canary-publish-report.md');
 const canaryCheck = await read('scripts/check-canary-readiness.mjs');
 const canaryWorkflow = await read('.github/workflows/canary.yml');
 const dogfoodScript = await read('scripts/dogfood-clean-consumer.mjs');
+const dogfoodBrontoScript = await read('scripts/dogfood-bronto-report.mjs');
 const screenshotCheck = await read('scripts/check-browser-screenshots.mjs');
 const visualBaseline = JSON.parse(await read('test/visual-baselines/browser-screenshots.json'));
 
@@ -31,6 +33,7 @@ for (const path of [
   'docs/compatibility.md',
   'docs/dogfood-friction-report.md',
   'docs/dogfood-clean-consumer-report.md',
+  'docs/dogfood-bronto-report.md',
   'docs/visual-regression.md',
   'docs/performance.md',
   'docs/accessibility.md',
@@ -43,6 +46,7 @@ for (const path of [
   'scripts/check-canary-readiness.mjs',
   'scripts/benchmark-layout.mjs',
   'scripts/dogfood-clean-consumer.mjs',
+  'scripts/dogfood-bronto-report.mjs',
   'test/visual-baselines/browser-screenshots.json'
 ]) {
   await assertPath(path);
@@ -52,11 +56,13 @@ assert.equal(pkg.scripts?.['test:pre-release'], 'node scripts/check-pre-release-
 assert.equal(pkg.scripts?.['test:api-stability'], 'node scripts/check-api-stability.mjs');
 assert.equal(pkg.scripts?.['test:canary'], 'node scripts/check-canary-readiness.mjs');
 assert.equal(pkg.scripts?.['test:dogfood'], 'npm run build && node scripts/dogfood-clean-consumer.mjs');
+assert.equal(pkg.scripts?.['test:dogfood:bronto-report'], 'npm run build && node scripts/dogfood-bronto-report.mjs');
 assert.equal(pkg.scripts?.['test:performance'], 'npm run build && node scripts/benchmark-layout.mjs --assert');
 assert.ok(pkg.scripts?.check?.includes('npm run test:pre-release'), 'npm run check must include test:pre-release');
 assert.ok(pkg.scripts?.check?.includes('npm run test:api-stability'), 'npm run check must include test:api-stability');
 assert.ok(pkg.scripts?.check?.includes('npm run test:canary'), 'npm run check must include test:canary');
 assert.ok(pkg.scripts?.check?.includes('npm run test:dogfood'), 'npm run check must include test:dogfood');
+assert.ok(pkg.scripts?.check?.includes('npm run test:dogfood:bronto-report'), 'npm run check must include test:dogfood:bronto-report');
 assert.ok(pkg.scripts?.check?.includes('npm run test:performance'), 'npm run check must include test:performance');
 
 for (const term of [
@@ -64,6 +70,7 @@ for (const term of [
   'Freeze the `0.1.x` public API contract',
   'Publish a private/canary package',
   'docs/canary-publish-report.md',
+  'docs/dogfood-bronto-report.md',
   'visual regression baselines',
   'Performance',
   'Accessibility',
@@ -175,6 +182,19 @@ for (const term of [
 }
 
 for (const term of [
+  'Dogfood Bronto Report',
+  'public `@ponchia/ui` report CSS',
+  'report stat cards',
+  'SVG report chart',
+  'report table row',
+  'npm run test:dogfood:bronto-report',
+  'Would ship with this API today: yes',
+  'Manual coordinates are top-left note coordinates'
+]) {
+  assertIncludes(dogfoodBrontoReport, term, 'docs/dogfood-bronto-report.md');
+}
+
+for (const term of [
   'Dogfood clean consumer verified',
   'packed tarball clean consumer',
   'prepareVegaScenegraphAnnotations',
@@ -184,6 +204,18 @@ for (const term of [
   '.tmp-dogfood/dogfood-report.png'
 ]) {
   assertIncludes(dogfoodScript, term, 'scripts/dogfood-clean-consumer.mjs');
+}
+
+for (const term of [
+  'Bronto report dogfood verified',
+  'public @ponchia/ui static report grammar',
+  '@ponchia/ui@0.6.8',
+  'prepareDomAnnotations',
+  'annotationFrameFromSvg',
+  'dogfood-bronto-report.png',
+  'Manual placement uses report-surface pixels'
+]) {
+  assertIncludes(dogfoodBrontoScript, term, 'scripts/dogfood-bronto-report.mjs');
 }
 
 for (const term of [

@@ -27,6 +27,10 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - Dogfood: `npm run test:dogfood` installs the packed package into a clean Vite
   report consumer, renders DOM, Vega-Lite, and Mermaid surfaces, and records
   friction in `docs/dogfood-clean-consumer-report.md`.
+- Real report dogfood: `npm run test:dogfood:bronto-report` installs the packed
+  package beside public `@ponchia/ui` report CSS in a clean Vite consumer,
+  annotates rendered report stat cards, an SVG chart, and a table row, and
+  records friction in `docs/dogfood-bronto-report.md`.
 - API freeze: `docs/api-stability.manifest.json` labels every public export as
   stable or experimental for `0.1.x`, source entrypoints carry `@public` and
   `@experimental` notes, and `npm run test:api-stability` enforces coverage.
@@ -53,6 +57,7 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - Compatibility matrix: `docs/compatibility.md`
 - Dogfood report template: `docs/dogfood-friction-report.md`
 - Clean-consumer dogfood report: `docs/dogfood-clean-consumer-report.md`
+- Bronto report dogfood report: `docs/dogfood-bronto-report.md`
 - Canary release runbook: `docs/canary-release.md`
 - Canary publish evidence: `docs/canary-publish-report.md`
 - Visual regression baselines: `docs/visual-regression.md`
