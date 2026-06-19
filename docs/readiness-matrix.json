@@ -23,6 +23,7 @@
     "test:readiness",
     "test:completion-audit",
     "test:repo",
+    "test:release",
     "test:pre-release",
     "test:compatibility",
     "test:compatibility:lanes",
@@ -1376,8 +1377,11 @@
           "file": ".github/workflows/release.yml",
           "terms": [
             "id-token: write",
-            "npm publish --provenance --access public",
-            "environment: npm"
+            "Verify tag commit is on main",
+            "Verify tag matches package.json version",
+            "npm pack --dry-run --json --ignore-scripts",
+            "npm publish --ignore-scripts --provenance --access public --tag \"$dist_tag\"",
+            "environment: npm-publish"
           ]
         },
         {
@@ -1405,7 +1409,7 @@
             "GitHub owner: `Ponchia`",
             "Repository for `0.1.x`: `Ponchia/bronto-annotations`",
             "`publishConfig.access` is `public`",
-            "npm publish --provenance --access public",
+            "npm publish --ignore-scripts --provenance --access public --tag \"$dist_tag\"",
             "README headline stays `# @ponchia/annotations`",
             "No separate hosted examples site is required before `0.1.0`"
           ]
@@ -1415,7 +1419,7 @@
           "terms": [
             "Repository readiness verified",
             "package-lock root version must match package.json",
-            "npm publish --provenance --access public",
+            "npm publish --ignore-scripts --provenance --access public --tag \"$dist_tag\"",
             "GitHub Packages Canary"
           ]
         },

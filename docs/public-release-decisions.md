@@ -38,8 +38,11 @@ decisions so package metadata, docs, and release automation do not drift.
 ## Npm Access And Provenance
 
 - Public npm access: `publishConfig.access` is `public`.
-- Public release path: the GitHub Release workflow publishes with
-  `npm publish --provenance --access public`.
+- Public release path: pushed `v*` tags run the Release workflow, pause at the
+  protected `npm-publish` GitHub Environment, and publish with
+  `npm publish --ignore-scripts --provenance --access public --tag "$dist_tag"`.
+- Future releases should use npm Trusted Publishing for OIDC/provenance rather
+  than a long-lived `NPM_TOKEN`.
 - Canary path: GitHub Packages publishes unique `0.1.0-canary.*` versions and
   installs the exact version from a clean registry consumer.
 - Required proof before public npm release: `npm run check`, `npm pack

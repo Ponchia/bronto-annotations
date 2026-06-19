@@ -1029,7 +1029,9 @@ and helper usage onto this package.
 This repository is set up as a release-ready package, not only a local scaffold.
 
 - CI runs `npm run check` on Node 20 and Node 22 for pushes and pull requests.
-- Release publishing uses npm provenance through the GitHub Release workflow.
+- Release publishing is tag-driven: pushed `v*` tags run the Release workflow,
+  require the protected `npm-publish` GitHub Environment approval, and publish
+  to npm with provenance.
 - Dependabot tracks npm and GitHub Actions updates, with optional peers grouped
   separately from tooling.
 - `CONTRIBUTING.md` documents product boundaries, verification expectations,

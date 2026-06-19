@@ -6,6 +6,13 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## Unreleased
+
+### Changed
+
+- Switched future npm releases to the tag-driven, protected-environment CI/CD
+  lane used by the public Ponchia packages.
+
 ## 0.1.0 - 2026-06-19
 
 ### Added
@@ -28,6 +35,6 @@ reasonable.
 
 ### Repository
 
-- Private GitHub repository bootstrap under `Ponchia/bronto-annotations`.
+- Public GitHub repository bootstrap under `Ponchia/bronto-annotations`.
 - CI, release provenance workflow, Dependabot, issue templates, PR template,
   CODEOWNERS, contributing guidance, security policy, and release runbook.
