@@ -62,6 +62,12 @@ anchors, and host-owned edit patches are browser-proven and test-proven.
 - `examples/react-flow-basic` runs with a non-identity React Flow viewport,
   verifies rendered nodes, edges, and handles against public adapter output in
   the browser, and persists a dragged note edit as a host-owned annotation patch.
+- `npm run test:dogfood:external` can run with
+  `PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_MODE=react-flow`; the local external
+  pass measured a real rendered React Flow diagram, fed 7 rendered nodes, 6
+  generated edge routes, 12 handles, and 42 sampled SVG route points through
+  `prepareReactFlowAnnotations`, then verified visible notes/connectors and
+  target alignment in Chromium.
 - `test/adapters/authoring-contract.test.ts`, `test/core/edit.test.ts`, and
   `examples/react-basic` cover edit-patch preservation and note/anchor movement
   contracts.
@@ -71,7 +77,8 @@ anchors, and host-owned edit patches are browser-proven and test-proven.
 - The clean generated-surface dogfood consumer still uses invented report
   content, but `npm run test:dogfood:self-report` now covers a real
   release-evidence report built from the repository's own readiness and
-  completion data. `npm run test:dogfood:external` adds a first env-gated
-  external Astro/React host pass over rendered DOM stack-page geometry; broader
-  production-specific surfaces should still keep feeding friction reports before
+  completion data. `npm run test:dogfood:external` adds env-gated external
+  Astro/React host passes over rendered DOM stack-page geometry and rendered
+  React Flow diagram geometry; broader production-specific Vega, Mermaid, D2,
+  and editing surfaces should still keep feeding friction reports before
   widening `0.1.x` stability promises.

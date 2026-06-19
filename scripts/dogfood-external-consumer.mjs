@@ -12,10 +12,19 @@ const consumerRoot = process.env.PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT;
 const requireConsumer = process.env.PONCHIA_ANNOTATIONS_REQUIRE_EXTERNAL_CONSUMER === '1';
 const buildScript = process.env.PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_BUILD_SCRIPT ?? 'build';
 const routePath = process.env.PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_PATH ?? '/stack/';
+const consumerMode = process.env.PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_MODE ?? 'stack-dom';
 const distSubdir = process.env.PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_DIST ?? 'dist';
+const reactFlowSurfaceSelector = process.env.PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_SURFACE_SELECTOR ?? '[data-flow-diagram]';
+const reactFlowReadySelector = process.env.PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_READY_SELECTOR ?? '[data-flow-diagram] .react-flow__node';
 const screenshotDir = new URL('../.tmp-dogfood/', import.meta.url).pathname;
-const screenshotPath = join(screenshotDir, 'dogfood-external-consumer.png');
-const evidencePath = join(screenshotDir, 'dogfood-external-consumer.json');
+const screenshotFile = consumerMode === 'react-flow'
+  ? 'dogfood-external-react-flow.png'
+  : 'dogfood-external-consumer.png';
+const evidenceFile = consumerMode === 'react-flow'
+  ? 'dogfood-external-react-flow.json'
+  : 'dogfood-external-consumer.json';
+const screenshotPath = join(screenshotDir, screenshotFile);
+const evidencePath = join(screenshotDir, evidenceFile);
 
 if (!consumerRoot) {
   const message = 'Skipped external consumer dogfood: set PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT to a local Astro/React consumer checkout.';
@@ -46,6 +55,7 @@ const {
   resolvePreparedAnnotationLayout
 } = await import('@ponchia/annotations');
 const { anchorFromDOMRect } = await import('@ponchia/annotations/dom');
+const { prepareReactFlowAnnotations } = await import('@ponchia/annotations/react-flow');
 
 const css = await readFile(new URL('../dist/bronto.css', import.meta.url), 'utf8');
 const server = await serveStatic(distRoot);
@@ -63,6 +73,10 @@ try {
   page.on('pageerror', (error) => pageErrors.push(error.message));
 
   await page.goto(new URL(routePath, server.url).href, { waitUntil: 'networkidle' });
+
+  if (consumerMode === 'react-flow') {
+    await runExternalReactFlowDogfood(page, { css, consoleErrors, pageErrors });
+  } else if (consumerMode === 'stack-dom') {
   await page.waitForSelector('.stack-layer-diagram .stack-layer', { timeout: 45_000 });
   await page.evaluate(() => window.scrollTo(0, 0));
 
@@ -130,6 +144,8 @@ try {
   await page.screenshot({ path: screenshotPath, fullPage: true });
   await writeFile(evidencePath, JSON.stringify({
     consumerType: 'external Astro/React writing site',
+    consumerMode,
+    surfaceType: 'rendered DOM stack page',
     routePath,
     packageSource: 'current checkout through public package imports',
     buildScript,
@@ -157,6 +173,9 @@ try {
     browser: browserEvidence,
     screenshot: '.tmp-dogfood/dogfood-external-consumer.png'
   }, null, 2));
+  } else {
+    throw new Error(`Unsupported external consumer dogfood mode: ${consumerMode}. Expected "stack-dom" or "react-flow".`);
+  }
 
   await page.close();
 } finally {
@@ -164,7 +183,296 @@ try {
   await server.close();
 }
 
-console.log('External consumer dogfood verified: 4 annotations on a real Astro/React stack page. Screenshot: .tmp-dogfood/dogfood-external-consumer.png.');
+if (consumerMode === 'react-flow') {
+  console.log('External React Flow dogfood verified: 4 annotations on a real rendered React Flow surface. Screenshot: .tmp-dogfood/dogfood-external-react-flow.png.');
+} else {
+  console.log('External consumer dogfood verified: 4 annotations on a real Astro/React stack page. Screenshot: .tmp-dogfood/dogfood-external-consumer.png.');
+}
+
+async function runExternalReactFlowDogfood(page, { css, consoleErrors, pageErrors }) {
+  await page.waitForSelector(reactFlowSurfaceSelector, { timeout: 45_000 });
+  await page.evaluate((selector) => {
+    const surface = document.querySelector(selector) ?? document.querySelector('[data-flow-diagram]');
+    surface?.scrollIntoView({ block: 'center' });
+  }, reactFlowSurfaceSelector);
+  await page.waitForSelector(reactFlowReadySelector, { timeout: 45_000 });
+  await page.waitForFunction(({ surfaceSelector }) => {
+    const surface = document.querySelector(surfaceSelector) ?? document.querySelector('[data-flow-diagram]');
+
+    return Boolean(
+      surface
+        && surface.querySelectorAll('.react-flow__node[data-id]').length >= 2
+        && surface.querySelectorAll('.react-flow__edge[data-id]').length >= 1
+    );
+  }, { surfaceSelector: reactFlowSurfaceSelector }, { timeout: 45_000 });
+  await page.waitForTimeout(500);
+
+  const measured = await page.evaluate(measureExternalReactFlowPage, {
+    surfaceSelector: reactFlowSurfaceSelector
+  });
+  assert.ok(measured.nodes.length >= 2, 'external React Flow dogfood should measure at least two rendered nodes');
+  assert.ok(measured.edges.length >= 1, 'external React Flow dogfood should measure at least one rendered edge route');
+  assert.ok(measured.handles.length >= 1, 'external React Flow dogfood should measure rendered handles');
+
+  const { prepared, targets, selected } = prepareExternalReactFlowAnnotations(measured);
+  const defaults = generatedSurfaceLayoutDefaults({
+    anchorLabel: 'External React Flow anchors',
+    layoutLabel: 'External React Flow annotations',
+    failOnWarnings: true,
+    includeInfo: true
+  });
+  const resolved = resolvePreparedAnnotationLayout(prepared, {
+    ...defaults,
+    bounds: measured.bounds,
+    noteSizes: {
+      reactFlowEntry: { width: 188, height: 78 },
+      reactFlowRoute: { width: 196, height: 78 },
+      reactFlowHandle: { width: 194, height: 78 },
+      reactFlowTerminal: { width: 190, height: 78 }
+    },
+    assertQuality: {
+      label: 'External React Flow annotations',
+      minScore: 45,
+      includeWarnings: true,
+      maxIssues: 8
+    },
+    targetAlignmentTargets: targets,
+    assertTargetAlignment: {
+      label: 'External React Flow target alignment',
+      failOnWarnings: true,
+      includeAligned: true
+    },
+    targetAlignmentOptions: { tolerance: 2, nearTolerance: 10, minOverlapRatio: 0.9 }
+  });
+
+  const svg = renderAnnotationsSvg(resolved.layout, {
+    markerIdPrefix: 'external-react-flow-dogfood',
+    includeQualityIssues: resolved.quality,
+    preserveAspectRatio: 'none',
+    title: 'External React Flow dogfood annotations'
+  });
+
+  await page.evaluate(injectAnnotationLayer, { css, svg, bounds: measured.bounds });
+  const browserEvidence = await page.evaluate(readInjectedEvidence);
+
+  if (consoleErrors.length > 0 || pageErrors.length > 0) {
+    throw new Error(`external React Flow dogfood emitted browser errors: ${[...consoleErrors, ...pageErrors].join('\n')}`);
+  }
+
+  assert.equal(browserEvidence.annotationGroups, 4, 'external React Flow dogfood should inject four annotations');
+  assert.equal(browserEvidence.visibleNotes, 4, 'external React Flow dogfood should render four visible notes');
+  assert.equal(browserEvidence.visibleConnectors, 4, 'external React Flow dogfood should render four visible connectors');
+  assert.ok(browserEvidence.layerBox.width > 0 && browserEvidence.layerBox.height > 0, 'external React Flow dogfood layer must be visible');
+  assert.ok(browserEvidence.text.includes('Rendered node'), 'external React Flow dogfood should render note text');
+
+  await mkdir(screenshotDir, { recursive: true });
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  await writeFile(evidencePath, JSON.stringify({
+    consumerType: 'external Astro/React writing site',
+    consumerMode,
+    surfaceType: 'rendered React Flow diagram',
+    routePath,
+    surfaceSelector: reactFlowSurfaceSelector,
+    readySelector: reactFlowReadySelector,
+    packageSource: 'current checkout through public package imports',
+    buildScript,
+    measured: {
+      surfaceCount: measured.counts.surfaces,
+      nodeCount: measured.nodes.length,
+      edgeCount: measured.edges.length,
+      handleCount: measured.handles.length,
+      routePointCount: measured.edges.reduce((total, edge) => total + edge.points.length, 0),
+      selected
+    },
+    validation: {
+      ok: resolved.validation.ok,
+      summary: resolved.validationSummary
+    },
+    targetAlignment: {
+      ok: resolved.targetAlignment?.ok,
+      summary: resolved.targetAlignmentSummary
+    },
+    quality: {
+      ok: resolved.quality.ok,
+      score: resolved.quality.score,
+      issueCount: resolved.quality.metrics.issueCount,
+      summary: resolved.qualitySummary
+    },
+    browser: browserEvidence,
+    screenshot: '.tmp-dogfood/dogfood-external-react-flow.png'
+  }, null, 2));
+}
+
+function prepareExternalReactFlowAnnotations(measured) {
+  const nodes = measured.nodes.map((node) => ({
+    id: node.id,
+    position: { x: node.box.x, y: node.box.y },
+    width: node.box.width,
+    height: node.box.height,
+    measured: { width: node.box.width, height: node.box.height },
+    handles: measured.handles
+      .filter((handle) => handle.nodeId === node.id)
+      .map((handle) => ({
+        ...(handle.handleId ? { id: handle.handleId } : {}),
+        nodeId: node.id,
+        x: handle.box.x - node.box.x,
+        y: handle.box.y - node.box.y,
+        width: handle.box.width,
+        height: handle.box.height,
+        ...(handle.position ? { position: handle.position } : {}),
+        ...(handle.type ? { type: handle.type } : {})
+      })),
+    data: { label: node.text }
+  }));
+  const edges = measured.edges.map((edge) => ({
+    id: edge.id,
+    source: edge.sourceNodeId,
+    target: edge.targetNodeId,
+    data: {
+      source: 'rendered-react-flow-route',
+      pointCount: edge.points.length
+    }
+  }));
+  const entryNode = measured.nodes[0];
+  const terminalNode = measured.nodes[measured.nodes.length - 1];
+  const routedEdge = measured.edges.find((edge) => edge.points.length >= 2);
+  const handle = measured.handles.find((item) => item.type === 'source')
+    ?? measured.handles.find((item) => item.position)
+    ?? measured.handles[0];
+
+  assert.ok(entryNode, 'external React Flow dogfood should have an entry node');
+  assert.ok(terminalNode, 'external React Flow dogfood should have a terminal node');
+  assert.ok(routedEdge, 'external React Flow dogfood should have a routed edge');
+  assert.ok(handle, 'external React Flow dogfood should have a measured handle');
+
+  const specs = [
+    {
+      id: 'reactFlowEntry',
+      nodeId: entryNode.id,
+      note: {
+        title: 'Rendered node',
+        body: 'Actual React Flow node measured after host layout.',
+        wrap: 24
+      },
+      placement: { side: ['right', 'bottom', 'left'], align: ['center', 'start'], offset: [18, 30], crossOffset: [0, 42, -42] },
+      connector: { type: 'elbow', end: 'arrow', routing: { mode: 'orthogonal', padding: 10 } },
+      subject: { shape: 'rect', padding: 4, cornerRadius: 6, data: { source: 'rendered-node' } },
+      variant: 'callout',
+      tone: 'accent',
+      priority: 20,
+      annotationData: { externalTarget: 'entry-node', reactFlowNodeId: entryNode.id }
+    },
+    {
+      id: 'reactFlowRoute',
+      edgeId: routedEdge.id,
+      note: {
+        title: 'Rendered route',
+        body: 'The edge anchor follows generated SVG route points.',
+        wrap: 24
+      },
+      placement: { side: ['right', 'left', 'top'], align: ['center', 'start'], offset: [20, 32], crossOffset: [0, 44, -44] },
+      connector: { type: 'curve', end: 'dot' },
+      subject: { shape: 'path', data: { source: 'rendered-edge-route' } },
+      variant: 'curve',
+      tone: 'info',
+      priority: 18,
+      annotationData: { externalTarget: 'edge-route', reactFlowEdgeId: routedEdge.id }
+    },
+    {
+      id: 'reactFlowHandle',
+      handle: {
+        nodeId: handle.nodeId,
+        ...(handle.handleId ? { id: handle.handleId } : {}),
+        ...(handle.position ? { side: handle.position } : {}),
+        ...(handle.type ? { type: handle.type } : {}),
+        center: true
+      },
+      note: {
+        title: 'Measured handle',
+        body: 'Handle geometry came from React Flow DOM attributes.',
+        wrap: 24
+      },
+      placement: { side: ['left', 'right', 'bottom'], align: ['center', 'start'], offset: [18, 28], crossOffset: [0, 36, -36] },
+      connector: { type: 'straight', end: 'arrow' },
+      subject: { shape: 'point', radius: 5, data: { source: 'rendered-handle' } },
+      variant: 'badge',
+      tone: 'success',
+      priority: 16,
+      annotationData: { externalTarget: 'handle', reactFlowNodeId: handle.nodeId }
+    },
+    {
+      id: 'reactFlowTerminal',
+      nodeId: terminalNode.id,
+      note: {
+        title: 'Terminal node',
+        body: 'Final node shares the post-fitView coordinate space.',
+        wrap: 24
+      },
+      placement: { side: ['left', 'top', 'right'], align: ['center', 'end'], offset: [18, 30], crossOffset: [0, 42, -42] },
+      connector: { type: 'elbow', end: 'arrow', routing: { mode: 'orthogonal', padding: 10 } },
+      subject: { shape: 'rect', padding: 4, cornerRadius: 6, data: { source: 'rendered-node' } },
+      variant: 'callout',
+      tone: 'warning',
+      priority: 14,
+      annotationData: { externalTarget: 'terminal-node', reactFlowNodeId: terminalNode.id }
+    }
+  ];
+  const prepared = prepareReactFlowAnnotations({
+    nodes,
+    edges,
+    edgePoints: (edge) => measured.edges.find((item) => item.id === edge.id)?.points
+  }, specs, {
+    obstacles: {
+      includeNodes: true,
+      includeHandles: true,
+      includeEdges: true,
+      padding: 4
+    },
+    assert: {
+      label: 'External React Flow anchors',
+      failOnWarnings: true,
+      includeFound: true
+    }
+  });
+
+  return {
+    prepared,
+    targets: [
+      {
+        id: 'reactFlowEntry',
+        expected: `rendered React Flow node "${entryNode.id}"`,
+        box: entryNode.box,
+        minOverlapRatio: 0.9
+      },
+      {
+        id: 'reactFlowRoute',
+        expected: `rendered React Flow edge route "${routedEdge.id}"`,
+        points: routedEdge.points,
+        minOverlapRatio: 0.9
+      },
+      {
+        id: 'reactFlowHandle',
+        expected: `rendered React Flow handle on "${handle.nodeId}"`,
+        point: boxCenter(handle.box),
+        tolerance: 4
+      },
+      {
+        id: 'reactFlowTerminal',
+        expected: `rendered React Flow node "${terminalNode.id}"`,
+        box: terminalNode.box,
+        minOverlapRatio: 0.9
+      }
+    ],
+    selected: {
+      entryNodeId: entryNode.id,
+      terminalNodeId: terminalNode.id,
+      edgeId: routedEdge.id,
+      handleNodeId: handle.nodeId,
+      handlePosition: handle.position,
+      handleType: handle.type
+    }
+  };
+}
 
 function prepareAnnotationsFromMeasurements(measured, dom) {
   const noteById = {
@@ -230,6 +538,190 @@ function prepareAnnotationsFromMeasurements(measured, dom) {
       }))
     }
   };
+}
+
+function measureExternalReactFlowPage({ surfaceSelector }) {
+  const surface = document.querySelector(surfaceSelector) ?? document.querySelector('[data-flow-diagram]');
+
+  if (!surface) {
+    return {
+      title: document.title,
+      route: location.pathname,
+      bounds: documentBounds(),
+      counts: { surfaces: 0, nodes: 0, edges: 0, handles: 0 },
+      surface: undefined,
+      nodes: [],
+      handles: [],
+      edges: []
+    };
+  }
+
+  const nodeElements = [...surface.querySelectorAll('.react-flow__node[data-id]')];
+  const handleElements = [...surface.querySelectorAll('.react-flow__handle')];
+  const nodes = nodeElements.map((element) => ({
+    id: element.getAttribute('data-id'),
+    box: elementBox(element),
+    text: normalizeText(element.textContent ?? '')
+  })).filter((node) => node.id && node.box.width > 0 && node.box.height > 0);
+  const handles = handleElements.map((element) => {
+    const box = elementBox(element);
+    const className = element.getAttribute('class') ?? '';
+
+    return {
+      nodeId: element.getAttribute('data-nodeid'),
+      handleId: element.getAttribute('data-handleid') || undefined,
+      position: placementSide(element.getAttribute('data-handlepos')),
+      type: className.includes(' source ') || className.endsWith(' source') ? 'source'
+        : className.includes(' target ') || className.endsWith(' target') ? 'target'
+          : undefined,
+      box
+    };
+  }).filter((handle) => handle.nodeId && handle.box.width > 0 && handle.box.height > 0);
+  const edges = [...surface.querySelectorAll('.react-flow__edge[data-id]')].map((element, index) => {
+    const path = element.querySelector('path');
+    const points = path ? documentPathPoints(path) : [];
+    const fallbackId = `rendered-edge-${index + 1}`;
+    const sourceNodeId = closestNodeId(points[0], nodes) ?? nodes[0]?.id ?? fallbackId;
+    const targetNodeId = closestNodeId(points[points.length - 1], nodes) ?? nodes[nodes.length - 1]?.id ?? sourceNodeId;
+
+    return {
+      id: element.getAttribute('data-id') || fallbackId,
+      box: elementBox(element),
+      points,
+      sourceNodeId,
+      targetNodeId
+    };
+  }).filter((edge) => edge.points.length >= 2);
+
+  return {
+    title: document.title,
+    route: location.pathname,
+    bounds: documentBounds(),
+    counts: {
+      surfaces: document.querySelectorAll('[data-flow-diagram]').length,
+      nodes: nodeElements.length,
+      edges: surface.querySelectorAll('.react-flow__edge[data-id]').length,
+      handles: handleElements.length
+    },
+    surface: {
+      selector: surfaceSelector,
+      slug: surface.getAttribute('data-flow-diagram') || undefined,
+      box: elementBox(surface)
+    },
+    nodes,
+    handles,
+    edges
+  };
+
+  function documentPathPoints(path) {
+    const matrix = path.getScreenCTM();
+    const svg = path.ownerSVGElement;
+
+    if (!matrix || !svg || typeof path.getTotalLength !== 'function' || typeof path.getPointAtLength !== 'function') {
+      return pathBoxFallback(path);
+    }
+
+    const length = path.getTotalLength();
+
+    if (!Number.isFinite(length) || length <= 0) {
+      return pathBoxFallback(path);
+    }
+
+    const point = svg.createSVGPoint();
+    const count = Math.max(6, Math.min(20, Math.ceil(length / 70)));
+    const sampled = [];
+
+    for (let index = 0; index <= count; index += 1) {
+      const local = path.getPointAtLength(length * (index / count));
+      point.x = local.x;
+      point.y = local.y;
+      const screen = point.matrixTransform(matrix);
+      sampled.push({
+        x: round(screen.x + window.scrollX),
+        y: round(screen.y + window.scrollY)
+      });
+    }
+
+    return dedupePoints(sampled);
+  }
+
+  function pathBoxFallback(path) {
+    const box = elementBox(path);
+
+    return [
+      { x: box.x, y: box.y + box.height / 2 },
+      { x: box.x + box.width, y: box.y + box.height / 2 }
+    ];
+  }
+
+  function dedupePoints(points) {
+    return points.filter((point, index) => {
+      const previous = points[index - 1];
+
+      return !previous || Math.abs(point.x - previous.x) > 0.2 || Math.abs(point.y - previous.y) > 0.2;
+    });
+  }
+
+  function closestNodeId(point, candidates) {
+    if (!point) {
+      return undefined;
+    }
+
+    let best;
+
+    for (const node of candidates) {
+      const center = {
+        x: node.box.x + node.box.width / 2,
+        y: node.box.y + node.box.height / 2
+      };
+      const dx = point.x - center.x;
+      const dy = point.y - center.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (!best || distance < best.distance) {
+        best = { id: node.id, distance };
+      }
+    }
+
+    return best?.id;
+  }
+
+  function placementSide(value) {
+    return value === 'top' || value === 'right' || value === 'bottom' || value === 'left'
+      ? value
+      : undefined;
+  }
+
+  function documentBounds() {
+    const doc = document.documentElement;
+    const body = document.body;
+
+    return {
+      x: 0,
+      y: 0,
+      width: Math.max(doc.scrollWidth, body.scrollWidth, doc.clientWidth),
+      height: Math.max(doc.scrollHeight, body.scrollHeight, doc.clientHeight)
+    };
+  }
+
+  function elementBox(element) {
+    const rect = element.getBoundingClientRect();
+
+    return {
+      x: round(rect.left + window.scrollX),
+      y: round(rect.top + window.scrollY),
+      width: round(rect.width),
+      height: round(rect.height)
+    };
+  }
+
+  function normalizeText(value) {
+    return value.replace(/\s+/g, ' ').trim().slice(0, 120);
+  }
+
+  function round(value) {
+    return Math.round(value * 1000) / 1000;
+  }
 }
 
 function measureExternalStackPage() {
@@ -454,5 +946,12 @@ function rectLike(box) {
     top: box.y,
     right: box.x + box.width,
     bottom: box.y + box.height
+  };
+}
+
+function boxCenter(box) {
+  return {
+    x: box.x + box.width / 2,
+    y: box.y + box.height / 2
   };
 }

@@ -1236,7 +1236,10 @@
             "Dogfood External Consumer Report",
             "external Astro/React writing site",
             "rendered DOM stack diagram",
+            "rendered React Flow diagram",
             "npm run test:dogfood:external",
+            "prepareReactFlowAnnotations",
+            "42 generated SVG edge-route points",
             "Target-alignment checks used: yes",
             "Layout-quality checks used: yes",
             "Would ship with this API today: yes"
@@ -1287,9 +1290,12 @@
             "PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT",
             "Skipped external consumer dogfood",
             "anchorFromDOMRect",
+            "prepareReactFlowAnnotations",
             "resolvePreparedAnnotationLayout",
             "renderAnnotationsSvg",
-            "dogfood-external-consumer.png"
+            "External React Flow dogfood verified",
+            "dogfood-external-consumer.png",
+            "dogfood-external-react-flow.png"
           ]
         },
         {

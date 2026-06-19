@@ -292,13 +292,20 @@ for (const term of [
   'Dogfood External Consumer Report',
   'external Astro/React writing site',
   'rendered DOM stack diagram',
+  'rendered React Flow diagram',
+  'PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_MODE=react-flow',
   'npm run test:dogfood:external',
   'PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT',
+  'prepareReactFlowAnnotations',
+  '7 rendered nodes',
+  '42 generated SVG edge-route points',
   'Target-alignment checks used: yes',
   'Layout-quality checks used: yes',
   'Would ship with this API today: yes',
   'dogfood-external-consumer.png',
-  'dogfood-external-consumer.json'
+  'dogfood-external-consumer.json',
+  'dogfood-external-react-flow.png',
+  'dogfood-external-react-flow.json'
 ]) {
   assertIncludes(dogfoodExternalReport, term, 'docs/dogfood-external-consumer-report.md');
 }
@@ -350,10 +357,15 @@ for (const term of [
   'PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT',
   'Skipped external consumer dogfood',
   'anchorFromDOMRect',
+  'prepareReactFlowAnnotations',
   'resolvePreparedAnnotationLayout',
   'renderAnnotationsSvg',
   'External consumer target alignment',
-  'dogfood-external-consumer.png'
+  'External React Flow dogfood verified',
+  'External React Flow target alignment',
+  'PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_MODE',
+  'dogfood-external-consumer.png',
+  'dogfood-external-react-flow.png'
 ]) {
   assertIncludes(dogfoodExternalScript, term, 'scripts/dogfood-external-consumer.mjs');
 }
@@ -419,6 +431,8 @@ for (const term of [
   'D2 Nested Diagrams And Routes',
   'React Flow Viewport, Handles, And Editing',
   'non-identity React Flow viewport',
+  'PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_MODE=react-flow',
+  '42 sampled SVG route points',
   'host-owned annotation patch',
   'examples/mermaid-basic',
   'mermaid-sequence-route',

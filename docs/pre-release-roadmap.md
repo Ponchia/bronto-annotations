@@ -38,8 +38,9 @@ has been proven in real consumer use before a public `1.0.0` commitment.
   diagram geometry, and records friction in `docs/dogfood-self-report.md`.
 - External consumer dogfood: `npm run test:dogfood:external` is an env-gated
   local harness that builds a real Astro/React consumer, measures rendered DOM
-  stack-page geometry in Chromium, injects a package-generated SVG layer, and
-  records friction in `docs/dogfood-external-consumer-report.md`.
+  stack-page geometry or rendered React Flow diagram geometry in Chromium,
+  injects a package-generated SVG layer, and records friction in
+  `docs/dogfood-external-consumer-report.md`.
 - API freeze: `docs/api-stability.manifest.json` labels every public export as
   stable or experimental for `0.1.x`, source entrypoints carry `@public` and
   `@experimental` notes, and `npm run test:api-stability` enforces coverage.

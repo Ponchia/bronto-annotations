@@ -949,10 +949,14 @@
             "PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT",
             "Skipped external consumer dogfood",
             "anchorFromDOMRect",
+            "prepareReactFlowAnnotations",
             "resolvePreparedAnnotationLayout",
             "renderAnnotationsSvg",
             "External consumer target alignment",
-            "dogfood-external-consumer.png"
+            "External React Flow dogfood verified",
+            "External React Flow target alignment",
+            "dogfood-external-consumer.png",
+            "dogfood-external-react-flow.png"
           ]
         },
         {
@@ -961,12 +965,17 @@
             "Dogfood External Consumer Report",
             "external Astro/React writing site",
             "rendered DOM stack diagram",
+            "rendered React Flow diagram",
             "npm run test:dogfood:external",
+            "prepareReactFlowAnnotations",
+            "42 generated SVG edge-route points",
             "Target-alignment checks used: yes",
             "Layout-quality checks used: yes",
             "Would ship with this API today: yes",
             "dogfood-external-consumer.png",
-            "dogfood-external-consumer.json"
+            "dogfood-external-consumer.json",
+            "dogfood-external-react-flow.png",
+            "dogfood-external-react-flow.json"
           ]
         }
       ]
@@ -1522,7 +1531,9 @@
             "Dogfood External Consumer Report",
             "external Astro/React writing site",
             "rendered DOM stack diagram",
+            "rendered React Flow diagram",
             "npm run test:dogfood:external",
+            "prepareReactFlowAnnotations",
             "Target-alignment checks used: yes",
             "Layout-quality checks used: yes",
             "Would ship with this API today: yes"
@@ -1545,8 +1556,10 @@
             "PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT",
             "Skipped external consumer dogfood",
             "anchorFromDOMRect",
+            "prepareReactFlowAnnotations",
             "resolvePreparedAnnotationLayout",
-            "renderAnnotationsSvg"
+            "renderAnnotationsSvg",
+            "External React Flow dogfood verified"
           ]
         },
         {
