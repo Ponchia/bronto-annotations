@@ -17,6 +17,7 @@
     "test:dogfood",
     "test:dogfood:bronto-report",
     "test:dogfood:self-report",
+    "test:dogfood:external",
     "test:browser",
     "test:screenshots",
     "test:readiness",
@@ -931,6 +932,46 @@
       ]
     },
     {
+      "id": "external-consumer-dogfood",
+      "evidence": [
+        {
+          "file": "package.json",
+          "terms": [
+            "\"test:dogfood:external\"",
+            "scripts/dogfood-external-consumer.mjs",
+            "npm run test:dogfood:external"
+          ]
+        },
+        {
+          "file": "scripts/dogfood-external-consumer.mjs",
+          "terms": [
+            "External consumer dogfood verified",
+            "PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT",
+            "Skipped external consumer dogfood",
+            "anchorFromDOMRect",
+            "resolvePreparedAnnotationLayout",
+            "renderAnnotationsSvg",
+            "External consumer target alignment",
+            "dogfood-external-consumer.png"
+          ]
+        },
+        {
+          "file": "docs/dogfood-external-consumer-report.md",
+          "terms": [
+            "Dogfood External Consumer Report",
+            "external Astro/React writing site",
+            "rendered DOM stack diagram",
+            "npm run test:dogfood:external",
+            "Target-alignment checks used: yes",
+            "Layout-quality checks used: yes",
+            "Would ship with this API today: yes",
+            "dogfood-external-consumer.png",
+            "dogfood-external-consumer.json"
+          ]
+        }
+      ]
+    },
+    {
       "id": "github-packages-canary",
       "evidence": [
         {
@@ -1388,6 +1429,7 @@
             "docs/dogfood-clean-consumer-report.md",
             "docs/dogfood-bronto-report.md",
             "docs/dogfood-self-report.md",
+            "docs/dogfood-external-consumer-report.md",
             "docs/canary-release.md",
             "docs/adapter-recipes-proof.md",
             "docs/public-release-decisions.md",
@@ -1475,6 +1517,18 @@
           ]
         },
         {
+          "file": "docs/dogfood-external-consumer-report.md",
+          "terms": [
+            "Dogfood External Consumer Report",
+            "external Astro/React writing site",
+            "rendered DOM stack diagram",
+            "npm run test:dogfood:external",
+            "Target-alignment checks used: yes",
+            "Layout-quality checks used: yes",
+            "Would ship with this API today: yes"
+          ]
+        },
+        {
           "file": "scripts/dogfood-self-report.mjs",
           "terms": [
             "Self dogfood report verified",
@@ -1482,6 +1536,17 @@
             "renderChartHost",
             "renderFlowHost",
             "targetAlignmentOk"
+          ]
+        },
+        {
+          "file": "scripts/dogfood-external-consumer.mjs",
+          "terms": [
+            "External consumer dogfood verified",
+            "PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT",
+            "Skipped external consumer dogfood",
+            "anchorFromDOMRect",
+            "resolvePreparedAnnotationLayout",
+            "renderAnnotationsSvg"
           ]
         },
         {
@@ -1624,7 +1689,9 @@
             "Pre-release goals verified",
             "docs/public-release-decisions.md",
             "docs/dogfood-self-report.md",
+            "docs/dogfood-external-consumer-report.md",
             "Dogfood Friction Report Template",
+            "npm run test:dogfood:external",
             "npm run test:compatibility",
             "npm run test:compatibility:lanes",
             "npm run test:performance"

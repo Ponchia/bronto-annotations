@@ -12,6 +12,7 @@ const dogfood = await read('docs/dogfood-friction-report.md');
 const dogfoodCleanConsumer = await read('docs/dogfood-clean-consumer-report.md');
 const dogfoodBrontoReport = await read('docs/dogfood-bronto-report.md');
 const dogfoodSelfReport = await read('docs/dogfood-self-report.md');
+const dogfoodExternalReport = await read('docs/dogfood-external-consumer-report.md');
 const visual = await read('docs/visual-regression.md');
 const performanceDocs = await read('docs/performance.md');
 const accessibility = await read('docs/accessibility.md');
@@ -28,6 +29,7 @@ const canaryWorkflow = await read('.github/workflows/canary.yml');
 const dogfoodScript = await read('scripts/dogfood-clean-consumer.mjs');
 const dogfoodBrontoScript = await read('scripts/dogfood-bronto-report.mjs');
 const dogfoodSelfScript = await read('scripts/dogfood-self-report.mjs');
+const dogfoodExternalScript = await read('scripts/dogfood-external-consumer.mjs');
 const screenshotCheck = await read('scripts/check-browser-screenshots.mjs');
 const visualBaseline = JSON.parse(await read('test/visual-baselines/browser-screenshots.json'));
 
@@ -41,6 +43,7 @@ for (const path of [
   'docs/dogfood-clean-consumer-report.md',
   'docs/dogfood-bronto-report.md',
   'docs/dogfood-self-report.md',
+  'docs/dogfood-external-consumer-report.md',
   'docs/visual-regression.md',
   'docs/performance.md',
   'docs/accessibility.md',
@@ -57,6 +60,7 @@ for (const path of [
   'scripts/dogfood-clean-consumer.mjs',
   'scripts/dogfood-bronto-report.mjs',
   'scripts/dogfood-self-report.mjs',
+  'scripts/dogfood-external-consumer.mjs',
   'test/visual-baselines/browser-screenshots.json'
 ]) {
   await assertPath(path);
@@ -68,6 +72,7 @@ assert.equal(pkg.scripts?.['test:canary'], 'node scripts/check-canary-readiness.
 assert.equal(pkg.scripts?.['test:dogfood'], 'npm run build && node scripts/dogfood-clean-consumer.mjs');
 assert.equal(pkg.scripts?.['test:dogfood:bronto-report'], 'npm run build && node scripts/dogfood-bronto-report.mjs');
 assert.equal(pkg.scripts?.['test:dogfood:self-report'], 'npm run build && node scripts/dogfood-self-report.mjs');
+assert.equal(pkg.scripts?.['test:dogfood:external'], 'npm run build && node scripts/dogfood-external-consumer.mjs');
 assert.equal(pkg.scripts?.['test:compatibility'], 'node scripts/check-compatibility-matrix.mjs');
 assert.equal(pkg.scripts?.['test:compatibility:lanes'], 'npm run build && node scripts/smoke-compatibility-lanes.mjs');
 assert.equal(pkg.scripts?.['test:performance'], 'npm run build && node scripts/benchmark-layout.mjs --assert');
@@ -77,6 +82,7 @@ assert.ok(pkg.scripts?.check?.includes('npm run test:canary'), 'npm run check mu
 assert.ok(pkg.scripts?.check?.includes('npm run test:dogfood'), 'npm run check must include test:dogfood');
 assert.ok(pkg.scripts?.check?.includes('npm run test:dogfood:bronto-report'), 'npm run check must include test:dogfood:bronto-report');
 assert.ok(pkg.scripts?.check?.includes('npm run test:dogfood:self-report'), 'npm run check must include test:dogfood:self-report');
+assert.ok(pkg.scripts?.check?.includes('npm run test:dogfood:external'), 'npm run check must include test:dogfood:external');
 assert.ok(pkg.scripts?.check?.includes('npm run test:compatibility'), 'npm run check must include test:compatibility');
 assert.ok(pkg.scripts?.check?.includes('npm run test:compatibility:lanes'), 'npm run check must include test:compatibility:lanes');
 assert.ok(pkg.scripts?.check?.includes('npm run test:performance'), 'npm run check must include test:performance');
@@ -89,6 +95,7 @@ for (const term of [
   'docs/public-release-decisions.md',
   'docs/dogfood-bronto-report.md',
   'docs/dogfood-self-report.md',
+  'docs/dogfood-external-consumer-report.md',
   'createAnnotationEditEvent',
   'createAnnotationEditDelta',
   'visual regression baselines',
@@ -282,6 +289,21 @@ for (const term of [
 }
 
 for (const term of [
+  'Dogfood External Consumer Report',
+  'external Astro/React writing site',
+  'rendered DOM stack diagram',
+  'npm run test:dogfood:external',
+  'PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT',
+  'Target-alignment checks used: yes',
+  'Layout-quality checks used: yes',
+  'Would ship with this API today: yes',
+  'dogfood-external-consumer.png',
+  'dogfood-external-consumer.json'
+]) {
+  assertIncludes(dogfoodExternalReport, term, 'docs/dogfood-external-consumer-report.md');
+}
+
+for (const term of [
   'Dogfood clean consumer verified',
   'packed tarball clean consumer',
   'prepareVegaScenegraphAnnotations',
@@ -321,6 +343,19 @@ for (const term of [
   'dogfood-self-report.png'
 ]) {
   assertIncludes(dogfoodSelfScript, term, 'scripts/dogfood-self-report.mjs');
+}
+
+for (const term of [
+  'External consumer dogfood verified',
+  'PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT',
+  'Skipped external consumer dogfood',
+  'anchorFromDOMRect',
+  'resolvePreparedAnnotationLayout',
+  'renderAnnotationsSvg',
+  'External consumer target alignment',
+  'dogfood-external-consumer.png'
+]) {
+  assertIncludes(dogfoodExternalScript, term, 'scripts/dogfood-external-consumer.mjs');
 }
 
 for (const term of [
@@ -415,6 +450,8 @@ for (const term of [
   'Pre-Release Hardening',
   'docs/pre-release-roadmap.md',
   'docs/dogfood-self-report.md',
+  'docs/dogfood-external-consumer-report.md',
+  'npm run test:dogfood:external',
   'npm run test:compatibility',
   'npm run test:compatibility:lanes',
   'npm run test:performance'
@@ -422,7 +459,7 @@ for (const term of [
   assertIncludes(readme, term, 'README.md');
 }
 
-console.log('Pre-release goals verified: roadmap, API stability, compatibility, dogfood, self-dogfood, visual regression, performance, accessibility, adapter recipes, and public release decisions.');
+console.log('Pre-release goals verified: roadmap, API stability, compatibility, dogfood, self-dogfood, external dogfood, visual regression, performance, accessibility, adapter recipes, and public release decisions.');
 
 async function read(path) {
   return readFile(pathUrl(path), 'utf8');

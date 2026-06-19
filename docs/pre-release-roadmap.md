@@ -36,6 +36,10 @@ has been proven in real consumer use before a public `1.0.0` commitment.
   `docs/readiness-matrix.json`, `docs/completion-audit.json`, and
   `package.json`, annotates DOM report regions plus generated SVG chart and
   diagram geometry, and records friction in `docs/dogfood-self-report.md`.
+- External consumer dogfood: `npm run test:dogfood:external` is an env-gated
+  local harness that builds a real Astro/React consumer, measures rendered DOM
+  stack-page geometry in Chromium, injects a package-generated SVG layer, and
+  records friction in `docs/dogfood-external-consumer-report.md`.
 - API freeze: `docs/api-stability.manifest.json` labels every public export as
   stable or experimental for `0.1.x`, source entrypoints carry `@public` and
   `@experimental` notes, and `npm run test:api-stability` enforces coverage.
@@ -66,10 +70,9 @@ has been proven in real consumer use before a public `1.0.0` commitment.
   `@ponchia/annotations` package name, `Ponchia/bronto-annotations` repository
   policy, public npm access, README positioning, and examples hosting decisions
   for the `0.1.x` lane.
-- Remaining high-value proof: keep widening dogfood into external production
-  host apps or reports before widening public API stability promises; the
-  current generated-surface recipes and self-report dogfood are browser-proven
-  but still benefit from more consumer-specific friction reports.
+- Remaining high-value proof: keep widening dogfood beyond the first external
+  consumer into additional production host apps or reports before widening
+  public API stability promises.
 
 ## Tracking Documents
 
@@ -82,6 +85,8 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - Clean-consumer dogfood report: `docs/dogfood-clean-consumer-report.md`
 - Bronto report dogfood report: `docs/dogfood-bronto-report.md`
 - Self-dogfood report: `docs/dogfood-self-report.md`
+- External consumer dogfood report:
+  `docs/dogfood-external-consumer-report.md`
 - Canary release runbook: `docs/canary-release.md`
 - Canary publish evidence: `docs/canary-publish-report.md`
 - Public release decisions: `docs/public-release-decisions.md`

@@ -914,6 +914,8 @@ npm run test:bronto-parity
 npm run test:bronto-upstream
 npm run test:dogfood
 npm run test:dogfood:bronto-report
+npm run test:dogfood:self-report
+npm run test:dogfood:external
 ```
 
 Examples:
@@ -977,6 +979,10 @@ evidence: it renders `docs/readiness-matrix.json`,
 `docs/completion-audit.json`, and `package.json` into a clean report consumer,
 then annotates DOM metric cards, a generated SVG chart, and a generated SVG
 flow diagram. The friction report lives in `docs/dogfood-self-report.md`.
+`npm run test:dogfood:external` is an optional env-gated local harness for a
+real external Astro/React consumer: it builds the host, measures actual rendered
+DOM geometry in Chromium, injects a package-generated SVG layer, and records the
+sanitized friction report in `docs/dogfood-external-consumer-report.md`.
 
 `docs/readiness-matrix.json` is a checked map from the promised public surface
 to concrete source files, examples, tests, packed-consumer smoke, browser
@@ -1058,6 +1064,9 @@ the API in real consumers before wider stability promises.
 - `docs/dogfood-self-report.md` records the self-dogfood release-evidence
   report built from current readiness/audit data and friction found by
   `npm run test:dogfood:self-report`.
+- `docs/dogfood-external-consumer-report.md` records the env-gated external
+  Astro/React consumer pass and friction found by `npm run
+  test:dogfood:external`.
 - Static SVG `includeQualityIssues` and React `qualityDebug` render
   layout-quality issue boxes for manual-placement and overlap debugging.
 - `docs/canary-release.md` documents the GitHub Packages canary lane, and

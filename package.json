@@ -94,6 +94,7 @@
     "test:dogfood": "npm run build && node scripts/dogfood-clean-consumer.mjs",
     "test:dogfood:bronto-report": "npm run build && node scripts/dogfood-bronto-report.mjs",
     "test:dogfood:self-report": "npm run build && node scripts/dogfood-self-report.mjs",
+    "test:dogfood:external": "npm run build && node scripts/dogfood-external-consumer.mjs",
     "test:examples": "npm run build && node scripts/build-examples.mjs",
     "test:browser": "npm run build && node scripts/verify-examples-browser.mjs",
     "test:screenshots": "node scripts/check-browser-screenshots.mjs",
@@ -105,7 +106,7 @@
     "test:compatibility:lanes": "npm run build && node scripts/smoke-compatibility-lanes.mjs",
     "test:performance": "npm run build && node scripts/benchmark-layout.mjs --assert",
     "test:hygiene": "node scripts/public-hygiene.mjs",
-    "check": "npm run build && npm test && npm run test:docs-snippets && npm run test:types && npm run test:exports && npm run test:api-reference && npm run test:api-stability && npm run test:canary && npm run test:d3-parity && npm run test:bronto-parity && npm run test:bronto-upstream && npm run test:examples && npm run test:pack && npm run test:dogfood && npm run test:dogfood:bronto-report && npm run test:dogfood:self-report && npm run test:browser && npm run test:screenshots && npm run test:readiness && npm run test:completion-audit && npm run test:repo && npm run test:pre-release && npm run test:compatibility && npm run test:compatibility:lanes && npm run test:performance && npm run test:hygiene"
+    "check": "npm run build && npm test && npm run test:docs-snippets && npm run test:types && npm run test:exports && npm run test:api-reference && npm run test:api-stability && npm run test:canary && npm run test:d3-parity && npm run test:bronto-parity && npm run test:bronto-upstream && npm run test:examples && npm run test:pack && npm run test:dogfood && npm run test:dogfood:bronto-report && npm run test:dogfood:self-report && npm run test:dogfood:external && npm run test:browser && npm run test:screenshots && npm run test:readiness && npm run test:completion-audit && npm run test:repo && npm run test:pre-release && npm run test:compatibility && npm run test:compatibility:lanes && npm run test:performance && npm run test:hygiene"
   },
   "peerDependencies": {
     "@terrastruct/d2": ">=0.1.0",

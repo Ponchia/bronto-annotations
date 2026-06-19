@@ -71,6 +71,7 @@ anchors, and host-owned edit patches are browser-proven and test-proven.
 - The clean generated-surface dogfood consumer still uses invented report
   content, but `npm run test:dogfood:self-report` now covers a real
   release-evidence report built from the repository's own readiness and
-  completion data. An external production host integration should still be used
-  to collect final API-friction feedback before widening `0.1.x` stability
-  promises.
+  completion data. `npm run test:dogfood:external` adds a first env-gated
+  external Astro/React host pass over rendered DOM stack-page geometry; broader
+  production-specific surfaces should still keep feeding friction reports before
+  widening `0.1.x` stability promises.
