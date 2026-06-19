@@ -877,6 +877,7 @@ npm run test:completion-audit
 npm run test:d3-parity
 npm run test:bronto-parity
 npm run test:bronto-upstream
+npm run test:dogfood
 ```
 
 Examples:
@@ -925,6 +926,12 @@ DOM/report, Vega, Mermaid, D2, and React Flow surfaces through public package
 imports, verifies each annotation subject aligns with the generated host target,
 and checks legacy `ui-annotation*` report snippets are styled by the packed CSS
 bridge.
+
+Dogfood verification runs a separate clean Vite report consumer from the packed
+tarball. It renders DOM report regions, a Vega-Lite chart compiled through
+Vega, and a Mermaid diagram, then verifies visible notes/connectors, generated
+target alignment, and no console errors. The friction report lives in
+`docs/dogfood-clean-consumer-report.md`.
 
 `docs/readiness-matrix.json` is a checked map from the promised public surface
 to concrete source files, examples, tests, packed-consumer smoke, browser
@@ -995,6 +1002,8 @@ the API in real consumers before wider stability promises.
   Mermaid, D2, and React Flow ranges.
 - `docs/dogfood-friction-report.md` is the required template for the first real
   consumer integration report.
+- `docs/dogfood-clean-consumer-report.md` records the clean-consumer dogfood
+  pass and friction found by `npm run test:dogfood`.
 - `docs/visual-regression.md` documents the screenshot baseline update workflow.
 - `npm run test:performance` runs deterministic 10, 50, and 200 annotation
   stress layouts against the real engine.

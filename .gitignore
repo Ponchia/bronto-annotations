@@ -2,6 +2,7 @@ node_modules/
 dist/
 .tmp/
 .tmp-packed-screenshots/
+.tmp-dogfood/
 .playwright-cli/
 *.tgz
 .DS_Store

@@ -24,19 +24,23 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - Package implementation: complete for `0.1.0`.
 - Repository operations: CI, release workflow, package metadata, templates, and
   repo-readiness checks are in place.
+- Dogfood: `npm run test:dogfood` installs the packed package into a clean Vite
+  report consumer, renders DOM, Vega-Lite, and Mermaid surfaces, and records
+  friction in `docs/dogfood-clean-consumer-report.md`.
 - Visual regression: `test/visual-baselines/browser-screenshots.json` stores
   approved browser metrics for every example viewport and packed browser
   consumer, and `npm run test:screenshots` compares new output against it.
 - Performance: `npm run test:performance` exercises deterministic 10, 50, and
   200 annotation layouts.
-- Remaining high-value proof: dogfood in a real consumer and record friction
-  before widening public API stability promises.
+- Remaining high-value proof: install a private/canary registry package in a
+  downstream consumer before widening public API stability promises.
 
 ## Tracking Documents
 
 - API stability: `docs/api-stability.md`
 - Compatibility matrix: `docs/compatibility.md`
 - Dogfood report template: `docs/dogfood-friction-report.md`
+- Clean-consumer dogfood report: `docs/dogfood-clean-consumer-report.md`
 - Visual regression baselines: `docs/visual-regression.md`
 - Performance expectations: `docs/performance.md`
 - Accessibility recipes: `docs/accessibility.md`

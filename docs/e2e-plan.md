@@ -211,6 +211,10 @@ targets such as unmeasured React Flow handles.
   Flow surfaces with optional peers installed, verify each annotation subject
   aligns with the generated host target, and prove legacy `ui-annotation*`
   report snippets are styled by the packed CSS bridge.
+- Clean-consumer dogfood checks that install the packed tarball into a separate
+  Vite report, render DOM, Vega-Lite, and Mermaid host surfaces, verify visible
+  notes/connectors, assert generated-target alignment, and capture a friction
+  report.
 - Browser verification for every example through a local Vite server.
 - Browser screenshot evidence checks that every expected desktop/mobile PNG and
   packed-consumer PNG was generated, has the expected dimensions, is not a

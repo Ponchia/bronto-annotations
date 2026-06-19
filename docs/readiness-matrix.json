@@ -12,6 +12,7 @@
     "test:bronto-upstream",
     "test:examples",
     "test:pack",
+    "test:dogfood",
     "test:browser",
     "test:screenshots",
     "test:readiness",
@@ -788,6 +789,41 @@
       ]
     },
     {
+      "id": "clean-consumer-dogfood",
+      "evidence": [
+        {
+          "file": "package.json",
+          "terms": [
+            "\"test:dogfood\"",
+            "scripts/dogfood-clean-consumer.mjs",
+            "npm run test:dogfood"
+          ]
+        },
+        {
+          "file": "scripts/dogfood-clean-consumer.mjs",
+          "terms": [
+            "Dogfood clean consumer verified",
+            "packed tarball clean consumer",
+            "prepareDomAnnotations",
+            "prepareVegaScenegraphAnnotations",
+            "prepareMermaidAnnotations",
+            "compiledFromVegaLite",
+            ".tmp-dogfood/dogfood-report.png"
+          ]
+        },
+        {
+          "file": "docs/dogfood-clean-consumer-report.md",
+          "terms": [
+            "Dogfood Clean Consumer Report",
+            "clean Vite report",
+            "Vega-Lite generated chart",
+            "Mermaid generated diagram",
+            "Would ship with this API today: yes"
+          ]
+        }
+      ]
+    },
+    {
       "id": "completion-audit",
       "evidence": [
         {
@@ -1085,6 +1121,7 @@
           "terms": [
             "Dogfood in a real consumer",
             "Freeze the `0.1.x` public API contract",
+            "docs/dogfood-clean-consumer-report.md",
             "visual regression baselines",
             "test/visual-baselines/browser-screenshots.json",
             "Performance",
@@ -1098,6 +1135,24 @@
             "test/visual-baselines/browser-screenshots.json",
             "--write-baseline",
             "CI compares new screenshots"
+          ]
+        },
+        {
+          "file": "docs/dogfood-clean-consumer-report.md",
+          "terms": [
+            "Dogfood Clean Consumer Report",
+            "npm run test:dogfood",
+            "Coordinate space",
+            "Generated geometry timing"
+          ]
+        },
+        {
+          "file": "scripts/dogfood-clean-consumer.mjs",
+          "terms": [
+            "Annotation Readiness Report",
+            "Vega-Lite",
+            "Mermaid",
+            "targetAlignmentOk"
           ]
         },
         {

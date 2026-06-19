@@ -13,6 +13,7 @@
     "test:bronto-upstream",
     "test:examples",
     "test:pack",
+    "test:dogfood",
     "test:browser",
     "test:screenshots",
     "test:readiness",
@@ -952,7 +953,7 @@
     {
       "id": "pre-release-hardening",
       "status": "proven",
-      "claim": "The project now tracks and enforces the next pre-release goals: real-consumer dogfood reporting, API stability policy, canary publishing preparation, visual baseline enforcement, deeper adapter recipes, authoring UX direction, performance stress checks, accessibility recipes, compatibility matrix, and public release naming decisions.",
+      "claim": "The project now tracks and enforces the next pre-release goals: clean-consumer dogfood reporting, API stability policy, canary publishing preparation, visual baseline enforcement, deeper adapter recipes, authoring UX direction, performance stress checks, accessibility recipes, compatibility matrix, and public release naming decisions.",
       "evidence": [
         {
           "file": "docs/pre-release-roadmap.md",
@@ -960,6 +961,7 @@
             "Dogfood in a real consumer",
             "Freeze the `0.1.x` public API contract",
             "Publish a private/canary package",
+            "docs/dogfood-clean-consumer-report.md",
             "visual regression baselines",
             "test/visual-baselines/browser-screenshots.json",
             "Performance",
@@ -995,6 +997,28 @@
             "Coordinate space",
             "Generated geometry timing",
             "Would ship with this API today"
+          ]
+        },
+        {
+          "file": "docs/dogfood-clean-consumer-report.md",
+          "terms": [
+            "Dogfood Clean Consumer Report",
+            "clean Vite report",
+            "Vega-Lite generated chart",
+            "Mermaid generated diagram",
+            "npm run test:dogfood",
+            "Would ship with this API today: yes"
+          ]
+        },
+        {
+          "file": "scripts/dogfood-clean-consumer.mjs",
+          "terms": [
+            "Dogfood clean consumer verified",
+            "packed tarball clean consumer",
+            "prepareDomAnnotations",
+            "prepareVegaScenegraphAnnotations",
+            "prepareMermaidAnnotations",
+            "compiledFromVegaLite"
           ]
         },
         {

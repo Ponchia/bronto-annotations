@@ -7,11 +7,13 @@ const roadmap = await read('docs/pre-release-roadmap.md');
 const apiStability = await read('docs/api-stability.md');
 const compatibility = await read('docs/compatibility.md');
 const dogfood = await read('docs/dogfood-friction-report.md');
+const dogfoodCleanConsumer = await read('docs/dogfood-clean-consumer-report.md');
 const visual = await read('docs/visual-regression.md');
 const performanceDocs = await read('docs/performance.md');
 const accessibility = await read('docs/accessibility.md');
 const adapterRecipes = await read('docs/adapter-recipes-roadmap.md');
 const benchmark = await read('scripts/benchmark-layout.mjs');
+const dogfoodScript = await read('scripts/dogfood-clean-consumer.mjs');
 const screenshotCheck = await read('scripts/check-browser-screenshots.mjs');
 const visualBaseline = JSON.parse(await read('test/visual-baselines/browser-screenshots.json'));
 
@@ -20,19 +22,23 @@ for (const path of [
   'docs/api-stability.md',
   'docs/compatibility.md',
   'docs/dogfood-friction-report.md',
+  'docs/dogfood-clean-consumer-report.md',
   'docs/visual-regression.md',
   'docs/performance.md',
   'docs/accessibility.md',
   'docs/adapter-recipes-roadmap.md',
   'scripts/benchmark-layout.mjs',
+  'scripts/dogfood-clean-consumer.mjs',
   'test/visual-baselines/browser-screenshots.json'
 ]) {
   await assertPath(path);
 }
 
 assert.equal(pkg.scripts?.['test:pre-release'], 'node scripts/check-pre-release-goals.mjs');
+assert.equal(pkg.scripts?.['test:dogfood'], 'npm run build && node scripts/dogfood-clean-consumer.mjs');
 assert.equal(pkg.scripts?.['test:performance'], 'npm run build && node scripts/benchmark-layout.mjs --assert');
 assert.ok(pkg.scripts?.check?.includes('npm run test:pre-release'), 'npm run check must include test:pre-release');
+assert.ok(pkg.scripts?.check?.includes('npm run test:dogfood'), 'npm run check must include test:dogfood');
 assert.ok(pkg.scripts?.check?.includes('npm run test:performance'), 'npm run check must include test:performance');
 
 for (const term of [
@@ -76,6 +82,31 @@ for (const term of [
   'Would ship with this API today'
 ]) {
   assertIncludes(dogfood, term, 'docs/dogfood-friction-report.md');
+}
+
+for (const term of [
+  'Dogfood Clean Consumer Report',
+  'clean Vite report',
+  'Vega-Lite generated chart',
+  'Mermaid generated diagram',
+  'npm run test:dogfood',
+  'Would ship with this API today: yes',
+  'Coordinate space',
+  'Generated geometry timing'
+]) {
+  assertIncludes(dogfoodCleanConsumer, term, 'docs/dogfood-clean-consumer-report.md');
+}
+
+for (const term of [
+  'Dogfood clean consumer verified',
+  'packed tarball clean consumer',
+  'prepareVegaScenegraphAnnotations',
+  'prepareMermaidAnnotations',
+  'prepareDomAnnotations',
+  'compiledFromVegaLite',
+  '.tmp-dogfood/dogfood-report.png'
+]) {
+  assertIncludes(dogfoodScript, term, 'scripts/dogfood-clean-consumer.mjs');
 }
 
 for (const term of [
