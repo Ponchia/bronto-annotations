@@ -1078,7 +1078,7 @@ the API in real consumers before wider stability promises.
 - `docs/compatibility.md` records supported Node, TypeScript, React, Vega,
   Mermaid, D2, and React Flow ranges; `npm run test:compatibility` enforces the
   metadata/docs/CI contract, and `npm run test:compatibility:lanes` clean-smokes
-  React 18 and Vega 5.
+  TypeScript 5.8, React 18, and Vega 5.
 - `docs/dogfood-friction-report.md` is the required template for the first real
   consumer integration report.
 - `docs/dogfood-clean-consumer-report.md` records the clean-consumer dogfood

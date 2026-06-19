@@ -1210,6 +1210,8 @@
           "terms": [
             "Node.js",
             "TypeScript",
+            "TypeScript 5.8 clean consumer",
+            "TypeScript 6.0",
             "npm run test:compatibility",
             "npm run test:compatibility:lanes",
             "React 18",
@@ -1240,6 +1242,8 @@
           "file": "scripts/smoke-compatibility-lanes.mjs",
           "terms": [
             "Compatibility lane smoke verified",
+            "TypeScript 5.8 clean consumer",
+            "typescript@5.8.3",
             "React 18 clean consumer",
             "Vega 5 clean consumer",
             "react@18.2.0",
