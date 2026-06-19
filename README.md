@@ -913,7 +913,9 @@ smoke also captures clean-installed package screenshots in
 After `npm run test:pack` and `npm run test:browser`, screenshot verification
 checks every expected desktop/mobile PNG for all examples plus the packed
 consumers, validates the PNG dimensions, rejects tiny placeholder files, and
-requires visible varied content.
+requires visible varied content. The approved metrics live in
+`test/visual-baselines/browser-screenshots.json`, and `npm run
+test:screenshots` compares new browser output against those visual baselines.
 
 Packed-consumer verification also installs the generated tarball into temporary
 clean projects. One browser smoke proves root SVG rendering and
@@ -993,6 +995,7 @@ the API in real consumers before wider stability promises.
   Mermaid, D2, and React Flow ranges.
 - `docs/dogfood-friction-report.md` is the required template for the first real
   consumer integration report.
+- `docs/visual-regression.md` documents the screenshot baseline update workflow.
 - `npm run test:performance` runs deterministic 10, 50, and 200 annotation
   stress layouts against the real engine.
 - `scripts/check-pre-release-goals.mjs` keeps these hardening docs and gates

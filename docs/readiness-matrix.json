@@ -756,8 +756,22 @@
             "nonBackgroundSamples",
             "nonBackgroundRatio",
             "luminanceRange",
+            "Visual baselines verified",
+            "assertVisualBaseline",
             "react-flow-basic",
             "style-gallery"
+          ]
+        },
+        {
+          "file": "test/visual-baselines/browser-screenshots.json",
+          "terms": [
+            "schemaVersion",
+            "index-desktop",
+            "vega-basic-desktop",
+            "mermaid-basic-mobile",
+            "d2-basic-desktop",
+            "react-flow-basic-mobile",
+            "packed-adapters"
           ]
         },
         {
@@ -1072,8 +1086,18 @@
             "Dogfood in a real consumer",
             "Freeze the `0.1.x` public API contract",
             "visual regression baselines",
+            "test/visual-baselines/browser-screenshots.json",
             "Performance",
             "Compatibility matrix"
+          ]
+        },
+        {
+          "file": "docs/visual-regression.md",
+          "terms": [
+            "Visual Regression Baselines",
+            "test/visual-baselines/browser-screenshots.json",
+            "--write-baseline",
+            "CI compares new screenshots"
           ]
         },
         {

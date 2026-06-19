@@ -1,0 +1,455 @@
+{
+  "schemaVersion": 1,
+  "description": "Approved browser screenshot baseline metrics for example and packed-consumer annotation layers.",
+  "updateCommand": "npm run test:pack && npm run test:browser && node scripts/check-browser-screenshots.mjs --write-baseline",
+  "tolerances": {
+    "heightRatio": 0.72,
+    "byteLengthRatio": 0.35,
+    "distinctColorsRatio": 0.4,
+    "nonBackgroundSamplesRatio": 0.4,
+    "nonBackgroundRatioDelta": 0.04,
+    "luminanceRangeDelta": 45
+  },
+  "screenshots": [
+    {
+      "id": "index-desktop",
+      "kind": "example",
+      "example": "index",
+      "viewport": "desktop",
+      "file": ".tmp/screenshots/index.png",
+      "expected": {
+        "width": 1200,
+        "minHeight": 800
+      },
+      "metrics": {
+        "width": 1200,
+        "height": 800,
+        "byteLength": 63675,
+        "distinctColors": 252,
+        "nonBackgroundSamples": 1018,
+        "nonBackgroundRatio": 0.0509,
+        "luminanceRange": 231.41
+      }
+    },
+    {
+      "id": "index-mobile",
+      "kind": "example",
+      "example": "index",
+      "viewport": "mobile",
+      "file": ".tmp/screenshots/index-mobile.png",
+      "expected": {
+        "width": 390,
+        "minHeight": 844
+      },
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "byteLength": 31271,
+        "distinctColors": 337,
+        "nonBackgroundSamples": 1220,
+        "nonBackgroundRatio": 0.0593,
+        "luminanceRange": 231.41
+      }
+    },
+    {
+      "id": "svg-basic-desktop",
+      "kind": "example",
+      "example": "svg-basic",
+      "viewport": "desktop",
+      "file": ".tmp/screenshots/svg-basic.png",
+      "expected": {
+        "width": 1200,
+        "minHeight": 800
+      },
+      "metrics": {
+        "width": 1200,
+        "height": 800,
+        "byteLength": 40725,
+        "distinctColors": 160,
+        "nonBackgroundSamples": 788,
+        "nonBackgroundRatio": 0.0394,
+        "luminanceRange": 231.41
+      }
+    },
+    {
+      "id": "svg-basic-mobile",
+      "kind": "example",
+      "example": "svg-basic",
+      "viewport": "mobile",
+      "file": ".tmp/screenshots/svg-basic-mobile.png",
+      "expected": {
+        "width": 390,
+        "minHeight": 844
+      },
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "byteLength": 16578,
+        "distinctColors": 208,
+        "nonBackgroundSamples": 1033,
+        "nonBackgroundRatio": 0.0502,
+        "luminanceRange": 255
+      }
+    },
+    {
+      "id": "react-basic-desktop",
+      "kind": "example",
+      "example": "react-basic",
+      "viewport": "desktop",
+      "file": ".tmp/screenshots/react-basic.png",
+      "expected": {
+        "width": 1200,
+        "minHeight": 800
+      },
+      "metrics": {
+        "width": 1200,
+        "height": 800,
+        "byteLength": 33860,
+        "distinctColors": 184,
+        "nonBackgroundSamples": 908,
+        "nonBackgroundRatio": 0.0454,
+        "luminanceRange": 231.41
+      }
+    },
+    {
+      "id": "react-basic-mobile",
+      "kind": "example",
+      "example": "react-basic",
+      "viewport": "mobile",
+      "file": ".tmp/screenshots/react-basic-mobile.png",
+      "expected": {
+        "width": 390,
+        "minHeight": 844
+      },
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "byteLength": 15329,
+        "distinctColors": 191,
+        "nonBackgroundSamples": 1066,
+        "nonBackgroundRatio": 0.0518,
+        "luminanceRange": 231.41
+      }
+    },
+    {
+      "id": "bronto-report-desktop",
+      "kind": "example",
+      "example": "bronto-report",
+      "viewport": "desktop",
+      "file": ".tmp/screenshots/bronto-report.png",
+      "expected": {
+        "width": 1200,
+        "minHeight": 800
+      },
+      "metrics": {
+        "width": 1200,
+        "height": 800,
+        "byteLength": 63280,
+        "distinctColors": 240,
+        "nonBackgroundSamples": 2545,
+        "nonBackgroundRatio": 0.1273,
+        "luminanceRange": 232.41
+      }
+    },
+    {
+      "id": "bronto-report-mobile",
+      "kind": "example",
+      "example": "bronto-report",
+      "viewport": "mobile",
+      "file": ".tmp/screenshots/bronto-report-mobile.png",
+      "expected": {
+        "width": 390,
+        "minHeight": 844
+      },
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "byteLength": 41319,
+        "distinctColors": 472,
+        "nonBackgroundSamples": 3067,
+        "nonBackgroundRatio": 0.1491,
+        "luminanceRange": 232.41
+      }
+    },
+    {
+      "id": "dom-basic-desktop",
+      "kind": "example",
+      "example": "dom-basic",
+      "viewport": "desktop",
+      "file": ".tmp/screenshots/dom-basic.png",
+      "expected": {
+        "width": 1200,
+        "minHeight": 800
+      },
+      "metrics": {
+        "width": 1200,
+        "height": 800,
+        "byteLength": 34249,
+        "distinctColors": 134,
+        "nonBackgroundSamples": 1626,
+        "nonBackgroundRatio": 0.0813,
+        "luminanceRange": 231.41
+      }
+    },
+    {
+      "id": "dom-basic-mobile",
+      "kind": "example",
+      "example": "dom-basic",
+      "viewport": "mobile",
+      "file": ".tmp/screenshots/dom-basic-mobile.png",
+      "expected": {
+        "width": 390,
+        "minHeight": 844
+      },
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "byteLength": 28345,
+        "distinctColors": 287,
+        "nonBackgroundSamples": 3517,
+        "nonBackgroundRatio": 0.171,
+        "luminanceRange": 231.41
+      }
+    },
+    {
+      "id": "vega-basic-desktop",
+      "kind": "example",
+      "example": "vega-basic",
+      "viewport": "desktop",
+      "file": ".tmp/screenshots/vega-basic.png",
+      "expected": {
+        "width": 1200,
+        "minHeight": 800
+      },
+      "metrics": {
+        "width": 1200,
+        "height": 800,
+        "byteLength": 33884,
+        "distinctColors": 182,
+        "nonBackgroundSamples": 630,
+        "nonBackgroundRatio": 0.0315,
+        "luminanceRange": 255
+      }
+    },
+    {
+      "id": "vega-basic-mobile",
+      "kind": "example",
+      "example": "vega-basic",
+      "viewport": "mobile",
+      "file": ".tmp/screenshots/vega-basic-mobile.png",
+      "expected": {
+        "width": 390,
+        "minHeight": 844
+      },
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "byteLength": 15310,
+        "distinctColors": 169,
+        "nonBackgroundSamples": 945,
+        "nonBackgroundRatio": 0.0459,
+        "luminanceRange": 255
+      }
+    },
+    {
+      "id": "mermaid-basic-desktop",
+      "kind": "example",
+      "example": "mermaid-basic",
+      "viewport": "desktop",
+      "file": ".tmp/screenshots/mermaid-basic.png",
+      "expected": {
+        "width": 1200,
+        "minHeight": 800
+      },
+      "metrics": {
+        "width": 1200,
+        "height": 800,
+        "byteLength": 32904,
+        "distinctColors": 129,
+        "nonBackgroundSamples": 1140,
+        "nonBackgroundRatio": 0.057,
+        "luminanceRange": 231.41
+      }
+    },
+    {
+      "id": "mermaid-basic-mobile",
+      "kind": "example",
+      "example": "mermaid-basic",
+      "viewport": "mobile",
+      "file": ".tmp/screenshots/mermaid-basic-mobile.png",
+      "expected": {
+        "width": 390,
+        "minHeight": 844
+      },
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "byteLength": 14619,
+        "distinctColors": 176,
+        "nonBackgroundSamples": 1244,
+        "nonBackgroundRatio": 0.0605,
+        "luminanceRange": 235
+      }
+    },
+    {
+      "id": "d2-basic-desktop",
+      "kind": "example",
+      "example": "d2-basic",
+      "viewport": "desktop",
+      "file": ".tmp/screenshots/d2-basic.png",
+      "expected": {
+        "width": 1200,
+        "minHeight": 800
+      },
+      "metrics": {
+        "width": 1200,
+        "height": 800,
+        "byteLength": 31987,
+        "distinctColors": 115,
+        "nonBackgroundSamples": 1442,
+        "nonBackgroundRatio": 0.0721,
+        "luminanceRange": 231.88
+      }
+    },
+    {
+      "id": "d2-basic-mobile",
+      "kind": "example",
+      "example": "d2-basic",
+      "viewport": "mobile",
+      "file": ".tmp/screenshots/d2-basic-mobile.png",
+      "expected": {
+        "width": 390,
+        "minHeight": 844
+      },
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "byteLength": 19529,
+        "distinctColors": 208,
+        "nonBackgroundSamples": 1419,
+        "nonBackgroundRatio": 0.069,
+        "luminanceRange": 239.47
+      }
+    },
+    {
+      "id": "react-flow-basic-desktop",
+      "kind": "example",
+      "example": "react-flow-basic",
+      "viewport": "desktop",
+      "file": ".tmp/screenshots/react-flow-basic.png",
+      "expected": {
+        "width": 1200,
+        "minHeight": 800
+      },
+      "metrics": {
+        "width": 1200,
+        "height": 800,
+        "byteLength": 50766,
+        "distinctColors": 234,
+        "nonBackgroundSamples": 889,
+        "nonBackgroundRatio": 0.0445,
+        "luminanceRange": 231.41
+      }
+    },
+    {
+      "id": "react-flow-basic-mobile",
+      "kind": "example",
+      "example": "react-flow-basic",
+      "viewport": "mobile",
+      "file": ".tmp/screenshots/react-flow-basic-mobile.png",
+      "expected": {
+        "width": 390,
+        "minHeight": 844
+      },
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "byteLength": 38362,
+        "distinctColors": 363,
+        "nonBackgroundSamples": 1730,
+        "nonBackgroundRatio": 0.0841,
+        "luminanceRange": 231.41
+      }
+    },
+    {
+      "id": "style-gallery-desktop",
+      "kind": "example",
+      "example": "style-gallery",
+      "viewport": "desktop",
+      "file": ".tmp/screenshots/style-gallery.png",
+      "expected": {
+        "width": 1200,
+        "minHeight": 800
+      },
+      "metrics": {
+        "width": 1200,
+        "height": 800,
+        "byteLength": 103328,
+        "distinctColors": 444,
+        "nonBackgroundSamples": 1678,
+        "nonBackgroundRatio": 0.0839,
+        "luminanceRange": 231.41
+      }
+    },
+    {
+      "id": "style-gallery-mobile",
+      "kind": "example",
+      "example": "style-gallery",
+      "viewport": "mobile",
+      "file": ".tmp/screenshots/style-gallery-mobile.png",
+      "expected": {
+        "width": 390,
+        "minHeight": 844
+      },
+      "metrics": {
+        "width": 390,
+        "height": 844,
+        "byteLength": 30880,
+        "distinctColors": 396,
+        "nonBackgroundSamples": 1341,
+        "nonBackgroundRatio": 0.0652,
+        "luminanceRange": 255
+      }
+    },
+    {
+      "id": "packed-browser",
+      "kind": "packed-consumer",
+      "example": "packed-browser",
+      "viewport": "browser",
+      "file": ".tmp-packed-screenshots/packed-browser.png",
+      "expected": {
+        "width": 640,
+        "minHeight": 420
+      },
+      "metrics": {
+        "width": 640,
+        "height": 448,
+        "byteLength": 15164,
+        "distinctColors": 153,
+        "nonBackgroundSamples": 605,
+        "nonBackgroundRatio": 0.0295,
+        "luminanceRange": 255
+      }
+    },
+    {
+      "id": "packed-adapters",
+      "kind": "packed-consumer",
+      "example": "packed-adapters",
+      "viewport": "browser",
+      "file": ".tmp-packed-screenshots/packed-adapters.png",
+      "expected": {
+        "width": 920,
+        "minHeight": 760
+      },
+      "metrics": {
+        "width": 920,
+        "height": 904,
+        "byteLength": 55246,
+        "distinctColors": 362,
+        "nonBackgroundSamples": 1031,
+        "nonBackgroundRatio": 0.0508,
+        "luminanceRange": 242
+      }
+    }
+  ]
+}

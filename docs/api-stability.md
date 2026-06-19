@@ -36,7 +36,8 @@ shape is still allowed to evolve before `1.0.0`.
 - d3-style builder mutation helpers and custom annotation type definitions.
 - Edit-patch authoring ergonomics beyond emitted suggested edits.
 - Dense-layout tuning constants and scoring weights.
-- Future visual regression baseline file format.
+- Visual regression baseline file format, which is an internal verification
+  fixture and not a package API.
 - Any canary-only package publishing workflow before the first public release.
 
 ## API Change Rules

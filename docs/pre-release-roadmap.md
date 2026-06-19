@@ -24,6 +24,9 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - Package implementation: complete for `0.1.0`.
 - Repository operations: CI, release workflow, package metadata, templates, and
   repo-readiness checks are in place.
+- Visual regression: `test/visual-baselines/browser-screenshots.json` stores
+  approved browser metrics for every example viewport and packed browser
+  consumer, and `npm run test:screenshots` compares new output against it.
 - Performance: `npm run test:performance` exercises deterministic 10, 50, and
   200 annotation layouts.
 - Remaining high-value proof: dogfood in a real consumer and record friction
@@ -34,7 +37,7 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - API stability: `docs/api-stability.md`
 - Compatibility matrix: `docs/compatibility.md`
 - Dogfood report template: `docs/dogfood-friction-report.md`
-- Visual regression plan: `docs/visual-regression.md`
+- Visual regression baselines: `docs/visual-regression.md`
 - Performance expectations: `docs/performance.md`
 - Accessibility recipes: `docs/accessibility.md`
 - Adapter recipe roadmap: `docs/adapter-recipes-roadmap.md`

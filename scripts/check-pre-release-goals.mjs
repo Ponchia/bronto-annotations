@@ -12,6 +12,8 @@ const performanceDocs = await read('docs/performance.md');
 const accessibility = await read('docs/accessibility.md');
 const adapterRecipes = await read('docs/adapter-recipes-roadmap.md');
 const benchmark = await read('scripts/benchmark-layout.mjs');
+const screenshotCheck = await read('scripts/check-browser-screenshots.mjs');
+const visualBaseline = JSON.parse(await read('test/visual-baselines/browser-screenshots.json'));
 
 for (const path of [
   'docs/pre-release-roadmap.md',
@@ -22,7 +24,8 @@ for (const path of [
   'docs/performance.md',
   'docs/accessibility.md',
   'docs/adapter-recipes-roadmap.md',
-  'scripts/benchmark-layout.mjs'
+  'scripts/benchmark-layout.mjs',
+  'test/visual-baselines/browser-screenshots.json'
 ]) {
   await assertPath(path);
 }
@@ -78,9 +81,23 @@ for (const term of [
 for (const term of [
   'visual baselines',
   'CI compares new screenshots',
-  'non-empty screenshot evidence'
+  'non-empty screenshot evidence',
+  'test/visual-baselines/browser-screenshots.json',
+  '--write-baseline'
 ]) {
   assertIncludes(visual, term, 'docs/visual-regression.md');
+}
+
+assert.equal(visualBaseline.schemaVersion, 1, 'visual baseline schemaVersion must be 1');
+assert.equal(visualBaseline.screenshots.length, 22, 'visual baseline must cover every browser and packed-consumer screenshot');
+
+for (const term of [
+  'test/visual-baselines/browser-screenshots.json',
+  '--write-baseline',
+  'Visual baselines',
+  'assertVisualBaseline'
+]) {
+  assertIncludes(screenshotCheck, term, 'scripts/check-browser-screenshots.mjs');
 }
 
 for (const term of [

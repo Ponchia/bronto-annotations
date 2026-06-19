@@ -307,7 +307,9 @@ Flow must prove rendered node/handle/edge DOM selectors, node/handle/edge
 provenance from public flow state, and generated node/edge obstacles. The verifier also compares
 rendered annotation subjects against actual generated Vega marks, Mermaid
 nodes/edges, D2 shapes/routes, and React Flow nodes, handles, or edges, so metadata-only adapter
-success is not enough. Screenshots are captured under `.tmp/screenshots`.
+success is not enough. Screenshots are captured under `.tmp/screenshots`, and
+`scripts/check-browser-screenshots.mjs` compares decoded screenshot evidence
+against `test/visual-baselines/browser-screenshots.json`.
 
 Rendered SVG overlays can match host `preserveAspectRatio` behavior. This is
 required for generated diagrams such as D2 when their SVG uses non-default

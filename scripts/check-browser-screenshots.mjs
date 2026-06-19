@@ -1,11 +1,21 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname, join, relative, resolve } from 'node:path';
 import { inflateSync } from 'node:zlib';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const screenshotsDir = join(root, '.tmp/screenshots');
 const packedScreenshotsDir = join(root, '.tmp-packed-screenshots');
+const baselinePath = join(root, 'test/visual-baselines/browser-screenshots.json');
+const writeBaseline = process.argv.includes('--write-baseline');
+const baselineTolerances = {
+  heightRatio: 0.72,
+  byteLengthRatio: 0.35,
+  distinctColorsRatio: 0.4,
+  nonBackgroundSamplesRatio: 0.4,
+  nonBackgroundRatioDelta: 0.04,
+  luminanceRangeDelta: 45
+};
 const viewports = [
   { name: 'desktop', width: 1200, height: 800, suffix: '' },
   { name: 'mobile', width: 390, height: 844, suffix: '-mobile' }
@@ -28,6 +38,7 @@ const packedScreenshots = [
 ];
 
 const failures = [];
+const observations = [];
 let verified = 0;
 
 for (const example of examples) {
@@ -43,6 +54,19 @@ for (const example of examples) {
         width: viewport.width,
         height: viewport.height
       });
+      observations.push(createObservation({
+        id: `${example}-${viewport.name}`,
+        kind: 'example',
+        example,
+        viewport: viewport.name,
+        file,
+        expected: {
+          width: viewport.width,
+          minHeight: viewport.height
+        },
+        png,
+        decoded
+      }));
       verified += 1;
     } catch (error) {
       failures.push(error instanceof Error ? error.message : String(error));
@@ -56,6 +80,19 @@ for (const screenshot of packedScreenshots) {
     const decoded = decodePng(png);
 
     assertScreenshotEvidence(screenshot.file, png, decoded, screenshot);
+    observations.push(createObservation({
+      id: screenshot.name,
+      kind: 'packed-consumer',
+      example: screenshot.name,
+      viewport: 'browser',
+      file: screenshot.file,
+      expected: {
+        width: screenshot.width,
+        minHeight: screenshot.height
+      },
+      png,
+      decoded
+    }));
     verified += 1;
   } catch (error) {
     failures.push(error instanceof Error ? error.message : String(error));
@@ -66,7 +103,15 @@ if (failures.length > 0) {
   throw new Error(`Browser screenshot evidence failed:\n${failures.join('\n')}`);
 }
 
-console.log(`Browser screenshot evidence verified: ${verified} PNGs across ${examples.length} examples, ${viewports.length} viewports, and ${packedScreenshots.length} packed consumers.`);
+if (writeBaseline) {
+  await writeVisualBaseline(observations);
+} else {
+  await assertVisualBaseline(observations);
+}
+
+const baselineStatus = writeBaseline ? 'Visual baselines updated' : 'Visual baselines verified';
+
+console.log(`Browser screenshot evidence verified: ${verified} PNGs across ${examples.length} examples, ${viewports.length} viewports, and ${packedScreenshots.length} packed consumers. ${baselineStatus}: ${observations.length} approved screenshots.`);
 
 function assertScreenshotEvidence(file, png, decoded, expected) {
   assert.equal(decoded.width, expected.width, `${file} width should match ${expected.label ?? expected.name}`);
@@ -76,6 +121,93 @@ function assertScreenshotEvidence(file, png, decoded, expected) {
   assert.ok(decoded.nonBackgroundSamples >= 400, `${file} should contain enough non-background rendered content`);
   assert.ok(decoded.nonBackgroundRatio >= 0.02, `${file} should not be mostly blank background`);
   assert.ok(decoded.luminanceRange >= 80, `${file} should contain visible foreground/background contrast`);
+}
+
+function createObservation({ id, kind, example, viewport, file, expected, png, decoded }) {
+  return {
+    id,
+    kind,
+    example,
+    viewport,
+    file: relativePath(file),
+    expected,
+    metrics: {
+      width: decoded.width,
+      height: decoded.height,
+      byteLength: png.length,
+      distinctColors: decoded.distinctColors,
+      nonBackgroundSamples: decoded.nonBackgroundSamples,
+      nonBackgroundRatio: round(decoded.nonBackgroundRatio, 4),
+      luminanceRange: round(decoded.luminanceRange, 2)
+    }
+  };
+}
+
+async function writeVisualBaseline(observations) {
+  await mkdir(dirname(baselinePath), { recursive: true });
+  await writeFile(
+    baselinePath,
+    `${JSON.stringify({
+      schemaVersion: 1,
+      description: 'Approved browser screenshot baseline metrics for example and packed-consumer annotation layers.',
+      updateCommand: 'npm run test:pack && npm run test:browser && node scripts/check-browser-screenshots.mjs --write-baseline',
+      tolerances: baselineTolerances,
+      screenshots: observations
+    }, null, 2)}\n`
+  );
+}
+
+async function assertVisualBaseline(observations) {
+  let baseline;
+
+  try {
+    baseline = JSON.parse(await readFile(baselinePath, 'utf8'));
+  } catch (error) {
+    throw new Error(`Visual baseline missing or unreadable at ${relativePath(baselinePath)}. Run "npm run test:pack && npm run test:browser && node scripts/check-browser-screenshots.mjs --write-baseline" after intentionally approving browser output.`);
+  }
+
+  assert.equal(baseline.schemaVersion, 1, 'visual baseline schemaVersion must be 1');
+  assert.deepEqual(
+    [...observations.map((observation) => observation.id)].sort(),
+    [...baseline.screenshots.map((screenshot) => screenshot.id)].sort(),
+    'visual baseline screenshot ids must match current browser evidence'
+  );
+
+  const expectedById = new Map(baseline.screenshots.map((screenshot) => [screenshot.id, screenshot]));
+
+  for (const observation of observations) {
+    const expected = expectedById.get(observation.id);
+
+    assert.ok(expected, `${observation.id} must have a visual baseline`);
+    assert.equal(observation.file, expected.file, `${observation.id} visual baseline file path changed`);
+    assert.deepEqual(observation.expected, expected.expected, `${observation.id} expected visual dimensions changed`);
+    assert.equal(observation.metrics.width, expected.metrics.width, `${observation.id} visual baseline width changed`);
+    assertMetricAtLeast(observation, expected, 'height', expected.metrics.height * baselineTolerances.heightRatio);
+    assertMetricAtLeast(observation, expected, 'byteLength', expected.metrics.byteLength * baselineTolerances.byteLengthRatio);
+    assertMetricAtLeast(observation, expected, 'distinctColors', expected.metrics.distinctColors * baselineTolerances.distinctColorsRatio);
+    assertMetricAtLeast(observation, expected, 'nonBackgroundSamples', expected.metrics.nonBackgroundSamples * baselineTolerances.nonBackgroundSamplesRatio);
+    assertMetricAtLeast(observation, expected, 'nonBackgroundRatio', Math.max(0.02, expected.metrics.nonBackgroundRatio - baselineTolerances.nonBackgroundRatioDelta));
+    assertMetricAtLeast(observation, expected, 'luminanceRange', Math.max(80, expected.metrics.luminanceRange - baselineTolerances.luminanceRangeDelta));
+  }
+}
+
+function assertMetricAtLeast(observation, expected, metric, minimum) {
+  const actual = observation.metrics[metric];
+
+  assert.ok(
+    actual >= minimum,
+    `${observation.id} ${metric} regressed below visual baseline (${actual} < ${round(minimum, 4)}; baseline ${expected.metrics[metric]})`
+  );
+}
+
+function relativePath(file) {
+  return relative(root, file).replaceAll('\\', '/');
+}
+
+function round(value, digits) {
+  const scale = 10 ** digits;
+
+  return Math.round(value * scale) / scale;
 }
 
 async function readPng(file) {

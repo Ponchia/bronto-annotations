@@ -708,7 +708,21 @@
             "distinctColors",
             "nonBackgroundSamples",
             "nonBackgroundRatio",
-            "luminanceRange"
+            "luminanceRange",
+            "Visual baselines verified",
+            "assertVisualBaseline"
+          ]
+        },
+        {
+          "file": "test/visual-baselines/browser-screenshots.json",
+          "terms": [
+            "schemaVersion",
+            "index-desktop",
+            "vega-basic-desktop",
+            "mermaid-basic-mobile",
+            "d2-basic-desktop",
+            "react-flow-basic-mobile",
+            "packed-adapters"
           ]
         },
         {
@@ -938,7 +952,7 @@
     {
       "id": "pre-release-hardening",
       "status": "proven",
-      "claim": "The project now tracks and enforces the next pre-release goals: real-consumer dogfood reporting, API stability policy, canary publishing preparation, visual baseline planning, deeper adapter recipes, authoring UX direction, performance stress checks, accessibility recipes, compatibility matrix, and public release naming decisions.",
+      "claim": "The project now tracks and enforces the next pre-release goals: real-consumer dogfood reporting, API stability policy, canary publishing preparation, visual baseline enforcement, deeper adapter recipes, authoring UX direction, performance stress checks, accessibility recipes, compatibility matrix, and public release naming decisions.",
       "evidence": [
         {
           "file": "docs/pre-release-roadmap.md",
@@ -947,6 +961,7 @@
             "Freeze the `0.1.x` public API contract",
             "Publish a private/canary package",
             "visual regression baselines",
+            "test/visual-baselines/browser-screenshots.json",
             "Performance",
             "Accessibility",
             "Compatibility matrix",
@@ -985,9 +1000,21 @@
         {
           "file": "docs/visual-regression.md",
           "terms": [
+            "Visual Regression Baselines",
             "visual baselines",
             "CI compares new screenshots",
-            "non-empty screenshot evidence"
+            "non-empty screenshot evidence",
+            "test/visual-baselines/browser-screenshots.json",
+            "--write-baseline"
+          ]
+        },
+        {
+          "file": "test/visual-baselines/browser-screenshots.json",
+          "terms": [
+            "schemaVersion",
+            "packed-browser",
+            "packed-adapters",
+            "react-flow-basic-mobile"
           ]
         },
         {
