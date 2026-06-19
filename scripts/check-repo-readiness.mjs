@@ -96,7 +96,7 @@ for (const term of [
   'npm ci',
   'npx playwright install --with-deps chromium',
   'npm run check',
-  'actions/upload-artifact@v4',
+  'actions/upload-artifact@v7',
   '.tmp/screenshots',
   '.tmp-packed-screenshots'
 ]) {
