@@ -10,6 +10,8 @@ This repository is private, but the package is shaped for public npm release.
 - `package.json` and `package-lock.json` versions match.
 - `README.md`, `docs/api-reference.md`, examples, readiness matrix, and
   completion audit reflect any public API change.
+- `docs/public-release-decisions.md` still matches package metadata, npm
+  access, README positioning, examples hosting, and release ownership.
 - NPM publishing is configured with either trusted publishing or `NPM_TOKEN`.
 
 ## Local Dry Run
@@ -36,6 +38,12 @@ The workflow publishes a unique `0.1.0-canary.*` version to GitHub Packages
 with the `canary` tag, then installs that exact version from a clean registry
 consumer. See `docs/canary-release.md` for the full runbook and
 `docs/canary-publish-report.md` for the latest verified publish evidence.
+
+## Public Release Decisions
+
+`docs/public-release-decisions.md` is the source of truth for the package name,
+ownership, repository visibility policy, npm access, README positioning, and
+examples hosting decision for the `0.1.x` lane.
 
 ## Publish
 

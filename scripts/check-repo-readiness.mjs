@@ -8,6 +8,7 @@ const changelog = await read('CHANGELOG.md');
 const contributing = await read('CONTRIBUTING.md');
 const security = await read('SECURITY.md');
 const releaseDocs = await read('docs/release.md');
+const releaseDecisions = await read('docs/public-release-decisions.md');
 const canaryDocs = await read('docs/canary-release.md');
 const canaryPublishReport = await read('docs/canary-publish-report.md');
 const ci = await read('.github/workflows/ci.yml');
@@ -63,6 +64,7 @@ for (const path of [
   'SECURITY.md',
   'docs/canary-release.md',
   'docs/canary-publish-report.md',
+  'docs/public-release-decisions.md',
   'docs/release.md'
 ]) {
   await assertPath(path);
@@ -176,11 +178,32 @@ for (const term of [
   'npm pack --dry-run',
   'Canary / Private Registry',
   'docs/canary-publish-report.md',
+  'docs/public-release-decisions.md',
   'npm provenance',
   'Root imports work without optional peers'
 ]) {
   assertIncludes(releaseDocs, term, 'docs/release.md');
 }
+
+for (const term of [
+  'Public Release Decisions',
+  'Public package name: `@ponchia/annotations`',
+  'GitHub owner: `Ponchia`',
+  'Package owner/scope: `@ponchia`',
+  'Repository for `0.1.x`: `Ponchia/bronto-annotations`',
+  'keep the repository private',
+  'do not rename before `0.1.0`',
+  '`publishConfig.access` is `public`',
+  'npm publish --provenance --access public',
+  'README headline stays `# @ponchia/annotations`',
+  'No separate hosted examples site is required before `0.1.0`'
+]) {
+  assertIncludes(releaseDecisions, term, 'docs/public-release-decisions.md');
+}
+
+assertIncludes(releaseDecisions, pkg.name, 'docs/public-release-decisions.md');
+assertIncludes(releaseDecisions, 'Ponchia/bronto-annotations', 'docs/public-release-decisions.md');
+assertIncludes(releaseDecisions, '`publishConfig.access` is `public`', 'docs/public-release-decisions.md');
 
 for (const term of [
   'GitHub Packages Canary',
@@ -213,7 +236,7 @@ for (const term of [
   assertIncludes(readme, term, 'README.md');
 }
 
-console.log('Repository readiness verified: metadata, CI, release, templates, lifecycle docs, and package manager policy.');
+console.log('Repository readiness verified: metadata, CI, release, public decisions, templates, lifecycle docs, and package manager policy.');
 
 async function read(path) {
   return readFile(pathUrl(path), 'utf8');

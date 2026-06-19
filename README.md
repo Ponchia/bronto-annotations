@@ -1051,6 +1051,9 @@ the API in real consumers before wider stability promises.
   `docs/canary-publish-report.md` records the verified
   `0.1.0-canary.1.e754177` registry install; `npm run test:canary` verifies the
   canary workflow, version prep, and registry-consumer smoke wiring.
+- `docs/public-release-decisions.md` records the `@ponchia/annotations`
+  package name, `Ponchia/bronto-annotations` repository policy, public npm
+  access, README positioning, and examples hosting decisions for `0.1.x`.
 - `docs/adapter-recipes-proof.md` records which deeper Vega-Lite, Mermaid, D2,
   and React Flow recipes are already proven and which still need richer
   browser/live coverage.

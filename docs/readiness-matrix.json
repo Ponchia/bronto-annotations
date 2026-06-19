@@ -1303,6 +1303,19 @@
           ]
         },
         {
+          "file": "docs/public-release-decisions.md",
+          "terms": [
+            "Public Release Decisions",
+            "Public package name: `@ponchia/annotations`",
+            "GitHub owner: `Ponchia`",
+            "Repository for `0.1.x`: `Ponchia/bronto-annotations`",
+            "`publishConfig.access` is `public`",
+            "npm publish --provenance --access public",
+            "README headline stays `# @ponchia/annotations`",
+            "No separate hosted examples site is required before `0.1.0`"
+          ]
+        },
+        {
           "file": "scripts/check-repo-readiness.mjs",
           "terms": [
             "Repository readiness verified",
@@ -1333,12 +1346,25 @@
             "docs/dogfood-bronto-report.md",
             "docs/canary-release.md",
             "docs/adapter-recipes-proof.md",
+            "docs/public-release-decisions.md",
             "createAnnotationEditEvent",
             "createAnnotationEditDelta",
             "visual regression baselines",
             "test/visual-baselines/browser-screenshots.json",
             "Performance",
             "Compatibility matrix"
+          ]
+        },
+        {
+          "file": "docs/public-release-decisions.md",
+          "terms": [
+            "Public Release Decisions",
+            "Package Name",
+            "Ownership",
+            "Repository Name And Visibility",
+            "Npm Access And Provenance",
+            "README Positioning",
+            "Examples Hosting"
           ]
         },
         {
@@ -1500,6 +1526,7 @@
           "file": "scripts/check-pre-release-goals.mjs",
           "terms": [
             "Pre-release goals verified",
+            "docs/public-release-decisions.md",
             "Dogfood Friction Report Template",
             "npm run test:performance"
           ]

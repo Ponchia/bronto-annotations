@@ -51,6 +51,10 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - Authoring UX: `createAnnotationEditEvent` and `createAnnotationEditDelta`
   provide DOM-free note-drag and anchor-move suggestions for React and custom
   authoring surfaces; hosts still own state and persistence.
+- Public release decisions: `docs/public-release-decisions.md` fixes the
+  `@ponchia/annotations` package name, `Ponchia/bronto-annotations` repository
+  policy, public npm access, README positioning, and examples hosting decisions
+  for the `0.1.x` lane.
 - Remaining high-value proof: keep widening dogfood into non-synthetic host
   apps or reports before widening public API stability promises; the current
   generated-surface recipes are browser-proven but still benefit from more
@@ -66,6 +70,7 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - Bronto report dogfood report: `docs/dogfood-bronto-report.md`
 - Canary release runbook: `docs/canary-release.md`
 - Canary publish evidence: `docs/canary-publish-report.md`
+- Public release decisions: `docs/public-release-decisions.md`
 - Visual regression baselines: `docs/visual-regression.md`
 - Performance expectations: `docs/performance.md`
 - Accessibility recipes: `docs/accessibility.md`

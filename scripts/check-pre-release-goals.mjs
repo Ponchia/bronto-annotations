@@ -7,6 +7,7 @@ const roadmap = await read('docs/pre-release-roadmap.md');
 const apiStability = await read('docs/api-stability.md');
 const apiStabilityManifest = JSON.parse(await read('docs/api-stability.manifest.json'));
 const compatibility = await read('docs/compatibility.md');
+const releaseDecisions = await read('docs/public-release-decisions.md');
 const dogfood = await read('docs/dogfood-friction-report.md');
 const dogfoodCleanConsumer = await read('docs/dogfood-clean-consumer-report.md');
 const dogfoodBrontoReport = await read('docs/dogfood-bronto-report.md');
@@ -31,6 +32,7 @@ for (const path of [
   'docs/api-stability.md',
   'docs/api-stability.manifest.json',
   'docs/compatibility.md',
+  'docs/public-release-decisions.md',
   'docs/dogfood-friction-report.md',
   'docs/dogfood-clean-consumer-report.md',
   'docs/dogfood-bronto-report.md',
@@ -70,6 +72,7 @@ for (const term of [
   'Freeze the `0.1.x` public API contract',
   'Publish a private/canary package',
   'docs/canary-publish-report.md',
+  'docs/public-release-decisions.md',
   'docs/dogfood-bronto-report.md',
   'createAnnotationEditEvent',
   'createAnnotationEditDelta',
@@ -80,6 +83,22 @@ for (const term of [
   'public package/repository naming'
 ]) {
   assertIncludes(roadmap, term, 'docs/pre-release-roadmap.md');
+}
+
+for (const term of [
+  'Public Release Decisions',
+  'Package Name',
+  'Ownership',
+  'Repository Name And Visibility',
+  'Npm Access And Provenance',
+  'README Positioning',
+  'Examples Hosting',
+  '@ponchia/annotations',
+  'Ponchia/bronto-annotations',
+  'publishConfig.access',
+  'No separate hosted examples site is required before `0.1.0`'
+]) {
+  assertIncludes(releaseDecisions, term, 'docs/public-release-decisions.md');
 }
 
 for (const term of [
@@ -328,7 +347,7 @@ for (const term of [
   assertIncludes(readme, term, 'README.md');
 }
 
-console.log('Pre-release goals verified: roadmap, API stability, compatibility, dogfood, visual regression, performance, accessibility, and adapter recipes.');
+console.log('Pre-release goals verified: roadmap, API stability, compatibility, dogfood, visual regression, performance, accessibility, adapter recipes, and public release decisions.');
 
 async function read(path) {
   return readFile(pathUrl(path), 'utf8');

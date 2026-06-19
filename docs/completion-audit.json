@@ -997,7 +997,21 @@
             "npm pack --dry-run",
             "Canary / Private Registry",
             "docs/canary-publish-report.md",
+            "docs/public-release-decisions.md",
             "npm provenance"
+          ]
+        },
+        {
+          "file": "docs/public-release-decisions.md",
+          "terms": [
+            "Public Release Decisions",
+            "Public package name: `@ponchia/annotations`",
+            "GitHub owner: `Ponchia`",
+            "Repository for `0.1.x`: `Ponchia/bronto-annotations`",
+            "`publishConfig.access` is `public`",
+            "npm publish --provenance --access public",
+            "README headline stays `# @ponchia/annotations`",
+            "No separate hosted examples site is required before `0.1.0`"
           ]
         }
       ]
@@ -1017,6 +1031,7 @@
             "docs/canary-release.md",
             "docs/canary-publish-report.md",
             "docs/adapter-recipes-proof.md",
+            "docs/public-release-decisions.md",
             "createAnnotationEditEvent",
             "createAnnotationEditDelta",
             "visual regression baselines",
@@ -1025,6 +1040,20 @@
             "Accessibility",
             "Compatibility matrix",
             "public package/repository naming"
+          ]
+        },
+        {
+          "file": "docs/public-release-decisions.md",
+          "terms": [
+            "Public Release Decisions",
+            "Package Name",
+            "Ownership",
+            "Repository Name And Visibility",
+            "Npm Access And Provenance",
+            "README Positioning",
+            "Examples Hosting",
+            "@ponchia/annotations",
+            "Ponchia/bronto-annotations"
           ]
         },
         {
@@ -1254,6 +1283,7 @@
           "file": "scripts/check-pre-release-goals.mjs",
           "terms": [
             "Pre-release goals verified",
+            "docs/public-release-decisions.md",
             "npm run test:performance",
             "Dogfood Friction Report Template"
           ]
