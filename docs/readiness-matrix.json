@@ -343,8 +343,10 @@
         "mermaidLabel",
         "mermaidId: 'api-report'",
         "mermaidDataSelector",
+        "[data-node-id=\"flow-intake\"]",
         "mermaidId: 'api-report-request'",
         "mermaid-edge",
+        "mermaid-translated-data",
         "mermaid-sequence-route"
       ],
       "packedTerms": [
@@ -355,6 +357,7 @@
       "docsTerms": [
         "`mermaid-basic`",
         "source/target endpoint ids",
+        "labels are translated or user-authored",
         "rendered sequence participants, message labels, and"
       ]
     },
@@ -1137,6 +1140,10 @@
             "prepareMermaidAnnotations",
             "resolvePreparedAnnotationLayout",
             "sequenceSource",
+            "Ingresso dati",
+            "translated-node",
+            "mermaid-translated-data",
+            "renderedTranslatedHooks",
             "mermaid-sequence-route",
             "renderedSequenceActors"
           ]
@@ -1212,6 +1219,8 @@
             "non-identity React Flow viewport",
             "host-owned annotation patch",
             "flowchart and sequence browser-proven",
+            "mermaid-translated-data",
+            "translated-label data-hook",
             "mermaid-sequence-route",
             "Remaining Limits"
           ]
@@ -1458,6 +1467,7 @@
           "terms": [
             "Vega-Lite",
             "Sequence diagram",
+            "Class/data-selector",
             "Nested diagram",
             "Zoom/pan",
             "docs/adapter-recipes-proof.md"
@@ -1472,6 +1482,8 @@
             "D2 Nested Diagrams And Routes",
             "React Flow Viewport, Handles, And Editing",
             "flowchart and sequence browser-proven",
+            "mermaid-translated-data",
+            "translated-label data-hook",
             "mermaid-sequence-route",
             "Remaining Limits"
           ]

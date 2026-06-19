@@ -51,9 +51,10 @@ has been proven in real consumer use before a public `1.0.0` commitment.
 - Authoring UX: `createAnnotationEditEvent` and `createAnnotationEditDelta`
   provide DOM-free note-drag and anchor-move suggestions for React and custom
   authoring surfaces; hosts still own state and persistence.
-- Remaining high-value proof: widen dogfood into richer real generated
-  surfaces before widening public API stability promises, especially
-  Vega-Lite, Mermaid sequence diagrams, and nested D2 diagrams.
+- Remaining high-value proof: keep widening dogfood into non-synthetic host
+  apps or reports before widening public API stability promises; the current
+  generated-surface recipes are browser-proven but still benefit from more
+  consumer-specific friction reports.
 
 ## Tracking Documents
 

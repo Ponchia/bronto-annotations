@@ -18,8 +18,9 @@ Status: proven in adapter tests and browser example coverage.
 
 ## Mermaid Flowchart And Sequence SVG
 
-Status: flowchart and sequence browser-proven; sequence SVG fixture coverage is
-also kept in adapter tests.
+Status: flowchart and sequence browser-proven, with translated-label data-hook
+recipes also browser-proven; sequence SVG fixture coverage is also kept in
+adapter tests.
 
 - `examples/mermaid-basic` renders real Mermaid flowchart and sequence diagrams,
   annotates rendered flowchart node labels, a rendered flowchart edge route,
@@ -27,6 +28,10 @@ also kept in adapter tests.
   Browser verification checks target alignment against actual Mermaid SVG nodes,
   paths, actor elements, message labels, and `line.messageLine0`/path message
   routes.
+- The same browser example renders a localized `Ingresso dati` node and anchors
+  `mermaid-translated-data` through `[data-node-id="flow-intake"]` plus the
+  `translated-node` class, proving consumers can avoid label text when Mermaid
+  translated labels or user-authored labels are unstable.
 - `test/adapters/mermaid.test.ts` covers a Mermaid sequence-style SVG fixture
   with participant, message label, and message route anchors using labels,
   `data-message-id`, and `data-edge-id`.

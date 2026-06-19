@@ -50,6 +50,7 @@ const examples = [
     requiredEvidence: [
       { mermaidKind: 'label', mermaidLabel: 'API' },
       { mermaidKind: 'label', mermaidLabel: 'Report' },
+      { mermaidKind: 'data', mermaidDataSelector: '[data-node-id="flow-intake"]' },
       { mermaidKind: 'edge', mermaidId: 'api-report' },
       { mermaidKind: 'data', mermaidDataSelector: '[data-participant-id="sequence-api"]' },
       { mermaidKind: 'data', mermaidDataSelector: '[data-message-id="api-report-request"]' },
@@ -57,6 +58,7 @@ const examples = [
     ],
     requiredSelectors: [
       '#flowchart svg g.node',
+      '#flowchart svg .translated-node[data-node-id="flow-intake"]',
       '#sequence svg [data-participant-id="sequence-api"]',
       '#sequence svg [data-message-id="api-report-request"]',
       '#sequence svg [data-edge-id="api-report-request"]'
@@ -64,6 +66,7 @@ const examples = [
     anchorTargetChecks: [
       { annotationId: 'mermaid-api', selector: '#flowchart svg g.node', text: 'API', maxCenterDistance: 10 },
       { annotationId: 'mermaid-report', selector: '#flowchart svg g.node', text: 'Report', maxCenterDistance: 10 },
+      { annotationId: 'mermaid-translated-data', selector: '#flowchart svg [data-node-id="flow-intake"]', maxCenterDistance: 10 },
       { annotationId: 'mermaid-edge', selector: '#flowchart svg path[data-edge-id="api-report"]', maxCenterDistance: 14 },
       { annotationId: 'mermaid-sequence-api', selector: '#sequence svg [data-participant-id="sequence-api"]', maxCenterDistance: 10 },
       { annotationId: 'mermaid-sequence-message', selector: '#sequence svg [data-message-id="api-report-request"]', maxCenterDistance: 10 },

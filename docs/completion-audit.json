@@ -457,6 +457,10 @@
             "prepareMermaidAnnotations",
             "resolvePreparedAnnotationLayout",
             "sequenceSource",
+            "Ingresso dati",
+            "translated-node",
+            "mermaid-translated-data",
+            "renderedTranslatedHooks",
             "mermaid-sequence-route",
             "renderedSequenceActors"
           ]
@@ -1231,6 +1235,8 @@
             "non-identity React Flow viewport",
             "host-owned annotation patch",
             "flowchart and sequence browser-proven",
+            "mermaid-translated-data",
+            "translated-label data-hook",
             "mermaid-sequence-route",
             "Remaining Limits"
           ]

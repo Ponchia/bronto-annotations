@@ -20,7 +20,7 @@ const layer = document.querySelector<HTMLElement>('#annotations');
 
 const flowchartSource = `
 flowchart LR
-  Intake[Intake] --> API[API]
+  Intake[Ingresso dati] --> API[API]
   API --> Report[Report]
 `;
 const sequenceSource = `
@@ -106,6 +106,24 @@ async function render() {
       subject: { shape: 'rect', padding: 4 }
     },
     {
+      id: 'mermaid-translated-data',
+      data: { nodeId: 'flow-intake' },
+      coordinateSpace,
+      note: {
+        title: 'Stable data hook',
+        body: 'Label text can be translated.'
+      },
+      placement: {
+        manual: {
+          x: compact ? bounds.width - 162 : 18,
+          y: compact ? 24 : 206,
+          side: compact ? 'bottom' as const : 'top' as const
+        }
+      },
+      subject: { shape: 'rect' as const, padding: 4 },
+      tone: 'success' as const
+    },
+    {
       id: 'mermaid-edge',
       edgeId: 'api-report',
       kind: 'path',
@@ -175,6 +193,7 @@ async function render() {
   const targetAlignmentTargets: AnchorAlignmentTarget[] = [
     targetFromText(diagramHost, coordinateSpace, 'mermaid-api', '#flowchart g.node', 'API', 'rendered Mermaid API node'),
     targetFromText(diagramHost, coordinateSpace, 'mermaid-report', '#flowchart g.node', 'Report', 'rendered Mermaid Report node'),
+    targetFromSelector(diagramHost, coordinateSpace, 'mermaid-translated-data', '#flowchart [data-node-id="flow-intake"]', 'rendered Mermaid translated Intake node'),
     targetFromSelector(diagramHost, coordinateSpace, 'mermaid-edge', '#flowchart [data-edge-id="api-report"]', 'rendered Mermaid API to Report edge'),
     targetFromSelector(diagramHost, coordinateSpace, 'mermaid-sequence-api', '#sequence [data-participant-id="sequence-api"]', 'rendered Mermaid sequence API actor'),
     targetFromSelector(diagramHost, coordinateSpace, 'mermaid-sequence-message', '#sequence [data-message-id="api-report-request"]', 'rendered Mermaid sequence message label'),
@@ -193,6 +212,7 @@ async function render() {
     noteSizes: {
       'mermaid-api': { width: 128, height: 54 },
       'mermaid-report': { width: 144, height: 54 },
+      'mermaid-translated-data': { width: compact ? 150 : 168, height: 58 },
       'mermaid-edge': { width: 154, height: 58 },
       'mermaid-sequence-api': { width: compact ? 142 : 160, height: 58 },
       'mermaid-sequence-message': { width: compact ? 150 : 168, height: 58 },
@@ -235,6 +255,7 @@ async function render() {
       renderedEdges: diagramHost.querySelectorAll('[data-edge-id]').length,
       renderedSequenceActors: sequenceSvg.querySelectorAll('[data-participant-id]').length,
       renderedSequenceMessages: sequenceSvg.querySelectorAll('[data-message-id]').length,
+      renderedTranslatedHooks: flowchartSvg.querySelectorAll('.translated-node[data-node-id="flow-intake"]').length,
       validation: prepared.validation,
       anchorEvidence: prepared.annotations.map((annotation) => annotation.data),
       anchorIds: prepared.annotations.map((annotation) => annotation.id),
@@ -304,6 +325,9 @@ function boundsFromElement(element: HTMLElement): Box {
 }
 
 function tagFlowchartSvg(svg: SVGSVGElement): void {
+  const translated = tagByText(svg, 'g.node', 'Ingresso dati', 'data-node-id', 'flow-intake');
+  translated?.classList.add('translated-node');
+  translated?.setAttribute('data-label-key', 'flow.intake');
   tagByText(svg, 'g.node', 'API', 'data-node-id', 'flow-api');
   tagByText(svg, 'g.node', 'Report', 'data-node-id', 'flow-report');
 }
@@ -329,11 +353,14 @@ function tagByText(
   text: string,
   attribute: string,
   value: string
-): void {
+): Element | undefined {
   const element = Array.from(root.querySelectorAll<Element>(selector))
     .find((candidate) => normalizeText(candidate.textContent ?? '') === normalizeText(text));
 
-  (element?.closest('g') ?? element)?.setAttribute(attribute, value);
+  const target = element?.closest('g') ?? element;
+  target?.setAttribute(attribute, value);
+
+  return target;
 }
 
 function normalizeText(value: string): string {

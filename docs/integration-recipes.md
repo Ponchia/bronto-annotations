@@ -338,7 +338,9 @@ const prepared = prepareMermaidAnnotations(svg, [
 ```
 
 If labels are translated or user-authored, prefer node ids, edge ids, classes,
-or data attributes over label text.
+or data attributes over label text. `examples/mermaid-basic` browser-verifies
+this with a localized `Ingresso dati` node annotated through
+`[data-node-id="flow-intake"]` instead of its rendered label.
 
 For sequence diagrams, use rendered SVG hooks after Mermaid has produced the
 diagram: participant labels or ids for actors, `data-message-id` or selectors
