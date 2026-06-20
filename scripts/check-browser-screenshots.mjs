@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
 import { inflateSync } from 'node:zlib';
+import { writeLine } from './log.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const screenshotsDir = join(root, '.tmp/screenshots');
@@ -111,7 +112,7 @@ if (writeBaseline) {
 
 const baselineStatus = writeBaseline ? 'Visual baselines updated' : 'Visual baselines verified';
 
-console.log(`Browser screenshot evidence verified: ${verified} PNGs across ${examples.length} examples, ${viewports.length} viewports, and ${packedScreenshots.length} packed consumers. ${baselineStatus}: ${observations.length} approved screenshots.`);
+writeLine(`Browser screenshot evidence verified: ${verified} PNGs across ${examples.length} examples, ${viewports.length} viewports, and ${packedScreenshots.length} packed consumers. ${baselineStatus}: ${observations.length} approved screenshots.`);
 
 function assertScreenshotEvidence(file, png, decoded, expected) {
   assert.equal(decoded.width, expected.width, `${file} width should match ${expected.label ?? expected.name}`);

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { writeLine } from './log.mjs';
 
 const parity = JSON.parse(await readFile(new URL('../docs/bronto-ui-annotation-parity.json', import.meta.url), 'utf8'));
 const css = await readFile(new URL('../src/styles/bronto.css', import.meta.url), 'utf8');
@@ -38,7 +39,7 @@ assert.equal(pkg.peerDependencies?.['@ponchia/ui'], undefined, '@ponchia/ui must
 assert.ok(pkg.exports?.['./bronto.css'], 'package must export ./bronto.css');
 assert.equal(pkg.sideEffects?.includes('./dist/bronto.css'), true, 'bronto.css must be marked as side-effectful');
 
-console.log(`Bronto annotation parity verified: ${parity.legacySelectors.length} legacy selectors, ${parity.packageSelectors.length} package selectors, ${parity.helperExports.length} helper exports.`);
+writeLine(`Bronto annotation parity verified: ${parity.legacySelectors.length} legacy selectors, ${parity.packageSelectors.length} package selectors, ${parity.helperExports.length} helper exports.`);
 
 function assertIncludes(text, term, label) {
   assert.ok(text.includes(term), `${label} must include ${JSON.stringify(term)}`);

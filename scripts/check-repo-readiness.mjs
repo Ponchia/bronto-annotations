@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
+import { writeLine } from './log.mjs';
 
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const lock = JSON.parse(await readFile(new URL('../package-lock.json', import.meta.url), 'utf8'));
@@ -320,7 +321,7 @@ for (const term of [
   assertIncludes(readme, term, 'README.md');
 }
 
-console.log('Repository readiness verified: metadata, CI, release, public decisions, templates, lifecycle docs, and package manager policy.');
+writeLine('Repository readiness verified: metadata, CI, release, public decisions, templates, lifecycle docs, and package manager policy.');
 
 async function read(path) {
   return readFile(pathUrl(path), 'utf8');

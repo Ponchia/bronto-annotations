@@ -914,6 +914,8 @@ names, and respects print, forced-colors, and reduced-motion preferences.
 ```bash
 npm install
 npm run check
+npm run typecheck
+npm run check:dead
 npm run test:docs-snippets
 npm run test:pack
 npm run test:browser
@@ -1009,6 +1011,11 @@ claims do not drift from the evidence.
 `test/docs-public-snippets.ts` type-checks the documented recipe shapes through
 the public package subpaths, including React, DOM, Vega, Mermaid, D2, React
 Flow, and `bronto.css` imports.
+
+`npm run typecheck` builds declarations and then type-checks source, tests, and
+examples as one strict TypeScript program. `npm run check:dead` runs Knip with
+the package public subpaths, example entrypoints, scripts, and type-consumer
+harnesses configured as intentional entrypoints.
 
 `docs/completion-audit.json` maps the original requested product scope and
 success criteria to direct evidence across source, tests, examples, packed

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { writeLine } from './log.mjs';
 
 const root = new URL('..', import.meta.url);
 const matrix = JSON.parse(await readFile(new URL('../docs/readiness-matrix.json', import.meta.url), 'utf8'));
@@ -121,7 +122,7 @@ assertIncludes(e2ePlan, '## Verification Gates', 'docs/e2e-plan.md');
 assertIncludes(e2ePlan, 'Readiness matrix', 'docs/e2e-plan.md');
 assertIncludes(integrationRecipes, '## First-Use Checklist', 'docs/integration-recipes.md');
 
-console.log(`Readiness matrix verified: ${matrix.publicExports.length} exports, ${matrix.contexts.length} contexts, ${matrix.capabilities.length} capability groups.`);
+writeLine(`Readiness matrix verified: ${matrix.publicExports.length} exports, ${matrix.contexts.length} contexts, ${matrix.capabilities.length} capability groups.`);
 
 function assertUniqueId(value, label) {
   assert.equal(typeof value, 'string', `${label} id must be a string`);

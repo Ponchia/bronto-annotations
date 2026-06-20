@@ -92,6 +92,7 @@ export type MermaidLabelMatch = 'exact' | 'contains';
 
 export type MermaidObstacleOptions = ElementAnchorOptions & {
   selector?: string;
+  padding?: number;
 };
 
 export type MermaidAnnotationLayerOptions = {
@@ -250,6 +251,7 @@ export function obstaclesFromMermaidSvg(root: ParentNode, options: MermaidObstac
 
   return obstaclesFromElements(root.querySelectorAll(selector), {
     ...options,
+    inflate: (options.inflate ?? 0) + (options.padding ?? 0),
     source: options.source ?? 'mermaid-svg-obstacle'
   });
 }

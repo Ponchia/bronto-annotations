@@ -6,7 +6,8 @@ import {
 } from '@ponchia/annotations';
 import {
   obstaclesFromVegaSvg,
-  prepareVegaScenegraphAnnotations
+  prepareVegaScenegraphAnnotations,
+  type VegaScenegraphAnchorSpec
 } from '@ponchia/annotations/vega';
 import {
   annotationFrameFromSvg,
@@ -14,12 +15,13 @@ import {
 } from '@ponchia/annotations/dom';
 import '@ponchia/annotations/bronto.css';
 import * as vega from 'vega';
+import type { Spec } from 'vega';
 import './styles.css';
 
 const chart = document.querySelector<HTMLElement>('#chart');
 const layer = document.querySelector<HTMLElement>('#annotations');
 
-const spec = {
+const spec: Spec = {
   $schema: 'https://vega.github.io/schema/vega/v6.json',
   width: 640,
   height: 320,
@@ -89,7 +91,7 @@ async function render() {
   }
 
   const frame = annotationFrameFromSvg(svg);
-  const annotationSpecs = [
+  const annotationSpecs: Array<VegaScenegraphAnchorSpec<{ id?: string }>> = [
     {
       id: 'vega-peak',
       markName: 'points',
@@ -116,7 +118,7 @@ async function render() {
       placement: { side: 'bottom' }
     }
   ];
-  const prepared = prepareVegaScenegraphAnnotations(view, annotationSpecs, {
+  const prepared = prepareVegaScenegraphAnnotations<{ id?: string }>(view, annotationSpecs, {
     obstacles: { role: 'axis', padding: 4 }
   });
   const targetAlignmentTargets: AnchorAlignmentTarget[] = [

@@ -185,6 +185,10 @@ targets such as unmeasured React Flow handles.
 `npm run check` runs:
 
 - TypeScript build and declaration generation.
+- Whole-repo strict TypeScript typechecking for source, tests, and examples.
+- Dead-code and dependency checks through Knip, with package subpaths,
+  examples, scripts, and public type-consumer harnesses configured as
+  intentional entrypoints.
 - Unit tests for core anchors, geometry, placement, bounded refinement,
   collisions, connectors, SVG rendering, React rendering, DOM/SVG extraction,
   DOM prepared annotation bundles, and every adapter.

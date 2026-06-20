@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { chromium } from 'playwright';
 import { createServer } from 'vite';
+import { writeLine } from './log.mjs';
 
 const exec = promisify(execFile);
 const root = new URL('..', import.meta.url);
@@ -31,7 +32,7 @@ try {
   ]);
 
   const evidence = await verifyDogfoodConsumer(consumerDir);
-  console.log(`Dogfood clean consumer verified: ${evidence.annotationCount} annotations across ${evidence.surfaces.length} report surfaces. Screenshot: .tmp-dogfood/dogfood-report.png.`);
+  writeLine(`Dogfood clean consumer verified: ${evidence.annotationCount} annotations across ${evidence.surfaces.length} report surfaces. Screenshot: .tmp-dogfood/dogfood-report.png.`);
 } finally {
   if (tarball) {
     await rm(tarball, { force: true });

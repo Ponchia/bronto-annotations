@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, it } from 'vitest';
+import type { Spec } from 'vega';
 import {
   anchorsFromVegaScales,
   anchorsFromVegaScenegraph,
@@ -484,12 +485,12 @@ describe('Vega adapter', () => {
         y: { field: 'value', type: 'quantitative' }
       }
     } as const;
-    const compiled = compile(liteSpec).spec as unknown;
+    const compiled = compile(liteSpec).spec as Spec;
     const view = new vega.View(vega.parse(compiled), { renderer: 'none' });
 
     await view.runAsync();
 
-    const prepared = prepareVegaScenegraphAnnotations(view, [
+    const prepared = prepareVegaScenegraphAnnotations<{ id?: string }>(view, [
       {
         id: 'vega-lite-peak',
         markName: 'marks',
@@ -503,16 +504,20 @@ describe('Vega adapter', () => {
     });
 
     expect(prepared.validation.ok).toBe(true);
-    expect(prepared.annotations[0]?.anchor.type).toBe('box');
-    expect(prepared.annotations[0]?.data).toMatchObject({
+    const annotation = prepared.annotations[0];
+    expect(annotation?.anchor.type).toBe('box');
+    expect(annotation?.data).toMatchObject({
       anchorSource: 'vega-scenegraph',
       vegaMarkName: 'marks',
       vegaMarkType: 'symbol',
       vegaRole: 'mark',
       source: 'vega-lite'
     });
-    expect(prepared.annotations[0]?.anchor.box.width).toBeGreaterThan(0);
-    expect(prepared.annotations[0]?.anchor.box.height).toBeGreaterThan(0);
+    if (!annotation || annotation.anchor.type !== 'box') {
+      throw new Error('Expected Vega-Lite annotation to resolve to a box anchor.');
+    }
+    expect(annotation.anchor.box.width).toBeGreaterThan(0);
+    expect(annotation.anchor.box.height).toBeGreaterThan(0);
     expect(prepared.obstacles.length).toBeGreaterThanOrEqual(2);
     expect(prepared.obstacles.every((obstacle) => obstacle.width > 0 && obstacle.height > 0)).toBe(true);
   });

@@ -25,10 +25,11 @@ npm ci
 npm run check
 ```
 
-`npm run check` is the required gate. It builds the package, runs unit and type
-tests, validates public exports and docs, runs parity checks, builds examples,
-performs packed-consumer smokes, verifies examples in a browser, checks
-screenshots, and enforces readiness/completion/repository hygiene.
+`npm run check` is the required gate. It builds the package, runs whole-repo
+type checks, unit tests, dead-code/dependency checks, validates public exports
+and docs, runs parity checks, builds examples, performs packed-consumer smokes,
+verifies examples in a browser, checks screenshots, and enforces
+readiness/completion/repository hygiene.
 
 ## Pull Requests
 

@@ -549,7 +549,7 @@ describe('React adapter', () => {
       observe = observe;
       disconnect = disconnect;
     });
-    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function getBoundingClientRect() {
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function getBoundingClientRect(this: HTMLElement) {
       if (this.classList.contains('pa-annotation__note-box')) {
         return rect(0, 0, 244, 92);
       }

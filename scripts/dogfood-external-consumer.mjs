@@ -6,6 +6,7 @@ import { createServer } from 'node:http';
 import { basename, extname, join, normalize, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 import { chromium } from 'playwright';
+import { writeLine } from './log.mjs';
 
 const exec = promisify(execFile);
 const consumerRoot = process.env.PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT;
@@ -33,7 +34,7 @@ if (!consumerRoot) {
     throw new Error(message);
   }
 
-  console.log(message);
+  writeLine(message);
   process.exit(0);
 }
 
@@ -184,9 +185,9 @@ try {
 }
 
 if (consumerMode === 'react-flow') {
-  console.log('External React Flow dogfood verified: 4 annotations on a real rendered React Flow surface. Screenshot: .tmp-dogfood/dogfood-external-react-flow.png.');
+  writeLine('External React Flow dogfood verified: 4 annotations on a real rendered React Flow surface. Screenshot: .tmp-dogfood/dogfood-external-react-flow.png.');
 } else {
-  console.log('External consumer dogfood verified: 4 annotations on a real Astro/React stack page. Screenshot: .tmp-dogfood/dogfood-external-consumer.png.');
+  writeLine('External consumer dogfood verified: 4 annotations on a real Astro/React stack page. Screenshot: .tmp-dogfood/dogfood-external-consumer.png.');
 }
 
 async function runExternalReactFlowDogfood(page, { css, consoleErrors, pageErrors }) {

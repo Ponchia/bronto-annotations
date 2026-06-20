@@ -1,0 +1,31 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "rules": {
+    "duplicates": "off"
+  },
+  "workspaces": {
+    ".": {
+      "entry": [
+        "src/index.ts",
+        "src/react/index.ts",
+        "src/dom/index.ts",
+        "src/adapters/vega.ts",
+        "src/adapters/mermaid.ts",
+        "src/adapters/d2.ts",
+        "src/adapters/react-flow.ts",
+        "test/**/*.test.ts",
+        "test/docs-public-snippets.ts",
+        "test/export-consumer.ts",
+        "examples/*/main.ts",
+        "examples/*/main.tsx",
+        "scripts/**/*.mjs"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "test/**/*.{ts,tsx}",
+        "examples/**/*.{ts,tsx}",
+        "scripts/**/*.mjs"
+      ]
+    }
+  }
+}

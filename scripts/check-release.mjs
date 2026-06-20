@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { writeLine } from './log.mjs';
 
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const changelog = await read('CHANGELOG.md');
@@ -57,7 +58,7 @@ assert.equal(
   'release:prep must date the ordinary Unreleased changelog section'
 );
 
-console.log(`Release hygiene verified: v${version} tag publishing, protected npm environment, provenance, dist-tag routing, and CHANGELOG release notes.`);
+writeLine(`Release hygiene verified: v${version} tag publishing, protected npm environment, provenance, dist-tag routing, and CHANGELOG release notes.`);
 
 async function read(path) {
   return readFile(new URL(`../${path}`, import.meta.url), 'utf8');

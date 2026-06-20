@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { writeLine } from './log.mjs';
 
 const api = await readFile(new URL('../docs/api-reference.md', import.meta.url), 'utf8');
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
@@ -190,4 +191,4 @@ for (const boundary of [
 assert.ok(api.includes('annotationData'), 'API reference must include annotationData');
 assert.ok(api.includes('includeQualityIssues'), 'API reference must include includeQualityIssues');
 
-console.log(`API reference verified: ${required.length} public subpaths.`);
+writeLine(`API reference verified: ${required.length} public subpaths.`);

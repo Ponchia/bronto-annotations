@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { access, readFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
+import { writeLine } from './log.mjs';
 
 const exec = promisify(execFile);
 const pkg = JSON.parse(await read('package.json'));
@@ -100,7 +101,7 @@ assert.match(stdout.trim(), /^\d+\.\d+\.\d+-canary\.[0-9a-z-]+(\.[0-9a-z-]+)*$/,
 await exec(process.execPath, ['--check', 'scripts/prepare-github-canary.mjs']);
 await exec(process.execPath, ['--check', 'scripts/smoke-registry-consumer.mjs']);
 
-console.log('Canary readiness verified: GitHub Packages workflow, version prep, registry smoke, and docs.');
+writeLine('Canary readiness verified: GitHub Packages workflow, version prep, registry smoke, and docs.');
 
 async function read(path) {
   return readFile(pathUrl(path), 'utf8');

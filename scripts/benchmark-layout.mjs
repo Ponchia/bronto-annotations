@@ -3,6 +3,7 @@ import {
   evaluateAnnotationLayout,
   resolveAnnotationLayout
 } from '../dist/index.js';
+import { writeLine } from './log.mjs';
 
 const assertMode = process.argv.includes('--assert');
 const cases = [
@@ -55,7 +56,7 @@ for (const testCase of cases) {
   }
 }
 
-console.log(JSON.stringify({
+writeLine(JSON.stringify({
   benchmark: 'layout-stress',
   generatedAt: new Date(0).toISOString(),
   results

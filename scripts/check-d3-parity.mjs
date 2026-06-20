@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { writeLine } from './log.mjs';
 
 const parity = JSON.parse(await readFile(new URL('../docs/d3-annotation-parity.json', import.meta.url), 'utf8'));
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
@@ -291,7 +292,7 @@ for (const term of parity.requiredDocsTerms) {
   assert.ok(readme.includes(term) || plan.includes(term), `README/docs must include ${JSON.stringify(term)}`);
 }
 
-console.log(`d3-annotation parity verified: ${parity.supportedTypeAliases.length} type aliases, ${parity.supportedRuntimeHelpers.length} helpers, ${parity.intentionallyUnsupportedExports.length} explicit non-exported D3 runtime APIs.`);
+writeLine(`d3-annotation parity verified: ${parity.supportedTypeAliases.length} type aliases, ${parity.supportedRuntimeHelpers.length} helpers, ${parity.intentionallyUnsupportedExports.length} explicit non-exported D3 runtime APIs.`);
 
 function inputForType(type) {
   const base = {

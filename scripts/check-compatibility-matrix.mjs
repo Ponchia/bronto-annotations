@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { writeLine } from './log.mjs';
 
 const pkg = JSON.parse(await read('package.json'));
 const compatibility = await read('docs/compatibility.md');
@@ -119,7 +120,7 @@ for (const term of [
   assertIncludes(laneSmoke, term, 'scripts/smoke-compatibility-lanes.mjs');
 }
 
-console.log('Compatibility matrix verified: package peers, optional metadata, CI Node lanes, docs, and packed-smoke evidence are aligned.');
+writeLine('Compatibility matrix verified: package peers, optional metadata, CI Node lanes, docs, and packed-smoke evidence are aligned.');
 
 async function read(path) {
   return readFile(new URL(`../${path}`, import.meta.url), 'utf8');

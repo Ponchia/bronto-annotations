@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { chromium } from 'playwright';
 import { createServer } from 'vite';
+import { writeLine } from './log.mjs';
 
 const exec = promisify(execFile);
 const root = new URL('..', import.meta.url);
@@ -26,7 +27,7 @@ try {
   await install(consumerDir, [tarball]);
 
   const evidence = await verifyConsumer(consumerDir, projectEvidence);
-  console.log(`Self dogfood report verified: ${evidence.annotationCount} annotations from ${evidence.dataSources.length} project evidence files. Screenshot: .tmp-dogfood/dogfood-self-report.png.`);
+  writeLine(`Self dogfood report verified: ${evidence.annotationCount} annotations from ${evidence.dataSources.length} project evidence files. Screenshot: .tmp-dogfood/dogfood-self-report.png.`);
 } finally {
   if (tarball) {
     await rm(tarball, { force: true });

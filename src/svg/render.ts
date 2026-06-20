@@ -52,6 +52,15 @@ export type SvgRenderOptions = {
 };
 
 const DEFAULT_CLASS_PREFIX = 'pa-annotation';
+const TEXT_ESCAPES: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;'
+};
+const ATTRIBUTE_ESCAPES: Record<string, string> = {
+  ...TEXT_ESCAPES,
+  '"': '&quot;'
+};
 
 /**
  * Render a complete SVG annotation layer as a string.
@@ -530,14 +539,15 @@ function renderMarkerDefs(layout: ResolvedLayout, prefix: string, markerPrefix: 
 }
 
 function escapeText(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
+  return escapeCharacters(value, /[&<>]/g, TEXT_ESCAPES);
 }
 
 function escapeAttribute(value: string): string {
-  return escapeText(value).replaceAll('"', '&quot;');
+  return escapeCharacters(value, /[&<>"]/g, ATTRIBUTE_ESCAPES);
+}
+
+function escapeCharacters(value: string, pattern: RegExp, escapes: Record<string, string>): string {
+  return value.replace(pattern, (character) => escapes[character] ?? character);
 }
 
 function dataAttributes(data: DataAttributes | undefined): string {

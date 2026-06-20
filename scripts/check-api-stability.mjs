@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import ts from 'typescript';
+import { writeLine } from './log.mjs';
 
 const root = new URL('..', import.meta.url);
 const manifestUrl = new URL('../docs/api-stability.manifest.json', import.meta.url);
@@ -36,10 +37,10 @@ for (const subpath of Object.keys(publicSubpaths)) {
 
 if (writeManifest) {
   await writeApiStabilityManifest(actualSubpaths);
-  console.log(`API stability manifest updated: ${Object.keys(actualSubpaths).length} public subpaths.`);
+  writeLine(`API stability manifest updated: ${Object.keys(actualSubpaths).length} public subpaths.`);
 } else {
   await assertApiStabilityManifest(actualSubpaths);
-  console.log(`API stability verified: ${Object.keys(actualSubpaths).length} public subpaths with explicit stable/experimental labels.`);
+  writeLine(`API stability verified: ${Object.keys(actualSubpaths).length} public subpaths with explicit stable/experimental labels.`);
 }
 
 async function assertApiStabilityManifest(actualSubpaths) {
