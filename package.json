@@ -1,6 +1,6 @@
 {
   "name": "@ponchia/annotations",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Headless annotation placement and rendering helpers for charts, diagrams, reports, and UI surfaces.",
   "keywords": [
     "annotations",

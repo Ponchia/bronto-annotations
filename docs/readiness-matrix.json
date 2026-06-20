@@ -735,17 +735,17 @@
           ]
         },
         {
-      "file": "src/styles/bronto.css",
-      "terms": [
-        ".pa-annotation__note-box",
-        ".ui-annotation__title",
-        ".ui-annotation__badge-pointer",
-        "--bronto-accent-soft",
-        "pointer-events: none",
-        "pointer-events: auto",
-        "@media (prefers-reduced-motion: no-preference)",
-        "@media print"
-      ]
+          "file": "src/styles/bronto.css",
+          "terms": [
+            ".pa-annotation__note-box",
+            ".ui-annotation__title",
+            ".ui-annotation__badge-pointer",
+            "--bronto-accent-soft",
+            "pointer-events: none",
+            "pointer-events: auto",
+            "@media (prefers-reduced-motion: no-preference)",
+            "@media print"
+          ]
         },
         {
           "file": "test/package/bronto-css.test.ts",
@@ -757,10 +757,10 @@
             "tracks emitted package text, badge, and edit classes",
             "--bronto-accent-soft",
             "pa-annotation__marker",
-        "pa-annotation__edit-hit",
-        "keeps annotation overlays passive",
-        "pa-annotation__badge-label"
-      ]
+            "pa-annotation__edit-hit",
+            "keeps annotation overlays passive",
+            "pa-annotation__badge-label"
+          ]
         },
         {
           "file": "scripts/verify-examples-browser.mjs",
@@ -1359,7 +1359,7 @@
         {
           "file": "package.json",
           "terms": [
-            "\"version\": \"0.1.0\"",
+            "\"version\": \"0.2.0\"",
             "\"repository\"",
             "\"publishConfig\"",
             "\"test:repo\"",
