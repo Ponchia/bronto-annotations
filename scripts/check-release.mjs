@@ -57,6 +57,11 @@ assert.equal(
   '## Unreleased\n\n## 0.1.1 - 2026-06-19\n\n### Changed\n\n- Release item\n',
   'release:prep must date the ordinary Unreleased changelog section'
 );
+assert.equal(
+  dateChangelogHeading('## Unreleased\n\n## 0.1.1 - 2026-06-19\n\n### Changed\n\n- Release item\n', '0.1.1', '2026-06-19'),
+  '## Unreleased\n\n## 0.1.1 - 2026-06-19\n\n### Changed\n\n- Release item\n',
+  'release:prep must be idempotent for an already dated version'
+);
 
 writeLine(`Release hygiene verified: v${version} tag publishing, protected npm environment, provenance, dist-tag routing, and CHANGELOG release notes.`);
 

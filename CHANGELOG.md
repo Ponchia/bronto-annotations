@@ -8,6 +8,8 @@ reasonable.
 
 ## Unreleased
 
+## 0.2.0 - 2026-06-20
+
 ### Changed
 
 - Added public-repo security automation for CodeQL, Dependency Review,
