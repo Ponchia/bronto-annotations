@@ -2,6 +2,7 @@ import { execFile } from 'node:child_process';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
+import { writeLine } from './log.mjs';
 
 const exec = promisify(execFile);
 const root = new URL('..', import.meta.url);
@@ -23,7 +24,7 @@ try {
   }
 }
 
-console.log('Compatibility lane smoke verified: TypeScript 5.8 clean consumer, React 18 clean consumer, and Vega 5 clean consumer.');
+writeLine('Compatibility lane smoke verified: TypeScript 5.8 clean consumer, React 18 clean consumer, and Vega 5 clean consumer.');
 
 async function smokeTypeScript58(packageTarball) {
   const workdir = await consumerWorkdir('typescript58-');

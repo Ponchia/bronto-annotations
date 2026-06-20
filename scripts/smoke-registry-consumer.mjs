@@ -3,6 +3,7 @@ import { execFile } from 'node:child_process';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
+import { writeLine } from './log.mjs';
 
 const exec = promisify(execFile);
 const root = new URL('..', import.meta.url);
@@ -153,7 +154,7 @@ await writeFile(join(workdir, 'smoke.mjs'), `
 `);
 await exec('node', ['smoke.mjs'], { cwd: workdir });
 
-console.log(`Registry consumer smoke verified: @ponchia/annotations@${version} from ${registry}.`);
+writeLine(`Registry consumer smoke verified: @ponchia/annotations@${version} from ${registry}.`);
 
 function valueAfter(flag) {
   const index = process.argv.indexOf(flag);

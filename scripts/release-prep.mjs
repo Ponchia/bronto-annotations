@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeLine } from './log.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -39,7 +40,7 @@ function main(argv) {
     cwd: root,
     stdio: 'inherit',
   });
-  console.log(`package.json + lock: ${from} -> ${version}`);
+  writeLine(`package.json + lock: ${from} -> ${version}`);
 
   const isPrerelease = version.includes('-');
   const changelogPath = resolve(root, 'CHANGELOG.md');
@@ -47,11 +48,11 @@ function main(argv) {
   const dated = isPrerelease ? changelog : dateChangelogHeading(changelog, version, new Date().toISOString().slice(0, 10));
   if (dated !== changelog) {
     writeFileSync(changelogPath, dated);
-    console.log(`CHANGELOG.md: dated ${version}`);
+    writeLine(`CHANGELOG.md: dated ${version}`);
   } else if (isPrerelease) {
-    console.log('CHANGELOG.md: prerelease, base heading left unchanged');
+    writeLine('CHANGELOG.md: prerelease, base heading left unchanged');
   } else {
-    console.log(`CHANGELOG.md: no "Unreleased - ${version}" heading found; verify it is already dated`);
+    writeLine(`CHANGELOG.md: no "Unreleased - ${version}" heading found; verify it is already dated`);
   }
 
   const bugPath = resolve(root, '.github/ISSUE_TEMPLATE/bug_report.yml');
@@ -59,10 +60,10 @@ function main(argv) {
   const bumped = bug.replace(/placeholder: \d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?/, `placeholder: ${version}`);
   if (bumped !== bug) {
     writeFileSync(bugPath, bumped);
-    console.log('bug report template: bumped version placeholder');
+    writeLine('bug report template: bumped version placeholder');
   }
 
-  console.log('\nNext: review the diff, run `npm run check`, merge to main, then tag from main.');
+  writeLine('\nNext: review the diff, run `npm run check`, merge to main, then tag from main.');
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

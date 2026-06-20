@@ -114,10 +114,21 @@ type VegaScaleGeometrySpec<TDatum = Record<string, unknown>> = {
   offset?: Point;
 };
 
+type VegaViewPadding = number | Partial<{ top: number; left: number; right: number; bottom: number }>;
+
+type VegaViewPaddingAccessor =
+  | (() => VegaViewPadding)
+  | {
+    (): VegaViewPadding;
+    (padding: VegaViewPadding): unknown;
+  };
+
+type VegaViewOriginAccessor = () => [number, number] | Partial<Point>;
+
 export type VegaViewLike<TDatum = Record<string, unknown>> = {
   data(name?: string): TDatum[];
-  padding?: () => Partial<{ top: number; left: number; right: number; bottom: number }>;
-  origin?: () => [number, number] | Partial<Point>;
+  padding?: VegaViewPaddingAccessor;
+  origin?: VegaViewOriginAccessor;
 };
 
 export type VegaScaleFunction = {
@@ -158,8 +169,8 @@ export type VegaScenegraphItem<TDatum = unknown> = {
 
 export type VegaScenegraphViewLike<TDatum = unknown> = {
   scenegraph(): { root?: VegaScenegraphItem<TDatum> } | VegaScenegraphItem<TDatum>;
-  padding?: () => Partial<{ top: number; left: number; right: number; bottom: number }>;
-  origin?: () => [number, number] | Partial<Point>;
+  padding?: VegaViewPaddingAccessor;
+  origin?: VegaViewOriginAccessor;
 };
 
 export type VegaViewAnchorSpec<TDatum = Record<string, unknown>> = VegaAnnotationAuthoring & VegaViewGeometrySpec<TDatum> & {
@@ -1145,10 +1156,10 @@ function translatePoint(point: Point, offset: Point): Point {
 }
 
 function viewOrigin(view: {
-  padding?: () => Partial<{ top: number; left: number }>;
-  origin?: () => [number, number] | Partial<Point>;
+  padding?: VegaViewPaddingAccessor;
+  origin?: VegaViewOriginAccessor;
 }): Point {
-  const padding = view.padding?.();
+  const padding = normalizeViewPadding(view.padding?.());
   const origin = view.origin?.();
   const originPoint = Array.isArray(origin)
     ? { x: origin[0], y: origin[1] }
@@ -1158,6 +1169,12 @@ function viewOrigin(view: {
     x: (padding?.left ?? 0) + (originPoint.x ?? 0),
     y: (padding?.top ?? 0) + (originPoint.y ?? 0)
   };
+}
+
+function normalizeViewPadding(padding: VegaViewPadding | undefined): Partial<{ top: number; left: number }> {
+  return typeof padding === 'number'
+    ? { top: padding, left: padding }
+    : padding ?? {};
 }
 
 function cssEscape(value: string): string {

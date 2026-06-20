@@ -6,7 +6,8 @@ import {
   type Box
 } from '@ponchia/annotations';
 import {
-  prepareMermaidAnnotations
+  prepareMermaidAnnotations,
+  type MermaidAnchorSpec
 } from '@ponchia/annotations/mermaid';
 import {
   boxFromSvgElement
@@ -69,7 +70,7 @@ async function render() {
   flowchartEdges[0]?.setAttribute('data-edge-id', 'intake-api');
   flowchartEdges[1]?.setAttribute('data-edge-id', 'api-report');
 
-  const annotationSpecs = [
+  const annotationSpecs: MermaidAnchorSpec[] = [
     {
       id: 'mermaid-api',
       label: 'API',

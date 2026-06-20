@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { writeLine } from './log.mjs';
 
 const pkg = JSON.parse(await read('package.json'));
 const ci = await read('.github/workflows/ci.yml');
@@ -137,7 +138,7 @@ for (const term of [
   assertIncludes(readme, term, 'README.md');
 }
 
-console.log('Security automation verified: CodeQL, Dependency Review, Scorecard, Dependabot docs, public runner policy, and public security settings guidance.');
+writeLine('Security automation verified: CodeQL, Dependency Review, Scorecard, Dependabot docs, public runner policy, and public security settings guidance.');
 
 async function read(path) {
   return readFile(new URL(`../${path}`, import.meta.url), 'utf8');

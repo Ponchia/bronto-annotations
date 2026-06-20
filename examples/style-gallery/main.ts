@@ -6,6 +6,7 @@ import {
   resolveAnnotationLayout,
   type Annotation,
   type AnnotationMotion,
+  type AnnotationSubjectOptions,
   type AnnotationTone,
   type AnnotationVariant,
   type Box
@@ -48,6 +49,14 @@ const anchors = variants.map((variant, index) => {
 const annotations: Annotation[] = anchors.map(({ variant, x, y }, index) => {
   const tone = tones[index % tones.length]!;
   const motion = motions[index % motions.length]!;
+  const style = index === 0
+    ? {
+      color: '#d12f6a',
+      lineColor: '#d12f6a',
+      noteBackground: '#fff7fb',
+      subjectFill: 'rgba(209, 47, 106, 0.14)'
+    }
+    : undefined;
 
   return {
     id: variant,
@@ -67,14 +76,7 @@ const annotations: Annotation[] = anchors.map(({ variant, x, y }, index) => {
     variant,
     tone,
     motion,
-    style: index === 0
-      ? {
-        color: '#d12f6a',
-        lineColor: '#d12f6a',
-        noteBackground: '#fff7fb',
-        subjectFill: 'rgba(209, 47, 106, 0.14)'
-      }
-      : undefined,
+    ...(style ? { style } : {}),
     priority: variants.length - index
   };
 });
@@ -93,7 +95,7 @@ const stage = document.querySelector<HTMLElement>('#annotations');
 if (stage) {
   const svg = renderAnnotationsSvg(layout, {
     title: 'Annotation style gallery',
-    description: 'All public annotation variants, tones, and motion classes rendered with package styling.',
+    ariaLabel: 'All public annotation variants, tones, and motion classes rendered with package styling.',
     markerIdPrefix: 'style-gallery',
     noteTabIndex: 0,
     preserveAspectRatio: 'xMidYMin meet'
@@ -125,7 +127,7 @@ Object.assign(window, {
   }
 });
 
-function subjectForVariant(variant: AnnotationVariant, index: number): Annotation['subject'] {
+function subjectForVariant(variant: AnnotationVariant, index: number): AnnotationSubjectOptions {
   if (variant === 'badge') {
     return { badge: { label: 'B', x: 'right', y: 'top' } };
   }

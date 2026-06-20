@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
+import { writeLine } from './log.mjs';
 
 const checkOnly = process.argv.includes('--check');
 const pkgUrl = new URL('../package.json', import.meta.url);
@@ -23,4 +24,4 @@ if (!checkOnly) {
   await writeFile(pkgUrl, `${JSON.stringify(pkg, null, 2)}\n`);
 }
 
-console.log(version);
+writeLine(version);

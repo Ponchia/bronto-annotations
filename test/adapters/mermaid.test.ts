@@ -169,6 +169,9 @@ describe('Mermaid adapter', () => {
     expect(obstaclesFromMermaidSvg(svg)).toEqual([
       { x: 20, y: 30, width: 120, height: 40 }
     ]);
+    expect(obstaclesFromMermaidSvg(svg, { padding: 4 })).toEqual([
+      { x: 16, y: 26, width: 128, height: 48 }
+    ]);
   });
 
   it('extracts sequence participant, message, and route anchors from rendered Mermaid SVG hooks', () => {

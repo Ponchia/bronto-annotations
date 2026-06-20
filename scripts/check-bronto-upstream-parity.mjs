@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeLine } from './log.mjs';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const upstreamRoot = resolve(
@@ -18,7 +19,7 @@ if (!await exists(upstreamRoot)) {
     throw new Error(message);
   }
 
-  console.log(message);
+  writeLine(message);
   process.exit(0);
 }
 
@@ -92,7 +93,7 @@ assert.deepEqual(
 const declarationCount = [...upstreamDeclarationIndex.values()]
   .reduce((count, properties) => count + properties.size, 0);
 
-console.log(`Upstream Bronto UI parity verified: ${upstreamSelectors.length} selectors, ${declarationCount} legacy CSS declarations, ${upstreamExports.length} helpers, ${upstreamKeyframes.length} keyframes from ${upstreamRoot}.`);
+writeLine(`Upstream Bronto UI parity verified: ${upstreamSelectors.length} selectors, ${declarationCount} legacy CSS declarations, ${upstreamExports.length} helpers, ${upstreamKeyframes.length} keyframes from ${upstreamRoot}.`);
 
 function cliValue(name) {
   const index = process.argv.indexOf(name);

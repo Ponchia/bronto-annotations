@@ -20,9 +20,9 @@ const privateNames = [
   ['vps', '-', 'infra'],
   ['vault', 'warden']
 ].map((parts) => parts.join(''));
-const forbidden = [
+const forbiddenText = privateNames.map((name) => name.toLowerCase());
+const forbiddenPatterns = [
   /\/Users\//,
-  ...privateNames.map((name) => new RegExp(escapeRegExp(name), 'i')),
   /SECRET_[A-Z0-9_]+/,
   /password\s*[:=]\s*['"][^'"]+['"]/i,
   /https?:\/\/(?!127\.0\.0\.1|localhost|vega\.github\.io)[^\s"'<>]+internal[^\s"'<>]*/i
@@ -36,12 +36,19 @@ const failures = [];
 
 for (const file of files) {
   const text = await readFile(file, 'utf8');
+  const normalizedText = text.toLowerCase();
 
-  for (const pattern of forbidden) {
+  for (const pattern of forbiddenPatterns) {
     assert(pattern.global === false, 'Forbidden patterns must not be global.');
 
     if (pattern.test(text)) {
       failures.push(`${relative(root, file)} matched ${pattern}`);
+    }
+  }
+
+  for (const value of forbiddenText) {
+    if (normalizedText.includes(value)) {
+      failures.push(`${relative(root, file)} contained private marker "${value}"`);
     }
   }
 }
@@ -66,8 +73,4 @@ async function collectFiles(paths) {
   }
 
   return result;
-}
-
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

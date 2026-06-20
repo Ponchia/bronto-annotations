@@ -6,7 +6,8 @@ import {
 } from '@ponchia/annotations';
 import {
   obstaclesFromD2Svg,
-  prepareD2DiagramAnnotations
+  prepareD2DiagramAnnotations,
+  type D2DiagramAnchorSpec
 } from '@ponchia/annotations/d2';
 import {
   annotationFrameFromSvg
@@ -31,7 +32,11 @@ async function render() {
   }
 
   const d2 = new D2();
-  const result = await d2.compile(source, { layout: 'dagre' });
+  const result = await d2.compile({
+    fs: { 'index.d2': source },
+    inputPath: 'index.d2',
+    options: { layout: 'dagre' }
+  });
   diagramHost.innerHTML = await d2.render(result.diagram, {
     ...result.renderOptions,
     noXMLTag: true,
@@ -49,7 +54,7 @@ async function render() {
     padding: { top: 24, right: 280, bottom: 24, left: 56 },
     preserveAspectRatio: svg.getAttribute('preserveAspectRatio') ?? 'xMinYMin meet'
   });
-  const annotationSpecs = [
+  const annotationSpecs: D2DiagramAnchorSpec[] = [
     {
       id: 'd2-process',
       shapeId: 'process',

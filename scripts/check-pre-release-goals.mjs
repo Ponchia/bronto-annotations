@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
+import { writeLine } from './log.mjs';
 
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const readme = await read('README.md');
@@ -476,7 +477,7 @@ for (const term of [
   assertIncludes(readme, term, 'README.md');
 }
 
-console.log('Pre-release goals verified: roadmap, API stability, compatibility, dogfood, self-dogfood, external dogfood, visual regression, performance, accessibility, adapter recipes, and public release decisions.');
+writeLine('Pre-release goals verified: roadmap, API stability, compatibility, dogfood, self-dogfood, external dogfood, visual regression, performance, accessibility, adapter recipes, and public release decisions.');
 
 async function read(path) {
   return readFile(pathUrl(path), 'utf8');

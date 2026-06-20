@@ -213,9 +213,9 @@ function FlowAnnotations({ bounds }: { bounds: LayerBounds }) {
       obstacles={obstacles}
       refinement={{ passes: 2, maxCandidatesPerAnnotation: 64 }}
       assertQuality={flowLayoutDefaults.assertQuality}
-      assertTargetAlignment={targetAlignmentTargets.length > 0
-        ? { label: 'React Flow target alignment', failOnWarnings: true }
-        : undefined}
+      {...(targetAlignmentTargets.length > 0
+        ? { assertTargetAlignment: { label: 'React Flow target alignment', failOnWarnings: true } }
+        : {})}
       qualityFormat={flowLayoutDefaults.qualityFormat}
       targetAlignmentTargets={targetAlignmentTargets}
       targetAlignmentOptions={{

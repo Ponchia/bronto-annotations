@@ -1,4 +1,4 @@
-export type WrapNoteTextOptions = {
+type WrapNoteTextOptions = {
   maxChars: number;
   maxLines?: number;
   splitter?: string | RegExp | undefined;

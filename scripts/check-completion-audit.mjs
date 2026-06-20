@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
+import { writeLine } from './log.mjs';
 
 const audit = JSON.parse(await readFile(new URL('../docs/completion-audit.json', import.meta.url), 'utf8'));
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
@@ -85,7 +86,7 @@ assert.ok(e2ePlan.includes('parse Mermaid source or own diagram layout'), 'Merma
 assert.ok(e2ePlan.includes('It does not parse D2'), 'D2 parser boundary must remain documented');
 assert.ok(e2ePlan.includes('It does not own graph'), 'React Flow graph-state boundary must remain documented');
 
-console.log(`Completion audit verified: ${audit.requirements.length} requirement groups with direct evidence.`);
+writeLine(`Completion audit verified: ${audit.requirements.length} requirement groups with direct evidence.`);
 
 async function assertPath(relativePath) {
   try {
