@@ -8,6 +8,18 @@ reasonable.
 
 ## Unreleased
 
+## 0.2.1 - 2026-08-20
+
+### Fixed
+
+- DOM measurement (`measure="dom"`) now reads each note's used local size via
+  `getComputedStyle` instead of trusting `getBoundingClientRect`, which reports
+  post-transform pixels. Under an ancestor CSS scale — a zoomed canvas, a
+  fitted diagram — notes were measured at `size × scale` and laid out at that
+  width in local units, wrapping their own text one syllable per line below
+  scale 1. The client rect remains the fallback where the environment performs
+  no layout.
+
 ## 0.2.0 - 2026-06-20
 
 ### Changed

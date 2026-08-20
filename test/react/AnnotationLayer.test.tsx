@@ -584,6 +584,55 @@ describe('React adapter', () => {
     expect(disconnect).toHaveBeenCalled();
   });
 
+  it('measures notes in local units when an ancestor transform scales the client rect', async () => {
+    // The layout consumes measured sizes in the layer's local coordinate
+    // space, so a host that scales the layer (a zoomed canvas) must not leak
+    // its scale into the measurement: the client rect reports post-transform
+    // pixels, the computed style reports the used local size. Here the "real"
+    // note is 244x92 while a 0.5x ancestor scale halves the client rect — a
+    // measurement trusting the rect would shred the note's own text.
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function getBoundingClientRect(this: HTMLElement) {
+      if (this.classList.contains('pa-annotation__note-box')) {
+        return rect(0, 0, 122, 46);
+      }
+
+      return rect(0, 0, 0, 0);
+    });
+    const realGetComputedStyle = globalThis.getComputedStyle;
+    vi.stubGlobal('getComputedStyle', (element: Element, pseudo?: string | null) => {
+      const style = realGetComputedStyle(element, pseudo);
+      if (element instanceof HTMLElement && element.classList.contains('pa-annotation__note-box')) {
+        return new Proxy(style, {
+          get(target, property) {
+            if (property === 'width') {
+              return '244px';
+            }
+            if (property === 'height') {
+              return '92px';
+            }
+            return Reflect.get(target, property);
+          }
+        });
+      }
+      return style;
+    });
+
+    const layouts: ResolvedLayout[] = [];
+    render(
+      <AnnotationLayer
+        annotations={annotations}
+        bounds={{ x: 0, y: 0, width: 320, height: 220 }}
+        measure="dom"
+        onLayout={(layout) => layouts.push(layout)}
+      />
+    );
+
+    await waitFor(() => {
+      expect(layouts.at(-1)?.annotations[0]?.noteBox.width).toBe(244);
+      expect(layouts.at(-1)?.annotations[0]?.noteBox.height).toBe(92);
+    });
+  });
+
   it('emits editable note handles with suggested manual placement while dragging', () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(0, 0, 320, 220));
 

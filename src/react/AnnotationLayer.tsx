@@ -342,9 +342,23 @@ export function AnnotationLayer({
         const rect = node.getBoundingClientRect();
 
         if (rect.width > 0 && rect.height > 0) {
+          // The layout consumes these sizes in the layer's LOCAL units, but
+          // getBoundingClientRect reports post-transform pixels: under an
+          // ancestor CSS scale (a zoomed canvas, a fitted diagram) the note
+          // would be measured at size x scale and then laid out at that width
+          // in local units — too narrow below scale 1, shredding its own text
+          // one syllable per line. getComputedStyle reports the used local
+          // size (border-box here, fractional), immune to transforms; the
+          // client rect stays as the fallback for environments that do not
+          // lay out (server-side or test DOMs return "auto").
+          const style = typeof globalThis.getComputedStyle === 'function'
+            ? globalThis.getComputedStyle(node)
+            : undefined;
+          const localWidth = style ? Number.parseFloat(style.width) : Number.NaN;
+          const localHeight = style ? Number.parseFloat(style.height) : Number.NaN;
           next[id] = {
-            width: Math.ceil(rect.width),
-            height: Math.ceil(rect.height)
+            width: Math.ceil(Number.isFinite(localWidth) && localWidth > 0 ? localWidth : rect.width),
+            height: Math.ceil(Number.isFinite(localHeight) && localHeight > 0 ? localHeight : rect.height)
           };
         }
       }
