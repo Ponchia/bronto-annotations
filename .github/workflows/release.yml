@@ -131,7 +131,11 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - name: Install npm with OIDC publish support
-        run: npm install -g npm@latest
+        # npm 11.5+ carries OIDC trusted publishing; @latest crossed to npm 12,
+        # which refuses the node 22.14.0 this job pins (requires ^22.22.2), and
+        # the v0.2.1 publish died on exactly that. Pin the major that supports
+        # both OIDC and this job's node.
+        run: npm install -g npm@^11.5.1
 
       - name: Install
         run: npm ci --ignore-scripts
