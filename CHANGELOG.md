@@ -8,6 +8,18 @@ reasonable.
 
 ## Unreleased
 
+## 0.2.2 - 2026-09-02
+
+### Fixed
+
+- The DOM measurer now carries each annotation's style variables, exactly as
+  the drawn note does. A border declared through `--pa-annotation-border`
+  computed to no border in the measuring copy, so every note measured 2px
+  narrower than it was drawn, and a title that fit the measurer wrapped at
+  the drawn box's sub-pixel edge with its second line clipped. The stylesheet
+  also keeps that border with a `currentColor` fallback where no colour is
+  set.
+
 ## 0.2.1 - 2026-08-20
 
 ### Fixed
