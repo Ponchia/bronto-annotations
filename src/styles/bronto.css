@@ -203,7 +203,9 @@ svg .pa-annotation__note-line {
 .pa-annotation-layer-wrap .pa-annotation__note-box,
 .pa-annotation-layer__measurer .pa-annotation__note-box {
   background: var(--pa-annotation-paper);
-  border: 1px solid var(--pa-annotation-border);
+  /* The fallback keeps the border — and so the measured width — even where
+     no annotation colour is set; an unresolved variable would drop it. */
+  border: 1px solid var(--pa-annotation-border, currentColor);
   border-radius: var(--radius-xl, 4px);
   box-shadow: var(--shadow-raised, 0 10px 30px rgb(15 23 42 / 12%));
   box-sizing: border-box;

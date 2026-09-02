@@ -212,6 +212,7 @@ describe('React adapter', () => {
           }
         ]}
         bounds={{ x: 0, y: 0, width: 280, height: 180 }}
+        measure="dom"
       />
     );
 
@@ -221,6 +222,15 @@ describe('React adapter', () => {
     expect(group?.style.getPropertyValue('--annotation-color')).toBe('#d12f6a');
     expect(group?.style.getPropertyValue('--pa-annotation-line')).toBe('#7c2d12');
     expect(group?.style.getPropertyValue('--custom-annotation-token')).toBe('demo');
+
+    // The measured copy must resolve the same variables as the drawn note, or
+    // a variable-driven border exists in one and not the other and the note
+    // measures narrower than it draws.
+    const measured = container.querySelector(
+      '.pa-annotation-layer__measurer .pa-annotation__note-box'
+    ) as HTMLDivElement | null;
+    expect(measured?.style.getPropertyValue('--pa-annotation-accent')).toBe('#d12f6a');
+    expect(measured?.style.getPropertyValue('--custom-annotation-token')).toBe('demo');
   });
 
   it('renders lower-priority annotations before higher-priority annotations for SVG stacking', () => {

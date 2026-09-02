@@ -502,6 +502,13 @@ export function AnnotationLayer({
                 key={item.id}
                 ref={(node) => setMeasureNode(item.id, node)}
                 data-note-align={item.annotation.note.align ?? 'start'}
+                // The drawn note inherits the annotation's style variables from
+                // its <g>; the measured copy has no such parent, so without
+                // these its `border: 1px solid var(--pa-annotation-border)`
+                // computed to no border at all and every note measured 2px
+                // narrower than the box it was then drawn in — which is how a
+                // title that fit the measurer wrapped at the drawn box's edge.
+                style={annotationStyle(item.annotation.style)}
                 {...dataAttributes(item.annotation.note.data)}
               >
                 {renderNote ? renderNote(item) : <DefaultNote annotation={item.annotation} classPrefix={prefix} />}
