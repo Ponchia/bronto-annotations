@@ -128,6 +128,8 @@ import {
 Exports:
 
 - `AnnotationLayer`
+- `AnnotationPin`
+- `AnnotationPinProps`
 - `useAnnotations`
 - `AnnotationLayerProps`
 - `AnnotationLayerEditOptions`
@@ -149,6 +151,12 @@ SVG layer for authoring and manual-placement review.
 `assertTargetAlignment`, and `onTargetAlignment` use the same generated-target
 alignment diagnostics as prepared layouts, which is useful when React renders an
 annotation layer over generated chart, diagram, or graph geometry.
+
+`AnnotationPin` renders a native button at `point` in its host overlay. Give it a
+meaningful `label`, an `onClick` handler, and optionally `selected`, `controls`,
+`children`, `className`, or `style`. It stops pointer-down and click propagation
+and uses a 44px target with the optional Bronto CSS. The host controls focus,
+visibility, clipping, pin grouping, and the fallback list of discussions.
 
 Boundary: the React adapter is a renderer/measurement adapter. Host apps still
 own annotation state, persistence, routing, and workflow actions.
@@ -191,6 +199,19 @@ Exports:
   `formatAnchorAlignmentReport`, `assertAnchorAlignmentReport`.
   `prepareDomAnnotations` accepts `assert: true` or
   `assert: { label, failOnWarnings }`.
+
+`measureRangeAnchor(range, options?)` returns a `RangeAnchorMeasurement`: `status`
+(`resolved`, `empty`, or `unsupported`), line `rects`, their union `box`, a
+`truncated` flag, and an optional `reason`. `RangeAnchorOptions.maxRects` defaults
+to 512 and accepts integers from 1 through 4096. Collapsed or invisible ranges
+return `empty`.
+
+Coordinates default to viewport pixels. Set `coordinateSpace` to a containing
+HTML element to get its local padding-space coordinates, accounting for borders,
+scroll, and axis-aligned scale. Rotated, skewed, or invisible local spaces are
+explicitly unsupported. Re-measure after content, layout, scroll, or zoom changes.
+Geometry is transient: persist host-owned text selectors and quotations instead
+of browser `Range` objects or measured rectangles.
 
 Boundary: this subpath measures existing rendered geometry. It does not render
 the host surface or own application state.

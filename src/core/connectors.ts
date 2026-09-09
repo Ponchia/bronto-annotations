@@ -509,6 +509,19 @@ function segmentIntersectsAnyBox(start: Point, end: Point, boxes: Box[]): boolea
 }
 
 function segmentIntersectsBox(start: Point, end: Point, box: Box): boolean {
+  const right = box.x + box.width;
+  const bottom = box.y + box.height;
+  const minX = Math.min(start.x, end.x);
+  const maxX = Math.max(start.x, end.x);
+  const minY = Math.min(start.y, end.y);
+  const maxY = Math.max(start.y, end.y);
+  // Reject disjoint extents before edge tests. Orientation alone treats two
+  // disjoint collinear segments as an intersection, creating false detours.
+  if (maxX < box.x || minX > right || maxY < box.y || minY > bottom) return false;
+  // The visibility graph is orthogonal: its hot path needs no corner objects
+  // or four orientation tests. Boundary contact still counts as a collision.
+  if (start.x === end.x || start.y === end.y)
+    return maxX >= box.x && minX <= right && maxY >= box.y && minY <= bottom;
   if (pointInsideBox(start, box) || pointInsideBox(end, box)) {
     return true;
   }

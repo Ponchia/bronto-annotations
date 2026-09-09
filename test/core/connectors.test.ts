@@ -137,6 +137,28 @@ describe('connector helpers', () => {
     expect(connector.d).toBe('M 0 50 L 0 33 L 67 33 L 67 50 L 100 50');
   });
 
+  it('does not detour around disjoint obstacles collinear with the path', () => {
+    expect(connectorPathD(
+      { x: 0, y: 50 }, { x: 100, y: 40, width: 40, height: 20 },
+      { type: 'straight' }, { obstacles: [{ x: 200, y: 50, width: 20, height: 20 }] }
+    )).toBe('M 0 50 L 100 50');
+    expect(connectorPathD(
+      { x: 50, y: 0 }, { x: 40, y: 100, width: 20, height: 40 },
+      { type: 'straight' }, { obstacles: [{ x: 50, y: 200, width: 20, height: 20 }] }
+    )).toBe('M 50 0 L 50 100');
+  });
+
+  it('keeps boundary contact blocked while allowing a diagonal that misses the box', () => {
+    expect(connectorPathD(
+      { x: 0, y: 40 }, { x: 100, y: 30, width: 40, height: 20 },
+      { type: 'straight' }, { obstacles: [{ x: 40, y: 40, width: 20, height: 20 }] }
+    )).not.toBe('M 0 40 L 100 40');
+    expect(connectorPathD(
+      { x: 0, y: 0 }, { x: 100, y: 100, width: 20, height: 20 },
+      { type: 'straight' }, { obstacles: [{ x: 0, y: 90, width: 10, height: 10 }] }
+    )).toBe('M 0 0 L 100 100');
+  });
+
   it('honors routing none when obstacle detours are disabled', () => {
     expect(connectorPathD(
       { x: 0, y: 50 },

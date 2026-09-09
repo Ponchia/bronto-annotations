@@ -6,7 +6,13 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
-## Unreleased
+## 0.3.0 - 2026-09-09
+
+- Avoid false connector detours for disjoint collinear obstacles and accelerate orthogonal visibility checks.
+- Refresh development dependencies to clear the current audit advisories.
+- Add DOM Range measurement for wrapped text in viewport or scaled local coordinates.
+- Add an accessible React annotation pin for host-owned overlays and discussion controls.
+- Align explanatory annotation typography with BrontoUI 0.11: sans-serif, sentence case.
 
 ## 0.2.2 - 2026-09-02
 

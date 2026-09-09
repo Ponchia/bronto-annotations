@@ -15,3 +15,6 @@ export type {
 } from './types.js';
 export { AnnotationLayer } from './AnnotationLayer.js';
 export { useAnnotations } from './useAnnotations.js';
+
+export { AnnotationPin } from './AnnotationPin.js';
+export type { AnnotationPinProps } from './AnnotationPin.js';

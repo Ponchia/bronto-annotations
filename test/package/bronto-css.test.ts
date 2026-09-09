@@ -204,6 +204,6 @@ describe('Bronto CSS bridge', () => {
   it('keeps legacy static SVG text legible over report figures', () => {
     expect(css).toContain('paint-order: stroke fill');
     expect(css).toContain('stroke: var(--annotation-note-bg)');
-    expect(css).toContain('text-transform: uppercase');
+    expect(css).toMatch(/\.ui-annotation__title\s*\{[^}]*text-transform: none/s);
   });
 });

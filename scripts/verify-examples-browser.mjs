@@ -740,7 +740,7 @@ try {
           && legacy.svgBox?.width > 0
           && legacy.svgBox?.height > 0
           && legacy.titlePaintOrder.includes('stroke')
-          && legacy.titleTextTransform === 'uppercase'
+          && legacy.titleTextTransform === 'none'
           && legacy.titleStroke !== ''
           && legacy.titleStroke !== 'none'
           && legacy.connectorStroke !== ''
