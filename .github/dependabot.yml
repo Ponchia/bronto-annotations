@@ -7,6 +7,9 @@ updates:
     open-pull-requests-limit: 5
     groups:
       dev-tooling:
+        update-types:
+          - minor
+          - patch
         patterns:
           - "@types/*"
           - typescript
@@ -14,6 +17,9 @@ updates:
           - vitest
           - playwright
       optional-peers:
+        update-types:
+          - minor
+          - patch
         patterns:
           - react
           - react-dom
@@ -21,6 +27,19 @@ updates:
           - mermaid
           - "@terrastruct/d2"
           - "@xyflow/react"
+    # These majors require a deliberate supported-lane upgrade: Mermaid 12
+    # requires Node 22, while our package currently supports Node 20; the
+    # TypeScript 7, Vitest 5 and jsdom 30 lanes are not yet verified.
+    # This filters routine version updates, not Dependabot security alerts.
+    ignore:
+      - dependency-name: mermaid
+        update-types: ["version-update:semver-major"]
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: vitest
+        update-types: ["version-update:semver-major"]
+      - dependency-name: jsdom
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
