@@ -622,6 +622,44 @@ existing candidate scores/quality evidence are intentionally *not* revalidated.
 Commit via the host's normal edit patch and recompute the authoritative layout
 at the end of a gesture, rather than persisting a provisional resolved item.
 
+### Experimental incremental committed layouts
+
+A custom headless/React host resolving many annotations can reuse unchanged
+priority-ordered placements when **only later annotations change**. This is an
+opt-in optimization for *committed* edits, complementary to the immediate
+`previewAnnotationEdit` drag preview:
+
+```ts
+import {
+  applyAnnotationEdits,
+  createIncrementalAnnotationLayoutSession,
+  evaluateAnnotationLayout
+} from '@ponchia/annotations';
+
+const options = { annotations, bounds, noteSizes, obstacles, refinement: false };
+const session = createIncrementalAnnotationLayoutSession(options);
+
+// On an edit commit, the host owns the changed annotation collection.
+const changed = applyAnnotationEdits(annotations, event);
+const authoritative = session.update({ ...options, annotations: changed });
+const quality = evaluateAnnotationLayout(authoritative);
+```
+
+The experimental resolver returns identical geometry and quality to a fresh
+`resolveAnnotationLayout` call: candidate scoring and connector routing are
+recomputed from the first changed annotation forward. Stable earlier winners
+retain their object identities for efficient React reconciliation. No-op updates
+return the previous layout object.
+
+It falls back to full resolution when bounds, obstacles, global placement
+preferences, annotation order/count, or refinement inputs change. Iterative
+refinement always uses the full resolver because later candidates may change
+earlier winners. Inputs are snapshotted by value so an in-place change to a
+note, anchor or effective size is detected; avoid mutating resolved layout
+objects returned by the session. Neither API schedules background work or
+manages host state, pointer updates, persistence or worker threads. For a live
+drag, use the lightweight visual preview and update the session at commit.
+
 ## DOM And SVG Utilities
 
 ```ts

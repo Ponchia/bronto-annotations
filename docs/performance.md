@@ -95,5 +95,43 @@ skip obstacle-aware routing and converge to the authoritative path on commit.
 These results still do not make full 200-note relayouts suitable for every
 animation frame. Hosts should memoize stable inputs, persist only edited
 annotation deltas, and avoid recomputing dense layouts on every pointer move.
-Incremental/worker-backed resolution remains an optional future design rather
-than a hidden compatibility change in the current API.
+The experimental `createIncrementalAnnotationLayoutSession` now supports
+**prefix-preserving committed updates**: with unchanged global geometry and
+without refinement, the resolver keeps the exact winners before the first
+changed priority-ordered annotation and resolves the affected suffix. This
+preserves fresh-layout geometry, path routing and diagnostics; an unchanged
+input yields the same layout object. Late-note edits can therefore be much
+cheaper than rebuilding the full layout. Host-authored changes to bounds,
+obstacles, global placement or order, and all iterative refinement requests
+still trigger a full resolver pass. This is not a spatial-index-based solver,
+and it does **not** guarantee partial updates for arbitrary changed topology.
+
+Hosts should continue using the visual-only `previewAnnotationEdit` during
+pointer movement and the authoritative incremental session only when
+committing edits. Worker-backed asynchronous resolution remains future work;
+no public synchronous API or quality threshold was changed.
+
+### Incremental late-edit benchmark
+
+Run the optional comparison without changing the existing full-layout CI
+performance thresholds:
+
+```bash
+npm run benchmark:incremental
+```
+
+This benchmarks a single edit to the final priority-ordered annotation against
+an entire fresh resolution and asserts **deep equality** of the result and
+quality metrics. One observed development-host run gave:
+
+| Fixture | Fresh full layout | Committed last-note update | Reused winners |
+| --- | ---: | ---: | ---: |
+| 50 annotations | 923 ms | 23 ms | 49/50 |
+| 200 annotations | 4,086 ms | 11 ms | 199/200 |
+
+These are individual illustrative measurements from October 2026, not stable
+latency bounds or a promise of similar speedups for all edits. Earlier edits,
+reordered annotations, changed host obstacles/bounds, and global refinement
+force larger recomputations. Capturing input value snapshots has a small cost
+per update; benchmark under representative host density before enabling the
+experimental optimization broadly.
