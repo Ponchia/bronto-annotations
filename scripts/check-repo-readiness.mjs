@@ -180,7 +180,7 @@ for (const term of [
   'schedule:',
   'id-token: write',
   'security-events: write',
-  'ossf/scorecard-action@v2.4.3',
+  'ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc',
   'results_format: sarif',
   'github/codeql-action/upload-sarif@v4'
 ]) {
