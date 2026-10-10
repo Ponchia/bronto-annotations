@@ -585,6 +585,46 @@ keeps other notes and layout-quality diagnostics stable, and uses a direct
 connector preview until the host commits with `onEditEnd`. Pointer cancellation
 restores the original drawing without committing a partial edit.
 
+**Experimental host-resolved React layouts.** If the host uses
+`createIncrementalAnnotationLayoutSession` for committed edits, pass the
+resulting authoritative `session.layout` to the React adapter through its
+`resolvedLayout` prop. This bypasses the component's redundant full layout
+calculation while preserving its existing note rendering, pointer editing,
+quality reports and target-alignment callbacks. The host still supplies the
+matching `annotations` and `bounds` and updates both the source annotations and
+`resolvedLayout` on edit commit. For example, inside a host-controlled React
+component:
+
+```tsx
+<AnnotationLayer
+  annotations={annotations}
+  bounds={bounds}
+  noteSizes={noteSizes}
+  resolvedLayout={resolvedLayout}
+  previewEdits
+  editable={{ includeAnchor: true }}
+  onEditEnd={(edit) => {
+    const next = applyAnnotationEdits(annotations, edit);
+    setAnnotations(next);
+    setResolvedLayout(layoutSession.update({
+      annotations: next,
+      bounds,
+      noteSizes,
+      refinement: false
+    }));
+  }}
+/>
+```
+
+In this snippet, `layoutSession` is created once and the initial
+`resolvedLayout` state comes from `layoutSession.layout`; the host owns that
+state and maintains stable callback identities. The supplied layout must
+correspond to the current annotations and bounds. `measure="dom"` cannot be
+combined with `resolvedLayout` because component-owned note measurements
+would bypass the host's layout session; pass explicit `noteSizes` and use the
+default `measure="estimate"` instead. Without `resolvedLayout`, the React layer
+continues to perform its usual full layout.
+
 Custom SVG or canvas-overlay authoring tools can use the same DOM-free edit
 math without React:
 

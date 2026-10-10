@@ -51,6 +51,13 @@ export type AnnotationLayerProps = LayoutOptions & {
   debug?: boolean;
   editable?: boolean | AnnotationLayerEditOptions;
   previewEdits?: boolean;
+  /**
+   * @experimental Host-owned, authoritative layout supplied by
+   * createIncrementalAnnotationLayoutSession or resolveAnnotationLayout.
+   * Must correspond to the current annotations/bounds. DOM self-measurement
+   * is unsupported because it cannot update a host-owned layout session.
+   */
+  resolvedLayout?: ResolvedLayout;
   label?: string;
   measure?: 'estimate' | 'dom';
   markerIdPrefix?: string;

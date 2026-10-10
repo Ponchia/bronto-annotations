@@ -163,6 +163,17 @@ unchanged. See the README authoring recipe and `docs/performance.md`.
 reporting path as the DOM-free core after each resolved React layout.
 `qualityDebug` renders the same opt-in layout-quality issue boxes in the React
 SVG layer for authoring and manual-placement review.
+
+`AnnotationLayerProps.resolvedLayout` is an experimental option for hosts that
+compute the authoritative layout externally, including with the experimental
+`createIncrementalAnnotationLayoutSession`. When provided, the React layer
+uses that exact layout for SVG geometry, edit handles and quality callbacks,
+without invoking its own full solver. The host must supply matching annotation
+IDs and bounds; mismatches throw with a clear error. This mode requires
+`measure="estimate"` (the default), because internal DOM note measurement would
+otherwise become inconsistent with the host-owned layout. Pass measured note
+sizes to the host session explicitly and commit an updated layout alongside
+the annotation changes. Existing consumers without the prop are unaffected.
 `targetAlignmentTargets`, `targetAlignmentOptions`, `targetAlignmentFormat`,
 `assertTargetAlignment`, and `onTargetAlignment` use the same generated-target
 alignment diagnostics as prepared layouts, which is useful when React renders an
