@@ -1359,7 +1359,7 @@
         {
           "file": "package.json",
           "terms": [
-            "\"version\": \"0.3.2\"",
+            "\"version\": \"0.3.3\"",
             "\"repository\"",
             "\"publishConfig\"",
             "\"test:repo\"",
