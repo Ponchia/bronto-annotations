@@ -31,7 +31,11 @@ resolution.
 For performance-sensitive consumers, prefer:
 
 - host-provided `noteSizes` when available
-- bounded `placement.maxCandidates`
+- `placement.allowedSides` and `placement.allowedAligns` when the host truly
+  needs fewer placement alternatives; these constrain evaluated search space
+- `placement.maxCandidates` only to limit **retained** ranked/debug candidates:
+  it does not limit how many candidates are evaluated or speed up the search
+- `connector: { routing: 'none' }` only where connector avoidance is unnecessary
 - generated obstacles that represent real collision risks, not every invisible
   host primitive
 - `refinement` only for surfaces where note overlap matters more than latency
@@ -48,3 +52,39 @@ On ARM64 Linux with Node 24, the unchanged 50-annotation fixture measured
 The 200-annotation fixture measured 5,503 ms afterward. These are development
 measurements, not a promise for every machine; the existing 2,500 ms and
 15,000 ms ceilings remain unchanged. Layout quality checks still run.
+
+## Dense Connector Routing: October 2026
+
+Profiling the deterministic fixture identified orthogonal connector routing as
+its primary cost, particularly repeated visibility-graph construction and
+full-frontier sorting. The implementation now rejects obviously disjoint
+routing obstacles using a conservative segment-bounds check, reuses the list
+of previously placed note boxes, and filters graph obstacles by the relevant
+row/column. It also uses a distance-and-key-ordered binary heap for shortest
+paths, and appends graph edges directly instead of rebuilding arrays.
+
+The changes keep the public API, candidate ordering, geometry and route
+selection intact. Deterministic fixtures (including manual placements and
+routed box/point anchors) were compared before and after; their selected
+positions, candidate scores, connector paths, and quality metrics matched.
+The `test/core/connectors.test.ts` regressions also cover padded near misses
+and boundary contact, where overly aggressive fast paths can break routes.
+
+Measurements on one development host, using `node scripts/benchmark-layout.mjs
+--assert` with the same fixture, were:
+
+| Fixture | Before | After | Interpretation |
+| --- | ---: | ---: | --- |
+| 50 notes, 15 obstacles | 1,153 ms | 597 ms | Around 1.9× faster in this run |
+| 200 notes, 40 obstacles | 8,596 ms | 4,140 ms | Around 2.1× faster in this run |
+
+The 200-annotation fixture uses a single timed run, so results should be
+interpreted as indicative rather than a stable latency guarantee. Absolute
+timings vary with CPU contention and Node version. The existing generous
+benchmark ceilings have **not** been tightened simply because one run improved.
+
+These results still do not make full 200-note relayouts suitable for every
+animation frame. Hosts should memoize stable inputs, persist only edited
+annotation deltas, and avoid recomputing dense layouts on every pointer move.
+Incremental/worker-backed resolution remains an optional future design rather
+than a hidden compatibility change in the current API.
