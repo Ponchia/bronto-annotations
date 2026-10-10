@@ -6,6 +6,21 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.6.2 - 2026-10-10
+
+### Performance
+
+- Avoid the quadratic annotation quality-report pass in passive and host-controlled React layers that do not request `onQuality`, `assertQuality` or `qualityDebug`. Explicit consumers retain the same metrics, assertions and debug overlays, with report formatting changes reusing the existing quality calculation.
+
+### Fixed
+
+- Make `onLayout` notifications independent of unrelated quality, alignment and debug setting changes. Toggling the quality overlay or changing quality-report formatting no longer emits false layout-change callbacks.
+
+### Verification
+
+- Add regression tests proving no unrequested report work, preserved callback and assertion semantics, stable React rendering and notification independence. Continue validating all existing browser, accessibility, clean-consumer, Node and public-site lanes.
+- Preserve package exports, supported peer ranges and runtime dependencies.
+
 ## 0.6.1 - 2026-10-10
 
 ### Fixed
