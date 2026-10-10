@@ -15,11 +15,15 @@ export function verifyPublishedRegistry(metadata, version, distTag) {
   const published = metadata?.versions?.[version];
   assert.equal(published?.version, version, `Package version ${version} is not yet visible`);
   assert.equal(published?.name, '@ponchia/annotations');
-  assert.match(published?.dist?.integrity ?? '', /^sha512-\S+$/, 'Missing published package integrity');
-  assert.ok(
-    published.dist.tarball.startsWith('https://registry.npmjs.org/@ponchia/annotations/-/'),
-    'Unexpected published tarball origin'
-  );
+  assert.match(published?.dist?.integrity ?? '', /^sha512-[A-Za-z0-9+/=]+$/, 'Missing SHA-512 package integrity');
+  assert.equal(typeof published?.dist?.tarball, 'string', 'Missing published tarball URL');
+  const url = new URL(published.dist.tarball);
+  assert.equal(url.protocol, 'https:', 'Published tarball must use HTTPS');
+  assert.equal(url.hostname, 'registry.npmjs.org', 'Published tarball must come from npm');
+  assert.equal(url.pathname, `/@ponchia/annotations/-/annotations-${version}.tgz`,
+    'Published tarball path must match the exact version');
+  assert.equal(url.search, '', 'Published tarball URL must not contain a query string');
+  assert.equal(url.hash, '', 'Published tarball URL must not contain a fragment');
 
   return {
     name: published.name,

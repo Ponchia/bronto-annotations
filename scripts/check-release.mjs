@@ -75,7 +75,7 @@ const samplePublished = {
       name: '@ponchia/annotations',
       version: registryVersion,
       dist: {
-        integrity: 'sha512-test-integrity',
+        integrity: 'sha512-dGVzdC1pbnRlZ3JpdHk=',
         tarball: 'https://registry.npmjs.org/@ponchia/annotations/-/annotations-0.4.1.tgz'
       }
     }
