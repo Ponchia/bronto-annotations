@@ -157,8 +157,10 @@ export {
 export {
   estimateNoteSize,
   refineAnnotationLayout,
-  resolveAnnotationLayout
+  resolveAnnotationLayout,
+  createIncrementalAnnotationLayoutSession
 } from './core/layout.js';
+export type { AnnotationLayoutSession } from './core/layout.js';
 export type {
   AnnotationEditHandle,
   AnnotationEditHandleKind,

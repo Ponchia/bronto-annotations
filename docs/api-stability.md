@@ -45,6 +45,10 @@ subpath is listed exactly once as stable or experimental.
 - Edit-patch authoring ergonomics, including `createAnnotationEditEvent`,
   `createAnnotationEditDelta`, `createAnnotationEditSession`, and
   `previewAnnotationEdit` (visual only).
+- `createIncrementalAnnotationLayoutSession` and `AnnotationLayoutSession`:
+  opt-in priority-prefix reuse for stable bounds/obstacles and unrefined
+  layouts, with safe full-resolution fallback for changed global geometry or
+  refinement passes.
 - React edit-handle authoring options and edit events until the authoring UX
   layer is hardened.
 - Dense-layout tuning constants and scoring weights.

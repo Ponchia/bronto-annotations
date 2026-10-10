@@ -201,6 +201,8 @@ function rootExperimental(name) {
   return name.includes('D3')
     || name.includes('Edit')
     || [
+      'AnnotationLayoutSession',
+      'createIncrementalAnnotationLayoutSession',
       'allPlacementCandidates',
       'annotationEditHandles',
       'annotationEditPatch',

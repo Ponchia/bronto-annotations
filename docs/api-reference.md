@@ -149,6 +149,16 @@ Pointer cancellation restores the previous appearance without committing.
 Non-React hosts can use the experimental DOM-free `previewAnnotationEdit`
 from the root package for the same visual-only geometry; its previous candidate
 scores and diagnostics are not recomputed.
+
+The root package also exposes experimental `createIncrementalAnnotationLayoutSession`
+and `AnnotationLayoutSession`. A session has a read-only `layout` property and
+`update(nextLayoutOptions)` returning a fully resolved layout. It reuses only
+unchanged priority-ordered prefix winners for unrefined layouts; global geometry,
+ordering changes and iterative refinement trigger a full recomputation. Hosts
+control lifecycle and authoritative update timing; no workers or subscriptions
+are created. The public synchronous `resolveAnnotationLayout` behavior is
+unchanged. See the README authoring recipe and `docs/performance.md`.
+
 `assertQuality`, `qualityFormat`, and `onQuality` use the same layout-quality
 reporting path as the DOM-free core after each resolved React layout.
 `qualityDebug` renders the same opt-in layout-quality issue boxes in the React

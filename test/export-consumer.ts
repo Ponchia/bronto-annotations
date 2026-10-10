@@ -29,6 +29,7 @@ import {
   createAnnotationEditDelta,
   createAnnotationEditEvent,
   createAnnotationEditSession,
+  createIncrementalAnnotationLayoutSession,
   previewAnnotationEdit,
   createD3StyleAnnotationBuilder,
   d3StyleAnnotationCollectionEditPatch,
@@ -79,6 +80,7 @@ import {
   type AnnotationEditPhase,
   type AnnotationEditPatch,
   type AnnotationEditSession,
+  type AnnotationLayoutSession,
   type AnnotationEditSuggestion,
   type CreateAnnotationEditDeltaOptions,
   type CreateAnnotationEditEventOptions,
@@ -728,6 +730,12 @@ const editSessionOptions: CreateAnnotationEditSessionOptions = {
   handle: editHandles[0]!
 };
 const editSession: AnnotationEditSession = createAnnotationEditSession(editSessionOptions);
+const incremental: AnnotationLayoutSession = createIncrementalAnnotationLayoutSession({
+  annotations,
+  bounds: layout.bounds,
+  refinement: false
+});
+void incremental.update({ annotations, bounds: layout.bounds, refinement: false });
 const preview = previewAnnotationEdit(editSession.annotation,
   editSession.move({ x: editSession.origin.x + 4, y: editSession.origin.y + 2 }),
   layout.placementBounds);

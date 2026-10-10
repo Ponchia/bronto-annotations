@@ -75,7 +75,10 @@ has been proven in real consumer use before a public `1.0.0` commitment.
   for the `0.1.x` lane.
 - Remaining high-value proof: keep widening dogfood beyond the first external
   consumer into additional production host apps or reports before widening
-  public API stability promises.
+  public API stability promises. Experimental suffix-reuse layout sessions can
+  accelerate committed late-note edits without relaxing deterministic layout
+  or candidate quality; broader incremental invalidation and worker-backed
+  scheduling remain research rather than a stable contract.
 
 ## Tracking Documents
 

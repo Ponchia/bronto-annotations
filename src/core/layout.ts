@@ -27,22 +27,27 @@ import type {
 } from './model.js';
 
 export function resolveAnnotationLayout(options: LayoutOptions): ResolvedLayout {
+  return resolveAnnotationLayoutFrom(options);
+}
+
+/** @internal Compute a suffix after an unchanged priority-ordered prefix. */
+function resolveAnnotationLayoutFrom(
+  options: LayoutOptions,
+  reused: ResolvedAnnotation[] = []
+): ResolvedLayout {
   const bounds = normalizeBox(options.bounds);
   const padding = resolvePadding(options.padding);
   const placementBounds = insetBox(bounds, padding);
   const obstacles = (options.obstacles ?? [])
     .map(normalizeBox)
     .filter(isFiniteBox);
-  const placedNotes: ResolvedAnnotation[] = [];
-  // Share an append-only box collection across candidates. Rebuilding it for
-  // every annotation makes dense layouts allocate O(n²) throwaway arrays.
-  const placedNoteBoxes: ResolvedAnnotation['noteBox'][] = [];
-  const ordered = [...options.annotations].sort((a, b) => {
-    const priority = (b.priority ?? 0) - (a.priority ?? 0);
-    return priority || a.id.localeCompare(b.id);
-  });
+  const placedNotes: ResolvedAnnotation[] = [...reused];
+  // Reuse the existing prefix's original winners and avoid recomputing their
+  // connector routing / placement scores when later annotations change.
+  const placedNoteBoxes = reused.map((item) => item.noteBox);
+  const ordered = orderAnnotations(options.annotations);
 
-  for (const annotation of ordered) {
+  for (const annotation of ordered.slice(reused.length)) {
     const placement = mergePlacement(options.placement, annotation.placement);
     const noteSize = noteSizeFor(annotation, options);
     const candidates = allPlacementCandidates({
@@ -90,6 +95,123 @@ export function resolveAnnotationLayout(options: LayoutOptions): ResolvedLayout 
   return options.refinement
     ? refineAnnotationLayout(layout, options.refinement)
     : layout;
+}
+
+/** @experimental A host-owned incremental resolver for stable input geometry.
+ *
+ * Candidate placement only considers *earlier* priority-ordered notes, so a
+ * change late in that order can reuse the exact resolved prefix. A changed
+ * obstacle, bounds, default placement, padding or refinement configuration
+ * triggers a full resolution. Refinement itself always uses the full resolver
+ * because later notes can influence earlier winners during iterative passes.
+ *
+ * Inputs are fingerprinted by value after each successful update, including
+ * deeply mutated annotation objects and per-note effective sizes. Unsupported
+ * cyclic/opaque values conservatively disable reuse. Keep the returned layout
+ * immutable: mutating a resolved winner invalidates this optimization.
+ */
+export function createIncrementalAnnotationLayoutSession(options: LayoutOptions): AnnotationLayoutSession {
+  let current = resolveAnnotationLayout(options);
+  let previousSnapshot = captureIncrementalSnapshot(options);
+
+  return {
+    get layout() { return current; },
+    update(next: LayoutOptions) {
+      const nextSnapshot = captureIncrementalSnapshot(next);
+      const nextCount = nextSnapshot.annotations.length;
+      let reuse = 0;
+
+      // A refinement pass may move earlier winners in response to *later*
+      // notes. Never keep a prefix across that global optimization.
+      if (!next.refinement && previousSnapshot.globals !== undefined
+        && previousSnapshot.globals === nextSnapshot.globals
+        && previousSnapshot.annotations.length === current.annotations.length
+        && nextCount === current.annotations.length) {
+        while (reuse < nextCount) {
+          const before = previousSnapshot.annotations[reuse];
+          const after = nextSnapshot.annotations[reuse];
+          if (before === undefined || after === undefined || before !== after) break;
+          reuse += 1;
+        }
+      }
+
+      // Preserve the previous object graph for no-op updates so rendered
+      // React hosts can avoid rerendering unaffected annotations.
+      const nextLayout = reuse === nextCount && reuse === current.annotations.length
+        ? current
+        : resolveAnnotationLayoutFrom(next, reuse ? current.annotations.slice(0, reuse) : []);
+      current = nextLayout;
+      previousSnapshot = nextSnapshot;
+      return nextLayout;
+    }
+  };
+}
+
+/** @experimental Mutable resolver session; updates return authoritative layout snapshots. */
+export type AnnotationLayoutSession = {
+  readonly layout: ResolvedLayout;
+  update(options: LayoutOptions): ResolvedLayout;
+};
+
+type IncrementalSnapshot = { globals: string | undefined; annotations: Array<string | undefined> };
+
+function captureIncrementalSnapshot(options: LayoutOptions): IncrementalSnapshot {
+  const globals = incrementalFingerprint({
+    bounds: options.bounds,
+    padding: options.padding,
+    obstacles: options.obstacles,
+    placement: options.placement,
+    defaultNoteSize: options.defaultNoteSize,
+    refinement: options.refinement
+  });
+  return {
+    globals,
+    annotations: orderAnnotations(options.annotations).map((annotation) => incrementalFingerprint({
+      annotation,
+      noteSize: noteSizeFor(annotation, options)
+    }))
+  };
+}
+
+function orderAnnotations(annotations: Annotation[]): Annotation[] {
+  return [...annotations].sort((a, b) => {
+    const priority = (b.priority ?? 0) - (a.priority ?? 0);
+    return priority || a.id.localeCompare(b.id);
+  });
+}
+
+// JSON-compatible geometry snapshots are cheap to compare and capture edits
+// even if a host mutates its input in place. RegExp values matter for wrapping;
+// functions are tracked by identity. Unsupported object types and circular
+// structures cause conservative full recomputation instead of stale reuse.
+const fingerprintFunctions = new WeakMap<Function, number>();
+let fingerprintFunctionCount = 0;
+function incrementalFingerprint(input: unknown): string | undefined {
+  try {
+    return JSON.stringify(input, (_key, value: unknown) => {
+      if (typeof value === 'function') {
+        let id = fingerprintFunctions.get(value);
+        if (id === undefined) {
+          id = ++fingerprintFunctionCount;
+          fingerprintFunctions.set(value, id);
+        }
+        return { $functionId: id };
+      }
+      if (value instanceof RegExp) return { $regexp: value.source, $flags: value.flags };
+      if (typeof value === 'number' && !Number.isFinite(value)) return { $nonFinite: String(value) };
+      if (typeof value === 'bigint') return { $bigint: String(value) };
+      if (value && typeof value === 'object' && !Array.isArray(value)
+        && Object.getPrototypeOf(value) !== Object.prototype
+        && Object.getPrototypeOf(value) !== null) {
+        // Non-plain objects are unsupported unless they have a useful
+        // stable JSON representation; fail safe on host/runtime instances.
+        throw new Error('Opaque snapshot value');
+      }
+      return value;
+    });
+  } catch {
+    return undefined;
+  }
 }
 
 export function refineAnnotationLayout(
