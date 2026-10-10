@@ -101,6 +101,19 @@ for (const term of [
 }
 
 for (const term of [
+  'dev-tooling:',
+  'optional-peers:',
+  'update-types:',
+  'version-update:semver-major',
+  'dependency-name: mermaid',
+  'dependency-name: typescript',
+  'dependency-name: vitest',
+  'dependency-name: jsdom'
+]) {
+  assertIncludes(dependabot, term, '.github/dependabot.yml');
+}
+
+for (const term of [
   'private vulnerability reporting',
   'Host apps are responsible'
 ]) {
@@ -115,6 +128,7 @@ for (const term of [
   'js/html-constructed-from-input',
   'Dependabot alerts',
   'Dependabot security updates',
+  'Version Update Compatibility Policy',
   'Automated security fixes',
   'Private vulnerability reporting',
   'Secret scanning push protection',

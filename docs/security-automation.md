@@ -19,6 +19,26 @@ require consumer credentials or a long-lived npm token.
   weekly schedule, and manual dispatch. It publishes Scorecard results and
   uploads SARIF into GitHub code scanning.
 
+## Version Update Compatibility Policy
+
+Routine Dependabot npm PRs group compatible **minor and patch** updates for
+optional integrations and development tooling. Major upgrades of `mermaid`,
+`typescript`, `vitest`, and `jsdom` are deferred until their next compatibility
+lane is deliberately reviewed and tested. In particular, Mermaid 12 contains
+parser dependencies requiring Node 22, while the public package still promises
+Node 20 support; replacing the Mermaid 11 verification lane automatically
+would remove existing compatibility evidence.
+
+The `ignore` rules affect **version updates**, not Dependabot's independent
+security alerts or security updates. A major upgrade can be reviewed in a
+dedicated PR with corresponding changes to the compatibility matrix, tests,
+Node/runtime support policy, and public docs. Remove or revise the ignore rule
+when that upgrade is supported; do not weaken matrix assertions just to make
+a grouped dependency PR pass.
+
+GitHub Actions upgrades stay in their separate Dependabot ecosystem so their
+runner permissions and trusted-publishing controls can be audited individually.
+
 ## Runner Policy
 
 This repository is public. Public pull-request validation stays on standard
