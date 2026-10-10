@@ -160,43 +160,45 @@ jobs:
         run: |
           set -uo pipefail
           version="${GITHUB_REF_NAME#v}"
-          view_ok=false
-          attempts_remaining=5
-          while [ "$attempts_remaining" -gt 0 ]; do
-            if npm view "@ponchia/annotations@$version" version dist.integrity dist.tarball --json > "${RUNNER_TEMP}/npm-view.json"; then
-              view_ok=true
+          if [ "$version" != "${version%%-*}" ]; then
+            dist_tag=next
+          else
+            dist_tag=latest
+          fi
+          # npm publish can finish before public registry reads are consistent.
+          # npm view caches an early 404 or an old latest dist-tag, so observe
+          # fresh HTTP packuments instead of repeating cached CLI lookups.
+          published=false
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent --show-error --max-time 15 \
+              -H 'Accept: application/json' -H 'Cache-Control: no-cache' \
+              "https://registry.npmjs.org/@ponchia%2fannotations?run=${GITHUB_RUN_ID}&attempt=$attempt" \
+              -o "${RUNNER_TEMP}/npm-registry.json" \
+              && node scripts/verify-published-registry.mjs \
+                "${RUNNER_TEMP}/npm-registry.json" "$version" "$dist_tag" \
+                > "${RUNNER_TEMP}/npm-registry-confirmed.json"; then
+              published=true
               break
             fi
-            attempts_remaining=$((attempts_remaining - 1))
-            sleep 5
+            echo "npm public metadata for $version ($dist_tag) has not propagated (attempt $attempt/20)."
+            sleep 10
           done
-          tags_ok=false
-          if npm view @ponchia/annotations dist-tags --json > "${RUNNER_TEMP}/npm-dist-tags.json"; then
-            tags_ok=true
-          fi
 
           {
             echo ''
             echo '## npm registry state'
             echo ''
-            if [ "$view_ok" = true ] && [ "$tags_ok" = true ]; then
-              node <<'NODE'
-          const fs = require('node:fs');
-          const path = require('node:path');
-          const tmp = process.env.RUNNER_TEMP;
-          const view = JSON.parse(fs.readFileSync(path.join(tmp, 'npm-view.json'), 'utf8'));
-          const tags = JSON.parse(fs.readFileSync(path.join(tmp, 'npm-dist-tags.json'), 'utf8'));
-          console.log('```json');
-          console.log(JSON.stringify({ published: view, distTags: tags }, null, 2));
-          console.log('```');
-          NODE
+            if [ "$published" = true ]; then
+              echo 'Registry version, dist-tag, integrity and tarball confirmed:'
+              echo ''
+              echo '```json'
+              cat "${RUNNER_TEMP}/npm-registry-confirmed.json"
+              echo '```'
             else
-              echo '> npm publish completed, but the post-publish registry observation did not return a complete response.'
+              echo '> npm publish succeeded, but fresh public registry metadata was not visible within the observation window.'
               echo ''
-              echo "- package lookup: $view_ok"
-              echo "- dist-tag lookup: $tags_ok"
-              echo ''
-              echo "Verify manually with \`npm view @ponchia/annotations version dist-tags --json\`."
+              echo 'Do not republish the immutable version based only on this read delay.'
+              echo "Verify with a fresh cache: \`npm --cache=\$(mktemp -d) view @ponchia/annotations@$version version dist-tags --json\`."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
