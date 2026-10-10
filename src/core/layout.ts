@@ -17,6 +17,7 @@ import { evaluateAnnotationLayout } from './quality.js';
 import { wrapNoteText } from './text.js';
 import type {
   Annotation,
+  Box,
   LayoutOptions,
   LayoutRefinementOptions,
   PlacementCandidate,
@@ -119,25 +120,40 @@ export function createIncrementalAnnotationLayoutSession(options: LayoutOptions)
     update(next: LayoutOptions) {
       const nextSnapshot = captureIncrementalSnapshot(next);
       const nextCount = nextSnapshot.annotations.length;
+      const changedObstacles = obstacleChanges(
+        previousSnapshot.obstacles, nextSnapshot.obstacles
+      );
       let reuse = 0;
 
       // A refinement pass may move earlier winners in response to *later*
       // notes. Never keep a prefix across that global optimization.
       if (!next.refinement && previousSnapshot.globals !== undefined
         && previousSnapshot.globals === nextSnapshot.globals
-        && previousSnapshot.annotations.length === current.annotations.length
-        && nextCount === current.annotations.length) {
-        while (reuse < nextCount) {
+        && previousSnapshot.annotations.length === current.annotations.length) {
+        // Insertion/removal at the end of priority order cannot change
+        // previously placed notes. For earlier changes, only the suffix is
+        // invalidated; the normal resolver still recomputes the rest exactly.
+        const ordered = orderAnnotations(next.annotations);
+
+        while (reuse < Math.min(nextCount, current.annotations.length)) {
           const before = previousSnapshot.annotations[reuse];
           const after = nextSnapshot.annotations[reuse];
           if (before === undefined || after === undefined || before !== after) break;
+          if (changedObstacles.length > 0 && !safeFromObstacleChanges(
+            ordered[reuse]!, next, current.placementBounds, changedObstacles
+          )) break;
           reuse += 1;
         }
       }
 
       // Preserve the previous object graph for no-op updates so rendered
       // React hosts can avoid rerendering unaffected annotations.
-      const nextLayout = reuse === nextCount && reuse === current.annotations.length
+      const identicalLayout = reuse === nextCount
+        && reuse === current.annotations.length
+        && previousSnapshot.globals !== undefined
+        && previousSnapshot.globals === nextSnapshot.globals
+        && changedObstacles.length === 0;
+      const nextLayout = identicalLayout
         ? current
         : resolveAnnotationLayoutFrom(next, reuse ? current.annotations.slice(0, reuse) : []);
       current = nextLayout;
@@ -153,24 +169,104 @@ export type AnnotationLayoutSession = {
   update(options: LayoutOptions): ResolvedLayout;
 };
 
-type IncrementalSnapshot = { globals: string | undefined; annotations: Array<string | undefined> };
+type IncrementalSnapshot = {
+  globals: string | undefined;
+  obstacles: Box[];
+  annotations: Array<string | undefined>;
+};
 
 function captureIncrementalSnapshot(options: LayoutOptions): IncrementalSnapshot {
   const globals = incrementalFingerprint({
     bounds: options.bounds,
     padding: options.padding,
-    obstacles: options.obstacles,
     placement: options.placement,
     defaultNoteSize: options.defaultNoteSize,
     refinement: options.refinement
   });
   return {
     globals,
+    // Snapshot normalized obstacles by value: hosts can mutate a node/box in
+    // place after the prior update, so retaining the original references is
+    // unsafe. Invalid host boxes are removed by the full resolver too.
+    obstacles: (options.obstacles ?? []).map(normalizeBox).filter(isFiniteBox),
     annotations: orderAnnotations(options.annotations).map((annotation) => incrementalFingerprint({
       annotation,
       noteSize: noteSizeFor(annotation, options)
     }))
   };
+}
+
+function obstacleChanges(before: Box[], after: Box[]): Box[] {
+  const changed: Box[] = [];
+  for (let index = 0; index < Math.max(before.length, after.length); index += 1) {
+    const old = before[index];
+    const next = after[index];
+    if (old && next && old.x === next.x && old.y === next.y
+      && old.width === next.width && old.height === next.height) continue;
+    if (old) changed.push(old);
+    if (next) changed.push(next);
+  }
+  return changed;
+}
+
+/**
+ * Conservative spatial dependency proof for a changed host obstacle.
+ * Routing-capable connectors can change paths even when the new obstacle is
+ * far away, because orthogonal routing selects and sorts global obstacles.
+ * Only explicitly unrouted (or intrinsically unrouted) connectors qualify.
+ * For those, consider EVERY possible candidate note/connector footprint, not
+ * only candidates retained by maxCandidates. No intersecting changed boxes
+ * means the scores, order, winner and SVG paths remain exactly the same.
+ */
+function safeFromObstacleChanges(
+  annotation: Annotation,
+  options: LayoutOptions,
+  placementBounds: Box,
+  changedObstacles: Box[]
+): boolean {
+  const connector = annotation.connector;
+  const type = connector?.type ?? 'elbow';
+  const routing = connector?.routing;
+  if (type !== 'none' && type !== 'curve' && routing !== 'none'
+    && !(typeof routing === 'object' && routing?.mode === 'none')) {
+    return false;
+  }
+
+  const completePlacement = mergePlacement(options.placement, annotation.placement);
+  delete completePlacement.maxCandidates;
+  const candidates = allPlacementCandidates({
+    annotation,
+    bounds: placementBounds,
+    noteSize: noteSizeFor(annotation, options),
+    obstacles: [],
+    placedNotes: [],
+    placement: completePlacement
+  });
+  if (candidates.length === 0) return false;
+
+  for (const candidate of candidates) {
+    const bounds = [candidate.noteBox, ...candidate.connector.points.slice(1).map((point, index) => {
+      const from = candidate.connector.points[index]!;
+      return {
+        x: Math.min(from.x, point.x),
+        y: Math.min(from.y, point.y),
+        width: Math.abs(from.x - point.x),
+        height: Math.abs(from.y - point.y)
+      };
+    })];
+    for (const box of bounds) {
+      if (!isFiniteBox(box)) return false;
+      for (const changed of changedObstacles) {
+        // Closed boundaries over-invalidate intentionally: collision/routing
+        // checks have different touch semantics, and recomputing is safer.
+        if (box.x <= changed.x + changed.width && box.x + box.width >= changed.x
+          && box.y <= changed.y + changed.height && box.y + box.height >= changed.y) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
 }
 
 function orderAnnotations(annotations: Annotation[]): Annotation[] {

@@ -106,9 +106,11 @@ changed priority-ordered annotation and resolves the affected suffix. This
 preserves fresh-layout geometry, path routing and diagnostics; an unchanged
 input yields the same layout object. Late-note edits can therefore be much
 cheaper than rebuilding the full layout. Host-authored changes to bounds,
-obstacles, global placement or order, and all iterative refinement requests
-still trigger a full resolver pass. This is not a spatial-index-based solver,
-and it does **not** guarantee partial updates for arbitrary changed topology.
+global placement, or enabled iterative refinement still trigger full resolution.
+Appending/removing suffix notes and verified spatially independent changes to
+obstacles can keep a valid prefix; affected routed connectors fall back. This
+is a conservative dependency proof rather than a spatial-index-based solver,
+so partial updates are **not** guaranteed for arbitrary changed topology.
 
 Hosts should continue using the visual-only `previewAnnotationEdit` during
 pointer movement and the authoritative incremental session only when
@@ -134,11 +136,51 @@ quality metrics. One observed development-host run gave:
 | 200 annotations | 4,086 ms | 11 ms | 199/200 |
 
 These are individual illustrative measurements from October 2026, not stable
-latency bounds or a promise of similar speedups for all edits. Earlier edits,
-reordered annotations, changed host obstacles/bounds, and global refinement
-force larger recomputations. Capturing input value snapshots has a small cost
-per update; benchmark under representative host density before enabling the
-experimental optimization broadly.
+latency bounds or a promise of similar speedups for all edits. Earlier edits and global refinement still require larger recomputations.
+The experimental session now handles appending/removing low-priority notes,
+recomputing only the changed suffix. It also supports **conservative obstacle
+invalidation** when an annotation's connector explicitly disables routing (or
+is intrinsically unrouted) and every candidate note/connector bounding box
+is disjoint from the changed obstacle boxes. This checks *all possible*
+placement candidates, including ones omitted from `maxCandidates` output.
+Candidates or connectors that might be affected trigger normal suffix
+recalculation; route-aware connectors with changed host obstacles trigger full
+recalculation because remote obstacles can change a visibility-graph solution.
+A changed obstacle list produces a fresh layout with correct obstacle metadata
+even if all resolved note identities can be reused. These conditions avoid
+making unverified spatial independence claims. Capturing input value snapshots
+has a small cost per update; benchmark under representative host density before
+enabling the experimental optimization broadly.
+
+### Actual browser interaction evidence
+
+`npm run test:browser:incremental` runs a bounded Playwright/Chromium test on
+a real React `AnnotationLayer` with host-controlled resolved geometry, at 1200px
+desktop and 390px mobile widths. The fixture changes node count, distant/nearby
+obstacles, an anchor, and routing mode, checks React/SVG DOM stability, then
+compares every changed layout against an independent fresh full resolver.
+The optional `npm run benchmark:browser:incremental` adds a denser 200-note
+desktop case outside the mandatory CI suite. Resolver time and the first next
+animation-frame callback are recorded separately; neither is a production
+latency guarantee or a display-paint timestamp.
+
+On one ARM64 development host with Chromium, a 40-note desktop run measured:
+
+| Committed action | Resolver | Next animation frame | Reused winners |
+| --- | ---: | ---: | ---: |
+| Append one note | 0.8 ms | 28.6 ms | 40/40 previous |
+| Move distant obstacle | 5.6 ms | 25.9 ms | 40/40 |
+| Move nearby obstacle | 3.4 ms | 27.9 ms | 27/40 |
+| Edit last anchor | 0.8 ms | 20.0 ms | 39/40 |
+| Enable orthogonal routing | 5.2 ms | 39.2 ms | 0/40 |
+
+Mobile (24 notes) measured 4.1 ms resolver and 19.0 ms to the next animation
+frame on the distant-obstacle action, with 24/24 winners reused. These values
+are single-run observations subject to CPU contention, browser scheduling and
+React reconciliation. They do **not** establish sustained 60 fps. The measured
+UI frame time exceeds the pure resolver cost, so future work should profile
+React render/quality evaluation and host drawing separately before attempting
+worker-based layout scheduling.
 
 For annotated generated graphs, widen host-owned handle placement candidates
 according to the **rendered** owner card size. In an additional dense React Flow

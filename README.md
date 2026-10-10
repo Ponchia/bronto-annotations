@@ -665,7 +665,8 @@ at the end of a gesture, rather than persisting a provisional resolved item.
 ### Experimental incremental committed layouts
 
 A custom headless/React host resolving many annotations can reuse unchanged
-priority-ordered placements when **only later annotations change**. This is an
+priority-ordered placements when later annotations change, or when annotations
+are appended/removed after an unchanged higher-priority prefix. This is an
 opt-in optimization for *committed* edits, complementary to the immediate
 `previewAnnotationEdit` drag preview:
 
@@ -691,10 +692,16 @@ recomputed from the first changed annotation forward. Stable earlier winners
 retain their object identities for efficient React reconciliation. No-op updates
 return the previous layout object.
 
-It falls back to full resolution when bounds, obstacles, global placement
-preferences, annotation order/count, or refinement inputs change. Iterative
-refinement always uses the full resolver because later candidates may change
-earlier winners. Inputs are snapshotted by value so an in-place change to a
+It recomputes from the first changed priority-ordered note for insertions,
+deletions and changed anchors, preserving the prior prefix. Changed obstacles
+also allow conservative prefix reuse **only** where an annotation has an
+explicitly unrouted connector (or an intrinsic `curve`/`none` connector) and
+the changed boxes cannot touch any of its possible placement or connector
+candidates. It examines candidates beyond those retained by `maxCandidates`.
+Routing-aware connectors, changed bounds/global placement, and iterative
+refinement continue to trigger full recalculation when the change could affect
+previous winners. Iterative refinement uses the full resolver because later
+candidates may change earlier winners. Inputs are snapshotted by value so an in-place change to a
 note, anchor or effective size is detected; avoid mutating resolved layout
 objects returned by the session. Neither API schedules background work or
 manages host state, pointer updates, persistence or worker threads. For a live
