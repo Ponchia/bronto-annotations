@@ -46,9 +46,9 @@ subpath is listed exactly once as stable or experimental.
   `createAnnotationEditDelta`, `createAnnotationEditSession`, and
   `previewAnnotationEdit` (visual only).
 - `createIncrementalAnnotationLayoutSession` and `AnnotationLayoutSession`:
-  opt-in priority-prefix reuse for stable bounds/obstacles and unrefined
-  layouts, with safe full-resolution fallback for changed global geometry or
-  refinement passes.
+  opt-in priority-prefix reuse for unrefined layouts, including added/removed
+  suffix notes and conservatively independent obstacle changes; safe fallback
+  for affected routing, global geometry, or refinement.
 - React edit-handle authoring options, edit events, and the opt-in
   `AnnotationLayer.resolvedLayout` controlled-layout property until the
   authoring UX layer is hardened.

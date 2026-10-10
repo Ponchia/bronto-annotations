@@ -102,6 +102,8 @@
     "test:dogfood:external": "npm run build && node scripts/dogfood-external-consumer.mjs",
     "test:examples": "npm run build && node scripts/build-examples.mjs",
     "test:browser": "npm run build && node scripts/verify-examples-browser.mjs",
+    "test:browser:incremental": "npm run build && node scripts/verify-incremental-browser.mjs",
+    "benchmark:browser:incremental": "npm run build && node scripts/verify-incremental-browser.mjs --benchmark",
     "test:screenshots": "node scripts/check-browser-screenshots.mjs",
     "test:readiness": "node scripts/check-readiness-matrix.mjs",
     "test:completion-audit": "node scripts/check-completion-audit.mjs",
@@ -115,7 +117,7 @@
     "benchmark:incremental": "npm run build && node scripts/benchmark-incremental-layout.mjs",
     "test:hygiene": "node scripts/public-hygiene.mjs",
     "release:prep": "node scripts/release-prep.mjs",
-    "check": "npm run typecheck && node scripts/check-build-reuse.mjs && export PONCHIA_ANNOTATIONS_REUSE_BUILD=1 && npm test && npm run check:dead && npm run test:docs-snippets && npm run test:types && npm run test:exports && npm run test:api-reference && npm run test:api-stability && npm run test:canary && npm run test:d3-parity && npm run test:bronto-parity && npm run test:bronto-upstream && npm run test:examples && npm run test:pack && npm run test:dogfood && npm run test:dogfood:bronto-report && npm run test:dogfood:self-report && npm run test:dogfood:external && npm run test:browser && npm run test:screenshots && npm run test:readiness && npm run test:completion-audit && npm run test:repo && npm run test:release && npm run test:security-automation && npm run test:pre-release && npm run test:compatibility && npm run test:compatibility:lanes && npm run test:performance && npm run test:hygiene && npm run test:site",
+    "check": "npm run typecheck && node scripts/check-build-reuse.mjs && export PONCHIA_ANNOTATIONS_REUSE_BUILD=1 && npm test && npm run check:dead && npm run test:docs-snippets && npm run test:types && npm run test:exports && npm run test:api-reference && npm run test:api-stability && npm run test:canary && npm run test:d3-parity && npm run test:bronto-parity && npm run test:bronto-upstream && npm run test:examples && npm run test:pack && npm run test:dogfood && npm run test:dogfood:bronto-report && npm run test:dogfood:self-report && npm run test:dogfood:external && npm run test:browser && npm run test:browser:incremental && npm run test:screenshots && npm run test:readiness && npm run test:completion-audit && npm run test:repo && npm run test:release && npm run test:security-automation && npm run test:pre-release && npm run test:compatibility && npm run test:compatibility:lanes && npm run test:performance && npm run test:hygiene && npm run test:site",
     "site:build": "npm run build && node scripts/build-public-site.mjs",
     "test:site": "npm run site:build && node scripts/check-public-site.mjs && node scripts/verify-public-site-browser.mjs"
   },

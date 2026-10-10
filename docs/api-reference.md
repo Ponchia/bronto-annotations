@@ -153,8 +153,12 @@ scores and diagnostics are not recomputed.
 The root package also exposes experimental `createIncrementalAnnotationLayoutSession`
 and `AnnotationLayoutSession`. A session has a read-only `layout` property and
 `update(nextLayoutOptions)` returning a fully resolved layout. It reuses only
-unchanged priority-ordered prefix winners for unrefined layouts; global geometry,
-ordering changes and iterative refinement trigger a full recomputation. Hosts
+unchanged priority-ordered prefix winners for unrefined layouts, including
+added or removed suffix notes. For changed obstacles, an unaffected prefix may
+be reused only when connectors do not depend on obstacle routing and every
+potential candidate geometry is disjoint from the changed boxes. Global
+bounds/placement changes, affected candidates, orthogonal routing dependencies
+and iterative refinement trigger appropriate suffix or full recomputation. Hosts
 control lifecycle and authoritative update timing; no workers or subscriptions
 are created. The public synchronous `resolveAnnotationLayout` behavior is
 unchanged. See the README authoring recipe and `docs/performance.md`.
