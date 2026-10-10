@@ -6,6 +6,24 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.5.0 - 2026-10-10
+
+### Added
+
+- Add experimental DOM-free `createIncrementalAnnotationLayoutSession` and its `AnnotationLayoutSession` type for deterministic priority-prefix reuse after committed edits. Unchanged earlier annotation winners retain identity; later placements and connectors are recomputed.
+- Snapshot effective input values to detect nested in-place edits and note-size changes. Fall back to complete resolution when global geometry, obstacles, ordering, annotation count or iterative refinement can affect other winners.
+- Add the optional `npm run benchmark:incremental` comparison with deep layout/quality parity against fresh full resolution. Sample late-note edits measured 23 ms versus 923 ms for 50 notes and 11 ms versus 4,086 ms for 200 notes on one development host (single-run observations, not guarantees).
+
+### Integration evidence
+
+- Verify the existing React Flow adapter against a second, real dense external graph host with five rendered nodes, five edges and ten handles. A host-owned handle-clearance placement recipe raised layout quality from 0 to 86/100 with zero note/obstacle overlaps while preserving four exact anchor alignments.
+- Add strict external React Flow host verification, a rendered-owner-height clearance recipe, and deterministic collision regression fixtures without introducing a dependency on the host app.
+
+### Tests and documentation
+
+- Add differential tests for incremental no-op, late/early changes, in-place mutations, size updates, priority/count changes, changed bounds/obstacles, refinement, failed-update recovery and regular expressions.
+- Document experimental import/use contracts and the distinction between visual drag previews and authoritative incremental updates, with the normal synchronous resolver unchanged.
+
 ## 0.4.1 - 2026-10-10
 
 ### Performance
