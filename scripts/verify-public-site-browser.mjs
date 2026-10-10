@@ -1,10 +1,18 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
+import { readdir } from 'node:fs/promises';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 import { resolve } from 'node:path';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
+const publishedExamples = (await readdir(resolve(root, '_site/examples'), { withFileTypes: true }))
+  .filter((entry) => entry.isDirectory() &&
+    existsSync(resolve(root, '_site/examples', entry.name, 'index.html')))
+  .map((entry) => entry.name)
+  .sort();
+assert(publishedExamples.length >= 10, 'Expected all ten published examples for WCAG checks');
 const server = await createServer({
   root: resolve(root, '_site'),
   logLevel: 'error',
@@ -15,6 +23,7 @@ const port = server.httpServer?.address();
 if (!port || typeof port === 'string') throw Error('Vite server unavailable');
 const url = 'http://127.0.0.1:' + port.port;
 const browser = await chromium.launch({ headless: true });
+const wcagTags = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
 let variants = 0;
 
 async function visit(path, width) {
@@ -74,7 +83,7 @@ try {
     );
     assert.equal(await home.locator('#placed-count').innerText(), '3');
     const audit = await new AxeBuilder({ page: home })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+      .withTags(wcagTags)
       .analyze();
     assert.equal(
       audit.violations.length,
@@ -85,7 +94,7 @@ try {
           .join(', '),
     );
     variants++;
-    await home.close();
+    await home.context().close();
 
     const docs = await visit('/docs/', width);
     assert((await docs.locator('[data-doc-card]').count()) >= 25);
@@ -94,7 +103,7 @@ try {
     await docs.locator('#docs-filter').fill('not-found-search-term');
     assert.equal(await docs.locator('[data-doc-card]:visible').count(), 0);
     const docAudit = await new AxeBuilder({ page: docs })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+      .withTags(wcagTags)
       .analyze();
     assert.equal(
       docAudit.violations.length,
@@ -103,11 +112,11 @@ try {
         docAudit.violations.map((x) => x.id).join(', '),
     );
     variants++;
-    await docs.close();
+    await docs.context().close();
 
     const guide = await visit('/docs/context-quickstart.html', width);
     const guideAudit = await new AxeBuilder({ page: guide })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+      .withTags(wcagTags)
       .analyze();
     assert.equal(
       guideAudit.violations.length,
@@ -116,7 +125,27 @@ try {
         guideAudit.violations.map((x) => x.id).join(', '),
     );
     variants++;
-    await guide.close();
+    await guide.context().close();
+  }
+  for (const width of [390, 1200]) {
+    for (const name of publishedExamples) {
+      const example = await visit(`/examples/${name}/`, width);
+      await example.locator('.pa-annotation').first().waitFor({ timeout: 30000 });
+      const audit = await new AxeBuilder({ page: example })
+        .withTags(wcagTags)
+        .analyze();
+      assert.equal(
+        audit.violations.length,
+        0,
+        `Published example ${name} (${width}px) axe violations: ` +
+          audit.violations.map((violation) =>
+            `${violation.id} (${violation.impact}): ` +
+            violation.nodes.map((node) => node.target.join(' ')).join(', '),
+          ).join('; '),
+      );
+      variants++;
+      await example.context().close();
+    }
   }
   const demo = await visit('/examples/index/', 1200);
   // Exclude the badge label drawn intentionally next to the note box.
@@ -149,7 +178,7 @@ try {
     'Example index note text leaks beyond its background: ' +
       JSON.stringify(leaks),
   );
-  await demo.close();
+  await demo.context().close();
   // React Flow embeds keyboard-focusable note and edit-handle controls inside
   // an SVG. Its root must expose a named group, not an image role that hides
   // descendants from screen readers.
@@ -160,23 +189,13 @@ try {
       'group',
       'Interactive React Flow SVG must preserve child focus semantics',
     );
-    const flowAudit = await new AxeBuilder({ page: flow })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
-      .analyze();
-    assert.equal(
-      flowAudit.violations.length,
-      0,
-      'React Flow accessibility violations at ' + width + 'px: ' +
-        flowAudit.violations.map((v) => v.id + ': ' +
-          v.nodes.map((n) => n.target).join('|')).join(', '),
-    );
     variants++;
-    await flow.close();
+    await flow.context().close();
   }
   console.log(
     'Public browser verified: ' +
       variants +
-      ' homepage/docs/React Flow viewport combinations, real sliders, searchable docs, accessible layouts and visible note containment.',
+      ` viewport combinations, including ${publishedExamples.length} compiled examples at mobile and desktop sizes; WCAG audits, interactive controls, docs search and SVG containment verified.`,
   );
 } finally {
   await browser.close();

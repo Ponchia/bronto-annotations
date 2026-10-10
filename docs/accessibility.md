@@ -22,6 +22,18 @@ annotation list.
 - Use `onQuality` and `onTargetAlignment` to surface generated-report issues in
   tests or authoring tools.
 
+## Host Chart And Diagram Semantics
+
+The annotation layer supplements the host graphic's accessibility rather than
+replacing it. Any underlying SVG with `role="img"` needs an accessible name,
+such as an `aria-label` or `<title>` describing the chart or diagram. Generated
+Vega marks that convey meaning should supply an accessible `description` in
+the mark encoding; purely decorative marks can instead be marked `aria: false`.
+
+The React and Vega examples demonstrate this alongside the annotation layer.
+The public-site browser checks run axe-core over every compiled example at
+both narrow and desktop widths, including the host graphics.
+
 ## Interactive SVG Layer Semantics
 
 Passive SVG output is labeled as a single image (`role="img"`). Once the
