@@ -1,7 +1,9 @@
 # API Stability
 
-`@ponchia/annotations` is at `0.1.x`. The package is usable, but public API
-shape is still allowed to evolve before `1.0.0`.
+**Current package:** `0.4.x` (pre-1.0). The stable/experimental export manifest was first frozen for the `0.1.x` compatibility policy; this document records that historical floor, while minor-version changes must still be reviewed through the release notes before upgrading consumers.
+
+`@ponchia/annotations` is currently pre-1.0. The package is usable, but its
+experimental authoring API can still evolve before `1.0.0`.
 
 ## Stability Labels
 
@@ -41,7 +43,8 @@ subpath is listed exactly once as stable or experimental.
 
 - d3-style builder mutation helpers and custom annotation type definitions.
 - Edit-patch authoring ergonomics, including `createAnnotationEditEvent`,
-  `createAnnotationEditDelta`, and `createAnnotationEditSession`.
+  `createAnnotationEditDelta`, `createAnnotationEditSession`, and
+  `previewAnnotationEdit` (visual only).
 - React edit-handle authoring options and edit events until the authoring UX
   layer is hardened.
 - Dense-layout tuning constants and scoring weights.

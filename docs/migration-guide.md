@@ -275,3 +275,20 @@ and examples.
    important annotated output.
 6. Keep persistence, app state, chart scales, graph layout, routing, and
    workflow behavior in the host app.
+
+
+## 0.2 to 0.3
+
+The optional Bronto bridge now renders explanatory annotations in sans-serif
+and sentence case, matching BrontoUI 0.11. Technical values can still opt into
+a host-provided monospace class. Review label widths when updating visual
+baselines: line wrapping may improve or change without changing the anchor.
+
+The DOM `measureRangeAnchor` and React `AnnotationPin` exports are additive.
+Existing annotation models, renderers, and adapters retain their signatures.
+They are optional helpers for host-owned text comments; no persistence,
+collaboration service, editor, or discussion model is required.
+
+Connector routing now ignores obstacles that are collinear with, but disjoint
+from, a segment. Existing diagrams may lose unnecessary detours. Boundary
+contact still counts as a collision, and the public routing options are unchanged.

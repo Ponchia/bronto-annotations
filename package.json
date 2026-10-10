@@ -1,6 +1,6 @@
 {
   "name": "@ponchia/annotations",
-  "version": "0.2.0",
+  "version": "0.4.1",
   "description": "Headless annotation placement and rendering helpers for charts, diagrams, reports, and UI surfaces.",
   "keywords": [
     "annotations",
@@ -14,7 +14,7 @@
     "diagram",
     "layout"
   ],
-  "homepage": "https://github.com/Ponchia/bronto-annotations#readme",
+  "homepage": "https://ponchia.github.io/bronto-annotations/",
   "bugs": {
     "url": "https://github.com/Ponchia/bronto-annotations/issues"
   },
@@ -80,7 +80,9 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf dist .tmp",
-    "build": "npm run clean && tsc -p tsconfig.build.json && cp src/styles/bronto.css dist/bronto.css && cp src/styles/bronto.css.d.ts dist/bronto.css.d.ts",
+    "build": "node scripts/build-package.mjs",
+    "build:compile": "npm run clean && tsc -p tsconfig.build.json && cp src/styles/bronto.css dist/bronto.css && cp src/styles/bronto.css.d.ts dist/bronto.css.d.ts",
+    "test:build-reuse": "npm run build && node scripts/check-build-reuse.mjs",
     "typecheck": "npm run build && tsc --noEmit",
     "check:dead": "knip --treat-config-hints-as-errors",
     "test": "vitest run",
@@ -112,7 +114,9 @@
     "test:performance": "npm run build && node scripts/benchmark-layout.mjs --assert",
     "test:hygiene": "node scripts/public-hygiene.mjs",
     "release:prep": "node scripts/release-prep.mjs",
-    "check": "npm run typecheck && npm test && npm run check:dead && npm run test:docs-snippets && npm run test:types && npm run test:exports && npm run test:api-reference && npm run test:api-stability && npm run test:canary && npm run test:d3-parity && npm run test:bronto-parity && npm run test:bronto-upstream && npm run test:examples && npm run test:pack && npm run test:dogfood && npm run test:dogfood:bronto-report && npm run test:dogfood:self-report && npm run test:dogfood:external && npm run test:browser && npm run test:screenshots && npm run test:readiness && npm run test:completion-audit && npm run test:repo && npm run test:release && npm run test:security-automation && npm run test:pre-release && npm run test:compatibility && npm run test:compatibility:lanes && npm run test:performance && npm run test:hygiene"
+    "check": "npm run typecheck && node scripts/check-build-reuse.mjs && export PONCHIA_ANNOTATIONS_REUSE_BUILD=1 && npm test && npm run check:dead && npm run test:docs-snippets && npm run test:types && npm run test:exports && npm run test:api-reference && npm run test:api-stability && npm run test:canary && npm run test:d3-parity && npm run test:bronto-parity && npm run test:bronto-upstream && npm run test:examples && npm run test:pack && npm run test:dogfood && npm run test:dogfood:bronto-report && npm run test:dogfood:self-report && npm run test:dogfood:external && npm run test:browser && npm run test:screenshots && npm run test:readiness && npm run test:completion-audit && npm run test:repo && npm run test:release && npm run test:security-automation && npm run test:pre-release && npm run test:compatibility && npm run test:compatibility:lanes && npm run test:performance && npm run test:hygiene && npm run test:site",
+    "site:build": "npm run build && node scripts/build-public-site.mjs",
+    "test:site": "npm run site:build && node scripts/check-public-site.mjs && node scripts/verify-public-site-browser.mjs"
   },
   "peerDependencies": {
     "@terrastruct/d2": ">=0.1.0",
@@ -143,14 +147,17 @@
     }
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@terrastruct/d2": "^0.1.33",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^26.0.0",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@xyflow/react": "^12.11.0",
+    "dompurify": "3.4.16",
     "jsdom": "^29.1.1",
     "knip": "^6.17.1",
+    "marked": "18.1.0",
     "mermaid": "^11.15.0",
     "playwright": "^1.61.0",
     "react": "^19.1.0",
@@ -160,5 +167,12 @@
     "vega-lite": "^6.4.3",
     "vite": "^8.0.16",
     "vitest": "^4.1.9"
+  },
+  "overrides": {
+    "katex": "0.19.0"
+  },
+  "author": {
+    "name": "Zeno Trevisan",
+    "url": "https://brontolotto.observer/"
   }
 }

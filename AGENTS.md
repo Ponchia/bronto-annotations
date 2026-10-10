@@ -1,7 +1,6 @@
 # Agent Notes
 
-This project is an incubation home for the future public
-`@ponchia/annotations` package.
+This repository publishes the public `@ponchia/annotations` package.
 
 ## Public Boundary
 
@@ -28,3 +27,8 @@ This project is an incubation home for the future public
   milestones, examples, and validation.
 - `docs/adr/0001-standalone-annotations-product.md` records why this is a
   sibling project instead of more surface inside `@ponchia/ui`.
+
+## House check
+
+Run `repo-instruction-audit --repo .` after changing agent instructions or
+documentation routing.

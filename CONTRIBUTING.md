@@ -31,6 +31,26 @@ and docs, runs parity checks, builds examples, performs packed-consumer smokes,
 verifies examples in a browser, checks screenshots, and enforces
 readiness/completion/repository hygiene.
 
+### Verified build reuse
+
+The full `npm run check` pipeline performs an initial full TypeScript build,
+then reuses the **same byte-verified** `dist` artifact across its remaining
+checks instead of recompiling it for every fixture. This preserves packed
+consumer installations, screenshot coverage, compatibility lanes, and all
+existing verification stages. It only changes redundant build work.
+
+Every standalone command, including `npm run build`, `npm run test:pack`,
+`npm run test:browser`, and `npm run test:performance`, still builds freshly.
+Inside `npm run check`, `PONCHIA_ANNOTATIONS_REUSE_BUILD=1` enables a no-op
+build **only** when both source inputs and compiled outputs match the fingerprints
+recorded after a successful compile. The fingerprint lives in ignored `.tmp`
+and is never published with the package. Changed/missing artifacts stop the
+check rather than silently publishing or testing stale JavaScript.
+
+Run `npm run test:build-reuse` to verify that fresh output is reused unchanged,
+while an added source or dist file is correctly rejected. To repair a failed
+reuse check, run `npm run build` without the reuse environment variable.
+
 ## Pull Requests
 
 Before opening a PR:

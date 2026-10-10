@@ -9,6 +9,8 @@ import type {
   ResolvedAnnotation,
   ResolvedLayout
 } from './model.js';
+import { anchorSubject } from './anchors.js';
+import { connectorPath } from './connectors.js';
 import { annotationsForPaint } from './order.js';
 
 export type AnnotationEditHandleKind = 'note' | 'anchor';
@@ -241,6 +243,72 @@ export function createAnnotationEditSession(options: CreateAnnotationEditSession
       delta,
       phase
     })
+  };
+}
+
+/**
+ * @experimental An O(1), visual-only preview of one edited annotation.
+ *
+ * Keeps other placements untouched and bypasses obstacle-aware connector
+ * routing until the host commits and resolves its full layout. Candidate scores
+ * and debug candidates are inherited from the original resolved annotation;
+ * do not treat this object as a newly validated layout or persist it.
+ */
+export function previewAnnotationEdit(
+  resolved: ResolvedAnnotation,
+  edit: AnnotationEditSuggestion | AnnotationEditPatch,
+  placementBounds?: Box
+): ResolvedAnnotation {
+  const patch = annotationEditPatch(edit);
+  const annotation = applyAnnotationEdit(resolved.annotation, patch);
+  if (!patch.anchor && !patch.placement?.manual) {
+    return resolved;
+  }
+
+  const manual = patch.placement?.manual;
+  const side = manual?.side ?? resolved.placement.side;
+  const noteBox = manual
+    ? clampPreviewNoteBox({
+      x: finite(manual.x, 'placement.manual.x'),
+      y: finite(manual.y, 'placement.manual.y'),
+      width: resolved.noteBox.width,
+      height: resolved.noteBox.height
+    }, manual.clamp === false ? undefined : placementBounds)
+    : resolved.noteBox;
+  const subject = patch.anchor || side !== resolved.placement.side
+    ? anchorSubject(annotation.anchor, side)
+    : resolved.subject;
+
+  return {
+    ...resolved,
+    annotation,
+    subject,
+    anchorPoint: subject.point,
+    noteBox,
+    connector: connectorPath(subject.point, noteBox, {
+      ...annotation.connector,
+      routing: 'none'
+    }),
+    placement: {
+      ...resolved.placement,
+      side,
+      ...(manual ? {
+        align: manual.align ?? resolved.placement.align,
+        manual: true
+      } : {})
+    }
+  };
+}
+
+function clampPreviewNoteBox(box: Box, bounds: Box | undefined): Box {
+  if (!bounds || box.width > bounds.width || box.height > bounds.height) {
+    return box;
+  }
+
+  return {
+    ...box,
+    x: Math.min(Math.max(box.x, bounds.x), bounds.x + bounds.width - box.width),
+    y: Math.min(Math.max(box.y, bounds.y), bounds.y + bounds.height - box.height)
   };
 }
 

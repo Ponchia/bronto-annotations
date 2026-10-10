@@ -772,3 +772,6 @@ function cssEscape(value: string): string {
 
   return value.replace(/["#.:,[\]>+~*^$|=\\]/g, '\\$&');
 }
+
+export { measureRangeAnchor } from './range.js';
+export type { RangeAnchorOptions, RangeAnchorMeasurement } from './range.js';

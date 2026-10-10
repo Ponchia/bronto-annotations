@@ -91,9 +91,14 @@ export function renderAnnotationsSvg(layout: ResolvedLayout, options: SvgRenderO
   const preserveAspectRatio = options.preserveAspectRatio
     ? ` preserveAspectRatio="${escapeAttribute(options.preserveAspectRatio)}"`
     : '';
+  // A static image role can swallow the semantics of keyboard-focusable
+  // notes and edit handles. Use a labeled group when controls are present.
+  const layerRole = Number.isFinite(options.noteTabIndex) || options.includeEditHandles
+    ? 'group'
+    : 'img';
 
   return [
-    `<svg class="${escapeAttribute(`${prefix}-layer`)}" xmlns="http://www.w3.org/2000/svg" viewBox="${layout.bounds.x} ${layout.bounds.y} ${layout.bounds.width} ${layout.bounds.height}"${preserveAspectRatio} role="img" aria-label="${escapeAttribute(label)}">`,
+    `<svg class="${escapeAttribute(`${prefix}-layer`)}" xmlns="http://www.w3.org/2000/svg" viewBox="${layout.bounds.x} ${layout.bounds.y} ${layout.bounds.width} ${layout.bounds.height}"${preserveAspectRatio} role="${layerRole}" aria-label="${escapeAttribute(label)}">`,
     title,
     markerDefs,
     paintAnnotations.map((item) => renderResolvedAnnotationSvg(item, prefix, includeSubjects, markerPrefix, options.noteTabIndex)).join(''),

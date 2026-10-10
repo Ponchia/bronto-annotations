@@ -17,7 +17,30 @@ require consumer credentials or a long-lived npm token.
   introduce high-or-worse known vulnerabilities.
 - OpenSSF Scorecard runs on pushes to `main`, branch protection changes, a
   weekly schedule, and manual dispatch. It publishes Scorecard results and
-  uploads SARIF into GitHub code scanning.
+  uploads SARIF into GitHub code scanning. The Scorecard action is pinned to
+  the immutable `v2.4.4` release commit, rather than a mutable version tag.
+  This updates the underlying Scorecard engine to v5.5.0 while preserving
+  the workflow permissions and SARIF upload behavior.
+
+## Version Update Compatibility Policy
+
+Routine Dependabot npm PRs group compatible **minor and patch** updates for
+optional integrations and development tooling. Major upgrades of `mermaid`,
+`typescript`, `vitest`, and `jsdom` are deferred until their next compatibility
+lane is deliberately reviewed and tested. In particular, Mermaid 12 contains
+parser dependencies requiring Node 22, while the public package still promises
+Node 20 support; replacing the Mermaid 11 verification lane automatically
+would remove existing compatibility evidence.
+
+The `ignore` rules affect **version updates**, not Dependabot's independent
+security alerts or security updates. A major upgrade can be reviewed in a
+dedicated PR with corresponding changes to the compatibility matrix, tests,
+Node/runtime support policy, and public docs. Remove or revise the ignore rule
+when that upgrade is supported; do not weaken matrix assertions just to make
+a grouped dependency PR pass.
+
+GitHub Actions upgrades stay in their separate Dependabot ecosystem so their
+runner permissions and trusted-publishing controls can be audited individually.
 
 ## Runner Policy
 
@@ -62,3 +85,18 @@ gh api repos/Ponchia/bronto-annotations/private-vulnerability-reporting --jq '{e
 ```
 
 `npm run check` includes the local security automation check.
+
+## Transitive parser advisories
+
+The package has no core runtime dependencies. The documentation/demo toolchain
+brings in parsers through optional Mermaid and other development dependencies.
+After auditing those dependencies, the lockfile selects patched versions of
+`smol-toml`, `source-map-js` and `dompurify`. Mermaid 11 currently declares an
+older KaTeX range that includes a low-severity advisory, so the repository
+uses an explicit **development/build-tool override** for KaTeX 0.19.0.
+This is not a runtime dependency of `@ponchia/annotations`.
+
+The override is validated by the Mermaid generated-SVG adapter, packed
+consumer, browser screenshot, compatibility and full repository test suites.
+Revisit it when Mermaid itself raises its KaTeX range; do not downgrade Mermaid
+or silently suppress an advisory to make the audit green.

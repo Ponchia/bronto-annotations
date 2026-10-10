@@ -133,9 +133,20 @@ function routedConnectorPoints(
     return base;
   }
 
+  // A connector can only hit a padded obstacle when the segment's bounding
+  // box overlaps it. Avoid building a routing graph for clear segments.
+  if (!mayIntersectPaddedObstacle(base, context.obstacles, routing.padding)) {
+    return base;
+  }
+
   const obstacles = routingObstacles(start, end, context.obstacles, routing);
 
-  if (obstacles.length === 0 || connectorObstacleHits(base, obstacles) === 0) {
+  if (obstacles.length === 0) {
+    return base;
+  }
+
+  const baseHits = connectorObstacleHits(base, obstacles);
+  if (baseHits === 0) {
     return base;
   }
 
@@ -149,7 +160,6 @@ function routedConnectorPoints(
   }
 
   const routedHits = connectorObstacleHits(routed, obstacles);
-  const baseHits = connectorObstacleHits(base, obstacles);
 
   if (routedHits > baseHits) {
     return base;
@@ -194,6 +204,31 @@ function resolveRoutingOptions(
   };
 }
 
+function mayIntersectPaddedObstacle(points: Point[], obstacles: Box[], padding: number): boolean {
+  for (let index = 1; index < points.length; index += 1) {
+    const start = points[index - 1]!;
+    const end = points[index]!;
+    const left = Math.min(start.x, end.x);
+    const right = Math.max(start.x, end.x);
+    const top = Math.min(start.y, end.y);
+    const bottom = Math.max(start.y, end.y);
+
+    for (const box of obstacles) {
+      if (!isFiniteBox(box) || box.width <= 0 || box.height <= 0) {
+        continue;
+      }
+
+      // Inclusive comparisons preserve contact-with-boundary routing.
+      if (right >= box.x - padding && left <= box.x + box.width + padding
+        && bottom >= box.y - padding && top <= box.y + box.height + padding) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 function routingObstacles(
   start: Point,
   end: Point,
@@ -230,10 +265,14 @@ function orthogonalRoute(
   const nodes: Point[] = [];
 
   for (const x of xValues) {
+    // Share the narrow set of rectangles that actually touch this x-axis line.
+    // Point containment on the grid otherwise scans every obstacle at each cell.
+    const blockers = obstacles.filter((box) => x >= box.x && x <= box.x + box.width);
     for (const y of yValues) {
       const point = { x, y };
 
-      if (!pointInsideAnyBox(point, obstacles) && pointWithinBounds(point, options.bounds)) {
+      if (!blockers.some((box) => y >= box.y && y <= box.y + box.height)
+        && pointWithinBounds(point, options.bounds)) {
         nodes.push(point);
       }
     }
@@ -253,12 +292,14 @@ function orthogonalRoute(
   const rows = groupByCoordinate(nodes, 'y');
   const columns = groupByCoordinate(nodes, 'x');
 
-  for (const row of rows.values()) {
-    connectVisibleNeighbors(row.sort((a, b) => a.x - b.x), obstacles, adjacency, keyFor, options.preference);
+  for (const [y, row] of rows) {
+    const blockers = obstacles.filter((box) => y >= box.y && y <= box.y + box.height);
+    connectVisibleNeighbors(row.sort((a, b) => a.x - b.x), blockers, adjacency, keyFor, options.preference);
   }
 
-  for (const column of columns.values()) {
-    connectVisibleNeighbors(column.sort((a, b) => a.y - b.y), obstacles, adjacency, keyFor, options.preference);
+  for (const [x, column] of columns) {
+    const blockers = obstacles.filter((box) => x >= box.x && x <= box.x + box.width);
+    connectVisibleNeighbors(column.sort((a, b) => a.y - b.y), blockers, adjacency, keyFor, options.preference);
   }
 
   const routeKeys = shortestPath(keyFor(start), keyFor(end), adjacency);
@@ -298,6 +339,9 @@ function connectVisibleNeighbors(
   }
 }
 
+// Dijkstra with a binary min-heap. The old frontier rebuilt and sorted an
+// entire Set on every visit, which dominates dense orthogonal routing.
+// Distance ties retain the existing lexical key order for stable SVG paths.
 function shortestPath(
   startKey: string,
   endKey: string,
@@ -305,23 +349,27 @@ function shortestPath(
 ): string[] | undefined {
   const distances = new Map<string, number>([[startKey, 0]]);
   const previous = new Map<string, string>();
-  const queue = new Set<string>([startKey]);
+  const frontier: Array<{ key: string; distance: number }> = [];
+  pushFrontier(frontier, { key: startKey, distance: 0 });
 
-  while (queue.size > 0) {
-    const current = [...queue].sort((a, b) => (distances.get(a) ?? Infinity) - (distances.get(b) ?? Infinity) || a.localeCompare(b))[0]!;
-    queue.delete(current);
+  while (frontier.length > 0) {
+    const current = popFrontier(frontier)!;
 
-    if (current === endKey) {
+    // Decrease-key creates a new entry; stale entries do not affect the route.
+    if (current.distance !== distances.get(current.key)) {
+      continue;
+    }
+    if (current.key === endKey) {
       break;
     }
 
-    for (const edge of adjacency.get(current) ?? []) {
-      const nextDistance = (distances.get(current) ?? Infinity) + edge.weight;
+    for (const edge of adjacency.get(current.key) ?? []) {
+      const nextDistance = current.distance + edge.weight;
 
       if (nextDistance < (distances.get(edge.key) ?? Infinity)) {
         distances.set(edge.key, nextDistance);
-        previous.set(edge.key, current);
-        queue.add(edge.key);
+        previous.set(edge.key, current.key);
+        pushFrontier(frontier, { key: edge.key, distance: nextDistance });
       }
     }
   }
@@ -345,6 +393,50 @@ function shortestPath(
   }
 
   return path.reverse();
+}
+
+type RouteFrontierEntry = { key: string; distance: number };
+
+function compareFrontier(first: RouteFrontierEntry, second: RouteFrontierEntry): number {
+  return first.distance - second.distance || first.key.localeCompare(second.key);
+}
+
+function pushFrontier(queue: RouteFrontierEntry[], value: RouteFrontierEntry): void {
+  let index = queue.length;
+  queue.push(value);
+
+  while (index > 0) {
+    const parent = Math.floor((index - 1) / 2);
+    if (compareFrontier(queue[parent]!, value) <= 0) {
+      break;
+    }
+    queue[index] = queue[parent]!;
+    index = parent;
+  }
+  queue[index] = value;
+}
+
+function popFrontier(queue: RouteFrontierEntry[]): RouteFrontierEntry | undefined {
+  const first = queue[0];
+  const last = queue.pop();
+  if (queue.length === 0 || !last) {
+    return first;
+  }
+
+  let index = 0;
+  while (index * 2 + 1 < queue.length) {
+    let child = index * 2 + 1;
+    if (child + 1 < queue.length && compareFrontier(queue[child + 1]!, queue[child]!) < 0) {
+      child += 1;
+    }
+    if (compareFrontier(last, queue[child]!) <= 0) {
+      break;
+    }
+    queue[index] = queue[child]!;
+    index = child;
+  }
+  queue[index] = last;
+  return first;
 }
 
 function compactRoute(points: Point[]): Point[] {
@@ -446,7 +538,12 @@ function groupByCoordinate(points: Point[], coordinate: 'x' | 'y'): Map<number, 
 
   for (const point of points) {
     const key = point[coordinate];
-    groups.set(key, [...(groups.get(key) ?? []), point]);
+    const row = groups.get(key);
+    if (row) {
+      row.push(point);
+    } else {
+      groups.set(key, [point]);
+    }
   }
 
   return groups;
@@ -458,7 +555,12 @@ function addEdge(
   to: string,
   weight: number
 ): void {
-  adjacency.set(from, [...(adjacency.get(from) ?? []), { key: to, weight }]);
+  const edges = adjacency.get(from);
+  if (edges) {
+    edges.push({ key: to, weight });
+  } else {
+    adjacency.set(from, [{ key: to, weight }]);
+  }
 }
 
 function uniqueSorted(values: number[]): number[] {
@@ -493,10 +595,6 @@ function pointWithinBounds(point: Point, bounds: Box | undefined): boolean {
     && point.y <= bounds.y + bounds.height;
 }
 
-function pointInsideAnyBox(point: Point, boxes: Box[]): boolean {
-  return boxes.some((box) => pointInsideBox(point, box));
-}
-
 function pointInsideBox(point: Point, box: Box): boolean {
   return point.x >= box.x
     && point.x <= box.x + box.width
@@ -509,6 +607,19 @@ function segmentIntersectsAnyBox(start: Point, end: Point, boxes: Box[]): boolea
 }
 
 function segmentIntersectsBox(start: Point, end: Point, box: Box): boolean {
+  const right = box.x + box.width;
+  const bottom = box.y + box.height;
+  const minX = Math.min(start.x, end.x);
+  const maxX = Math.max(start.x, end.x);
+  const minY = Math.min(start.y, end.y);
+  const maxY = Math.max(start.y, end.y);
+  // Reject disjoint extents before edge tests. Orientation alone treats two
+  // disjoint collinear segments as an intersection, creating false detours.
+  if (maxX < box.x || minX > right || maxY < box.y || minY > bottom) return false;
+  // The visibility graph is orthogonal: its hot path needs no corner objects
+  // or four orientation tests. Boundary contact still counts as a collision.
+  if (start.x === end.x || start.y === end.y)
+    return maxX >= box.x && minX <= right && maxY >= box.y && minY <= bottom;
   if (pointInsideBox(start, box) || pointInsideBox(end, box)) {
     return true;
   }

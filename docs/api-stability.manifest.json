@@ -263,6 +263,7 @@
         "defineD3StyleAnnotationType",
         "getCandidateSides",
         "prepareD3StyleAnnotationCollection",
+        "previewAnnotationEdit",
         "resolvePlacementCandidate",
         "scorePlacementCandidate",
         "translateAnchor"
@@ -275,6 +276,8 @@
         "AnnotationLayerProps",
         "AnnotationLayerQualityEvent",
         "AnnotationLayerTargetAlignmentEvent",
+        "AnnotationPin",
+        "AnnotationPinProps",
         "UseAnnotationsOptions",
         "useAnnotations"
       ],
@@ -304,6 +307,8 @@
         "DomAnnotationSpec",
         "ElementAnchorOptions",
         "ExtractedAnchor",
+        "RangeAnchorMeasurement",
+        "RangeAnchorOptions",
         "RectLike",
         "SelectorAnchorSpec",
         "SelectorObstacleSpec",
@@ -330,6 +335,7 @@
         "formatAnchorAlignmentReport",
         "formatAnchorDiagnostic",
         "formatAnchorValidationReport",
+        "measureRangeAnchor",
         "obstaclesFromElements",
         "obstaclesFromSelector",
         "obstaclesFromSelectors",

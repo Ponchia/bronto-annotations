@@ -16,6 +16,7 @@ describe('SVG renderer', () => {
     const svg = renderAnnotationsSvg(layout, { title: 'Test annotations' });
 
     expect(svg).toContain('<svg');
+    expect(svg).toContain('role="img" aria-label="Test annotations"');
     expect(svg).toContain('pa-annotation__subject');
     expect(svg).toContain('pa-annotation__connector');
     expect(svg).toContain('pa-annotation__note');
@@ -47,6 +48,7 @@ describe('SVG renderer', () => {
     });
 
     expect(svg).toContain('aria-label="Debug annotation layer"');
+    expect(svg).toContain('role="group" aria-label="Debug annotation layer"');
     expect(svg).toContain('data-anchor-source="unit-test"');
     expect(svg).toContain('data-note-kind="callout"');
     expect(svg).toContain('data-debug-kind="candidate"');
@@ -59,6 +61,24 @@ describe('SVG renderer', () => {
     expect(svg).toMatch(/class="pa-annotation__subject[^"]*"[^>]+aria-hidden="true"/);
     expect(svg).toMatch(/class="pa-annotation__connector"[^>]+aria-hidden="true"/);
     expect(svg).toMatch(/class="pa-annotation__note-box"[^>]+aria-hidden="true"/);
+  });
+
+  it('groups SVG layers containing edit controls without needing focusable notes', () => {
+    const layout = resolveAnnotationLayout({
+      annotations: [{
+        id: 'editable',
+        anchor: { type: 'point', point: { x: 60, y: 70 } },
+        note: { title: 'Editable' }
+      }],
+      bounds: { x: 0, y: 0, width: 220, height: 170 }
+    });
+
+    const svg = renderAnnotationsSvg(layout, {
+      includeEditHandles: { includeAnchor: true },
+      ariaLabel: 'Editable chart notes'
+    });
+    expect(svg).toContain('role="group" aria-label="Editable chart notes"');
+    expect(svg).toContain('role="button"');
   });
 
   it('can render layout-quality issue boxes for manual placement debugging', () => {

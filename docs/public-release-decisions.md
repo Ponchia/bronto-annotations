@@ -67,3 +67,15 @@ decisions so package metadata, docs, and release automation do not drift.
 - Visual baselines live in `test/visual-baselines/browser-screenshots.json`.
 - No separate hosted examples site is required before `0.1.0`; README and
   packaged docs are the canonical public entry points.
+
+## October 2026: Published Presentation (0.3.x)
+
+The historical `0.1.x` decision to keep examples solely within the repository
+was sufficient for the initial npm release. At `0.3.x` the repo publishes a
+static, framework-independent product site and all compiled example fixtures
+using GitHub Pages: https://ponchia.github.io/bronto-annotations/.
+
+The website is generated from the existing examples and authored Markdown.
+The package still owns only annotation geometry, placements and adapters;
+BrontoUI remains a separate, optional visual system. Site-specific CSS and
+playground code are never included in the headless npm runtime.

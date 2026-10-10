@@ -740,7 +740,7 @@ try {
           && legacy.svgBox?.width > 0
           && legacy.svgBox?.height > 0
           && legacy.titlePaintOrder.includes('stroke')
-          && legacy.titleTextTransform === 'uppercase'
+          && legacy.titleTextTransform === 'none'
           && legacy.titleStroke !== ''
           && legacy.titleStroke !== 'none'
           && legacy.connectorStroke !== ''
@@ -883,6 +883,12 @@ async function verifyReactFlowEditDrag(page, label) {
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
   await page.mouse.move(start.x + delta.x, start.y + delta.y, { steps: 4 });
+  // Preview should be visible before the host commits its annotation patch.
+  await page.waitForFunction((input) => {
+    const note = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box');
+    const rect = note?.getBoundingClientRect();
+    return Boolean(rect && (Math.abs(rect.x - input.x) > 2 || Math.abs(rect.y - input.y) > 2));
+  }, { x: before.noteBox.x, y: before.noteBox.y }, { timeout: 5000 });
   await page.mouse.up();
 
   await page.waitForFunction(() => {
@@ -1194,6 +1200,12 @@ async function verifyEditDrag(page, label) {
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
   await page.mouse.move(start.x + delta.x, start.y + delta.y, { steps: 4 });
+  // Preview should be visible before the host commits its annotation patch.
+  await page.waitForFunction((input) => {
+    const note = document.querySelector('g[data-annotation-id="queue"] .pa-annotation__note-box');
+    const rect = note?.getBoundingClientRect();
+    return Boolean(rect && (Math.abs(rect.x - input.x) > 2 || Math.abs(rect.y - input.y) > 2));
+  }, { x: before.noteBox.x, y: before.noteBox.y }, { timeout: 5000 });
   await page.mouse.up();
 
   await page.waitForFunction(() => {
