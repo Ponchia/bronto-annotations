@@ -176,7 +176,8 @@ jobs:
               -o "${RUNNER_TEMP}/npm-registry.json" \
               && node scripts/verify-published-registry.mjs \
                 "${RUNNER_TEMP}/npm-registry.json" "$version" "$dist_tag" \
-                > "${RUNNER_TEMP}/npm-registry-confirmed.json"; then
+                > "${RUNNER_TEMP}/npm-registry-confirmed.json" \
+                2> "${RUNNER_TEMP}/npm-registry-last-error.log"; then
               published=true
               break
             fi
@@ -199,6 +200,11 @@ jobs:
               echo ''
               echo 'Do not republish the immutable version based only on this read delay.'
               echo "Verify with a fresh cache: \`npm --cache=\$(mktemp -d) view @ponchia/annotations@$version version dist-tags --json\`."
+              if [ -f "${RUNNER_TEMP}/npm-registry-last-error.log" ]; then
+                echo ''
+                echo 'Last metadata verifier error:'
+                tail -n 6 "${RUNNER_TEMP}/npm-registry-last-error.log"
+              fi
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
