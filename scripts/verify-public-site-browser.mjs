@@ -3,7 +3,6 @@ import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const server = await createServer({

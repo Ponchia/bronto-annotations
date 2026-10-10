@@ -80,6 +80,21 @@ for (const rel of pages) {
   assert(html.querySelector('title')?.textContent, 'Missing title: ' + rel);
   // Actual example fixtures have their own layout contract, and source links
   // are on the editorial pages rather than the test fixture itself.
+  // Authored Markdown may contain HTML snippets. The static docs renderer
+  // must never ship active HTML (inline script/event handlers). Search UI JS
+  // is independently authored and allowed only on the docs index.
+  if (rel.startsWith('docs/') && rel !== 'docs/index.html') {
+    assert.equal(
+      html.querySelectorAll('script,iframe,object,embed,form').length,
+      0,
+      'Unsafe active HTML in generated documentation: ' + rel,
+    );
+    for (const el of html.querySelectorAll('*')) {
+      for (const attr of [...el.attributes]) {
+        assert(!/^on/i.test(attr.name), 'Inline handler in ' + rel);
+      }
+    }
+  }
   if (rel === 'index.html' || rel.startsWith('docs/')) {
     assert(
       html.querySelector('main'),

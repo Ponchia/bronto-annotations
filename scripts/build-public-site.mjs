@@ -17,6 +17,8 @@ import {
 import { resolve, join, relative, dirname, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
+import { JSDOM } from 'jsdom';
+import createDOMPurify from 'dompurify';
 
 const exec = promisify(execFile);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -47,6 +49,9 @@ const titles = {
 };
 const primaryDocs = Object.keys(titles);
 const baseUrl = 'https://ponchia.github.io/bronto-annotations/';
+// Site content comes from tracked Markdown. Sanitize inline HTML as well as
+// Markdown output so authored guides cannot inject active markup into Pages.
+const sanitizer = createDOMPurify(new JSDOM('').window);
 const esc = (input) =>
   String(input)
     .replace(/&/g, '&amp;')
@@ -109,21 +114,27 @@ function rewriteMarkdownLinks(html, file) {
 }
 
 function namedHeadings(html) {
+  const fragment = JSDOM.fragment(html);
   const seen = new Map();
-  return html.replace(/<h([1-6])>([\s\S]*?)<\/h\1>/g, (_, depth, body) => {
-    const text = body.replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ');
-    const stem = text
-      .toLowerCase()
-      .normalize('NFKD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9 -]/g, '')
-      .trim()
-      .replace(/\s+/g, '-');
-    const number = seen.get(stem) ?? 0;
-    seen.set(stem, number + 1);
-    const id = stem + (number ? '-' + number : '');
-    return '<h' + depth + ' id="' + esc(id) + '">' + body + '</h' + depth + '>';
-  });
+  for (const heading of fragment.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
+    // DOM textContent is a real HTML extraction, unlike stripping tags with a
+    // regex (which can leave active fragments and triggered CodeQL alerts).
+    const text = heading.textContent ?? '';
+    const stem =
+      text
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9 -]/g, '')
+        .trim()
+        .replace(/\s+/g, '-') || 'section';
+    const count = seen.get(stem) ?? 0;
+    seen.set(stem, count + 1);
+    heading.id = stem + (count ? '-' + count : '');
+  }
+  const wrapper = fragment.ownerDocument.createElement('div');
+  wrapper.append(fragment);
+  return wrapper.innerHTML;
 }
 
 function header(prefix) {
@@ -241,7 +252,9 @@ for (const file of docsFiles) {
   const prefix = '../'.repeat(directoryDepth);
   const text = source.match(/^#\s+([^\n]+)/m)?.[1] ?? slug.replaceAll('-', ' ');
   const heading = titles[slug] ?? text;
-  let parsed = String(marked.parse(source));
+  let parsed = sanitizer.sanitize(String(marked.parse(source)), {
+    USE_PROFILES: { html: true },
+  });
   // Preserve keyboard scrolling for code fences that overflow on narrow screens.
   parsed = parsed.replace(/<pre(?:\s+[^>]*)?>/g, (tag) =>
     tag.replace(
