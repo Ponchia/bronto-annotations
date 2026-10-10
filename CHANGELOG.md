@@ -6,6 +6,18 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.4.1 - 2026-10-10
+
+### Performance
+
+- Keep React note, edit-handle, SVG marker and DOM measurement subtrees stable while previewing changes to a single annotation. Unchanged custom `renderNote` callbacks are no longer reinvoked on every pointer movement.
+- Cache authoritative layout-quality debug geometry during visual-only previews, leaving report semantics, pointer/keyboard editing, accessibility roles and SSR markup intact.
+
+### Verification
+
+- Add dense React authoring regression coverage with 32 notes and repeated pointer movement, including stable hidden measurement copies and unaffected note content.
+- Preserve the public API, compatibility matrix, existing packed consumers, accessibility checks and browser visual baselines.
+
 ## 0.4.0 - 2026-10-10
 
 ### Added
