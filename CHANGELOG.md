@@ -6,6 +6,18 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.3.3 - 2026-10-10
+
+### Performance
+
+- Speed up dense annotation layouts by skipping unnecessary orthogonal connector routing, replacing full-frontier sorting with a stable binary heap, and reducing per-candidate graph allocations and geometry checks.
+- Preserve existing note positions, connector paths, candidate scoring, and layout-quality metrics in deterministic before/after comparisons, with added padded-obstacle and boundary-contact tests.
+- Document reproducible benchmark observations, host integration guidance, and remaining limits of dense full-layout recalculation without changing the public API.
+
+### Verification
+
+- Run 212 unit tests, adapter/browser examples, packaged consumers, legacy Bronto UI CSS parity, TypeScript/React/Vega compatibility checks, and public-site checks.
+
 ## 0.3.2 - 2026-10-10
 
 ### Accessibility
