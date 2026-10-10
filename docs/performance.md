@@ -85,8 +85,10 @@ benchmark ceilings have **not** been tightened simply because one run improved.
 
 For interactive React surfaces, `AnnotationLayer` can opt into
 `previewEdits` to project only the active annotation while dragging. This
-avoids recalculating the full layout or quality report per pointer event; the
-host still commits and re-resolves once at gesture end. Custom SVG/DOM hosts
+avoids recalculating the full layout or quality report per pointer event.
+Memoized annotation and edit-handle trees also keep unrelated custom React
+notes and hidden DOM-measurement copies from rendering on each drag update.
+The host still commits and re-resolves once at gesture end. Custom SVG/DOM hosts
 can use the experimental `previewAnnotationEdit` helper. Preview connectors
 skip obstacle-aware routing and converge to the authoritative path on commit.
 

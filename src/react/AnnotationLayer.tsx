@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  memo,
   useMemo,
   useRef,
   useState
@@ -219,6 +220,10 @@ export function AnnotationLayer({
   const paintAnnotations = useMemo(
     () => annotationsForPaint(layout.annotations),
     [layout.annotations]
+  );
+  const qualityIssues = useMemo(
+    () => qualityDebug ? renderQualityIssues(layout, quality, prefix) : null,
+    [layout, quality, prefix, qualityDebug]
   );
   const displayedAnnotations = useMemo(() => activePreview
     ? paintAnnotations.map((item) => item.id === activePreview.id ? activePreview : item)
@@ -440,91 +445,30 @@ export function AnnotationLayer({
         onPointerUp={finishEdit}
         onPointerCancel={cancelEdit}
       >
-        <MarkerDefs annotations={layout.annotations} prefix={prefix} markerPrefix={markerPrefix} />
+        <MemoMarkerDefs annotations={layout.annotations} prefix={prefix} markerPrefix={markerPrefix} />
         {displayedAnnotations.map((item) => (
-          <g
-            className={[
-              prefix,
-              `${prefix}--${item.placement.side}`,
-              item.placement.manual ? `${prefix}--manual` : undefined,
-              item.annotation.variant ? `${prefix}--${item.annotation.variant}` : undefined,
-              item.annotation.tone ? `${prefix}--${item.annotation.tone}` : undefined,
-              item.annotation.motion ? `${prefix}--${item.annotation.motion}` : undefined,
-              item.annotation.className
-            ].filter(Boolean).join(' ')}
-            data-annotation-id={item.id}
-            data-annotation-side={item.placement.side}
-            role="group"
-            aria-label={item.annotation.note.ariaLabel ?? item.annotation.note.title ?? item.id}
-            style={annotationStyle(item.annotation.style)}
-            {...dataAttributes(item.annotation.data)}
+          <PaintedAnnotation
             key={item.id}
-          >
-            {renderSubject(item, prefix)}
-            {renderConnector(item, prefix, markerPrefix)}
-            {item.annotation.note.visible === false ? null : (
-              <foreignObject
-                className={noteShellClass(prefix, item.annotation)}
-                x={item.noteBox.x}
-                y={item.noteBox.y}
-                width={item.noteBox.width}
-                height={item.noteBox.height}
-                data-note-align={item.annotation.note.align ?? 'start'}
-              >
-                <div
-                  className={noteBoxClass(prefix, item.annotation)}
-                  role="note"
-                  aria-label={item.annotation.note.ariaLabel ?? item.annotation.note.title ?? item.id}
-                  tabIndex={noteTabIndex}
-                  {...dataAttributes(item.annotation.note.data)}
-                  data-annotation-id={item.id}
-                  data-note-align={item.annotation.note.align ?? 'start'}
-                >
-                  {renderNote ? renderNote(item) : <DefaultNote annotation={item.annotation} classPrefix={prefix} />}
-                </div>
-              </foreignObject>
-            )}
-            {debug ? renderDebugBoxes(item, prefix) : null}
-          </g>
+            item={item}
+            prefix={prefix}
+            markerPrefix={markerPrefix}
+            debug={debug}
+            noteTabIndex={noteTabIndex}
+            renderNote={renderNote}
+          />
         ))}
-        {qualityDebug ? renderQualityIssues(layout, quality, prefix) : null}
+        {qualityIssues}
         {displayedEditHandles.length > 0 ? (
           <g className={`${prefix}__edit-handles`}>
             {displayedEditHandles.map((handle) => (
-              <g
-                className={`${prefix}__edit-handle-group ${prefix}__edit-handle-group--${handle.kind}`}
-                data-annotation-id={handle.annotationId}
-                data-edit-handle={handle.kind}
-                data-edit-handle-position={editHandlePosition(handle)}
+              <PaintedEditHandle
                 key={handle.id}
-              >
-                <circle
-                  aria-hidden="true"
-                  className={`${prefix}__edit-hit ${prefix}__edit-hit--${handle.kind}`}
-                  cx={handle.point.x}
-                  cy={handle.point.y}
-                  r={handle.hitRadius}
-                  data-edit-handle-position={editHandlePosition(handle)}
-                  style={{ cursor: handle.cursor }}
-                  onPointerDown={(event) => handleEditPointerDown(handle, event)}
-                />
-                <circle
-                  aria-label={handle.ariaLabel}
-                  className={`${prefix}__edit-handle ${prefix}__edit-handle--${handle.kind}`}
-                  cx={handle.point.x}
-                  cy={handle.point.y}
-                  data-annotation-id={handle.annotationId}
-                  data-edit-handle={handle.kind}
-                  data-edit-handle-position={editHandlePosition(handle)}
-                  r={handle.radius}
-                  role="button"
-                  style={{ cursor: handle.cursor }}
-                  tabIndex={editHandleTabIndex}
-                  aria-keyshortcuts="ArrowUp ArrowRight ArrowDown ArrowLeft Shift+ArrowUp Shift+ArrowRight Shift+ArrowDown Shift+ArrowLeft"
-                  onKeyDown={(event) => handleEditKeyDown(handle, event)}
-                  onPointerDown={(event) => handleEditPointerDown(handle, event)}
-                />
-              </g>
+                handle={handle}
+                prefix={prefix}
+                tabIndex={editHandleTabIndex}
+                onPointerDown={handleEditPointerDown}
+                onKeyDown={handleEditKeyDown}
+              />
             ))}
           </g>
         ) : null}
@@ -534,28 +478,164 @@ export function AnnotationLayer({
           {layout.annotations
             .filter((item) => item.annotation.note.visible !== false)
             .map((item) => (
-              <div
-                className={noteBoxClass(prefix, item.annotation)}
+              <MeasuredAnnotation
                 key={item.id}
-                ref={(node) => setMeasureNode(item.id, node)}
-                data-note-align={item.annotation.note.align ?? 'start'}
-                // The drawn note inherits the annotation's style variables from
-                // its <g>; the measured copy has no such parent, so without
-                // these its `border: 1px solid var(--pa-annotation-border)`
-                // computed to no border at all and every note measured 2px
-                // narrower than the box it was then drawn in — which is how a
-                // title that fit the measurer wrapped at the drawn box's edge.
-                style={annotationStyle(item.annotation.style)}
-                {...dataAttributes(item.annotation.note.data)}
-              >
-                {renderNote ? renderNote(item) : <DefaultNote annotation={item.annotation} classPrefix={prefix} />}
-              </div>
+                item={item}
+                prefix={prefix}
+                renderNote={renderNote}
+                setMeasureNode={setMeasureNode}
+              />
             ))}
         </div>
       ) : null}
     </div>
   );
 }
+
+// Drag previews update one resolved annotation. Memoized paint boundaries keep
+// React from reconstructing note content, host renderNote callbacks, and edit
+// controls for every untouched neighbor on each pointer event.
+const PaintedAnnotation = memo(function PaintedAnnotation({
+  item,
+  prefix,
+  markerPrefix,
+  debug,
+  noteTabIndex,
+  renderNote
+}: {
+  item: ResolvedAnnotation;
+  prefix: string;
+  markerPrefix: string;
+  debug: boolean;
+  noteTabIndex: AnnotationLayerProps['noteTabIndex'];
+  renderNote: AnnotationLayerProps['renderNote'];
+}) {
+  return (
+    <g
+      className={[
+        prefix,
+        `${prefix}--${item.placement.side}`,
+        item.placement.manual ? `${prefix}--manual` : undefined,
+        item.annotation.variant ? `${prefix}--${item.annotation.variant}` : undefined,
+        item.annotation.tone ? `${prefix}--${item.annotation.tone}` : undefined,
+        item.annotation.motion ? `${prefix}--${item.annotation.motion}` : undefined,
+        item.annotation.className
+      ].filter(Boolean).join(' ')}
+      data-annotation-id={item.id}
+      data-annotation-side={item.placement.side}
+      role="group"
+      aria-label={item.annotation.note.ariaLabel ?? item.annotation.note.title ?? item.id}
+      style={annotationStyle(item.annotation.style)}
+      {...dataAttributes(item.annotation.data)}
+    >
+      {renderSubject(item, prefix)}
+      {renderConnector(item, prefix, markerPrefix)}
+      {item.annotation.note.visible === false ? null : (
+        <foreignObject
+          className={noteShellClass(prefix, item.annotation)}
+          x={item.noteBox.x}
+          y={item.noteBox.y}
+          width={item.noteBox.width}
+          height={item.noteBox.height}
+          data-note-align={item.annotation.note.align ?? 'start'}
+        >
+          <div
+            className={noteBoxClass(prefix, item.annotation)}
+            role="note"
+            aria-label={item.annotation.note.ariaLabel ?? item.annotation.note.title ?? item.id}
+            tabIndex={noteTabIndex}
+            {...dataAttributes(item.annotation.note.data)}
+            data-annotation-id={item.id}
+            data-note-align={item.annotation.note.align ?? 'start'}
+          >
+            {renderNote ? renderNote(item) : <DefaultNote annotation={item.annotation} classPrefix={prefix} />}
+          </div>
+        </foreignObject>
+      )}
+      {debug ? renderDebugBoxes(item, prefix) : null}
+    </g>
+  );
+});
+
+const PaintedEditHandle = memo(function PaintedEditHandle({
+  handle,
+  prefix,
+  tabIndex,
+  onPointerDown,
+  onKeyDown
+}: {
+  handle: AnnotationEditHandle;
+  prefix: string;
+  tabIndex: number;
+  onPointerDown: (handle: AnnotationEditHandle, event: ReactPointerEvent<SVGCircleElement>) => void;
+  onKeyDown: (handle: AnnotationEditHandle, event: ReactKeyboardEvent<SVGCircleElement>) => void;
+}) {
+  return (
+    <g
+      className={`${prefix}__edit-handle-group ${prefix}__edit-handle-group--${handle.kind}`}
+      data-annotation-id={handle.annotationId}
+      data-edit-handle={handle.kind}
+      data-edit-handle-position={editHandlePosition(handle)}
+    >
+      <circle
+        aria-hidden="true"
+        className={`${prefix}__edit-hit ${prefix}__edit-hit--${handle.kind}`}
+        cx={handle.point.x}
+        cy={handle.point.y}
+        r={handle.hitRadius}
+        data-edit-handle-position={editHandlePosition(handle)}
+        style={{ cursor: handle.cursor }}
+        onPointerDown={(event) => onPointerDown(handle, event)}
+      />
+      <circle
+        aria-label={handle.ariaLabel}
+        className={`${prefix}__edit-handle ${prefix}__edit-handle--${handle.kind}`}
+        cx={handle.point.x}
+        cy={handle.point.y}
+        data-annotation-id={handle.annotationId}
+        data-edit-handle={handle.kind}
+        data-edit-handle-position={editHandlePosition(handle)}
+        r={handle.radius}
+        role="button"
+        style={{ cursor: handle.cursor }}
+        tabIndex={tabIndex}
+        aria-keyshortcuts="ArrowUp ArrowRight ArrowDown ArrowLeft Shift+ArrowUp Shift+ArrowRight Shift+ArrowDown Shift+ArrowLeft"
+        onKeyDown={(event) => onKeyDown(handle, event)}
+        onPointerDown={(event) => onPointerDown(handle, event)}
+      />
+    </g>
+  );
+});
+
+const MeasuredAnnotation = memo(function MeasuredAnnotation({
+  item,
+  prefix,
+  renderNote,
+  setMeasureNode
+}: {
+  item: ResolvedAnnotation;
+  prefix: string;
+  renderNote: AnnotationLayerProps['renderNote'];
+  setMeasureNode: (id: string, node: HTMLDivElement | null) => void;
+}) {
+  return (
+    <div
+      className={noteBoxClass(prefix, item.annotation)}
+      ref={(node) => setMeasureNode(item.id, node)}
+      data-note-align={item.annotation.note.align ?? 'start'}
+      // The drawn note inherits the annotation's style variables from
+      // its <g>; the measured copy has no such parent, so without
+      // these its `border: 1px solid var(--pa-annotation-border)`
+      // computed to no border at all and every note measured 2px
+      // narrower than the box it was then drawn in — which is how a
+      // title that fit the measurer wrapped at the drawn box's edge.
+      style={annotationStyle(item.annotation.style)}
+      {...dataAttributes(item.annotation.note.data)}
+    >
+      {renderNote ? renderNote(item) : <DefaultNote annotation={item.annotation} classPrefix={prefix} />}
+    </div>
+  );
+});
 
 function normalizeEditOptions(editable: AnnotationLayerProps['editable']): AnnotationLayerEditOptions | undefined {
   if (!editable) {
@@ -1040,6 +1120,8 @@ function badgeGeometry(
 function badgePath(anchor: Point, first: Point, second: Point): string {
   return `M${round(anchor.x)},${round(anchor.y)}L${round(first.x)},${round(first.y)}L${round(second.x)},${round(second.y)}Z`;
 }
+
+const MemoMarkerDefs = memo(MarkerDefs);
 
 function MarkerDefs({
   annotations,

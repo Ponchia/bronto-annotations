@@ -20,7 +20,7 @@ import {
   evaluateAnnotationLayout,
   generatedSurfaceLayoutDefaults
 } from '../../src/index.js';
-import type { Annotation, ResolvedLayout } from '../../src/index.js';
+import type { Annotation, ResolvedAnnotation, ResolvedLayout } from '../../src/index.js';
 import type {
   AnnotationLayerEditEvent,
   AnnotationLayerQualityEvent,
@@ -729,6 +729,64 @@ describe('React adapter', () => {
     });
     expect(Number(first().getAttribute('x'))).toBe(initialX);
     expect(layouts).toHaveLength(1);
+  });
+
+  it('does not rerender untouched custom notes or DOM measurers during dense drag previews', () => {
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(0, 0, 900, 600));
+    const many: Annotation[] = Array.from({ length: 32 }, (_, index) => ({
+      id: `note-${index}`,
+      anchor: { type: 'point', point: {
+        x: 12 + (index % 8) * 102,
+        y: 36 + Math.floor(index / 8) * 103
+      } },
+      note: { title: `Note ${index}` },
+      placement: { manual: {
+        x: 24 + (index % 8) * 102,
+        y: 48 + Math.floor(index / 8) * 103,
+        clamp: false,
+        side: 'right'
+      } }
+    }));
+    const rendered = new Map<string, number>();
+    const renderNote = (item: ResolvedAnnotation) => {
+      rendered.set(item.id, (rendered.get(item.id) ?? 0) + 1);
+      return <span>{item.annotation.note.title}</span>;
+    };
+    const sizes = Object.fromEntries(many.map((note) => [note.id, { width: 82, height: 38 }]));
+    const { container } = render(
+      <AnnotationLayer
+        annotations={many}
+        bounds={{ x: 0, y: 0, width: 900, height: 600 }}
+        noteSizes={sizes}
+        measure="dom"
+        editable={{ includeAnchor: true }}
+        previewEdits
+        renderNote={renderNote}
+      />
+    );
+    const initial = new Map(rendered);
+    const staticNote = container.querySelector('g.pa-annotation[data-annotation-id="note-23"] foreignObject');
+    const staticMeasurer = container.querySelectorAll('.pa-annotation-layer__measurer > div')[23];
+    const target = container.querySelector('.pa-annotation__edit-handle--note[data-annotation-id="note-0"]')!;
+    const layer = container.querySelector('svg.pa-annotation-layer')!;
+
+    expect(initial.size).toBe(32);
+    expect([...initial.values()].every((count) => count >= 2)).toBe(true);
+    pointer(target, 'pointerdown', { clientX: 90, clientY: 80, pointerId: 4 });
+    pointer(layer, 'pointermove', { clientX: 103, clientY: 89, pointerId: 4 });
+    pointer(layer, 'pointermove', { clientX: 112, clientY: 102, pointerId: 4 });
+
+    expect((rendered.get('note-0') ?? 0)).toBeGreaterThan(initial.get('note-0') ?? 0);
+    for (const annotation of many.slice(1)) {
+      expect(rendered.get(annotation.id), annotation.id).toBe(initial.get(annotation.id));
+    }
+    expect(container.querySelector('g.pa-annotation[data-annotation-id="note-23"] foreignObject')).toBe(staticNote);
+    expect(container.querySelectorAll('.pa-annotation-layer__measurer > div')[23]).toBe(staticMeasurer);
+
+    pointer(layer, 'pointercancel', { clientX: 112, clientY: 102, pointerId: 4 });
+    for (const annotation of many.slice(1)) {
+      expect(rendered.get(annotation.id), annotation.id).toBe(initial.get(annotation.id));
+    }
   });
 
   it('previews anchor moves, ignores unrelated pointers, and rolls back cancelled gestures', () => {
