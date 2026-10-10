@@ -62,3 +62,18 @@ gh api repos/Ponchia/bronto-annotations/private-vulnerability-reporting --jq '{e
 ```
 
 `npm run check` includes the local security automation check.
+
+## Transitive parser advisories
+
+The package has no core runtime dependencies. The documentation/demo toolchain
+brings in parsers through optional Mermaid and other development dependencies.
+After auditing those dependencies, the lockfile selects patched versions of
+`smol-toml`, `source-map-js` and `dompurify`. Mermaid 11 currently declares an
+older KaTeX range that includes a low-severity advisory, so the repository
+uses an explicit **development/build-tool override** for KaTeX 0.19.0.
+This is not a runtime dependency of `@ponchia/annotations`.
+
+The override is validated by the Mermaid generated-SVG adapter, packed
+consumer, browser screenshot, compatibility and full repository test suites.
+Revisit it when Mermaid itself raises its KaTeX range; do not downgrade Mermaid
+or silently suppress an advisory to make the audit green.
