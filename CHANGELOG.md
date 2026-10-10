@@ -6,6 +6,23 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.4.0 - 2026-10-10
+
+### Added
+
+- Introduce experimental DOM-free `previewAnnotationEdit`, a visual-only projection for a single edited annotation without resolving the entire layout or rerouting around obstacles during pointer movement.
+- Add opt-in `AnnotationLayer.previewEdits` for immediate live note, anchor, connector and edit-handle feedback while dragging. Unedited neighbors and authoritative layout/quality reports remain stable until the host commits.
+- Demonstrate the preview in React and transformed React Flow examples and document usage for custom headless integrations.
+
+### Fixed
+
+- Ignore unrelated pointer IDs during an active drag and roll back cancelled pointer gestures without persisting an unfinished edit.
+
+### Verification
+
+- Add core/React tests for visual projection, clipping, unchanged neighbor layouts, edit cancellation and pointer identity; require real browser drag previews before mouse release.
+- Preserve the existing synchronous headless layout and package compatibility contract; dynamic host-geometry incremental resolution remains planned separately.
+
 ## 0.3.3 - 2026-10-10
 
 ### Performance
