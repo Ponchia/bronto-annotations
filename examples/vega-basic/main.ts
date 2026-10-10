@@ -53,7 +53,9 @@ const spec: Spec = {
           x: { scale: 'x', field: 'x' },
           y: { scale: 'y', field: 'y' },
           stroke: { value: '#0f766e' },
-          strokeWidth: { value: 3 }
+          strokeWidth: { value: 3 },
+          aria: { value: true },
+          description: { value: 'The score rises from 3 to 9 before settling at 5 across three periods.' }
         }
       }
     },
