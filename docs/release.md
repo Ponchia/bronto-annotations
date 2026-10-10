@@ -81,6 +81,26 @@ The Release workflow:
 Do not create the GitHub Release by hand before the workflow publishes. The
 workflow creates the GitHub Release only after npm accepts the package.
 
+### Registry Propagation
+
+A successful trusted `npm publish` may precede public registry visibility by
+minutes. The release workflow checks uncached npm registry HTTP metadata, and
+records the exact published version, dist-tag and integrity once they appear.
+Its observation is advisory: metadata propagation delays do not undo a
+successfully published, immutable npm version.
+
+If an immediate `npm view` reports the previous `latest` or a 404 for the new
+version, verify with a **fresh npm cache** rather than publishing the same
+version again:
+
+```bash
+npm --cache="$(mktemp -d)" view @ponchia/annotations version dist-tags --json
+npm --cache="$(mktemp -d)" view @ponchia/annotations@X.Y.Z version dist.integrity --json
+```
+
+Check the exact version on `https://registry.npmjs.org/@ponchia%2fannotations`
+and inspect the protected publish step before considering intervention.
+
 ## Post-Release
 
 - Confirm clean install smoke in a new consumer:

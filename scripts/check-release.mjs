@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { writeLine } from './log.mjs';
+import { verifyPublishedRegistry } from './verify-published-registry.mjs';
 
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const changelog = await read('CHANGELOG.md');
@@ -42,7 +43,9 @@ for (const term of [
   'npm publish --ignore-scripts --provenance --access public --tag "$dist_tag"',
   'dist_tag=next',
   'dist_tag=latest',
-  'npm view "@ponchia/annotations@$version"',
+  'node scripts/verify-published-registry.mjs',
+  'Cache-Control: no-cache',
+  'curl --fail --silent --show-error',
   'node scripts/changelog-section.mjs "$REF_NAME"',
   'softprops/action-gh-release'
 ]) {
@@ -62,6 +65,28 @@ assert.equal(
   '## Unreleased\n\n## 0.1.1 - 2026-06-19\n\n### Changed\n\n- Release item\n',
   'release:prep must be idempotent for an already dated version'
 );
+
+const registryVersion = '0.4.1';
+const samplePublished = {
+  name: '@ponchia/annotations',
+  'dist-tags': { latest: registryVersion, next: '0.5.0-rc.1' },
+  versions: {
+    [registryVersion]: {
+      name: '@ponchia/annotations',
+      version: registryVersion,
+      dist: {
+        integrity: 'sha512-dGVzdC1pbnRlZ3JpdHk=',
+        tarball: 'https://registry.npmjs.org/@ponchia/annotations/-/annotations-0.4.1.tgz'
+      }
+    }
+  }
+};
+assert.equal(verifyPublishedRegistry(samplePublished, registryVersion, 'latest').version, registryVersion);
+assert.throws(() => verifyPublishedRegistry(samplePublished, '0.4.2', 'latest'), /propagated/);
+assert.throws(() => verifyPublishedRegistry({ ...samplePublished, 'dist-tags': { latest: '0.4.0' } }, registryVersion, 'latest'), /propagated/);
+assert.throws(() => verifyPublishedRegistry({ ...samplePublished, versions: {} }, registryVersion, 'latest'), /not yet visible/);
+assert.throws(() => verifyPublishedRegistry({ ...samplePublished, name: 'different' }, registryVersion, 'latest'), /expected package/);
+assert.throws(() => verifyPublishedRegistry(samplePublished, registryVersion, 'unexpected'), /Unexpected npm dist-tag/);
 
 writeLine(`Release hygiene verified: v${version} tag publishing, protected npm environment, provenance, dist-tag routing, and CHANGELOG release notes.`);
 
