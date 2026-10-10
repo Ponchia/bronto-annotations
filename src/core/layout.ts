@@ -34,6 +34,9 @@ export function resolveAnnotationLayout(options: LayoutOptions): ResolvedLayout 
     .map(normalizeBox)
     .filter(isFiniteBox);
   const placedNotes: ResolvedAnnotation[] = [];
+  // Share an append-only box collection across candidates. Rebuilding it for
+  // every annotation makes dense layouts allocate O(n²) throwaway arrays.
+  const placedNoteBoxes: ResolvedAnnotation['noteBox'][] = [];
   const ordered = [...options.annotations].sort((a, b) => {
     const priority = (b.priority ?? 0) - (a.priority ?? 0);
     return priority || a.id.localeCompare(b.id);
@@ -47,7 +50,7 @@ export function resolveAnnotationLayout(options: LayoutOptions): ResolvedLayout 
       bounds: placementBounds,
       noteSize,
       obstacles,
-      placedNotes: placedNotes.map((item) => item.noteBox),
+      placedNotes: placedNoteBoxes,
       placement
     });
     const winner = candidates[0];
@@ -57,6 +60,7 @@ export function resolveAnnotationLayout(options: LayoutOptions): ResolvedLayout 
       continue;
     }
 
+    placedNoteBoxes.push(winner.noteBox);
     placedNotes.push({
       id: annotation.id,
       annotation,
