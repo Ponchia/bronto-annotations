@@ -215,6 +215,11 @@ export function AnnotationLayer({
     () => annotationsForPaint(layout.annotations),
     [layout.annotations]
   );
+  // Static SVG may behave as one image. Expose focusable notes, edit handles,
+  // and custom rendered note content as a labeled accessibility group.
+  const layerRole = Number.isFinite(noteTabIndex) || editHandles.length > 0 || renderNote
+    ? 'group'
+    : 'img';
 
   const makeEditEvent = useCallback((
     active: ActiveEdit,
@@ -394,7 +399,7 @@ export function AnnotationLayer({
         ref={svgRef}
         className={`${prefix}-layer`}
         viewBox={`${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}`}
-        role="img"
+        role={layerRole}
         aria-label={label}
         width={bounds.width}
         height={bounds.height}

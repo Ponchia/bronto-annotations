@@ -150,10 +150,33 @@ try {
       JSON.stringify(leaks),
   );
   await demo.close();
+  // React Flow embeds keyboard-focusable note and edit-handle controls inside
+  // an SVG. Its root must expose a named group, not an image role that hides
+  // descendants from screen readers.
+  for (const width of [390, 1200]) {
+    const flow = await visit('/examples/react-flow-basic/', width);
+    assert.equal(
+      await flow.locator('svg.pa-annotation-layer').getAttribute('role'),
+      'group',
+      'Interactive React Flow SVG must preserve child focus semantics',
+    );
+    const flowAudit = await new AxeBuilder({ page: flow })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    assert.equal(
+      flowAudit.violations.length,
+      0,
+      'React Flow accessibility violations at ' + width + 'px: ' +
+        flowAudit.violations.map((v) => v.id + ': ' +
+          v.nodes.map((n) => n.target).join('|')).join(', '),
+    );
+    variants++;
+    await flow.close();
+  }
   console.log(
     'Public browser verified: ' +
       variants +
-      ' homepage/docs viewport combinations, real sliders, searchable docs, accessible layouts and visible note containment.',
+      ' homepage/docs/React Flow viewport combinations, real sliders, searchable docs, accessible layouts and visible note containment.',
   );
 } finally {
   await browser.close();
