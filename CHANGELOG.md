@@ -6,6 +6,22 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.6.1 - 2026-10-10
+
+### Fixed
+
+- Correct false connector/obstacle intersections caused by distant collinear line segments. Shared bounded geometry checks now drive routing, candidate penalties and layout-quality diagnostics, preserving genuine edge contact without penalizing unrelated host geometry.
+
+### Performance
+
+- Extend the existing experimental incremental layout session to reuse unchanged higher-priority placements after appending/removing lower-priority annotations and certain moved host obstacles. Conservatively invalidate the affected suffix, consider every possible candidate (including those omitted from `maxCandidates`) and fall back to a fresh layout for orthogonal routing, global changes or refinement.
+- Keep updated obstacle metadata and exact fresh-resolution parity when geometry changes, including nested in-place host edits.
+
+### Verification
+
+- Add deterministic topology, collision and randomized parity regression tests, plus actual Chromium/React desktop and mobile browser checks for changed obstacles, annotations and routing. Provide a separate 200-annotation browser benchmark with measured resolver and next-animation-frame timings; these are observations rather than a 60 fps guarantee.
+- Preserve existing stable exports and package compatibility, with no new production dependencies.
+
 ## 0.6.0 - 2026-10-10
 
 ### Added
