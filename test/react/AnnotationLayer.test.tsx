@@ -673,6 +673,98 @@ describe('React adapter', () => {
     });
   });
 
+  it('previews only the actively dragged note without committing or relaying a new layout', () => {
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(0, 0, 360, 240));
+    const stableAnnotations: Annotation[] = [
+      { id: 'first', anchor: { type: 'point', point: { x: 48, y: 60 } },
+        note: { title: 'First' }, connector: { type: 'straight' },
+        placement: { manual: { x: 95, y: 25, side: 'right' } } },
+      { id: 'second', anchor: { type: 'point', point: { x: 280, y: 80 } },
+        note: { title: 'Second' }, placement: { manual: { x: 230, y: 134 } } }
+    ];
+    const layouts: ResolvedLayout[] = [];
+    const qualities: AnnotationLayerQualityEvent[] = [];
+    const committed: AnnotationLayerEditEvent[] = [];
+    const { container } = render(
+      <AnnotationLayer
+        annotations={stableAnnotations}
+        bounds={{ x: 0, y: 0, width: 360, height: 240 }}
+        editable={{ includeAnchor: true }}
+        previewEdits
+        noteSizes={{ first: { width: 110, height: 52 }, second: { width: 100, height: 48 } }}
+        onLayout={(layout) => layouts.push(layout)}
+        onQuality={(quality) => qualities.push(quality)}
+        onEditEnd={(event) => committed.push(event)}
+      />
+    );
+    const first = () => container.querySelector('g.pa-annotation[data-annotation-id="first"] foreignObject')!;
+    const second = () => container.querySelector('g.pa-annotation[data-annotation-id="second"] foreignObject')!;
+    const connector = () => container.querySelector('g.pa-annotation[data-annotation-id="first"] .pa-annotation__connector')!;
+    const handle = () => container.querySelector('.pa-annotation__edit-handle--note[data-annotation-id="first"]')!;
+    const layer = container.querySelector('svg.pa-annotation-layer')!;
+    const initialX = Number(first().getAttribute('x'));
+    const initialY = Number(first().getAttribute('y'));
+    const initialSecondX = Number(second().getAttribute('x'));
+    const initialConnector = connector().getAttribute('d');
+    const initialHandleX = Number(handle().getAttribute('cx'));
+    const initialLayout = layouts[0];
+
+    pointer(handle(), 'pointerdown', { clientX: 100, clientY: 55, pointerId: 3 });
+    pointer(layer, 'pointermove', { clientX: 124, clientY: 69, pointerId: 3 });
+
+    expect(Number(first().getAttribute('x'))).toBe(initialX + 24);
+    expect(Number(first().getAttribute('y'))).toBe(initialY + 14);
+    expect(Number(handle().getAttribute('cx'))).toBe(initialHandleX + 24);
+    expect(connector().getAttribute('d')).not.toBe(initialConnector);
+    expect(Number(second().getAttribute('x'))).toBe(initialSecondX);
+    expect(layouts).toHaveLength(1);
+    expect(qualities).toHaveLength(1);
+    expect(layouts[0]).toBe(initialLayout);
+    expect(committed).toHaveLength(0);
+
+    pointer(layer, 'pointerup', { clientX: 124, clientY: 69, pointerId: 3 });
+    expect(committed).toHaveLength(1);
+    expect(committed[0]?.suggestedPlacement?.manual).toMatchObject({
+      x: initialX + 24, y: initialY + 14
+    });
+    expect(Number(first().getAttribute('x'))).toBe(initialX);
+    expect(layouts).toHaveLength(1);
+  });
+
+  it('previews anchor moves, ignores unrelated pointers, and rolls back cancelled gestures', () => {
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(0, 0, 320, 220));
+    const commits: AnnotationLayerEditEvent[] = [];
+    const { container } = render(
+      <AnnotationLayer
+        annotations={annotations}
+        bounds={{ x: 0, y: 0, width: 320, height: 220 }}
+        noteSizes={{ revenue: { width: 120, height: 52 } }}
+        editable={{ includeAnchor: true }}
+        previewEdits
+        onEditEnd={(event) => commits.push(event)}
+      />
+    );
+    const layer = container.querySelector('svg.pa-annotation-layer')!;
+    const subject = () => container.querySelector('g.pa-annotation[data-annotation-id="revenue"] .pa-annotation__subject')!;
+    const handle = container.querySelector('.pa-annotation__edit-handle--anchor[data-annotation-id="revenue"]')!;
+    const anchorX = Number(handle.getAttribute('cx'));
+    const initialSubject = subject().getAttribute('cx');
+
+    pointer(handle, 'pointerdown', { clientX: 160, clientY: 120, pointerId: 7 });
+    pointer(layer, 'pointermove', { clientX: 190, clientY: 130, pointerId: 8 });
+    expect(Number(container.querySelector('.pa-annotation__edit-handle--anchor')!.getAttribute('cx'))).toBe(anchorX);
+
+    pointer(layer, 'pointermove', { clientX: 190, clientY: 130, pointerId: 7 });
+    expect(Number(container.querySelector('.pa-annotation__edit-handle--anchor')!.getAttribute('cx'))).toBe(anchorX + 30);
+    expect(subject().getAttribute('cx')).not.toBe(initialSubject);
+    expect(commits).toHaveLength(0);
+
+    pointer(layer, 'pointercancel', { clientX: 190, clientY: 130, pointerId: 7 });
+    expect(Number(container.querySelector('.pa-annotation__edit-handle--anchor')!.getAttribute('cx'))).toBe(anchorX);
+    expect(subject().getAttribute('cx')).toBe(initialSubject);
+    expect(commits).toHaveLength(0);
+  });
+
   it('emits editable note handles with suggested manual placement while dragging', () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(0, 0, 320, 220));
 
@@ -883,7 +975,7 @@ function rect(x: number, y: number, width: number, height: number): DOMRect {
 
 function pointer(
   target: Element,
-  type: 'pointerdown' | 'pointermove' | 'pointerup',
+  type: 'pointerdown' | 'pointermove' | 'pointerup' | 'pointercancel',
   init: { clientX: number; clientY: number; pointerId: number }
 ) {
   const event = new Event(type, {

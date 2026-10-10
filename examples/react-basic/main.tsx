@@ -62,6 +62,7 @@ function App() {
           annotations={annotations}
           bounds={bounds}
           editable={{ includeAnchor: true, noteHandlePosition: 'bottom-right' }}
+          previewEdits
           obstacles={obstacles}
           padding={18}
           measure="dom"

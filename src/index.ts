@@ -182,6 +182,7 @@ export {
   createAnnotationEditDelta,
   createAnnotationEditEvent,
   createAnnotationEditSession,
+  previewAnnotationEdit,
   translateAnchor
 } from './core/edit.js';
 export type {

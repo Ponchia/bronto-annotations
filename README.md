@@ -552,6 +552,7 @@ export function FigureAnnotations() {
         keyboardStep: 2,
         keyboardLargeStep: 12
       }}
+      previewEdits
       onEditEnd={(event) => {
         setAnnotations((current) => applyAnnotationEdits(current, event));
       }}
@@ -578,7 +579,11 @@ edit handles can also be nudged with arrow keys. `editHandleTabIndex` controls
 whether React edit handles participate in normal tab navigation. `keyboardStep`
 controls normal arrow-key movement, `keyboardLargeStep` controls Shift+arrow movement, and
 `noteHandlePosition` moves the note drag handle to a corner or center that fits
-the host surface.
+the host surface. Set `previewEdits` to show the selected note/anchor moving during
+pointer gestures without recomputing the full annotation layout. It is opt-in,
+keeps other notes and layout-quality diagnostics stable, and uses a direct
+connector preview until the host commits with `onEditEnd`. Pointer cancellation
+restores the original drawing without committing a partial edit.
 
 Custom SVG or canvas-overlay authoring tools can use the same DOM-free edit
 math without React:
@@ -588,6 +593,7 @@ import {
   annotationEditHandles,
   applyAnnotationEdits,
   createAnnotationEditSession,
+  previewAnnotationEdit,
   resolveAnnotationLayout
 } from '@ponchia/annotations';
 
@@ -597,8 +603,11 @@ const edit = createAnnotationEditSession({
   layout,
   handle,
 });
+const moving = edit.move({ x: edit.origin.x + 8, y: edit.origin.y + 6 });
+const provisional = previewAnnotationEdit(edit.annotation, moving, layout.placementBounds);
+// Draw provisional.noteBox / provisional.connector while dragging;
+// only commit persisted annotation state at the end of the gesture.
 const event = edit.end({ x: edit.origin.x + 12, y: edit.origin.y + 8 });
-
 const nextAnnotations = applyAnnotationEdits(annotations, event);
 ```
 
@@ -607,7 +616,11 @@ keyboard nudges for one handle. `createAnnotationEditEvent` accepts
 start/current coordinates directly, and `createAnnotationEditDelta` is the
 lower-level keyboard or nudge variant when the host already has a delta. All
 helpers emit the same commit-ready suggestion shape as the React adapter and
-still leave persistence to the host app.
+still leave persistence to the host app. `previewAnnotationEdit` is an
+experimental, constant-sized visual projection of one edited note/anchor; its
+existing candidate scores/quality evidence are intentionally *not* revalidated.
+Commit via the host's normal edit patch and recompute the authoritative layout
+at the end of a gesture, rather than persisting a provisional resolved item.
 
 ## DOM And SVG Utilities
 
