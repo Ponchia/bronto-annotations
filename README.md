@@ -1,5 +1,20 @@
 # @ponchia/annotations
 
+**A headless engine for explanatory notes on your existing UI.**
+
+[Explore the website](https://ponchia.github.io/bronto-annotations/) ·
+[Try the live placement playground](https://ponchia.github.io/bronto-annotations/#playground) ·
+[Browse real examples](https://ponchia.github.io/bronto-annotations/#examples) ·
+[Read the guides](https://ponchia.github.io/bronto-annotations/docs/)
+
+![Bronto Annotations: annotated chart geometry](https://raw.githubusercontent.com/Ponchia/bronto-annotations/main/site/media/social.jpg)
+
+**New here?** Install with `npm install @ponchia/annotations`, then follow the
+[context quickstart](https://ponchia.github.io/bronto-annotations/docs/context-quickstart.html)
+or open a [complete SVG example](https://github.com/Ponchia/bronto-annotations/blob/main/examples/svg-basic/main.ts).
+The visual examples are runnable source from the repository, not illustrations of an imaginary API.
+
+
 `@ponchia/annotations` is a DOM-independent annotation engine with rendering
 helpers and adapters for geometry supplied by host applications.
 

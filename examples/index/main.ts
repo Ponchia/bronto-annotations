@@ -21,8 +21,10 @@ const annotations: Annotation[] = [
     id: 'start',
     anchor: { type: 'box', box: obstacles[0]! },
     note: {
+      wrap: 20,
+      maxLines: 2,
       title: 'Examples index',
-      body: 'Pick the host context first, then use the matching adapter.'
+      body: 'Choose a host and its adapter.'
     },
     placement: { manual: { x: 196, y: 54, side: 'right' } },
     variant: 'callout',
@@ -34,8 +36,10 @@ const annotations: Annotation[] = [
     id: 'generated',
     anchor: { type: 'box', box: obstacles[1]! },
     note: {
+      wrap: 20,
+      maxLines: 2,
       title: 'Generated surfaces',
-      body: 'Vega, Mermaid, D2, and React Flow examples use rendered host geometry.'
+      body: 'Notes follow chart marks.'
     },
     placement: { manual: { x: 196, y: 214, side: 'right' } },
     variant: 'elbow',
@@ -46,8 +50,10 @@ const annotations: Annotation[] = [
     id: 'styles',
     anchor: { type: 'box', box: obstacles[2]! },
     note: {
+      wrap: 20,
+      maxLines: 2,
       title: 'Styling gallery',
-      body: 'The style gallery covers every variant, tone, and motion hint.'
+      body: 'Explore tones and variants.'
     },
     placement: { manual: { x: 340, y: 122, side: 'left' } },
     variant: 'badge',
