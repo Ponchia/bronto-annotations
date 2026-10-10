@@ -50,7 +50,7 @@ describe('React adapter', () => {
       />
     );
 
-    expect(screen.getByRole('img', { name: 'Annotation layer' })).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Annotation layer' })).toBeTruthy();
     expect(screen.getByRole('group', { name: 'Revenue' })).toBeTruthy();
     expect(screen.getByText('Revenue')).toBeTruthy();
     expect(document.querySelector('.pa-annotation__connector')).toBeTruthy();
@@ -75,6 +75,36 @@ describe('React adapter', () => {
     expect(markup).toContain('preserveAspectRatio="xMinYMin meet"');
     expect(markup).toContain('pa-annotation__connector');
     expect(markup).toContain('Revenue');
+  });
+
+  it('exposes only passive SVG layers as images, never layers with focusable descendants', () => {
+    const passive = renderToStaticMarkup(
+      <AnnotationLayer
+        annotations={annotations}
+        bounds={{ x: 0, y: 0, width: 320, height: 220 }}
+      />
+    );
+    expect(passive).toContain('role="img" aria-label="Annotation layer"');
+
+    const editable = render(
+      <AnnotationLayer
+        annotations={annotations}
+        bounds={{ x: 0, y: 0, width: 320, height: 220 }}
+        editable={{ includeAnchor: true }}
+      />
+    );
+    expect(editable.container.querySelector('svg.pa-annotation-layer')?.getAttribute('role')).toBe('group');
+    expect(editable.container.querySelectorAll('circle[role="button"]').length).toBeGreaterThan(0);
+    editable.unmount();
+
+    const custom = renderToStaticMarkup(
+      <AnnotationLayer
+        annotations={annotations}
+        bounds={{ x: 0, y: 0, width: 320, height: 220 }}
+        renderNote={() => <button type="button">Details</button>}
+      />
+    );
+    expect(custom).toContain('role="group" aria-label="Annotation layer"');
   });
 
   it('can scope connector marker ids in server-rendered React output', () => {

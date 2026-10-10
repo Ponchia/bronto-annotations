@@ -22,6 +22,22 @@ annotation list.
 - Use `onQuality` and `onTargetAlignment` to surface generated-report issues in
   tests or authoring tools.
 
+## Interactive SVG Layer Semantics
+
+Passive SVG output is labeled as a single image (`role="img"`). Once the
+`renderAnnotationsSvg` helper receives a finite `noteTabIndex` or
+`includeEditHandles`, the root changes to a named group (`role="group"`), preserving
+independently focusable notes and edit controls in the accessibility tree.
+
+The React `AnnotationLayer` uses the same distinction: providing `noteTabIndex`,
+rendering editable handles, or supplying a custom note renderer results in a
+named group. Its default noninteractive layer retains the image role.
+
+Keep the layer's `title`, `ariaLabel`, or React `label` descriptive. Do not
+force an image role back onto interactive SVG content: screen readers may
+otherwise hide its keyboard-reachable descendants. The React Flow fixture is
+checked under axe-core on both narrow and desktop layouts to guard this.
+
 ## External Note Lists
 
 For dense reports, consider a host-owned list that mirrors annotation ids:
