@@ -1,5 +1,6 @@
 import { anchorSubject, overlapArea } from './anchors.js';
 import { connectorPath } from './connectors.js';
+import { segmentIntersectsBox } from './segment-intersection.js';
 import {
   DEFAULT_PLACEMENT,
   DEFAULT_SIDES
@@ -438,49 +439,4 @@ function connectorObstaclePenalty(points: Array<{ x: number; y: number }>, obsta
   }
 
   return hits;
-}
-
-function segmentIntersectsBox(start: { x: number; y: number }, end: { x: number; y: number }, box: Box): boolean {
-  if (pointInsideBox(start, box) || pointInsideBox(end, box)) {
-    return true;
-  }
-
-  const topLeft = { x: box.x, y: box.y };
-  const topRight = { x: box.x + box.width, y: box.y };
-  const bottomRight = { x: box.x + box.width, y: box.y + box.height };
-  const bottomLeft = { x: box.x, y: box.y + box.height };
-
-  return segmentsIntersect(start, end, topLeft, topRight)
-    || segmentsIntersect(start, end, topRight, bottomRight)
-    || segmentsIntersect(start, end, bottomRight, bottomLeft)
-    || segmentsIntersect(start, end, bottomLeft, topLeft);
-}
-
-function pointInsideBox(point: { x: number; y: number }, box: Box): boolean {
-  return point.x >= box.x
-    && point.x <= box.x + box.width
-    && point.y >= box.y
-    && point.y <= box.y + box.height;
-}
-
-function segmentsIntersect(
-  a: { x: number; y: number },
-  b: { x: number; y: number },
-  c: { x: number; y: number },
-  d: { x: number; y: number }
-): boolean {
-  const abC = orientation(a, b, c);
-  const abD = orientation(a, b, d);
-  const cdA = orientation(c, d, a);
-  const cdB = orientation(c, d, b);
-
-  return abC * abD <= 0 && cdA * cdB <= 0;
-}
-
-function orientation(
-  a: { x: number; y: number },
-  b: { x: number; y: number },
-  c: { x: number; y: number }
-): number {
-  return (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y);
 }

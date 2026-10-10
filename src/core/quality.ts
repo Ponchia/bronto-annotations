@@ -2,10 +2,10 @@ import {
   isFiniteBox,
   overlapArea
 } from './anchors.js';
+import { segmentIntersectsBox } from './segment-intersection.js';
 import type {
   Box,
   ConnectorPath,
-  Point,
   ResolvedAnnotation,
   ResolvedLayout
 } from './model.js';
@@ -319,40 +319,4 @@ function connectorIntersections(connector: ConnectorPath, box: Box): number[] {
   }
 
   return segmentIndexes;
-}
-
-function segmentIntersectsBox(start: Point, end: Point, box: Box): boolean {
-  if (pointInsideBox(start, box) || pointInsideBox(end, box)) {
-    return true;
-  }
-
-  const topLeft = { x: box.x, y: box.y };
-  const topRight = { x: box.x + box.width, y: box.y };
-  const bottomRight = { x: box.x + box.width, y: box.y + box.height };
-  const bottomLeft = { x: box.x, y: box.y + box.height };
-
-  return segmentsIntersect(start, end, topLeft, topRight)
-    || segmentsIntersect(start, end, topRight, bottomRight)
-    || segmentsIntersect(start, end, bottomRight, bottomLeft)
-    || segmentsIntersect(start, end, bottomLeft, topLeft);
-}
-
-function pointInsideBox(point: Point, box: Box): boolean {
-  return point.x >= box.x
-    && point.x <= box.x + box.width
-    && point.y >= box.y
-    && point.y <= box.y + box.height;
-}
-
-function segmentsIntersect(a: Point, b: Point, c: Point, d: Point): boolean {
-  const abC = orientation(a, b, c);
-  const abD = orientation(a, b, d);
-  const cdA = orientation(c, d, a);
-  const cdB = orientation(c, d, b);
-
-  return abC * abD <= 0 && cdA * cdB <= 0;
-}
-
-function orientation(a: Point, b: Point, c: Point): number {
-  return (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y);
 }

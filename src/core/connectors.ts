@@ -1,3 +1,4 @@
+import { segmentIntersectsBox } from './segment-intersection.js';
 import type {
   AnnotationConnectorOptions,
   Box,
@@ -604,48 +605,6 @@ function pointInsideBox(point: Point, box: Box): boolean {
 
 function segmentIntersectsAnyBox(start: Point, end: Point, boxes: Box[]): boolean {
   return boxes.some((box) => segmentIntersectsBox(start, end, box));
-}
-
-function segmentIntersectsBox(start: Point, end: Point, box: Box): boolean {
-  const right = box.x + box.width;
-  const bottom = box.y + box.height;
-  const minX = Math.min(start.x, end.x);
-  const maxX = Math.max(start.x, end.x);
-  const minY = Math.min(start.y, end.y);
-  const maxY = Math.max(start.y, end.y);
-  // Reject disjoint extents before edge tests. Orientation alone treats two
-  // disjoint collinear segments as an intersection, creating false detours.
-  if (maxX < box.x || minX > right || maxY < box.y || minY > bottom) return false;
-  // The visibility graph is orthogonal: its hot path needs no corner objects
-  // or four orientation tests. Boundary contact still counts as a collision.
-  if (start.x === end.x || start.y === end.y)
-    return maxX >= box.x && minX <= right && maxY >= box.y && minY <= bottom;
-  if (pointInsideBox(start, box) || pointInsideBox(end, box)) {
-    return true;
-  }
-
-  const topLeft = { x: box.x, y: box.y };
-  const topRight = { x: box.x + box.width, y: box.y };
-  const bottomRight = { x: box.x + box.width, y: box.y + box.height };
-  const bottomLeft = { x: box.x, y: box.y + box.height };
-
-  return segmentsIntersect(start, end, topLeft, topRight)
-    || segmentsIntersect(start, end, topRight, bottomRight)
-    || segmentsIntersect(start, end, bottomRight, bottomLeft)
-    || segmentsIntersect(start, end, bottomLeft, topLeft);
-}
-
-function segmentsIntersect(a: Point, b: Point, c: Point, d: Point): boolean {
-  const abC = orientation(a, b, c);
-  const abD = orientation(a, b, d);
-  const cdA = orientation(c, d, a);
-  const cdB = orientation(c, d, b);
-
-  return abC * abD <= 0 && cdA * cdB <= 0;
-}
-
-function orientation(a: Point, b: Point, c: Point): number {
-  return (b.y - a.y) * (c.x - b.x) - (b.x - a.x) * (c.y - b.y);
 }
 
 function distanceToSegment(box: Box, start: Point, end: Point): number {
