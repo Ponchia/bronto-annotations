@@ -155,49 +155,44 @@ jobs:
           echo "Publishing $version to dist-tag '$dist_tag'"
           npm publish --ignore-scripts --provenance --access public --tag "$dist_tag"
 
-      - name: Record npm registry state
-        continue-on-error: true
+      # npm can acknowledge publication before its public registry/CDN exposes
+      # the new version. Release notes must only follow confirmed installability.
+      - name: Verify published package on npm
+        timeout-minutes: 9
         run: |
-          set -uo pipefail
+          set -euo pipefail
           version="${GITHUB_REF_NAME#v}"
-          view_ok=false
-          attempts_remaining=5
-          while [ "$attempts_remaining" -gt 0 ]; do
-            if npm view "@ponchia/annotations@$version" version dist.integrity dist.tarball --json > "${RUNNER_TEMP}/npm-view.json"; then
-              view_ok=true
-              break
-            fi
-            attempts_remaining=$((attempts_remaining - 1))
-            sleep 5
-          done
-          tags_ok=false
-          if npm view @ponchia/annotations dist-tags --json > "${RUNNER_TEMP}/npm-dist-tags.json"; then
-            tags_ok=true
+          if [ "$version" != "${version%%-*}" ]; then
+            dist_tag=next
+          else
+            dist_tag=latest
           fi
 
+          verified=false
+          for attempt in $(seq 1 48); do
+            if npm --prefer-online view "@ponchia/annotations@$version" version dist --json > "${RUNNER_TEMP}/npm-view.json" 2>/dev/null \
+              && npm --prefer-online view @ponchia/annotations dist-tags --json > "${RUNNER_TEMP}/npm-dist-tags.json" 2>/dev/null \
+              && node scripts/verify-npm-registry.mjs "${RUNNER_TEMP}/npm-view.json" "${RUNNER_TEMP}/npm-dist-tags.json" "$version" "$dist_tag" > "${RUNNER_TEMP}/npm-published.json" 2>/dev/null; then
+              verified=true
+              break
+            fi
+            echo "npm is processing @ponchia/annotations@$version ($attempt/48 registry checks)"
+            if [ "$attempt" -lt 48 ]; then sleep 10; fi
+          done
+
+          if [ "$verified" != true ]; then
+            echo "::error::npm publication not confirmed: @ponchia/annotations@$version is not visible with the expected $dist_tag tag. Verify the registry before attempting any rerun; do not republish an already accepted version."
+            exit 1
+          fi
+
+          echo "npm confirms @ponchia/annotations@$version with dist-tag '$dist_tag'"
           {
             echo ''
-            echo '## npm registry state'
+            echo '## Verified npm registry publication'
             echo ''
-            if [ "$view_ok" = true ] && [ "$tags_ok" = true ]; then
-              node <<'NODE'
-          const fs = require('node:fs');
-          const path = require('node:path');
-          const tmp = process.env.RUNNER_TEMP;
-          const view = JSON.parse(fs.readFileSync(path.join(tmp, 'npm-view.json'), 'utf8'));
-          const tags = JSON.parse(fs.readFileSync(path.join(tmp, 'npm-dist-tags.json'), 'utf8'));
-          console.log('```json');
-          console.log(JSON.stringify({ published: view, distTags: tags }, null, 2));
-          console.log('```');
-          NODE
-            else
-              echo '> npm publish completed, but the post-publish registry observation did not return a complete response.'
-              echo ''
-              echo "- package lookup: $view_ok"
-              echo "- dist-tag lookup: $tags_ok"
-              echo ''
-              echo "Verify manually with \`npm view @ponchia/annotations version dist-tags --json\`."
-            fi
+            echo '```json'
+            cat "${RUNNER_TEMP}/npm-published.json"
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
   release-notes:

@@ -75,8 +75,13 @@ The Release workflow:
 6. Publishes with npm provenance via
    `npm publish --ignore-scripts --provenance --access public`.
 7. Routes stable versions to `latest` and prereleases to `next`.
-8. Records npm registry state and creates GitHub Release notes from
-   `CHANGELOG.md`.
+8. Waits for npm to expose the exact published version, SHA-512 tarball
+   integrity and intended `latest`/`next` dist-tag (up to eight minutes), then
+   creates GitHub Release notes from `CHANGELOG.md`. If npm has accepted the
+   publish but the registry remains unavailable, this verification fails closed
+   before the GitHub Release step. Check the registry manually **before**
+   rerunning any workflow: npm versions are immutable and blindly rerunning
+   `npm publish` can fail with an already-existing version.
 
 Do not create the GitHub Release by hand before the workflow publishes. The
 workflow creates the GitHub Release only after npm accepts the package.

@@ -42,13 +42,16 @@ for (const term of [
   'npm publish --ignore-scripts --provenance --access public --tag "$dist_tag"',
   'dist_tag=next',
   'dist_tag=latest',
-  'npm view "@ponchia/annotations@$version"',
+  'npm --prefer-online view "@ponchia/annotations@$version"',
+  'node scripts/verify-npm-registry.mjs',
+  'Verify published package on npm',
   'node scripts/changelog-section.mjs "$REF_NAME"',
   'softprops/action-gh-release'
 ]) {
   assertIncludes(release, term, '.github/workflows/release.yml');
 }
 
+assert.ok(!release.includes('continue-on-error: true'), 'npm registry verification must block release notes on failure');
 assert.ok(!release.includes('workflow_dispatch:'), 'release workflow must not publish from manual dispatch');
 assert.ok(!release.includes('NODE_AUTH_TOKEN'), 'release workflow should use trusted publishing, not a long-lived npm token');
 
