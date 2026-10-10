@@ -443,3 +443,44 @@ spec; keep graph node/edge state in React Flow.
   `assertTargetAlignment`, and `assertQuality`, or run
   `evaluateAnnotationLayout` directly, in tests or report builds for important
   output.
+
+
+## Passage comments in a host editor
+
+Keep the document selector and thread state in the host. Measure the current
+selection only when it is visible, then put a pin in the same coordinate space:
+
+```tsx
+import { measureRangeAnchor } from '@ponchia/annotations/dom';
+import { AnnotationPin } from '@ponchia/annotations/react';
+import '@ponchia/annotations/bronto.css';
+
+function PassagePin({ range, openDiscussion }: { range: Range; openDiscussion: () => void }) {
+const measured = measureRangeAnchor(range, { maxRects: 32 });
+const firstLine = measured.rects[0];
+
+return firstLine && measured.status === 'resolved' ? (
+  <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none' }}>
+    <AnnotationPin
+      point={{ x: firstLine.x + firstLine.width, y: firstLine.y }}
+      label="Open discussion about this passage"
+      style={{ pointerEvents: 'auto' }}
+      onClick={openDiscussion}
+    />
+  </div>
+) : null;
+}
+```
+
+The host clips highlights to its scroll viewport and keeps pins inside the
+viewport. On a transformed canvas, use a fixed viewport overlay as above, or
+pass `coordinateSpace` and position the overlay in that element's local padding
+space. Keep pin targets unscaled when touch access matters. If several pins
+collide, group them or show a bounded subset and offer the complete thread list.
+
+Do not retain a `Range` after an editor replaces its DOM. Reconstruct it from
+validated document offsets, resolve ambiguous or missing text explicitly, and
+measure again. The package never decides whether a discussion is resolved or
+whether a quotation still names the intended passage. Native button semantics
+provide keyboard activation; the host supplies panel focus return and any
+canvas-specific drag exclusion classes.

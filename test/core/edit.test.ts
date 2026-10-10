@@ -7,6 +7,7 @@ import {
   createAnnotationEditDelta,
   createAnnotationEditEvent,
   createAnnotationEditSession,
+  previewAnnotationEdit,
   resolveAnnotationLayout,
   translateAnchor
 } from '../../src/index.js';
@@ -411,4 +412,85 @@ describe('annotation edit handles', () => {
       anchor: { type: 'point', point: { x: 0, y: 0 } }
     }, { missing: 'throw' })).toThrow('Annotation edit target not found: missing');
   });
+  it('previews a single note edit without recalculating its placement candidates', () => {
+    const layout = resolveAnnotationLayout({
+      annotations: [{
+        id: 'preview-note',
+        anchor: { type: 'point', point: { x: 40, y: 60 } },
+        note: { title: 'Preview' },
+        connector: { type: 'straight' },
+        placement: { manual: { x: 80, y: 22, side: 'right' } }
+      }],
+      bounds: { x: 0, y: 0, width: 220, height: 160 },
+      padding: 12,
+      noteSizes: { 'preview-note': { width: 100, height: 48 } }
+    });
+    const original = layout.annotations[0]!;
+    const patch = { annotationId: 'preview-note', placement: {
+      manual: { x: 145, y: 160, side: 'right' as const }
+    } };
+    const preview = previewAnnotationEdit(original, patch, layout.placementBounds);
+
+    expect(original.noteBox).toEqual({ x: 80, y: 22, width: 100, height: 48 });
+    expect(preview.noteBox).toEqual({ x: 108, y: 100, width: 100, height: 48 });
+    expect(preview.annotation.placement?.manual).toEqual(patch.placement.manual);
+    expect(preview.placement.manual).toBe(true);
+    expect(preview.placement.candidates).toBe(original.placement.candidates);
+    expect(preview.connector.d).not.toBe(original.connector.d);
+    expect(layout.annotations[0]).toBe(original);
+    expect(previewAnnotationEdit(original, { annotationId: 'preview-note' })).toBe(original);
+    expect(() => previewAnnotationEdit(original, { annotationId: 'other',
+      placement: patch.placement })).toThrow('cannot be applied');
+  });
+
+  it('previews anchor movement independently and preserves unlocked note position', () => {
+    const layout = resolveAnnotationLayout({
+      annotations: [{
+        id: 'preview-anchor',
+        anchor: { type: 'box', box: { x: 48, y: 60, width: 20, height: 20 } },
+        note: { title: 'Anchor' },
+        connector: { type: 'elbow' },
+        placement: { manual: { x: 130, y: 36, side: 'right', clamp: false } }
+      }],
+      bounds: { x: 0, y: 0, width: 300, height: 200 },
+      noteSizes: { 'preview-anchor': { width: 90, height: 42 } }
+    });
+    const original = layout.annotations[0]!;
+    const handle = annotationEditHandles(layout, { includeAnchor: true }).find(
+      (item) => item.kind === 'anchor')!;
+    const edit = createAnnotationEditDelta({ annotation: original, handle,
+      delta: { x: 12, y: -8 } });
+    const preview = previewAnnotationEdit(original, edit, layout.placementBounds);
+
+    expect(preview.annotation.anchor).toEqual({
+      type: 'box', box: { x: 60, y: 52, width: 20, height: 20 }
+    });
+    expect(preview.anchorPoint.x).toBe(original.anchorPoint.x + 12);
+    expect(preview.anchorPoint.y).toBe(original.anchorPoint.y - 8);
+    expect(preview.noteBox).toBe(original.noteBox);
+    expect(preview.connector.d).not.toBe(original.connector.d);
+    expect(original.annotation.anchor).toEqual({
+      type: 'box', box: { x: 48, y: 60, width: 20, height: 20 }
+    });
+  });
+
+  it('preserves explicit unclamped authoring previews outside placement bounds', () => {
+    const layout = resolveAnnotationLayout({
+      annotations: [{
+        id: 'free',
+        anchor: { type: 'point', point: { x: 40, y: 40 } },
+        note: { title: 'Free movement' },
+        placement: { manual: { x: 80, y: 20, clamp: false } }
+      }],
+      bounds: { x: 0, y: 0, width: 180, height: 130 },
+      noteSizes: { free: { width: 100, height: 44 } }
+    });
+    const original = layout.annotations[0]!;
+    const next = previewAnnotationEdit(original, {
+      annotationId: 'free', placement: { manual: { x: -20, y: 250, clamp: false } }
+    }, layout.placementBounds);
+
+    expect(next.noteBox).toEqual({ x: -20, y: 250, width: 100, height: 44 });
+  });
+
 });

@@ -1,7 +1,6 @@
 # Agent Notes
 
-This project is an incubation home for the future public
-`@ponchia/annotations` package.
+This repository publishes the public `@ponchia/annotations` package.
 
 ## Public Boundary
 

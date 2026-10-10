@@ -6,7 +6,78 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
-## Unreleased
+## 0.4.1 - 2026-10-10
+
+### Performance
+
+- Keep React note, edit-handle, SVG marker and DOM measurement subtrees stable while previewing changes to a single annotation. Unchanged custom `renderNote` callbacks are no longer reinvoked on every pointer movement.
+- Cache authoritative layout-quality debug geometry during visual-only previews, leaving report semantics, pointer/keyboard editing, accessibility roles and SSR markup intact.
+
+### Verification
+
+- Add dense React authoring regression coverage with 32 notes and repeated pointer movement, including stable hidden measurement copies and unaffected note content.
+- Preserve the public API, compatibility matrix, existing packed consumers, accessibility checks and browser visual baselines.
+
+## 0.4.0 - 2026-10-10
+
+### Added
+
+- Introduce experimental DOM-free `previewAnnotationEdit`, a visual-only projection for a single edited annotation without resolving the entire layout or rerouting around obstacles during pointer movement.
+- Add opt-in `AnnotationLayer.previewEdits` for immediate live note, anchor, connector and edit-handle feedback while dragging. Unedited neighbors and authoritative layout/quality reports remain stable until the host commits.
+- Demonstrate the preview in React and transformed React Flow examples and document usage for custom headless integrations.
+
+### Fixed
+
+- Ignore unrelated pointer IDs during an active drag and roll back cancelled pointer gestures without persisting an unfinished edit.
+
+### Verification
+
+- Add core/React tests for visual projection, clipping, unchanged neighbor layouts, edit cancellation and pointer identity; require real browser drag previews before mouse release.
+- Preserve the existing synchronous headless layout and package compatibility contract; dynamic host-geometry incremental resolution remains planned separately.
+
+## 0.3.3 - 2026-10-10
+
+### Performance
+
+- Speed up dense annotation layouts by skipping unnecessary orthogonal connector routing, replacing full-frontier sorting with a stable binary heap, and reducing per-candidate graph allocations and geometry checks.
+- Preserve existing note positions, connector paths, candidate scoring, and layout-quality metrics in deterministic before/after comparisons, with added padded-obstacle and boundary-contact tests.
+- Document reproducible benchmark observations, host integration guidance, and remaining limits of dense full-layout recalculation without changing the public API.
+
+### Verification
+
+- Run 212 unit tests, adapter/browser examples, packaged consumers, legacy Bronto UI CSS parity, TypeScript/React/Vega compatibility checks, and public-site checks.
+
+## 0.3.2 - 2026-10-10
+
+### Accessibility
+
+- Interactive SVG and React annotation layers now expose named accessibility groups when they contain keyboard-focusable notes, edit controls, or custom note content, while passive layers retain their original image role.
+- Preserve edit-handle and note keyboard interaction semantics in assistive technologies for React Flow diagrams; resolve the previously reported serious nested-interactive accessibility issue.
+- Add headless SVG and React regressions and real Chromium/axe checks at mobile and desktop viewports.
+
+## 0.3.1 - 2026-10-10
+
+### Changed
+
+- Publish a fully navigable Bronto Annotations website using real interactive placement, complete examples, source links and 25 authored HTML documentation pages.
+- Improve first-use documentation, public npm metadata and social previews while keeping the framework-independent headless core and its exported API unchanged.
+- Make the compiled example index notes legible within their boxes and enforce their visible text containment in browser tests.
+
+### Security
+
+- Patch development transitive dependencies including `smol-toml`, `source-map-js`, DOMPurify and KaTeX, with zero remaining npm audit advisories; sanitize generated Markdown HTML with DOMPurify.
+
+### Verification
+
+- Add CI-gated GitHub Pages publication, all-example route checks, 700+ internal link assertions, responsive browser checks and accessibility coverage for the public website.
+
+## 0.3.0 - 2026-09-09
+
+- Avoid false connector detours for disjoint collinear obstacles and accelerate orthogonal visibility checks.
+- Refresh development dependencies to clear the current audit advisories.
+- Add DOM Range measurement for wrapped text in viewport or scaled local coordinates.
+- Add an accessible React annotation pin for host-owned overlays and discussion controls.
+- Align explanatory annotation typography with BrontoUI 0.11: sans-serif, sentence case.
 
 ## 0.2.2 - 2026-09-02
 

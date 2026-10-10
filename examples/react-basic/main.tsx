@@ -50,7 +50,7 @@ function App() {
   return (
     <main className="example-shell">
       <section className="flow-surface" aria-label="React annotation example">
-        <svg className="flow-surface__base" viewBox={`0 0 ${bounds.width} ${bounds.height}`} role="img">
+        <svg className="flow-surface__base" viewBox={`0 0 ${bounds.width} ${bounds.height}`} role="img" aria-label="Collect flows through a decision point to Publish">
           <rect className="flow-surface__node" x="160" y="142" width="150" height="70" rx="8" />
           <rect className="flow-surface__node" x="512" y="142" width="150" height="70" rx="8" />
           <path className="flow-surface__edge" d="M310 177H408 L432 188 L456 177H512" />
@@ -62,6 +62,7 @@ function App() {
           annotations={annotations}
           bounds={bounds}
           editable={{ includeAnchor: true, noteHandlePosition: 'bottom-right' }}
+          previewEdits
           obstacles={obstacles}
           padding={18}
           measure="dom"

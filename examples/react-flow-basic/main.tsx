@@ -209,6 +209,7 @@ function FlowAnnotations({ bounds }: { bounds: LayerBounds }) {
       padding={12}
       noteTabIndex={0}
       editable={{ noteHandlePosition: 'bottom-right' }}
+      previewEdits
       editHandleTabIndex={0}
       obstacles={obstacles}
       refinement={{ passes: 2, maxCandidatesPerAnnotation: 64 }}

@@ -1,5 +1,20 @@
 # @ponchia/annotations
 
+**A headless engine for explanatory notes on your existing UI.**
+
+[Explore the website](https://ponchia.github.io/bronto-annotations/) ·
+[Try the live placement playground](https://ponchia.github.io/bronto-annotations/#playground) ·
+[Browse real examples](https://ponchia.github.io/bronto-annotations/#examples) ·
+[Read the guides](https://ponchia.github.io/bronto-annotations/docs/)
+
+![Bronto Annotations: annotated chart geometry](https://raw.githubusercontent.com/Ponchia/bronto-annotations/main/site/media/social.jpg)
+
+**New here?** Install with `npm install @ponchia/annotations`, then follow the
+[context quickstart](https://ponchia.github.io/bronto-annotations/docs/context-quickstart.html)
+or open a [complete SVG example](https://github.com/Ponchia/bronto-annotations/blob/main/examples/svg-basic/main.ts).
+The visual examples are runnable source from the repository, not illustrations of an imaginary API.
+
+
 `@ponchia/annotations` is a DOM-independent annotation engine with rendering
 helpers and adapters for geometry supplied by host applications.
 
@@ -537,6 +552,7 @@ export function FigureAnnotations() {
         keyboardStep: 2,
         keyboardLargeStep: 12
       }}
+      previewEdits
       onEditEnd={(event) => {
         setAnnotations((current) => applyAnnotationEdits(current, event));
       }}
@@ -563,7 +579,11 @@ edit handles can also be nudged with arrow keys. `editHandleTabIndex` controls
 whether React edit handles participate in normal tab navigation. `keyboardStep`
 controls normal arrow-key movement, `keyboardLargeStep` controls Shift+arrow movement, and
 `noteHandlePosition` moves the note drag handle to a corner or center that fits
-the host surface.
+the host surface. Set `previewEdits` to show the selected note/anchor moving during
+pointer gestures without recomputing the full annotation layout. It is opt-in,
+keeps other notes and layout-quality diagnostics stable, and uses a direct
+connector preview until the host commits with `onEditEnd`. Pointer cancellation
+restores the original drawing without committing a partial edit.
 
 Custom SVG or canvas-overlay authoring tools can use the same DOM-free edit
 math without React:
@@ -573,6 +593,7 @@ import {
   annotationEditHandles,
   applyAnnotationEdits,
   createAnnotationEditSession,
+  previewAnnotationEdit,
   resolveAnnotationLayout
 } from '@ponchia/annotations';
 
@@ -582,8 +603,11 @@ const edit = createAnnotationEditSession({
   layout,
   handle,
 });
+const moving = edit.move({ x: edit.origin.x + 8, y: edit.origin.y + 6 });
+const provisional = previewAnnotationEdit(edit.annotation, moving, layout.placementBounds);
+// Draw provisional.noteBox / provisional.connector while dragging;
+// only commit persisted annotation state at the end of the gesture.
 const event = edit.end({ x: edit.origin.x + 12, y: edit.origin.y + 8 });
-
 const nextAnnotations = applyAnnotationEdits(annotations, event);
 ```
 
@@ -592,7 +616,11 @@ keyboard nudges for one handle. `createAnnotationEditEvent` accepts
 start/current coordinates directly, and `createAnnotationEditDelta` is the
 lower-level keyboard or nudge variant when the host already has a delta. All
 helpers emit the same commit-ready suggestion shape as the React adapter and
-still leave persistence to the host app.
+still leave persistence to the host app. `previewAnnotationEdit` is an
+experimental, constant-sized visual projection of one edited note/anchor; its
+existing candidate scores/quality evidence are intentionally *not* revalidated.
+Commit via the host's normal edit patch and recompute the authoritative layout
+at the end of a gesture, rather than persisting a provisional resolved item.
 
 ## DOM And SVG Utilities
 

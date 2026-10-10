@@ -84,7 +84,7 @@ for (const term of [
   'id-token: write',
   'security-events: write',
   'persist-credentials: false',
-  'ossf/scorecard-action@v2.4.3',
+  'ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc',
   'results_format: sarif',
   'publish_results: true',
   'github/codeql-action/upload-sarif@v4'
@@ -96,6 +96,19 @@ for (const term of [
   'package-ecosystem: npm',
   'package-ecosystem: github-actions',
   'optional-peers'
+]) {
+  assertIncludes(dependabot, term, '.github/dependabot.yml');
+}
+
+for (const term of [
+  'dev-tooling:',
+  'optional-peers:',
+  'update-types:',
+  'version-update:semver-major',
+  'dependency-name: mermaid',
+  'dependency-name: typescript',
+  'dependency-name: vitest',
+  'dependency-name: jsdom'
 ]) {
   assertIncludes(dependabot, term, '.github/dependabot.yml');
 }
@@ -115,6 +128,7 @@ for (const term of [
   'js/html-constructed-from-input',
   'Dependabot alerts',
   'Dependabot security updates',
+  'Version Update Compatibility Policy',
   'Automated security fixes',
   'Private vulnerability reporting',
   'Secret scanning push protection',

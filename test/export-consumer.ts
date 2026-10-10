@@ -29,6 +29,7 @@ import {
   createAnnotationEditDelta,
   createAnnotationEditEvent,
   createAnnotationEditSession,
+  previewAnnotationEdit,
   createD3StyleAnnotationBuilder,
   d3StyleAnnotationCollectionEditPatch,
   defineD3StyleAnnotationType,
@@ -727,6 +728,10 @@ const editSessionOptions: CreateAnnotationEditSessionOptions = {
   handle: editHandles[0]!
 };
 const editSession: AnnotationEditSession = createAnnotationEditSession(editSessionOptions);
+const preview = previewAnnotationEdit(editSession.annotation,
+  editSession.move({ x: editSession.origin.x + 4, y: editSession.origin.y + 2 }),
+  layout.placementBounds);
+void preview.noteBox;
 applyAnnotationEdits(annotations, editSession.end({ x: editSession.origin.x + 2, y: editSession.origin.y + 3 }));
 const editedAnnotation = applyAnnotationEdit(annotations[0]!, editPatch);
 applyAnnotationEdits([editedAnnotation], editSuggestion, editApplyOptions);

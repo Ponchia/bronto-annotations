@@ -18,13 +18,15 @@
         "test/export-consumer.ts",
         "examples/*/main.ts",
         "examples/*/main.tsx",
-        "scripts/**/*.mjs"
+        "scripts/**/*.mjs",
+        "site/main.ts"
       ],
       "project": [
         "src/**/*.{ts,tsx}",
         "test/**/*.{ts,tsx}",
         "examples/**/*.{ts,tsx}",
-        "scripts/**/*.mjs"
+        "scripts/**/*.mjs",
+        "site/**/*.ts"
       ]
     }
   }

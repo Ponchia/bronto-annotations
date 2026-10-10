@@ -1,5 +1,8 @@
 # Documentation
 
+**Browse the published documentation:** https://ponchia.github.io/bronto-annotations/docs/
+The interactive placement playground and actual rendered adapter examples are on the [product website](https://ponchia.github.io/bronto-annotations/).
+
 Use this page to distinguish the maintained package contract from dated
 incubation evidence and future work.
 
