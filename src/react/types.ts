@@ -50,6 +50,7 @@ export type AnnotationLayerProps = LayoutOptions & {
   classPrefix?: string;
   debug?: boolean;
   editable?: boolean | AnnotationLayerEditOptions;
+  previewEdits?: boolean;
   label?: string;
   measure?: 'estimate' | 'dom';
   markerIdPrefix?: string;

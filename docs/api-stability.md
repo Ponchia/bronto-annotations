@@ -43,7 +43,8 @@ subpath is listed exactly once as stable or experimental.
 
 - d3-style builder mutation helpers and custom annotation type definitions.
 - Edit-patch authoring ergonomics, including `createAnnotationEditEvent`,
-  `createAnnotationEditDelta`, and `createAnnotationEditSession`.
+  `createAnnotationEditDelta`, `createAnnotationEditSession`, and
+  `previewAnnotationEdit` (visual only).
 - React edit-handle authoring options and edit events until the authoring UX
   layer is hardened.
 - Dense-layout tuning constants and scoring weights.

@@ -20,7 +20,8 @@ import {
 import {
   annotationEditHandles,
   createAnnotationEditDelta,
-  createAnnotationEditEvent
+  createAnnotationEditEvent,
+  previewAnnotationEdit
 } from '../core/edit.js';
 import { subjectPath } from '../core/annotation-geometry.js';
 import { estimateNoteSize, resolveAnnotationLayout } from '../core/layout.js';
@@ -87,6 +88,7 @@ export function AnnotationLayer({
   classPrefix = PREFIX,
   debug = false,
   editable,
+  previewEdits = false,
   label = 'Annotation layer',
   measure = 'estimate',
   markerIdPrefix,
@@ -113,6 +115,9 @@ export function AnnotationLayer({
   const svgRef = useRef<SVGSVGElement>(null);
   const measureNodes = useRef(new Map<string, HTMLDivElement>());
   const [activeEdit, setActiveEdit] = useState<ActiveEdit | null>(null);
+  // Local paint-only preview. The resolved layout, quality report, and host
+  // annotation array remain unchanged until an edit is committed.
+  const [activePreview, setActivePreview] = useState<ResolvedAnnotation | null>(null);
   const [measuredSizes, setMeasuredSizes] = useState<Record<string, Size>>({});
   const estimatedSizes = useMemo(
     () => Object.fromEntries(annotations.map((annotation) => [
@@ -215,6 +220,19 @@ export function AnnotationLayer({
     () => annotationsForPaint(layout.annotations),
     [layout.annotations]
   );
+  const displayedAnnotations = useMemo(() => activePreview
+    ? paintAnnotations.map((item) => item.id === activePreview.id ? activePreview : item)
+    : paintAnnotations, [activePreview, paintAnnotations]);
+  const displayedEditHandles = useMemo(() => {
+    if (!activePreview || !editOptions) {
+      return editHandles;
+    }
+    // Compute only the edited annotation's handle geometry, not the layout or
+    // handles for its untouched neighbors.
+    const updated = annotationEditHandles({ ...layout, annotations: [activePreview] }, editOptions);
+    const byId = new Map(updated.map((handle) => [handle.id, handle]));
+    return editHandles.map((handle) => byId.get(handle.id) ?? handle);
+  }, [activePreview, editHandles, editOptions, layout]);
   // Static SVG may behave as one image. Expose focusable notes, edit handles,
   // and custom rendered note content as a labeled accessibility group.
   const layerRole = Number.isFinite(noteTabIndex) || editHandles.length > 0 || renderNote
@@ -260,6 +278,7 @@ export function AnnotationLayer({
     };
 
     setActiveEdit(active);
+    setActivePreview(null);
 
     const editEvent = makeEditEvent(active, 'start', point);
     onEditStart?.(editEvent);
@@ -267,26 +286,39 @@ export function AnnotationLayer({
   }, [clientPoint, layout.annotations, makeEditEvent, onEdit, onEditStart]);
 
   const handleEditPointerMove = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!activeEdit) {
+    if (!activeEdit || event.pointerId !== activeEdit.pointerId) {
       return;
     }
 
     event.preventDefault();
     const editEvent = makeEditEvent(activeEdit, 'move', clientPoint(event));
+    if (previewEdits) {
+      setActivePreview(previewAnnotationEdit(activeEdit.annotation, editEvent, layout.placementBounds));
+    }
     onEdit?.(editEvent);
-  }, [activeEdit, clientPoint, makeEditEvent, onEdit]);
+  }, [activeEdit, clientPoint, layout.placementBounds, makeEditEvent, onEdit, previewEdits]);
 
   const finishEdit = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!activeEdit) {
+    if (!activeEdit || event.pointerId !== activeEdit.pointerId) {
       return;
     }
 
     event.preventDefault();
     const editEvent = makeEditEvent(activeEdit, 'end', clientPoint(event));
+    setActivePreview(null);
+    setActiveEdit(null);
     onEditEnd?.(editEvent);
     onEdit?.(editEvent);
-    setActiveEdit(null);
   }, [activeEdit, clientPoint, makeEditEvent, onEdit, onEditEnd]);
+
+  const cancelEdit = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
+    if (!activeEdit || event.pointerId !== activeEdit.pointerId) {
+      return;
+    }
+    // Cancellation must not persist an incomplete gesture in the host app.
+    setActivePreview(null);
+    setActiveEdit(null);
+  }, [activeEdit]);
 
   const handleEditKeyDown = useCallback((
     handle: AnnotationEditHandle,
@@ -406,10 +438,10 @@ export function AnnotationLayer({
         preserveAspectRatio={preserveAspectRatio}
         onPointerMove={handleEditPointerMove}
         onPointerUp={finishEdit}
-        onPointerCancel={finishEdit}
+        onPointerCancel={cancelEdit}
       >
         <MarkerDefs annotations={layout.annotations} prefix={prefix} markerPrefix={markerPrefix} />
-        {paintAnnotations.map((item) => (
+        {displayedAnnotations.map((item) => (
           <g
             className={[
               prefix,
@@ -456,9 +488,9 @@ export function AnnotationLayer({
           </g>
         ))}
         {qualityDebug ? renderQualityIssues(layout, quality, prefix) : null}
-        {editHandles.length > 0 ? (
+        {displayedEditHandles.length > 0 ? (
           <g className={`${prefix}__edit-handles`}>
-            {editHandles.map((handle) => (
+            {displayedEditHandles.map((handle) => (
               <g
                 className={`${prefix}__edit-handle-group ${prefix}__edit-handle-group--${handle.kind}`}
                 data-annotation-id={handle.annotationId}

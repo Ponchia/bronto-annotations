@@ -83,6 +83,13 @@ interpreted as indicative rather than a stable latency guarantee. Absolute
 timings vary with CPU contention and Node version. The existing generous
 benchmark ceilings have **not** been tightened simply because one run improved.
 
+For interactive React surfaces, `AnnotationLayer` can opt into
+`previewEdits` to project only the active annotation while dragging. This
+avoids recalculating the full layout or quality report per pointer event; the
+host still commits and re-resolves once at gesture end. Custom SVG/DOM hosts
+can use the experimental `previewAnnotationEdit` helper. Preview connectors
+skip obstacle-aware routing and converge to the authoritative path on commit.
+
 These results still do not make full 200-note relayouts suitable for every
 animation frame. Hosts should memoize stable inputs, persist only edited
 annotation deltas, and avoid recomputing dense layouts on every pointer move.

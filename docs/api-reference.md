@@ -142,7 +142,13 @@ Exports:
 the rendered React layer while keeping navigation state in the host app.
 `editHandleTabIndex` does the same for React edit handles; it defaults to `0`
 for editable layers and can be set to `-1` when the host wants programmatic
-focus only.
+focus only. The opt-in `previewEdits` property renders only the actively edited
+annotation's provisional geometry during pointer movement, with the full layout
+and quality callbacks remaining stable until `onEditEnd` persists a patch.
+Pointer cancellation restores the previous appearance without committing.
+Non-React hosts can use the experimental DOM-free `previewAnnotationEdit`
+from the root package for the same visual-only geometry; its previous candidate
+scores and diagnostics are not recomputed.
 `assertQuality`, `qualityFormat`, and `onQuality` use the same layout-quality
 reporting path as the DOM-free core after each resolved React layout.
 `qualityDebug` renders the same opt-in layout-quality issue boxes in the React
