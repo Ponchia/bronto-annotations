@@ -6,6 +6,14 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.3.2 - 2026-10-10
+
+### Accessibility
+
+- Interactive SVG and React annotation layers now expose named accessibility groups when they contain keyboard-focusable notes, edit controls, or custom note content, while passive layers retain their original image role.
+- Preserve edit-handle and note keyboard interaction semantics in assistive technologies for React Flow diagrams; resolve the previously reported serious nested-interactive accessibility issue.
+- Add headless SVG and React regressions and real Chromium/axe checks at mobile and desktop viewports.
+
 ## 0.3.1 - 2026-10-10
 
 ### Changed
