@@ -7,6 +7,7 @@ import { basename, extname, join, normalize, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 import { chromium } from 'playwright';
 import { writeLine } from './log.mjs';
+import { handleClearanceOffsets } from './react-flow-handle-clearance.mjs';
 
 const exec = promisify(execFile);
 const consumerRoot = process.env.PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT;
@@ -144,7 +145,7 @@ try {
   await mkdir(screenshotDir, { recursive: true });
   await page.screenshot({ path: screenshotPath, fullPage: true });
   await writeFile(evidencePath, JSON.stringify({
-    consumerType: 'external Astro/React writing site',
+    consumerType: process.env.PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_LABEL ?? 'external Astro/React writing site',
     consumerMode,
     surfaceType: 'rendered DOM stack page',
     routePath,
@@ -211,6 +212,7 @@ async function runExternalReactFlowDogfood(page, { css, consoleErrors, pageError
   const measured = await page.evaluate(measureExternalReactFlowPage, {
     surfaceSelector: reactFlowSurfaceSelector
   });
+  assert.ok(measured.counts.surfaces >= 1, 'external React Flow dogfood should identify its host surface');
   assert.ok(measured.nodes.length >= 2, 'external React Flow dogfood should measure at least two rendered nodes');
   assert.ok(measured.edges.length >= 1, 'external React Flow dogfood should measure at least one rendered edge route');
   assert.ok(measured.handles.length >= 1, 'external React Flow dogfood should measure rendered handles');
@@ -233,7 +235,8 @@ async function runExternalReactFlowDogfood(page, { css, consoleErrors, pageError
     },
     assertQuality: {
       label: 'External React Flow annotations',
-      minScore: 45,
+      minScore: process.env.PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_STRICT_QUALITY === '1' ? 80 : 45,
+      failOnWarnings: process.env.PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_STRICT_QUALITY === '1',
       includeWarnings: true,
       maxIssues: 8
     },
@@ -269,7 +272,7 @@ async function runExternalReactFlowDogfood(page, { css, consoleErrors, pageError
   await mkdir(screenshotDir, { recursive: true });
   await page.screenshot({ path: screenshotPath, fullPage: true });
   await writeFile(evidencePath, JSON.stringify({
-    consumerType: 'external Astro/React writing site',
+    consumerType: process.env.PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_LABEL ?? 'external Astro/React writing site',
     consumerMode,
     surfaceType: 'rendered React Flow diagram',
     routePath,
@@ -393,7 +396,7 @@ function prepareExternalReactFlowAnnotations(measured) {
         body: 'Handle geometry came from React Flow DOM attributes.',
         wrap: 24
       },
-      placement: { side: ['left', 'right', 'bottom'], align: ['center', 'start'], offset: [18, 28], crossOffset: [0, 36, -36] },
+      placement: { side: ['top', 'right', 'left', 'bottom'], align: ['center', 'start'], offset: handleClearanceOffsets(handle, measured.nodes), crossOffset: [0, 36, -36] },
       connector: { type: 'straight', end: 'arrow' },
       subject: { shape: 'point', radius: 5, data: { source: 'rendered-handle' } },
       variant: 'badge',
@@ -599,7 +602,7 @@ function measureExternalReactFlowPage({ surfaceSelector }) {
     route: location.pathname,
     bounds: documentBounds(),
     counts: {
-      surfaces: document.querySelectorAll('[data-flow-diagram]').length,
+      surfaces: document.querySelectorAll(surfaceSelector).length,
       nodes: nodeElements.length,
       edges: surface.querySelectorAll('.react-flow__edge[data-id]').length,
       handles: handleElements.length
