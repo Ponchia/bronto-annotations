@@ -1,6 +1,6 @@
 {
   "name": "@ponchia/annotations",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Headless annotation placement and rendering helpers for charts, diagrams, reports, and UI surfaces.",
   "keywords": [
     "annotations",
@@ -168,5 +168,9 @@
   },
   "overrides": {
     "katex": "0.19.0"
+  },
+  "author": {
+    "name": "Zeno Trevisan",
+    "url": "https://brontolotto.observer/"
   }
 }

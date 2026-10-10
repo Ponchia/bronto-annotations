@@ -6,6 +6,22 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.3.1 - 2026-10-10
+
+### Changed
+
+- Publish a fully navigable Bronto Annotations website using real interactive placement, complete examples, source links and 25 authored HTML documentation pages.
+- Improve first-use documentation, public npm metadata and social previews while keeping the framework-independent headless core and its exported API unchanged.
+- Make the compiled example index notes legible within their boxes and enforce their visible text containment in browser tests.
+
+### Security
+
+- Patch development transitive dependencies including `smol-toml`, `source-map-js`, DOMPurify and KaTeX, with zero remaining npm audit advisories; sanitize generated Markdown HTML with DOMPurify.
+
+### Verification
+
+- Add CI-gated GitHub Pages publication, all-example route checks, 700+ internal link assertions, responsive browser checks and accessibility coverage for the public website.
+
 ## 0.3.0 - 2026-09-09
 
 - Avoid false connector detours for disjoint collinear obstacles and accelerate orthogonal visibility checks.
