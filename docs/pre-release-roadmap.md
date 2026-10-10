@@ -1,6 +1,6 @@
 # Pre-Release Roadmap
 
-**Historical scope:** This originally tracked preparation for `0.1.0`. The package is currently released at `0.6.0`; see [the current docs index](README.md), published demos, and the changelog for up-to-date status. Items below are preserved as verification evidence rather than a claim that `0.1.x` is current.
+**Historical scope:** This originally tracked preparation for `0.1.0`. The package is currently released at `0.6.1`; see [the current docs index](README.md), published demos, and the changelog for up-to-date status. Items below are preserved as verification evidence rather than a claim that `0.1.x` is current.
 
 This roadmap tracks the work that turns a complete package into a package that
 has been proven in real consumer use before a public `1.0.0` commitment.
