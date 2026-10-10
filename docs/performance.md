@@ -83,6 +83,25 @@ interpreted as indicative rather than a stable latency guarantee. Absolute
 timings vary with CPU contention and Node version. The existing generous
 benchmark ceilings have **not** been tightened simply because one run improved.
 
+### Avoid unused React layout-quality diagnostics
+
+React's `AnnotationLayer` renders the authoritative SVG and emits `onLayout`
+without computing an additional all-pairs quality report when the host has not
+requested one. The full `evaluateAnnotationLayout` pass runs only when the host
+supplies `onQuality`, enables `assertQuality`, or asks for `qualityDebug`.
+Switching between consumers of the *same* report reuses its memoized result;
+format-only changes recompute the description without rechecking geometry.
+All requested quality reports, assertions and debug overlays retain their
+previous semantics. Non-React code can continue calling
+`evaluateAnnotationLayout` explicitly whenever the host needs diagnostics.
+
+An isolated Node timing of the full report (20 repetitions with three warmups,
+manual-note fixtures, October 2026 development box) recorded median costs of
+roughly 0.26 ms at 40 annotations, 1.99 ms at 200 and 7.39 ms at 400. These are
+profiling observations, not frame deadlines or benchmarks for the whole React
+commit. Skipping an unrequested quality report removes avoidable quadratic
+work but does not by itself guarantee 60 fps rendering on dense canvases.
+
 For interactive React surfaces, `AnnotationLayer` can opt into
 `previewEdits` to project only the active annotation while dragging. This
 avoids recalculating the full layout or quality report per pointer event.

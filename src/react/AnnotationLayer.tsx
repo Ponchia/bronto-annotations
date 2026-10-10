@@ -163,13 +163,18 @@ export function AnnotationLayer({
     annotations, bounds, padding, obstacles, placement, defaultNoteSize,
     refinement, resolvedNoteSizes, resolvedLayout, measure
   ]);
+  // Full quality diagnostics compare every note with every other note. Most
+  // passive and host-controlled renderers do not request them. Avoid quadratic
+  // work on each committed edit unless a consumer needs a report, a quality
+  // assertion, or the visual debug overlay.
+  const needsQuality = Boolean(assertQuality || onQuality || qualityDebug);
   const quality = useMemo(
-    () => evaluateAnnotationLayout(layout),
-    [layout]
+    () => needsQuality ? evaluateAnnotationLayout(layout) : undefined,
+    [layout, needsQuality]
   );
   const qualitySummary = useMemo(
-    () => formatLayoutQualityReport(quality, qualityFormat),
-    [quality, qualityFormat]
+    () => onQuality && quality ? formatLayoutQualityReport(quality, qualityFormat) : undefined,
+    [quality, qualityFormat, onQuality]
   );
   const targetAlignment = useMemo(
     () => targetAlignmentTargets?.length
@@ -185,7 +190,7 @@ export function AnnotationLayer({
   );
 
   useIsomorphicLayoutEffect(() => {
-    if (assertQuality) {
+    if (assertQuality && quality) {
       assertAnnotationLayoutQuality(
         quality,
         assertQuality === true ? {} : assertQuality
@@ -208,11 +213,13 @@ export function AnnotationLayer({
       });
     }
 
-    onQuality?.({
-      layout,
-      quality,
-      summary: qualitySummary
-    });
+    if (onQuality && quality && qualitySummary !== undefined) {
+      onQuality({
+        layout,
+        quality,
+        summary: qualitySummary
+      });
+    }
     onLayout?.(layout);
   }, [
     assertQuality,
@@ -237,7 +244,7 @@ export function AnnotationLayer({
     [layout.annotations]
   );
   const qualityIssues = useMemo(
-    () => qualityDebug ? renderQualityIssues(layout, quality, prefix) : null,
+    () => qualityDebug && quality ? renderQualityIssues(layout, quality, prefix) : null,
     [layout, quality, prefix, qualityDebug]
   );
   const displayedAnnotations = useMemo(() => activePreview

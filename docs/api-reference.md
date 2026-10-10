@@ -168,6 +168,14 @@ reporting path as the DOM-free core after each resolved React layout.
 `qualityDebug` renders the same opt-in layout-quality issue boxes in the React
 SVG layer for authoring and manual-placement review.
 
+Quality diagnostics in the React layer are demand-driven: the underlying
+`evaluateAnnotationLayout` pass runs when `onQuality`, `assertQuality`, or
+`qualityDebug` is supplied. Passive layers and hosts using only `onLayout`
+avoid the otherwise unnecessary quadratic report cost. If requested, quality
+callbacks, blocking assertions and visual debug boxes use the unchanged
+full-quality semantics; `qualityFormat` changes only the report formatting.
+
+
 `AnnotationLayerProps.resolvedLayout` is an experimental option for hosts that
 compute the authoritative layout externally, including with the experimental
 `createIncrementalAnnotationLayoutSession`. When provided, the React layer
