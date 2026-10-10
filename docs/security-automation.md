@@ -17,7 +17,10 @@ require consumer credentials or a long-lived npm token.
   introduce high-or-worse known vulnerabilities.
 - OpenSSF Scorecard runs on pushes to `main`, branch protection changes, a
   weekly schedule, and manual dispatch. It publishes Scorecard results and
-  uploads SARIF into GitHub code scanning.
+  uploads SARIF into GitHub code scanning. The Scorecard action is pinned to
+  the immutable `v2.4.4` release commit, rather than a mutable version tag.
+  This updates the underlying Scorecard engine to v5.5.0 while preserving
+  the workflow permissions and SARIF upload behavior.
 
 ## Version Update Compatibility Policy
 
