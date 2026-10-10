@@ -168,6 +168,13 @@ reporting path as the DOM-free core after each resolved React layout.
 `qualityDebug` renders the same opt-in layout-quality issue boxes in the React
 SVG layer for authoring and manual-placement review.
 
+Layout, quality and target-alignment notifications are independent:
+`onLayout` runs when the authoritative layout changes or the callback
+subscription changes, not merely because the host toggles the debug overlay,
+reformats quality reports or enables an unrelated diagnostic assertion.
+The quality and alignment callbacks still receive their own updated reports.
+
+
 Quality diagnostics in the React layer are demand-driven: the underlying
 `evaluateAnnotationLayout` pass runs when `onQuality`, `assertQuality`, or
 `qualityDebug` is supplied. Passive layers and hosts using only `onLayout`

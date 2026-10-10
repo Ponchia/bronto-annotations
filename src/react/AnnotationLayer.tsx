@@ -189,6 +189,10 @@ export function AnnotationLayer({
     [targetAlignment, targetAlignmentFormat]
   );
 
+  // Independent host notifications: enabling debug overlays or reformatting
+  // the same quality evidence should never signal a changed layout. Likewise,
+  // host-only onLayout consumers do not subscribe to unrelated diagnostic
+  // toggles. Keep assertion and callback order consistent with prior behavior.
   useIsomorphicLayoutEffect(() => {
     if (assertQuality && quality) {
       assertAnnotationLayoutQuality(
@@ -196,43 +200,32 @@ export function AnnotationLayer({
         assertQuality === true ? {} : assertQuality
       );
     }
+  }, [assertQuality, quality]);
 
+  useIsomorphicLayoutEffect(() => {
     if (assertTargetAlignment && !targetAlignment) {
       throw new Error('targetAlignmentTargets are required when assertTargetAlignment is set.');
     }
 
     if (targetAlignment) {
-      assertAnchorAlignmentReportIfRequested(
-        targetAlignment,
-        assertTargetAlignment
-      );
+      assertAnchorAlignmentReportIfRequested(targetAlignment, assertTargetAlignment);
       onTargetAlignment?.({
         layout,
         targetAlignment,
         summary: targetAlignmentSummary!
       });
     }
+  }, [assertTargetAlignment, layout, onTargetAlignment, targetAlignment, targetAlignmentSummary]);
 
+  useIsomorphicLayoutEffect(() => {
     if (onQuality && quality && qualitySummary !== undefined) {
-      onQuality({
-        layout,
-        quality,
-        summary: qualitySummary
-      });
+      onQuality({ layout, quality, summary: qualitySummary });
     }
+  }, [layout, onQuality, quality, qualitySummary]);
+
+  useIsomorphicLayoutEffect(() => {
     onLayout?.(layout);
-  }, [
-    assertQuality,
-    assertTargetAlignment,
-    layout,
-    onLayout,
-    onQuality,
-    onTargetAlignment,
-    quality,
-    qualitySummary,
-    targetAlignment,
-    targetAlignmentSummary
-  ]);
+  }, [layout, onLayout]);
 
   const editOptions = useMemo(() => normalizeEditOptions(editable), [editable]);
   const editHandles = useMemo(

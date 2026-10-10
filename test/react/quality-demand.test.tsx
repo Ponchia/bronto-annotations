@@ -58,6 +58,31 @@ describe('React quality diagnostics are demand-driven', () => {
     expect(container.querySelectorAll('g.pa-annotation')).toHaveLength(2);
   });
 
+  it('does not emit duplicate onLayout notifications when diagnostic inputs change', () => {
+    const opts = { annotations, bounds, noteSizes };
+    const session = createIncrementalAnnotationLayoutSession(opts);
+    const onLayout = vi.fn();
+    const onQuality = vi.fn();
+    const { rerender } = render(
+      <AnnotationLayer {...opts} resolvedLayout={session.layout} onLayout={onLayout} />
+    );
+    expect(onLayout).toHaveBeenCalledTimes(1);
+    rerender(<AnnotationLayer {...opts} resolvedLayout={session.layout} onLayout={onLayout} qualityDebug />);
+    expect(onLayout).toHaveBeenCalledTimes(1);
+    rerender(<AnnotationLayer {...opts} resolvedLayout={session.layout} onLayout={onLayout}
+      qualityDebug onQuality={onQuality} />);
+    expect(onLayout).toHaveBeenCalledTimes(1);
+    expect(onQuality).toHaveBeenCalledTimes(1);
+    rerender(<AnnotationLayer {...opts} resolvedLayout={session.layout} onLayout={onLayout}
+      onQuality={onQuality} qualityFormat={{ label: 'Custom quality heading' }} />);
+    expect(onLayout).toHaveBeenCalledTimes(1);
+    expect(onQuality).toHaveBeenCalledTimes(2);
+    expect(onQuality.mock.calls[1]![0].summary).toContain('Custom quality heading');
+    rerender(<AnnotationLayer {...opts} resolvedLayout={session.layout} onLayout={onLayout} />);
+    expect(onLayout).toHaveBeenCalledTimes(1);
+    expect(onQuality).toHaveBeenCalledTimes(2);
+  });
+
   it('provides unchanged report semantics for requested onQuality callbacks', () => {
     const opts = { annotations, bounds, noteSizes };
     const session = createIncrementalAnnotationLayoutSession(opts);
