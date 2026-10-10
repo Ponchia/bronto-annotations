@@ -1,9 +1,9 @@
 # API Stability
 
-**Current package:** `0.3.x` (pre-1.0). The stable/experimental export manifest was first frozen for the `0.1.x` compatibility policy; this document records that historical floor, while minor-version changes must still be reviewed through the release notes before upgrading consumers.
+**Current package:** `0.4.x` (pre-1.0). The stable/experimental export manifest was first frozen for the `0.1.x` compatibility policy; this document records that historical floor, while minor-version changes must still be reviewed through the release notes before upgrading consumers.
 
-`@ponchia/annotations` is at `0.1.x`. The package is usable, but public API
-shape is still allowed to evolve before `1.0.0`.
+`@ponchia/annotations` is currently pre-1.0. The package is usable, but its
+experimental authoring API can still evolve before `1.0.0`.
 
 ## Stability Labels
 
