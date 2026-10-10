@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f6f7f6" />
+    <title>Bronto Annotations — Explain what's already on the screen</title>
+    <meta
+      name="description"
+      content="A headless annotation engine for SVG, charts, reports, Mermaid, D2 and React Flow. Place notes, avoid collisions and route connectors around real geometry."
+    />
+    <link
+      rel="canonical"
+      href="https://ponchia.github.io/bronto-annotations/"
+    />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="Bronto Annotations — Explain what's already on the screen"
+    />
+    <meta
+      property="og:description"
+      content="Headless note placement, obstacle avoidance and connectors for the charts and interfaces you already build."
+    />
+    <meta
+      property="og:url"
+      content="https://ponchia.github.io/bronto-annotations/"
+    />
+    <meta
+      property="og:image"
+      content="https://ponchia.github.io/bronto-annotations/media/social.jpg"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:image"
+      content="https://ponchia.github.io/bronto-annotations/media/social.jpg"
+    />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Bronto Annotations home"
+        ><svg aria-hidden="true" viewBox="0 0 36 36">
+          <path
+            d="M5 29L15 13L25 19L31 5"
+            stroke="currentColor"
+            stroke-width="2.5"
+            fill="none"
+          />
+          <circle cx="15" cy="13" r="3" />
+          <circle cx="31" cy="5" r="3" /></svg
+        ><span>bronto<span class="accent">/</span>annotations</span></a
+      >
+      <nav aria-label="Main navigation">
+        <a href="#playground">Playground</a><a href="#examples">Examples</a
+        ><a href="./docs/">Documentation</a
+        ><a href="https://github.com/Ponchia/bronto-annotations">GitHub ↗</a>
+      </nav>
+    </header>
+    <main id="main">
+      <section class="hero container" aria-labelledby="hero-heading">
+        <div class="hero-copy">
+          <p class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span> OPEN SOURCE /
+            HEADLESS TYPESCRIPT
+          </p>
+          <h1 id="hero-heading">
+            Explain what's already <em>on the screen.</em>
+          </h1>
+          <p class="hero-lead">
+            Annotations that know where to go. Attach notes to actual chart
+            marks, diagram nodes, DOM regions and reports—without giving up
+            control of rendering or application state.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#playground"
+              >Try the engine ↗</a
+            ><a
+              class="button button-outline"
+              href="./docs/context-quickstart.html"
+              >Get started</a
+            >
+          </div>
+          <p class="hero-micro">
+            DOM-free core <span>·</span> Collision-aware layout
+            <span>·</span> Optional adapters
+          </p>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <span>SUBJECT → CONNECTOR → NOTE</span>
+          <svg viewBox="0 0 380 260" role="presentation">
+            <rect
+              x="22"
+              y="35"
+              width="336"
+              height="188"
+              rx="6"
+              fill="#fff"
+              stroke="#d0d9dc"
+            />
+            <g stroke="#e9edf0">
+              <path d="M22 82H358M22 129H358M22 176H358" />
+            </g>
+            <path
+              d="M39 187Q97 181 145 133T226 116T340 69"
+              fill="none"
+              stroke="#627d80"
+              stroke-width="3"
+            />
+            <circle
+              cx="226"
+              cy="116"
+              r="6"
+              stroke="#d14c70"
+              fill="#fff"
+              stroke-width="3"
+            />
+            <path
+              d="M226 116L269 64L315 64"
+              fill="none"
+              stroke="#d14c70"
+              stroke-width="2"
+            />
+            <rect
+              x="240"
+              y="17"
+              width="126"
+              height="53"
+              rx="5"
+              fill="#fff"
+              stroke="#b4c3c9"
+            />
+            <path
+              d="M250 31H353M250 42H330M250 51H345"
+              stroke="#b0bdc4"
+              stroke-width="3"
+            />
+          </svg>
+          <p>
+            The host supplies geometry.<br />The engine places the explanation.
+          </p>
+        </div>
+      </section>
+      <section
+        id="playground"
+        class="playground-section"
+        aria-labelledby="playground-heading"
+      >
+        <div class="container">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">01 / INTERACTIVE</p>
+              <h2 id="playground-heading">Placement, as it happens.</h2>
+            </div>
+            <p>
+              This is the actual annotation layout engine—not a prerecorded
+              animation. Change the conditions and watch it recalculate.
+            </p>
+          </div>
+          <div class="playground-layout">
+            <div class="plot-panel">
+              <div class="plot-header">
+                <span
+                  ><span class="live-dot" aria-hidden="true"></span> LIVE
+                  GEOMETRY</span
+                ><span>HOST-CONTROLLED SVG</span>
+              </div>
+              <div class="chart-stage">
+                <svg
+                  class="plot-svg"
+                  viewBox="0 0 760 430"
+                  role="img"
+                  aria-label="Rising data series with an obstacle region and annotated points"
+                  preserveAspectRatio="xMidYMid meet"
+                >
+                  <rect
+                    class="plot-bg"
+                    x="33"
+                    y="42"
+                    width="691"
+                    height="317"
+                    rx="7"
+                  />
+                  <g class="plot-grid">
+                    <path
+                      d="M33 121H724M33 200H724M33 279H724M171 42V359M309 42V359M447 42V359M585 42V359"
+                    />
+                  </g>
+                  <path
+                    class="plot-trend"
+                    d="M52 316C117 299 143 221 193 244S279 296 343 209S442 144 506 156S590 124 645 94S703 111 714 66"
+                  />
+                  <g class="plot-point">
+                    <circle cx="193" cy="244" r="4" />
+                    <circle cx="343" cy="209" r="4" />
+                    <circle cx="506" cy="156" r="5" />
+                    <circle cx="645" cy="94" r="6" />
+                  </g>
+                  <rect
+                    id="plot-obstacle"
+                    x="350"
+                    y="219"
+                    width="150"
+                    height="90"
+                    rx="4"
+                    class="obstacle"
+                  />
+                  <text x="43" y="30" class="plot-axis">
+                    RESPONSE / NORMALIZED
+                  </text>
+                  <text x="568" y="393" class="plot-axis">SAMPLE INDEX →</text>
+                </svg>
+                <div
+                  id="annotation-overlay"
+                  class="annotation-overlay"
+                  aria-label="Computed annotations"
+                ></div>
+              </div>
+              <div class="plot-metrics">
+                <div>
+                  <span>LAYOUT SCORE</span
+                  ><strong id="layout-score" aria-live="polite">—</strong>
+                </div>
+                <div>
+                  <span>NOTES PLACED</span><strong id="placed-count">—</strong>
+                </div>
+                <div>
+                  <span>NOTE OVERLAP</span><strong id="overlap-count">—</strong>
+                </div>
+              </div>
+            </div>
+            <form class="controls-panel" id="annotation-controls">
+              <p class="eyebrow">CONFIGURE THE SCENE</p>
+              <h3>Move the conditions.<br />Keep the context.</h3>
+              <p>
+                Every update recomputes note candidates against obstacles and
+                existing placements.
+              </p>
+              <label class="control-block" for="notes-count"
+                ><span
+                  >Callouts
+                  <output id="notes-display" for="notes-count">3</output></span
+                ><input
+                  id="notes-count"
+                  type="range"
+                  min="2"
+                  max="5"
+                  step="1"
+                  value="3"
+              /></label>
+              <label class="control-block" for="obstacle-size"
+                ><span
+                  >Obstacle width
+                  <output id="obstacle-display" for="obstacle-size"
+                    >150</output
+                  ></span
+                ><input
+                  id="obstacle-size"
+                  type="range"
+                  min="80"
+                  max="215"
+                  step="5"
+                  value="150"
+              /></label>
+              <label class="control-block" for="route-style"
+                ><span>Connector routing</span
+                ><select id="route-style">
+                  <option value="orthogonal">Obstacle-aware</option>
+                  <option value="none">Direct paths</option>
+                </select></label
+              >
+              <button type="reset" class="reset-control">Reset scene ↺</button>
+              <p class="fine-print">
+                Real <code>resolveAnnotationLayout</code> and
+                <code>renderAnnotationsSvg</code>.
+                <a
+                  href="https://github.com/Ponchia/bronto-annotations/blob/main/site/main.ts"
+                  >Inspect source ↗</a
+                >
+              </p>
+            </form>
+          </div>
+        </div>
+      </section>
+      <section class="container value-section" aria-labelledby="value-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">02 / THE BOUNDARY</p>
+            <h2 id="value-heading">
+              You own the surface.<br />We handle the callouts.
+            </h2>
+          </div>
+          <p>
+            Bring geometry from the thing you already render. Receive
+            deterministic placements, paths and a scored quality report.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article>
+            <span class="feature-symbol">↗</span>
+            <h3>Anchor to reality.</h3>
+            <p>
+              Points, boxes, DOM ranges, chart marks and diagram edges become
+              anchors for shared annotation data.
+            </p>
+          </article>
+          <article>
+            <span class="feature-symbol">▱</span>
+            <h3>Make room for meaning.</h3>
+            <p>
+              Explore candidate placements, avoid known obstacles, and route
+              connectors around crowded regions.
+            </p>
+          </article>
+          <article>
+            <span class="feature-symbol">⌗</span>
+            <h3>Render your way.</h3>
+            <p>
+              Output SVG, use React components or draw the geometry yourself.
+              Application state remains yours.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section id="examples" class="examples-section">
+        <div class="container">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">03 / REAL EXAMPLES</p>
+              <h2>See the annotations land.</h2>
+            </div>
+            <p>
+              Every example runs real repository code. Open the demo, examine
+              the source, and bring the same patterns to your host.
+            </p>
+          </div>
+          <div class="example-grid">
+            <article class="example-card">
+              <a class="example-image" href="./examples/svg-basic/"
+                ><img
+                  src="./media/svg-basic.jpg"
+                  alt="Annotation notes and connectors on a trend chart"
+                  width="800"
+                  height="535"
+              /></a>
+              <div class="card-copy">
+                <p>SVG / HEADLESS</p>
+                <h3>Start with coordinates.</h3>
+                <span>Automatic placement layered over an existing chart.</span>
+                <div>
+                  <a href="./examples/svg-basic/">Live example ↗</a
+                  ><a
+                    href="https://github.com/Ponchia/bronto-annotations/blob/main/examples/svg-basic/main.ts"
+                    >Source ↗</a
+                  >
+                </div>
+              </div>
+            </article>
+            <article class="example-card">
+              <a class="example-image" href="./examples/react-flow-basic/"
+                ><img
+                  src="./media/react-flow-basic.jpg"
+                  alt="Annotation notes around React Flow nodes"
+                  width="800"
+                  height="535"
+              /></a>
+              <div class="card-copy">
+                <p>REACT FLOW</p>
+                <h3>Follow the diagram.</h3>
+                <span
+                  >Attach notes to nodes, edges and handles through public graph
+                  state.</span
+                >
+                <div>
+                  <a href="./examples/react-flow-basic/">Live example ↗</a
+                  ><a
+                    href="https://github.com/Ponchia/bronto-annotations/blob/main/examples/react-flow-basic/main.tsx"
+                    >Source ↗</a
+                  >
+                </div>
+              </div>
+            </article>
+            <article class="example-card">
+              <a class="example-image" href="./examples/vega-basic/"
+                ><img
+                  src="./media/vega-basic.jpg"
+                  alt="Annotations over a generated Vega visualization"
+                  width="800"
+                  height="535"
+              /></a>
+              <div class="card-copy">
+                <p>VEGA / VEGA-LITE</p>
+                <h3>Explain generated marks.</h3>
+                <span
+                  >Resolve annotated targets after the chart renderer produces
+                  its geometry.</span
+                >
+                <div>
+                  <a href="./examples/vega-basic/">Live example ↗</a
+                  ><a
+                    href="https://github.com/Ponchia/bronto-annotations/blob/main/examples/vega-basic/main.ts"
+                    >Source ↗</a
+                  >
+                </div>
+              </div>
+            </article>
+            <article class="example-card">
+              <a class="example-image" href="./examples/mermaid-basic/"
+                ><img
+                  src="./media/mermaid-basic.jpg"
+                  alt="Annotations around Mermaid diagram elements"
+                  width="800"
+                  height="535"
+              /></a>
+              <div class="card-copy">
+                <p>MERMAID</p>
+                <h3>Turn diagrams into evidence.</h3>
+                <span
+                  >Explain rendered nodes and messages without owning the
+                  diagram language.</span
+                >
+                <div>
+                  <a href="./examples/mermaid-basic/">Live example ↗</a
+                  ><a
+                    href="https://github.com/Ponchia/bronto-annotations/blob/main/examples/mermaid-basic/main.ts"
+                    >Source ↗</a
+                  >
+                </div>
+              </div>
+            </article>
+          </div>
+          <div class="more-examples">
+            Also explore <a href="./examples/dom-basic/">DOM regions ↗</a
+            ><a href="./examples/d2-basic/">D2 diagrams ↗</a
+            ><a href="./examples/react-basic/">React ↗</a
+            ><a href="./examples/bronto-report/">Reports ↗</a
+            ><a href="./examples/style-gallery/">Style gallery ↗</a
+            ><a class="all-link" href="./examples/index/"
+              >Browse all nine examples →</a
+            >
+          </div>
+        </div>
+      </section>
+      <section class="container quick-start" aria-labelledby="quick-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">04 / GET STARTED</p>
+            <h2 id="quick-heading">
+              Plain objects in.<br />Render-ready output.
+            </h2>
+          </div>
+          <p>
+            Use the headless core, pass host coordinates, and choose a renderer.
+            Optional adapters stay opt-in.
+          </p>
+        </div>
+        <div class="quick-grid">
+          <div>
+            <div class="install">
+              <code>npm install @ponchia/annotations</code
+              ><button
+                data-copy="npm install @ponchia/annotations"
+                class="copy-button"
+                type="button"
+              >
+                Copy
+              </button>
+            </div>
+            <p>
+              Start with an existing SVG or a measured DOM box. The same model
+              supports every optional adapter.
+            </p>
+            <div class="quick-links">
+              <a href="./docs/context-quickstart.html"
+                >Choose your host context ↗</a
+              ><a href="./docs/integration-recipes.html"
+                >Integration recipes ↗</a
+              ><a href="./docs/api-reference.html">API reference ↗</a>
+            </div>
+          </div>
+          <div class="code-window">
+            <div class="code-toolbar">
+              <span>quick-start.ts</span
+              ><button
+                data-copy-target="starter-code"
+                class="copy-button"
+                type="button"
+              >
+                Copy code
+              </button>
+            </div>
+            <pre
+              id="starter-code"
+              tabindex="0"
+              aria-label="Quick-start TypeScript example"
+            ><code>import {
+  resolveAnnotationLayout,
+  renderAnnotationsSvg
+} from '@ponchia/annotations';
+
+const layout = resolveAnnotationLayout({
+  annotations: [{
+    id: 'peak',
+    anchor: {
+      type: 'point',
+      point: { x: 280, y: 90 }
+    },
+    note: { title: 'Peak response' },
+    placement: { side: 'right' }
+  }],
+  bounds: { x: 0, y: 0, width: 640, height: 360 }
+});
+
+const svg = renderAnnotationsSvg(layout, {
+  title: 'Chart notes'
+});</code></pre>
+          </div>
+        </div>
+      </section>
+      <section class="related-section">
+        <div class="container related-grid">
+          <div>
+            <p class="eyebrow">THE BRONTO FAMILY</p>
+            <h2>Separate by design.<br />Better together.</h2>
+          </div>
+          <div>
+            <p>
+              <strong>Bronto Annotations</strong> computes layout, targets and
+              connectors. <strong>BrontoUI</strong> supplies the visual
+              vocabulary for developer tools, dashboards and reports. Use either
+              independently, or combine them with the optional annotation CSS
+              bridge.
+            </p>
+            <a
+              class="button button-outline"
+              href="https://ponchia.github.io/bronto-ui/"
+              >Explore BrontoUI ↗</a
+            >
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer container">
+      <div>
+        <a href="./" class="footer-brand"
+          >bronto<span class="accent">/</span>annotations</a
+        >
+        <p>Annotate the interfaces you already build.</p>
+      </div>
+      <nav aria-label="Footer links">
+        <a href="./docs/">Docs</a><a href="./examples/index/">Lab</a
+        ><a href="https://github.com/Ponchia/bronto-annotations">GitHub</a
+        ><a href="https://www.npmjs.com/package/@ponchia/annotations">npm</a>
+      </nav>
+      <small
+        >MIT licensed.
+        <a
+          href="https://github.com/Ponchia/bronto-annotations/blob/main/LICENSE"
+          >License ↗</a
+        ></small
+      >
+    </footer>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

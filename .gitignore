@@ -7,3 +7,4 @@ dist/
 .codeql/
 *.tgz
 .DS_Store
+_site/

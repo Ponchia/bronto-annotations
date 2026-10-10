@@ -25,6 +25,7 @@ const bugTemplate = await read('.github/ISSUE_TEMPLATE/bug_report.yml');
 const featureTemplate = await read('.github/ISSUE_TEMPLATE/feature_request.yml');
 const codeowners = await read('.github/CODEOWNERS');
 const securityAutomationDocs = await read('docs/security-automation.md');
+const pagesWorkflow = await read('.github/workflows/pages.yml');
 
 assert.notEqual(pkg.version, '0.0.0', 'package version must be release-shaped, not 0.0.0');
 assert.equal(lock.version, pkg.version, 'package-lock root version must match package.json');
@@ -32,7 +33,7 @@ assert.equal(lock.packages?.['']?.version, pkg.version, 'package-lock package ve
 assert.equal(pkg.private, false, 'package must remain publishable for the public npm release');
 assert.equal(pkg.repository?.type, 'git', 'package must declare git repository metadata');
 assert.equal(pkg.repository?.url, 'git+https://github.com/Ponchia/bronto-annotations.git');
-assert.equal(pkg.homepage, 'https://github.com/Ponchia/bronto-annotations#readme');
+assert.equal(pkg.homepage, 'https://ponchia.github.io/bronto-annotations/');
 assert.equal(pkg.bugs?.url, 'https://github.com/Ponchia/bronto-annotations/issues');
 assert.equal(pkg.publishConfig?.access, 'public', 'scoped package publish access must be explicit');
 assert.equal(pkg.publishConfig?.provenance, true, 'npm provenance must be explicit');
@@ -58,11 +59,16 @@ assert.equal(pkg.scripts?.['test:repo'], 'node scripts/check-repo-readiness.mjs'
 assert.equal(pkg.scripts?.['test:release'], 'node scripts/check-release.mjs');
 assert.equal(pkg.scripts?.['test:security-automation'], 'node scripts/check-security-automation.mjs');
 assert.ok(pkg.scripts?.check?.includes('npm run test:repo'), 'npm run check must include test:repo');
+assert.ok(pkg.scripts?.check?.includes('npm run test:site'), 'npm run check must verify the published Pages build');
+for (const marker of ['workflow_run:', 'workflows: [\'CI\']', 'ref: main', 'enablement: true', 'upload-pages-artifact', 'deploy-pages']) {
+  assertIncludes(pagesWorkflow, marker, '.github/workflows/pages.yml');
+}
 assert.ok(pkg.scripts?.check?.includes('npm run test:release'), 'npm run check must include test:release');
 assert.ok(pkg.scripts?.check?.includes('npm run test:security-automation'), 'npm run check must include test:security-automation');
 
 for (const path of [
   '.github/workflows/ci.yml',
+  '.github/workflows/pages.yml',
   '.github/workflows/release.yml',
   '.github/workflows/canary.yml',
   '.github/workflows/codeql.yml',
