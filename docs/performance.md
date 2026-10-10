@@ -135,3 +135,11 @@ reordered annotations, changed host obstacles/bounds, and global refinement
 force larger recomputations. Capturing input value snapshots has a small cost
 per update; benchmark under representative host density before enabling the
 experimental optimization broadly.
+
+For annotated generated graphs, widen host-owned handle placement candidates
+according to the **rendered** owner card size. In an additional dense React Flow
+host, a 20–30 px handle offset trapped a callout inside adjacent graph nodes;
+adding owner-height-based clearance candidates raised quality from 0 to 86
+with no note/obstacle overlap. See `docs/dogfood-external-consumer-report.md`
+for the strict host evidence and browser repro. This is a host integration
+recipe, not an automatic change to the deterministic core placement policy.
