@@ -49,8 +49,9 @@ subpath is listed exactly once as stable or experimental.
   opt-in priority-prefix reuse for stable bounds/obstacles and unrefined
   layouts, with safe full-resolution fallback for changed global geometry or
   refinement passes.
-- React edit-handle authoring options and edit events until the authoring UX
-  layer is hardened.
+- React edit-handle authoring options, edit events, and the opt-in
+  `AnnotationLayer.resolvedLayout` controlled-layout property until the
+  authoring UX layer is hardened.
 - Dense-layout tuning constants and scoring weights.
 - Low-level adapter finder/traversal helpers such as rendered SVG finders, D2
   traversal helpers, and React Flow geometry helpers.

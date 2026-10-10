@@ -16,6 +16,7 @@ import {
   boxCenter,
   boxUnion,
   expandBox,
+  normalizeBox,
   resolvePadding
 } from '../core/anchors.js';
 import {
@@ -90,6 +91,7 @@ export function AnnotationLayer({
   debug = false,
   editable,
   previewEdits = false,
+  resolvedLayout,
   label = 'Annotation layer',
   measure = 'estimate',
   markerIdPrefix,
@@ -135,8 +137,19 @@ export function AnnotationLayer({
     }),
     [estimatedSizes, noteSizes, measure, measuredSizes]
   );
-  const layout = useMemo(
-    () => resolveAnnotationLayout({
+  const layout = useMemo(() => {
+    // A host with an incremental session can supply its committed result.
+    // Computing it again here would undo the optimization. All subsequent
+    // quality, editing and SVG rendering use this same authoritative object.
+    if (resolvedLayout !== undefined) {
+      if (measure === 'dom') {
+        throw new Error('AnnotationLayer.resolvedLayout requires measure="estimate"; pass measured noteSizes through the host layout options instead.');
+      }
+      assertControlledLayout(resolvedLayout, annotations, bounds);
+      return resolvedLayout;
+    }
+
+    return resolveAnnotationLayout({
       annotations,
       bounds,
       noteSizes: resolvedNoteSizes,
@@ -145,9 +158,11 @@ export function AnnotationLayer({
       ...(placement ? { placement } : {}),
       ...(defaultNoteSize ? { defaultNoteSize } : {}),
       ...(refinement !== undefined ? { refinement } : {})
-    }),
-    [annotations, bounds, padding, obstacles, placement, defaultNoteSize, refinement, resolvedNoteSizes]
-  );
+    });
+  }, [
+    annotations, bounds, padding, obstacles, placement, defaultNoteSize,
+    refinement, resolvedNoteSizes, resolvedLayout, measure
+  ]);
   const quality = useMemo(
     () => evaluateAnnotationLayout(layout),
     [layout]
@@ -636,6 +651,22 @@ const MeasuredAnnotation = memo(function MeasuredAnnotation({
     </div>
   );
 });
+
+function assertControlledLayout(layout: ResolvedLayout, annotations: Annotation[], bounds: Box): void {
+  const normalizedBounds = normalizeBox(bounds);
+  if (layout.bounds.x !== normalizedBounds.x
+    || layout.bounds.y !== normalizedBounds.y
+    || layout.bounds.width !== normalizedBounds.width
+    || layout.bounds.height !== normalizedBounds.height) {
+    throw new Error('AnnotationLayer.resolvedLayout bounds do not match the current host bounds.');
+  }
+
+  const ids = new Set(annotations.map((annotation) => annotation.id));
+  if (ids.size !== annotations.length || layout.annotations.length !== ids.size
+    || layout.annotations.some((item) => !ids.delete(item.id)) || ids.size !== 0) {
+    throw new Error('AnnotationLayer.resolvedLayout must contain exactly the current host annotation IDs.');
+  }
+}
 
 function normalizeEditOptions(editable: AnnotationLayerProps['editable']): AnnotationLayerEditOptions | undefined {
   if (!editable) {

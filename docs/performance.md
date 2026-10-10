@@ -88,7 +88,11 @@ For interactive React surfaces, `AnnotationLayer` can opt into
 avoids recalculating the full layout or quality report per pointer event.
 Memoized annotation and edit-handle trees also keep unrelated custom React
 notes and hidden DOM-measurement copies from rendering on each drag update.
-The host still commits and re-resolves once at gesture end. Custom SVG/DOM hosts
+The host still commits and re-resolves once at gesture end. Hosts using an
+incremental committed-layout session can also pass its authoritative result to
+`AnnotationLayer.resolvedLayout`, avoiding a second full solver pass in the
+React renderer. This opt-in controlled mode requires explicit host-managed
+note sizes rather than the component's `measure="dom"` path. Custom SVG/DOM hosts
 can use the experimental `previewAnnotationEdit` helper. Preview connectors
 skip obstacle-aware routing and converge to the authoritative path on commit.
 

@@ -3,7 +3,8 @@
  *
  * @public Stable for `0.1.x`: `AnnotationLayer`, `useAnnotations`, rendering,
  * measurement, quality, and target-alignment props/events.
- * @experimental During `0.x`: edit-handle authoring options and edit events.
+ * @experimental During `0.x`: edit-handle authoring options, edit events,
+ * and the opt-in host-owned resolvedLayout renderer input.
  */
 export type {
   AnnotationLayerEditEvent,
