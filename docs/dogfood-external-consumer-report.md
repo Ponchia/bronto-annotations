@@ -87,6 +87,54 @@ path by:
 `PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT` it skips with a clear message so
 public CI does not depend on a private local checkout.
 
+### Second external React Flow host: dense architecture graph
+
+A separate, real React Flow graph app was tested without modifying its source.
+Unlike the writing-site host above, this app uses React Flow directly and has
+**no** `[data-flow-diagram]` wrapper; the consumer supplied its existing
+`.react-flow` selector. Its rendered desktop graph measured 5 actual nodes,
+5 routed edges (35 sampled path points), and 10 handles. The same four
+annotation targets (entry node, generated edge, handle, terminal node) were
+measured and aligned successfully.
+
+The initial generic placement recipe scored **0/100** on this denser graph:
+a handle callout overlapped neighboring graph cards by about 11,565 px².
+The problem was insufficient search distance, not missing anchors. Extending
+handle placement to consider top-side candidates and clearance offsets derived
+from the actual owner card height resolved the collisions **without** disabling
+quality assertions or changing the package layout engine.
+
+The final strict verification returned:
+
+- Quality **86/100**, zero invalid boxes, zero bounds overflow, zero note
+  overlap, and **zero obstacle overlap**
+- Four aligned targets, with zero missing targets or alignment warnings
+- Four visible notes/connectors, zero browser console/page errors, and one
+  detected host surface
+- Seven informational connector–obstacle intersections, including the expected
+  source/target anchor contacts; none were annotation card collisions
+
+The strict invocation on a host with an existing static build is:
+
+```bash
+PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_ROOT=<host-checkout> \
+PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_SKIP_BUILD=1 \
+PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_MODE=react-flow \
+PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_PATH=/ \
+PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_SURFACE_SELECTOR='.react-flow' \
+PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_READY_SELECTOR='.react-flow .react-flow__node' \
+PONCHIA_ANNOTATIONS_EXTERNAL_CONSUMER_STRICT_QUALITY=1 \
+PONCHIA_ANNOTATIONS_REQUIRE_EXTERNAL_CONSUMER=1 \
+npm run test:dogfood:external
+```
+
+Omit `SKIP_BUILD=1` if the host needs rebuilding. Strict mode raises the
+minimum score from 45 to 80 and rejects all warning-level quality issues;
+it never suppresses validation or overlaps. The report evidence and screenshot
+are stored in ignored `.tmp-dogfood/` and remain local to the development
+host. Desktop results are evidence for this topology and viewport, not a
+claim that 4 callouts will fit every mobile or zoomed-out graph.
+
 ## Friction
 
 | Area | Observation | Severity | Proposed Fix |

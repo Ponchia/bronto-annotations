@@ -97,3 +97,11 @@ animation frame. Hosts should memoize stable inputs, persist only edited
 annotation deltas, and avoid recomputing dense layouts on every pointer move.
 Incremental/worker-backed resolution remains an optional future design rather
 than a hidden compatibility change in the current API.
+
+For annotated generated graphs, widen host-owned handle placement candidates
+according to the **rendered** owner card size. In an additional dense React Flow
+host, a 20–30 px handle offset trapped a callout inside adjacent graph nodes;
+adding owner-height-based clearance candidates raised quality from 0 to 86
+with no note/obstacle overlap. See `docs/dogfood-external-consumer-report.md`
+for the strict host evidence and browser repro. This is a host integration
+recipe, not an automatic change to the deterministic core placement policy.
