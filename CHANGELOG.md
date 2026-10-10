@@ -6,6 +6,18 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.6.0 - 2026-10-10
+
+### Added
+
+- Add the experimental `AnnotationLayer.resolvedLayout` prop for React hosts that already calculate an authoritative layout through `createIncrementalAnnotationLayoutSession` or `resolveAnnotationLayout`. This avoids an otherwise redundant full layout solve after committed edits and retains unchanged custom React notes.
+- Validate matching host annotation IDs and bounds, and reject incompatible component-owned DOM measurement when the host supplies the authoritative layout. React quality reports, edit handles, target-alignment callbacks and server rendering use the same resolved geometry.
+
+### Documentation and verification
+
+- Document host-owned React layout state, the difference between drag previews and committed incremental updates, explicit note sizing, and normal fallback behavior.
+- Add controlled React tests for no-op updates, stable neighboring note rendering, exact committed geometry, quality and layout callbacks, server rendering, and invalid host input guards. Preserve the existing React layer's default behavior and public exports.
+
 ## 0.5.0 - 2026-10-10
 
 ### Added
