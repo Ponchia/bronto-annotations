@@ -227,11 +227,55 @@ export function AnnotationLayer({
     onLayout?.(layout);
   }, [layout, onLayout]);
 
-  const editOptions = useMemo(() => normalizeEditOptions(editable), [editable]);
-  const editHandles = useMemo(
-    () => editOptions ? annotationEditHandles(layout, editOptions) : [],
-    [layout, editOptions]
-  );
+  // A host commonly supplies editable={{ includeAnchor: true }} inline.
+  // Comparing the wrapper object's identity would regenerate every edit
+  // handle (and rerender its SVG controls) on otherwise identical commits.
+  // Depend on the actual supported scalar options instead, preserving the
+  // previous handle objects when both geometry and edit semantics are stable.
+  const editOptions = useMemo(() => {
+    const normalized = normalizeEditOptions(editable);
+    // Snapshot value-based options instead of holding on to a host object
+    // that may be mutated between committed React renders.
+    return normalized ? { ...normalized } : undefined;
+  }, [
+    Boolean(editable),
+    typeof editable === 'object' ? editable.includeNote : undefined,
+    typeof editable === 'object' ? editable.includeAnchor : undefined,
+    typeof editable === 'object' ? editable.noteHandlePosition : undefined,
+    typeof editable === 'object' ? editable.radius : undefined,
+    typeof editable === 'object' ? editable.hitRadius : undefined,
+    typeof editable === 'object' ? editable.keyboardStep : undefined,
+    typeof editable === 'object' ? editable.keyboardLargeStep : undefined
+  ]);
+  // Incremental committed layouts retain exact ResolvedAnnotation identities
+  // for unaffected winners. Preserve their previously committed handle objects
+  // as well, so the memoized SVG controls do not rebuild 2×N elements for a
+  // change that affects only the last note. The cache is updated after commit,
+  // never during a speculative/concurrent React render.
+  const handleCache = useRef<{
+    annotations: ResolvedAnnotation[];
+    options: AnnotationLayerEditOptions;
+    handles: AnnotationEditHandle[];
+  } | null>(null);
+  const editHandles = useMemo(() => {
+    if (!editOptions) return [];
+    const handles = annotationEditHandles(layout, editOptions);
+    const previous = handleCache.current;
+    if (!previous || previous.options !== editOptions) return handles;
+
+    const oldAnnotations = new Map(previous.annotations.map((item) => [item.id, item]));
+    const updatedAnnotations = new Map(layout.annotations.map((item) => [item.id, item]));
+    const previousHandles = new Map(previous.handles.map((handle) => [handle.id, handle]));
+    return handles.map((handle) => {
+      const unchanged = oldAnnotations.get(handle.annotationId) === updatedAnnotations.get(handle.annotationId);
+      return unchanged ? previousHandles.get(handle.id) ?? handle : handle;
+    });
+  }, [layout, editOptions]);
+  useIsomorphicLayoutEffect(() => {
+    handleCache.current = editOptions
+      ? { annotations: layout.annotations, options: editOptions, handles: editHandles }
+      : null;
+  }, [layout.annotations, editOptions, editHandles]);
   const paintAnnotations = useMemo(
     () => annotationsForPaint(layout.annotations),
     [layout.annotations]
@@ -275,11 +319,23 @@ export function AnnotationLayer({
     return clientToSvgPoint(event, svgRef.current, bounds);
   }, [bounds]);
 
+  // Edit-handle callbacks are stable across committed layout updates.
+  // Read the latest *committed* host values through a layout-effect-updated ref,
+  // so retained SVG controls never act on a stale annotation or handler.
+  const editDispatch = useRef({
+    layout, clientPoint, editOptions, onEdit, onEditStart, onEditEnd
+  });
+  useIsomorphicLayoutEffect(() => {
+    editDispatch.current = { layout, clientPoint, editOptions, onEdit, onEditStart, onEditEnd };
+  }, [layout, clientPoint, editOptions, onEdit, onEditStart, onEditEnd]);
+
   const handleEditPointerDown = useCallback((
     handle: AnnotationEditHandle,
     event: ReactPointerEvent<SVGCircleElement>
   ) => {
-    const annotation = layout.annotations.find((item) => item.id === handle.annotationId);
+    const { layout: currentLayout, clientPoint: currentPoint, onEditStart: currentStart,
+      onEdit: currentEdit } = editDispatch.current;
+    const annotation = currentLayout.annotations.find((item) => item.id === handle.annotationId);
 
     if (!annotation) {
       return;
@@ -289,7 +345,7 @@ export function AnnotationLayer({
     event.stopPropagation();
     event.currentTarget.setPointerCapture?.(event.pointerId);
 
-    const point = clientPoint(event);
+    const point = currentPoint(event);
     const active = {
       annotation,
       handle,
@@ -301,9 +357,9 @@ export function AnnotationLayer({
     setActivePreview(null);
 
     const editEvent = makeEditEvent(active, 'start', point);
-    onEditStart?.(editEvent);
-    onEdit?.(editEvent);
-  }, [clientPoint, layout.annotations, makeEditEvent, onEdit, onEditStart]);
+    currentStart?.(editEvent);
+    currentEdit?.(editEvent);
+  }, [makeEditEvent]);
 
   const handleEditPointerMove = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
     if (!activeEdit || event.pointerId !== activeEdit.pointerId) {
@@ -344,13 +400,15 @@ export function AnnotationLayer({
     handle: AnnotationEditHandle,
     event: ReactKeyboardEvent<SVGCircleElement>
   ) => {
-    const delta = keyboardDelta(event, editOptions);
+    const { layout: currentLayout, editOptions: currentOptions,
+      onEdit: currentEdit, onEditStart: currentStart, onEditEnd: currentEnd } = editDispatch.current;
+    const delta = keyboardDelta(event, currentOptions);
 
     if (!delta) {
       return;
     }
 
-    const annotation = layout.annotations.find((item) => item.id === handle.annotationId);
+    const annotation = currentLayout.annotations.find((item) => item.id === handle.annotationId);
 
     if (!annotation) {
       return;
@@ -373,11 +431,11 @@ export function AnnotationLayer({
       phase: 'end'
     });
 
-    onEditStart?.(startEvent);
-    onEdit?.(startEvent);
-    onEditEnd?.(endEvent);
-    onEdit?.(endEvent);
-  }, [editOptions, layout.annotations, makeEditEvent, onEdit, onEditEnd, onEditStart]);
+    currentStart?.(startEvent);
+    currentEdit?.(startEvent);
+    currentEnd?.(endEvent);
+    currentEdit?.(endEvent);
+  }, [makeEditEvent]);
 
   const setMeasureNode = useCallback((id: string, node: HTMLDivElement | null) => {
     if (node) {
