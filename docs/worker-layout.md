@@ -20,6 +20,16 @@ It demonstrates main-thread pings, superseded requests and cancellation with a
 host-owned module Worker; its extra delay makes revision handling visible and
 is **not** a solver benchmark.
 
+The **published** example is also exercised by `npm run test:site`, not just
+by the generated page's accessibility audit. At both mobile and desktop
+widths, the browser test waits for a real module Worker to start, commits a
+changed anchor and obstacle, supersedes a slow request, verifies that a
+cancelled reply never commits, and pings the main thread while the Worker is
+busy. Each accepted revision is compared with an independent full layout and
+must produce no runtime/Worker errors. The mobile test additionally checks
+that the diagram remains horizontally scrollable. This is functional proof,
+not a latency or sustained frame-rate assertion.
+
 The complete Vite + React test reference is in
 [`test/fixtures/worker-browser`](https://github.com/Ponchia/bronto-annotations/tree/main/test/fixtures/worker-browser).
 It is verified in **real Chromium** at desktop and mobile viewports, and has
