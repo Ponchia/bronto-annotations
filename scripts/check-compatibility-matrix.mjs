@@ -9,6 +9,7 @@ const packedSmoke = await read('scripts/smoke-packed-consumer.mjs');
 const laneSmoke = await read('scripts/smoke-compatibility-lanes.mjs');
 const mermaid12Lane = await read('scripts/smoke-mermaid12-browser.mjs');
 const typescript7Lane = await read('scripts/smoke-typescript7.mjs');
+const nextRunnerLane = await read('scripts/smoke-next-test-runners.mjs');
 
 const expectedPeers = {
   '@terrastruct/d2': '>=0.1.0',
@@ -35,6 +36,7 @@ assert.equal(pkg.scripts?.['test:compatibility'], 'node scripts/check-compatibil
 assert.equal(pkg.scripts?.['test:compatibility:lanes'], 'npm run build && node scripts/smoke-compatibility-lanes.mjs');
 assert.equal(pkg.scripts?.['test:compatibility:mermaid12'], 'npm run build && node scripts/smoke-mermaid12-browser.mjs');
 assert.equal(pkg.scripts?.['test:compatibility:typescript7'], 'npm run build && node scripts/smoke-typescript7.mjs');
+assert.equal(pkg.scripts?.['test:compatibility:test-runners-next'], 'node scripts/smoke-next-test-runners.mjs');
 assert.ok(pkg.scripts?.check?.includes('npm run test:compatibility'), 'npm run check must include test:compatibility');
 assert.ok(pkg.scripts?.check?.includes('npm run test:compatibility:lanes'), 'npm run check must include test:compatibility:lanes');
 assert.equal(pkg.dependencies, undefined, 'root runtime dependencies must stay absent');
@@ -59,6 +61,12 @@ for (const [content, term, label] of [
   [ciWorkflow, 'if: matrix.node-version == 22', '.github/workflows/ci.yml'],
   [ciWorkflow, 'run: npm run test:compatibility:mermaid12', '.github/workflows/ci.yml'],
   [ciWorkflow, 'run: npm run test:compatibility:typescript7', '.github/workflows/ci.yml'],
+  [ciWorkflow, 'run: npm run test:compatibility:test-runners-next', '.github/workflows/ci.yml'],
+  [ciWorkflow, 'Vitest 5 and jsdom 30 isolated unit suite', '.github/workflows/ci.yml'],
+  [compatibility, 'Vitest 5.0.3 and jsdom 30.1.2', 'docs/compatibility.md'],
+  [compatibility, 'Node >=22.22.2', 'docs/compatibility.md'],
+  [nextRunnerLane, "vitestVersion = '5.0.3'", 'scripts/smoke-next-test-runners.mjs'],
+  [nextRunnerLane, "jsdomVersion = '30.1.2'", 'scripts/smoke-next-test-runners.mjs'],
   [compatibility, 'TypeScript 7.0.2', 'docs/compatibility.md'],
   [typescript7Lane, 'typescript@7.0.2', 'scripts/smoke-typescript7.mjs'],
   [typescript7Lane, 'skipLibCheck: false', 'scripts/smoke-typescript7.mjs'],

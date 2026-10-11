@@ -52,6 +52,16 @@ without React, Vega, Mermaid, D2, React Flow, or `@ponchia/ui` installed.
   tests.
 - Mermaid 11, D2 0.1, and React Flow 12 are covered by unit tests, packed
   adapter smoke, and browser examples.
+- The **next test-runner** lane is `npm run test:compatibility:test-runners-next`:
+  on Node >=22.22.2 (or >=24.15), a disposable copy of the complete tracked
+  repository is installed with **Vitest 5.0.3 and jsdom 30.1.2**, then runs
+  the real TypeScript build/typecheck and entire unit test suite. This uses
+  fresh isolated dependencies, not the primary lockfile, and does **not**
+  change the publicly supported Node `>=20.19.0` runtime. Vitest 5 requires
+  Node >=22.12 and jsdom 30 requires >=22.22.2; they therefore run only in
+  the Node 22 protected CI lane. The normal `npm run check` continues to use
+  Vitest 4 and jsdom 29 on both Node 20 and 22. Keep their Dependabot major
+  deferrals until any default-runner change is deliberately considered.
 - Mermaid 12.1 declares **Node >=22.12.0** and cannot replace the Mermaid 11
   test peer while this annotations package supports Node 20. The Node 22-only
   `npm run test:compatibility:mermaid12` lane installs the **packed** library
