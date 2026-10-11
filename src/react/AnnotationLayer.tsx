@@ -77,7 +77,75 @@ type BadgeGeometry = {
   pointerD?: string;
 };
 
-export function AnnotationLayer({
+/** Public React adapter. The memo boundary is deliberately internal: it does
+ * not alter this component's callable type or the existing default renderer.
+ */
+export function AnnotationLayer(props: AnnotationLayerProps) {
+  return <MemoizedAnnotationLayer {...props} />;
+}
+
+const MemoizedAnnotationLayer = memo(AnnotationLayerRenderer, equalControlledLayerProps);
+
+// A controlled host may rebuild its raw annotation array and inline edit
+// options while its authoritative resolvedLayout object remains *identical*.
+// Do not reconcile hundreds of SVG notes and edit controls for this no-op.
+// Compare every other presentation/interaction prop by identity so callbacks,
+// accessibility and debug settings are never hidden by this optimization.
+const CONTROLLED_GEOMETRY_INPUTS = new Set<string>([
+  'annotations', 'bounds', 'padding', 'obstacles', 'placement',
+  'defaultNoteSize', 'noteSizes', 'refinement', 'editable', 'style'
+]);
+
+function equalControlledLayerProps(previous: AnnotationLayerProps, next: AnnotationLayerProps): boolean {
+  if (!previous.resolvedLayout || previous.resolvedLayout !== next.resolvedLayout) return false;
+  const first = previous.bounds;
+  const second = next.bounds;
+  if (first.x !== second.x || first.y !== second.y
+    || first.width !== second.width || first.height !== second.height) return false;
+  if (previous.annotations.length !== next.annotations.length) return false;
+  for (let index = 0; index < previous.annotations.length; index += 1) {
+    if (previous.annotations[index]?.id !== next.annotations[index]?.id) return false;
+  }
+  // Host target-alignment diagnostics read raw annotations (not just the
+  // resolved geometry). Preserve their ordinary semantics on array updates.
+  if (previous.annotations !== next.annotations && (
+    previous.targetAlignmentTargets || next.targetAlignmentTargets
+    || previous.onTargetAlignment || next.onTargetAlignment
+    || previous.assertTargetAlignment || next.assertTargetAlignment
+  )) return false;
+
+  if (!sameEditableOptions(previous.editable, next.editable)) return false;
+  // Inline React style objects frequently have stable primitive CSS values
+  // but a fresh wrapper each parent commit. Compare only their own CSS keys.
+  if (!sameShallowProps(previous.style, next.style)) return false;
+  const keys = new Set([...Object.keys(previous), ...Object.keys(next)]);
+  for (const key of keys) {
+    if (CONTROLLED_GEOMETRY_INPUTS.has(key)) continue;
+    if (previous[key as keyof AnnotationLayerProps] !== next[key as keyof AnnotationLayerProps]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function sameEditableOptions(first: AnnotationLayerProps['editable'], second: AnnotationLayerProps['editable']): boolean {
+  if (first === second) return true;
+  if (!first || !second || typeof first !== 'object' || typeof second !== 'object') return false;
+  return sameShallowProps(first, second);
+}
+
+function sameShallowProps(first: object | undefined, second: object | undefined): boolean {
+  if (first === second) return true;
+  const a = first ?? {};
+  const b = second ?? {};
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  for (const key of keys) {
+    if (a[key as keyof typeof a] !== b[key as keyof typeof b]) return false;
+  }
+  return true;
+}
+
+function AnnotationLayerRenderer({
   annotations,
   assertQuality,
   assertTargetAlignment,
