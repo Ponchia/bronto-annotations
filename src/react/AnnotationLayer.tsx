@@ -262,25 +262,34 @@ export function AnnotationLayer({
   const handleCache = useRef<{
     annotations: ResolvedAnnotation[];
     options: AnnotationLayerEditOptions;
-    handles: AnnotationEditHandle[];
+    grouped: Map<string, AnnotationEditHandle[]>;
   } | null>(null);
   const editHandles = useMemo(() => {
     if (!editOptions) return [];
-    const handles = annotationEditHandles(layout, editOptions);
     const previous = handleCache.current;
-    if (!previous || previous.options !== editOptions) return handles;
+    if (!previous || previous.options !== editOptions) {
+      return annotationEditHandles(layout, editOptions);
+    }
 
-    const oldAnnotations = new Map(previous.annotations.map((item) => [item.id, item]));
-    const updatedAnnotations = new Map(layout.annotations.map((item) => [item.id, item]));
-    const previousHandles = new Map(previous.handles.map((handle) => [handle.id, handle]));
-    return handles.map((handle) => {
-      const unchanged = oldAnnotations.get(handle.annotationId) === updatedAnnotations.get(handle.annotationId);
-      return unchanged ? previousHandles.get(handle.id) ?? handle : handle;
-    });
+    // A committed incremental layout often changes just one of hundreds of
+    // annotations. Recreating 2×N handle objects for every edit and throwing
+    // almost all of them away wastes scripting work, despite React memoization
+    // correctly preserving their DOM. Generate geometry *only* for changed
+    // annotations, then interleave retained and newly computed handles in
+    // priority paint order. Keep all cache writes in the commit effect below.
+    const previouslyResolved = new Map(previous.annotations.map((item) => [item.id, item]));
+    const changed = layout.annotations.filter((item) => previouslyResolved.get(item.id) !== item);
+    const changedHandles = changed.length > 0
+      ? annotationEditHandles({ ...layout, annotations: changed }, editOptions)
+      : [];
+    const refreshed = groupEditHandles(changedHandles);
+    return annotationsForPaint(layout.annotations).flatMap((item) =>
+      (previouslyResolved.get(item.id) === item ? previous.grouped : refreshed).get(item.id) ?? []
+    );
   }, [layout, editOptions]);
   useIsomorphicLayoutEffect(() => {
     handleCache.current = editOptions
-      ? { annotations: layout.annotations, options: editOptions, handles: editHandles }
+      ? { annotations: layout.annotations, options: editOptions, grouped: groupEditHandles(editHandles) }
       : null;
   }, [layout.annotations, editOptions, editHandles]);
   const paintAnnotations = useMemo(
@@ -731,6 +740,16 @@ function assertControlledLayout(layout: ResolvedLayout, annotations: Annotation[
     || layout.annotations.some((item) => !ids.delete(item.id)) || ids.size !== 0) {
     throw new Error('AnnotationLayer.resolvedLayout must contain exactly the current host annotation IDs.');
   }
+}
+
+function groupEditHandles(handles: AnnotationEditHandle[]): Map<string, AnnotationEditHandle[]> {
+  const groups = new Map<string, AnnotationEditHandle[]>();
+  for (const handle of handles) {
+    const group = groups.get(handle.annotationId);
+    if (group) group.push(handle);
+    else groups.set(handle.annotationId, [handle]);
+  }
+  return groups;
 }
 
 function normalizeEditOptions(editable: AnnotationLayerProps['editable']): AnnotationLayerEditOptions | undefined {

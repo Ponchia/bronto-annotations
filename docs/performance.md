@@ -196,6 +196,32 @@ checks assert editing-handle identity, current callback semantics, keyboard
 step changes and exact fresh-layout parity instead of imposing fragile timing
 limits. Earlier/route-changing edits can still incur substantial work.
 
+### React edit-handle generation on committed updates
+
+Incremental resolution preserves resolved annotation identities for unaffected
+priority-prefix winners. The React renderer also reuses these notes and their
+edit handles; it now *generates* note/anchor handle geometry only for changed
+winners instead of eagerly constructing and discarding two handles per
+unchanged annotation. Its committed cache retains handle groups by annotation
+ID, and the final list still follows priority-aware paint order. The public
+`annotationEditHandles` function remains unchanged and independently usable.
+
+To measure only this geometry/allocation work, run:
+
+```bash
+npm run benchmark:react:handles
+```
+
+The deterministic fixture compares full regeneration and changed-only
+regeneration after a final low-priority note edit. It asserts the **same handle
+objects, properties and ordering** before reporting times. On one ARM64
+shared development host with 200 annotations and 400 edit handles, median
+microbenchmark times were approximately 0.137 ms full versus 0.040 ms changed-
+only, reusing 398/400 existing objects. This isolates a small operation; it
+is not an end-to-end browser-frame speedup. Actual Chromium profiles still
+contain larger React scripting and scheduling costs, and should guide broader
+rendering improvements.
+
 ### Actual browser interaction evidence
 
 `npm run test:browser:incremental` runs a bounded Playwright/Chromium test on
