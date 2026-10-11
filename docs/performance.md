@@ -139,8 +139,17 @@ so partial updates are **not** guaranteed for arbitrary changed topology.
 
 Hosts should continue using the visual-only `previewAnnotationEdit` during
 pointer movement and the authoritative incremental session only when
-committing edits. Worker-backed asynchronous resolution remains future work;
-no public synchronous API or quality threshold was changed.
+committing edits. Consumer-owned Web Worker resolution has been tested in real
+Chromium and can keep the main thread responsive during expensive full reflows;
+see `docs/worker-layout.md` for measured transport and React timeline caveats.
+A **package-owned** asynchronous Worker API remains future work, and no
+public synchronous API or quality threshold was changed.
+The host-owned Worker proof now isolates request/reply scheduling and React
+commit from Worker comparison/encoding. In a 200-annotation compact update,
+~489 ms of comparison/patch encoding dominated a ~0.2 ms reply-delivery
+estimate; see the measured one-run observations in `docs/worker-layout.md`.
+Future gains should address safe value/alias comparison rather than assuming
+postMessage transport is the entire bottleneck.
 
 ### Incremental late-edit benchmark
 
