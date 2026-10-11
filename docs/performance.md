@@ -243,6 +243,43 @@ is not an end-to-end browser-frame speedup. Actual Chromium profiles still
 contain larger React scripting and scheduling costs, and should guide broader
 rendering improvements.
 
+### No-op controlled React rendering
+
+A host may refresh its annotation array and inline `editable`/CSS style
+objects even though an authoritative `resolvedLayout` session returns the
+**same** layout object. A controlled React layer now uses an internal memo
+boundary to skip the annotation renderer altogether when that authoritative
+layout, annotation IDs, bounds, and every presentation/interaction prop are
+semantically unchanged. It compares supported inline edit options and shallow
+CSS style values instead of their disposable wrapper-object identity.
+
+This optimization applies only to `resolvedLayout` mode. A host changing the
+layout, annotation membership, callbacks, accessibility labels, or editing
+semantics still renders normally. Host target-alignment reporting that reads
+raw annotations remains reactive to their source changes. The wrapper captures
+scalar edit-option and CSS style values, bounds and annotation IDs on each
+controlled parent render, so in-place host mutations remain visible to the
+memo boundary. `onLayout` and quality callbacks retain their existing
+subscription semantics. The caller must not mutate an authoritative resolved
+layout in place; recompute it via
+`createIncrementalAnnotationLayoutSession.update` when content really changes.
+
+Two independent opt-in desktop/mobile/200-note Chromium profiling runs on the
+shared development host observed these **no-op** results:
+
+| Case | Before: React render | After: React render | Before: next rAF | After: next rAF |
+| --- | ---: | ---: | ---: | ---: |
+| Desktop, 40 notes | 3.7 ms | 0 ms | 11.4 ms | 6.7 ms |
+| Mobile, 24 notes | 2.6 ms | 0 ms | 9.4 ms | 11.1 ms |
+| Dense desktop, 200 notes | 17.7 ms | 0 ms | 35.7 ms | 12.0 ms |
+
+These are separate single-run observations, subject to CPU contention and
+browser scheduling; the React duration may be zero on a memo bailout, but the
+page still has other host/UI scripting and work before the next frame. Do not
+interpret rAF callback timing as compositor painting or a guaranteed 60 fps.
+The existing full-layout parity and keyboard/pointer/accessibility regression
+checks stay intact, and no rendering virtualization is enabled by default.
+
 ### Actual browser interaction evidence
 
 `npm run test:browser:incremental` runs a bounded Playwright/Chromium test on

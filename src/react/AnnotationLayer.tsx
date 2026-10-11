@@ -77,7 +77,68 @@ type BadgeGeometry = {
   pointerD?: string;
 };
 
-export function AnnotationLayer({
+/** Public React adapter. The memo boundary is deliberately internal: it does
+ * not alter this component's callable type or the existing default renderer.
+ */
+export function AnnotationLayer(props: AnnotationLayerProps) {
+  // Read *values* on controlled parent renders. A host may mutate a supported
+  // edit option or style object in place; React's memo comparator otherwise
+  // sees the same old/new reference and incorrectly skips the update. Avoid
+  // snapshot overhead entirely for normal internally resolved React layers.
+  const controlled = props.resolvedLayout !== undefined;
+  return <MemoizedAnnotationLayer
+    {...props}
+    __editableSnapshot={controlled ? inlinePropsSnapshot(props.editable) : ''}
+    __styleSnapshot={controlled ? inlinePropsSnapshot(props.style) : ''}
+    __boundsSnapshot={controlled ? JSON.stringify([
+      props.bounds.x, props.bounds.y, props.bounds.width, props.bounds.height
+    ]) : ''}
+    __idsSnapshot={controlled ? JSON.stringify(props.annotations.map((item) => item.id)) : ''}
+  />;
+}
+
+type InternalRendererProps = AnnotationLayerProps & {
+  readonly __editableSnapshot: string;
+  readonly __styleSnapshot: string;
+  readonly __boundsSnapshot: string;
+  readonly __idsSnapshot: string;
+};
+
+const MemoizedAnnotationLayer = memo(AnnotationLayerRenderer, equalControlledLayerProps);
+
+// A controlled host may rebuild its raw annotation array and inline edit
+// options while its authoritative resolvedLayout object remains *identical*.
+// Do not reconcile hundreds of SVG notes and edit controls for this no-op.
+// Compare every other presentation/interaction prop by identity so callbacks,
+// accessibility and debug settings are never hidden by this optimization.
+const CONTROLLED_GEOMETRY_INPUTS = new Set<string>([
+  'annotations', 'bounds', 'padding', 'obstacles', 'placement',
+  'defaultNoteSize', 'noteSizes', 'refinement', 'editable', 'style'
+]);
+
+function equalControlledLayerProps(previous: InternalRendererProps, next: InternalRendererProps): boolean {
+  if (!previous.resolvedLayout || previous.resolvedLayout !== next.resolvedLayout) return false;
+  // Raw source diagnostics consume annotations directly rather than just the
+  // authoritative resolved geometry. Conservatively keep them reactive.
+  if (previous.targetAlignmentTargets || next.targetAlignmentTargets
+    || previous.onTargetAlignment || next.onTargetAlignment
+    || previous.assertTargetAlignment || next.assertTargetAlignment) return false;
+
+  const keys = new Set([...Object.keys(previous), ...Object.keys(next)]);
+  for (const key of keys) {
+    if (CONTROLLED_GEOMETRY_INPUTS.has(key)) continue;
+    if (previous[key as keyof InternalRendererProps] !== next[key as keyof InternalRendererProps]) return false;
+  }
+  return true;
+}
+
+function inlinePropsSnapshot(value: AnnotationLayerProps['editable'] | AnnotationLayerProps['style']): string {
+  if (!value || typeof value !== 'object') return String(value);
+  const record: Record<string, unknown> = value as Record<string, unknown>;
+  return JSON.stringify(Object.keys(record).sort().map((key) => [key, record[key]]));
+}
+
+function AnnotationLayerRenderer({
   annotations,
   assertQuality,
   assertTargetAlignment,
@@ -112,8 +173,10 @@ export function AnnotationLayer({
   targetAlignmentFormat,
   targetAlignmentOptions,
   targetAlignmentTargets,
-  style
-}: AnnotationLayerProps) {
+  style,
+  __boundsSnapshot,
+  __idsSnapshot
+}: InternalRendererProps) {
   const prefix = classPrefix;
   const markerPrefix = markerIdPrefix ?? prefix;
   const svgRef = useRef<SVGSVGElement>(null);
@@ -168,7 +231,11 @@ export function AnnotationLayer({
     });
   }, [
     annotations, bounds, padding, obstacles, placement, defaultNoteSize,
-    refinement, resolvedNoteSizes, resolvedLayout, measure
+    refinement, resolvedNoteSizes, resolvedLayout, measure,
+    // These primitive snapshots change even when a host mutates the same
+    // bounds object or annotation IDs array in place. Revalidate controlled
+    // layouts rather than trusting stale useMemo source references.
+    __boundsSnapshot, __idsSnapshot
   ]);
   // Full quality diagnostics compare every note with every other note. Most
   // passive and host-controlled renderers do not request them. Avoid quadratic
