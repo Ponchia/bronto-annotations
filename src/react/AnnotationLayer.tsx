@@ -185,6 +185,13 @@ function AnnotationLayerRenderer({
   // Local paint-only preview. The resolved layout, quality report, and host
   // annotation array remain unchanged until an edit is committed.
   const [activePreview, setActivePreview] = useState<ResolvedAnnotation | null>(null);
+  // High-frequency pointer streams can produce several moves per animation
+  // frame. Keep only the latest visual preview request and avoid reconciling
+  // the entire SVG layer on every individual pointer event. Host onEdit
+  // callbacks still receive every movement synchronously.
+  const pendingPreview = useRef<(() => ResolvedAnnotation) | null>(null);
+  const previewFrame = useRef<number | null>(null);
+  const previewGeneration = useRef(0);
   const [measuredSizes, setMeasuredSizes] = useState<Record<string, Size>>({});
   // A host-controlled resolved layout already owns the final note sizes.
   // Estimating every note again is wasted O(n) work on each incremental
@@ -412,6 +419,42 @@ function AnnotationLayerRenderer({
     editDispatch.current = { layout, clientPoint, editOptions, onEdit, onEditStart, onEditEnd };
   }, [layout, clientPoint, editOptions, onEdit, onEditStart, onEditEnd]);
 
+  const cancelQueuedPreview = useCallback(() => {
+    previewGeneration.current += 1;
+    if (previewFrame.current !== null) {
+      globalThis.cancelAnimationFrame?.(previewFrame.current);
+      previewFrame.current = null;
+    }
+    pendingPreview.current = null;
+  }, []);
+
+  // A host can update authoritative geometry mid-gesture. Discard visual
+  // projections based on the old layout, and clean up on component unmount.
+  useIsomorphicLayoutEffect(() => {
+    // If the host replaces authoritative geometry or disables previewEdits
+    // mid-gesture, also remove any already painted projection of the old state.
+    setActivePreview(null);
+    return cancelQueuedPreview;
+  }, [cancelQueuedPreview, layout, previewEdits]);
+
+  const schedulePreview = useCallback((build: () => ResolvedAnnotation) => {
+    if (typeof globalThis.requestAnimationFrame !== 'function') {
+      // Nonvisual test environments lack rAF; preserve synchronous behavior.
+      setActivePreview(build());
+      return;
+    }
+    pendingPreview.current = build;
+    if (previewFrame.current !== null) return;
+    const generation = previewGeneration.current;
+    previewFrame.current = globalThis.requestAnimationFrame(() => {
+      if (previewGeneration.current !== generation) return;
+      previewFrame.current = null;
+      const latest = pendingPreview.current;
+      pendingPreview.current = null;
+      if (latest) setActivePreview(latest());
+    });
+  }, []);
+
   const handleEditPointerDown = useCallback((
     handle: AnnotationEditHandle,
     event: ReactPointerEvent<SVGCircleElement>
@@ -436,13 +479,14 @@ function AnnotationLayerRenderer({
       pointerId: event.pointerId
     };
 
+    cancelQueuedPreview();
     setActiveEdit(active);
     setActivePreview(null);
 
     const editEvent = makeEditEvent(active, 'start', point);
     currentStart?.(editEvent);
     currentEdit?.(editEvent);
-  }, [makeEditEvent]);
+  }, [cancelQueuedPreview, makeEditEvent]);
 
   const handleEditPointerMove = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
     if (!activeEdit || event.pointerId !== activeEdit.pointerId) {
@@ -452,10 +496,12 @@ function AnnotationLayerRenderer({
     event.preventDefault();
     const editEvent = makeEditEvent(activeEdit, 'move', clientPoint(event));
     if (previewEdits) {
-      setActivePreview(previewAnnotationEdit(activeEdit.annotation, editEvent, layout.placementBounds));
+      // Avoid capturing the pooled/synthetic pointer event in asynchronous
+      // work: the edit suggestion is a plain data object made synchronously.
+      schedulePreview(() => previewAnnotationEdit(activeEdit.annotation, editEvent, layout.placementBounds));
     }
     onEdit?.(editEvent);
-  }, [activeEdit, clientPoint, layout.placementBounds, makeEditEvent, onEdit, previewEdits]);
+  }, [activeEdit, clientPoint, layout.placementBounds, makeEditEvent, onEdit, previewEdits, schedulePreview]);
 
   const finishEdit = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
     if (!activeEdit || event.pointerId !== activeEdit.pointerId) {
@@ -464,20 +510,22 @@ function AnnotationLayerRenderer({
 
     event.preventDefault();
     const editEvent = makeEditEvent(activeEdit, 'end', clientPoint(event));
+    cancelQueuedPreview();
     setActivePreview(null);
     setActiveEdit(null);
     onEditEnd?.(editEvent);
     onEdit?.(editEvent);
-  }, [activeEdit, clientPoint, makeEditEvent, onEdit, onEditEnd]);
+  }, [activeEdit, cancelQueuedPreview, clientPoint, makeEditEvent, onEdit, onEditEnd]);
 
   const cancelEdit = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
     if (!activeEdit || event.pointerId !== activeEdit.pointerId) {
       return;
     }
     // Cancellation must not persist an incomplete gesture in the host app.
+    cancelQueuedPreview();
     setActivePreview(null);
     setActiveEdit(null);
-  }, [activeEdit]);
+  }, [activeEdit, cancelQueuedPreview]);
 
   const handleEditKeyDown = useCallback((
     handle: AnnotationEditHandle,
