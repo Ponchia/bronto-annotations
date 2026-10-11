@@ -89,6 +89,53 @@ unchanged `ResolvedAnnotation` entries by value and reuses the prior objects
 only on exact equivalence. Hosts may use a different structural-sharing
 strategy as long as unchanged identities never conceal changed values.
 
+## Compact revisioned Worker replies (host-owned example)
+
+A Worker can finish a dense solve quickly yet still block its host while it
+copies a complete array of candidate placements and connector paths into a
+`postMessage` reply. The tested consumer example now includes a conservative
+**revisioned compact response protocol** in
+`test/fixtures/worker-browser/layout-patch.ts` and its Worker/React host.
+This is **not** a public annotations API: the host still owns Worker creation,
+state, scheduling and cancellation. The synchronous library API is unchanged.
+
+1. The first result is a **snapshot**. The Worker retains its resolved result
+   but does not trust it as a shared baseline until the host explicitly ACKs
+   the accepted revision.
+2. Later results may be **patches** carrying `baseRevision`, an ordered list of
+   changed annotation indices/values, and authoritative global geometry
+   (`bounds`, `placementBounds`, `padding`, `obstacles`). Unchanged resolved
+   annotations retain the existing host object identities.
+3. Only an exact acknowledged `baseRevision` can be patched. A mismatched
+   revision, changed annotation count/order, or dense change set produces a
+   complete snapshot instead. The host rejects stale IDs, duplicate/out-of-
+   bounds patch indices and changed annotation IDs, and requests a full
+   snapshot once if its baseline unexpectedly diverges.
+4. Superseded or cancelled Worker replies are **not ACKed**, so they cannot
+   silently advance the patch baseline. Acknowledgement itself does not stop
+   synchronous Worker CPU; cancellation remains a host-level decision.
+
+The comparison checks plain structured-cloneable data *by value*, including
+own keys and `undefined`. It conservatively marks non-plain/cyclic metadata as
+changed instead of incorrectly retaining a stale React object. The host must
+not mutate previously resolved layout objects in place. Global changes are
+carried in every patch and all reconstructed results are still compared
+against an independent fresh full resolution in Chromium.
+
+The mandatory desktop/mobile test proves that an acknowledged far-obstacle
+update uses a compact patch, and deliberately stale/cancelled replies are
+ignored. The optional 200-note case reports the same evidence without timing
+budgets. `jsonWireBytes` estimates serialized compact reply size, while
+`jsonFullBytes` uses an **actual full-layout JSON measurement for the first
+snapshot** and a cached acknowledged full-size estimate on subsequent patches.
+This avoids serializing a multi-megabyte unchanged layout simply for profiling.
+Neither field measures actual browser structured-clone transport bytes. The fixture
+separately reports Worker resolve/encode time, host request `postMessage`
+synchronous time, host patch admission, React Profiler render and next-rAF
+callback time. These timings overlap and are not additive; next-rAF is not
+compositor paint. Use browser profiles and real device data before claiming
+an interactive frame-rate improvement.
+
 ## Actual browser validation
 
 Run the mandatory mobile and desktop smoke without timing thresholds:
