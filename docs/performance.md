@@ -252,7 +252,13 @@ Profiler `reactRenderMs`, resolver `resolverMs`, and the time to the next
 `requestAnimationFrame` callback remain separate signals. Do not set CI
 budgets or remove accessible/offscreen note DOM based on one busy devbox run.
 
-The optional counters use Chromium CDP only; the library and package itself
+The mandatory 24/40-note `test:browser:incremental` lane also exercises the
+same CDP counter path, without any timing assertion or expanded dense fixture.
+That catches a broken Chromium metric interface in protected CI. The optional
+`benchmark:browser:profile` command extends the evidence to 200 notes and
+still must be run only under the shared heavy-work gate.
+
+The counters use Chromium CDP only; the library and package itself
 remain browser-agnostic and require no CDP dependency. Reference:
 [Chrome DevTools Performance domain](https://chromedevtools.github.io/devtools-protocol/tot/Performance/)
 and [Playwright CDPSession](https://playwright.dev/docs/api/class-cdpsession).

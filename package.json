@@ -102,7 +102,7 @@
     "test:dogfood:external": "npm run build && node scripts/dogfood-external-consumer.mjs",
     "test:examples": "npm run build && node scripts/build-examples.mjs",
     "test:browser": "npm run build && node scripts/verify-examples-browser.mjs",
-    "test:browser:incremental": "npm run build && node scripts/verify-incremental-browser.mjs",
+    "test:browser:incremental": "npm run build && node scripts/verify-incremental-browser.mjs --profile",
     "benchmark:browser:incremental": "npm run build && node scripts/verify-incremental-browser.mjs --benchmark",
     "benchmark:browser:profile": "npm run build && node scripts/verify-incremental-browser.mjs --benchmark --profile",
     "test:screenshots": "node scripts/check-browser-screenshots.mjs",
