@@ -171,6 +171,27 @@ making unverified spatial independence claims. Capturing input value snapshots
 has a small cost per update; benchmark under representative host density before
 enabling the experimental optimization broadly.
 
+### Incremental DOM note-size measurements
+
+React hosts using `AnnotationLayer measure="dom"` still need an initial full
+measurement of their visible notes, and must reconcile all notes when the
+annotation collection or note renderer changes. However, browser
+`ResizeObserver` callbacks now report the *specific* measured elements that
+changed. The adapter maps these entries to their note IDs, measures only
+those nodes (once per ID within a batch) and updates the corresponding sizes
+without scanning every unaffected note. This avoids repeated
+`getBoundingClientRect` and `getComputedStyle` calls during a one-note resize
+in a dense layout, while retaining local-unit CSS zoom handling, no-op
+updates and detached-node cleanup.
+
+A 48-note deterministic React/DOM regression checks that an event for one
+resized note causes exactly **one** geometry read, while a batch mentioning
+two notes with a duplicate entry causes **two** reads. These counts test the
+measurement path itself; the resulting authoritative layout can still need
+full recomputation when its note sizes change. For hosts that own measured
+sizes and committed incremental resolution, `resolvedLayout` remains the
+preferred controlled integration. No browser frame-time guarantee is implied.
+
 ### React edit-handle reuse during committed updates
 
 A committed incremental layout preserves unchanged resolved note identities, but
