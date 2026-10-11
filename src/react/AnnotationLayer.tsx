@@ -173,7 +173,9 @@ function AnnotationLayerRenderer({
   targetAlignmentFormat,
   targetAlignmentOptions,
   targetAlignmentTargets,
-  style
+  style,
+  __boundsSnapshot,
+  __idsSnapshot
 }: InternalRendererProps) {
   const prefix = classPrefix;
   const markerPrefix = markerIdPrefix ?? prefix;
@@ -229,7 +231,11 @@ function AnnotationLayerRenderer({
     });
   }, [
     annotations, bounds, padding, obstacles, placement, defaultNoteSize,
-    refinement, resolvedNoteSizes, resolvedLayout, measure
+    refinement, resolvedNoteSizes, resolvedLayout, measure,
+    // These primitive snapshots change even when a host mutates the same
+    // bounds object or annotation IDs array in place. Revalidate controlled
+    // layouts rather than trusting stale useMemo source references.
+    __boundsSnapshot, __idsSnapshot
   ]);
   // Full quality diagnostics compare every note with every other note. Most
   // passive and host-controlled renderers do not request them. Avoid quadratic
