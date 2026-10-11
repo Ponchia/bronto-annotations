@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { access, readFile } from 'node:fs/promises';
+import { access, readFile, readdir } from 'node:fs/promises';
 import { writeLine } from './log.mjs';
 
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
@@ -385,7 +385,29 @@ for (const term of [
 }
 
 assert.equal(visualBaseline.schemaVersion, 1, 'visual baseline schemaVersion must be 1');
-assert.equal(visualBaseline.screenshots.length, 24, 'visual baseline must cover every browser and packed-consumer screenshot');
+// Derive screenshot coverage from the actual runnable Vite fixtures. A fixed
+// count becomes stale whenever the public site adds a real example, and it
+// gives no useful diagnosis of which viewport is missing or duplicated.
+const exampleEntries = await readdir(new URL('../examples/', import.meta.url), { withFileTypes: true });
+const runnableExamples = [];
+for (const entry of exampleEntries) {
+  if (!entry.isDirectory()) continue;
+  try {
+    await access(new URL(`../examples/${entry.name}/index.html`, import.meta.url));
+    runnableExamples.push(entry.name);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+}
+assert.ok(runnableExamples.length >= 10, 'expected the full public examples catalog');
+const expectedVisualIds = [
+  ...runnableExamples.flatMap((name) => [`${name}-desktop`, `${name}-mobile`]),
+  'packed-browser',
+  'packed-adapters'
+];
+const actualVisualIds = visualBaseline.screenshots.map((item) => item.id);
+assert.deepEqual(actualVisualIds.sort(), expectedVisualIds.sort(),
+  'visual baselines must cover both viewports of every runnable example and both packed consumers');
 
 for (const term of [
   'test/visual-baselines/browser-screenshots.json',
