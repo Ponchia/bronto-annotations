@@ -6,6 +6,18 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.6.4 - 2026-10-11
+
+### Performance
+
+- Skip redundant note-size estimation and temporary size-map merging when a React host supplies an authoritative `AnnotationLayer.resolvedLayout`. The host's incremental session already owns the final annotation note-box geometry, so repeated committed updates no longer perform size work in the React renderer.
+- Preserve standard uncontrolled note-size estimation and DOM measurement behavior when an external layout is not supplied or the host switches out of controlled mode.
+
+### Verification
+
+- Add focused React regression cases checking that host-controlled commits avoid estimator-only note property reads while normal uncontrolled rendering still performs size estimation. Keep the complete browser, compatibility, accessibility and packaged-consumer checks unchanged.
+- Preserve stable exports, existing experimental API behavior and production dependency ranges.
+
 ## 0.6.3 - 2026-10-11
 
 ### Performance
