@@ -193,7 +193,7 @@ function App() {
   function supersede() {
     const previous = structuredClone(committed.current);
     const newest = structuredClone(committed.current);
-    newest.annotations.at(-1)!.note.title = 'Latest request wins';
+    newest.annotations.at(-1)!.note.title = 'Latest wins';
     request('Slow obsolete request', previous, 510);
     request('Newer revision', newest, 0);
   }
