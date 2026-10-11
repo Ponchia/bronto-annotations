@@ -269,7 +269,7 @@ function App() {
             <AnnotationLayer
               annotations={view.options.annotations}
               bounds={bounds}
-              obstacles={view.options.obstacles}
+              obstacles={view.options.obstacles ?? []}
               noteSizes={noteSizes}
               resolvedLayout={view.layout}
               noteTabIndex={0}
