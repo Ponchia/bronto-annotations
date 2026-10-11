@@ -714,7 +714,11 @@ candidates may change earlier winners. Inputs are snapshotted by value so an in-
 note, anchor or effective size is detected; avoid mutating resolved layout
 objects returned by the session. Neither API schedules background work or
 manages host state, pointer updates, persistence or worker threads. For a live
-drag, use the lightweight visual preview and update the session at commit.
+drag, use the lightweight visual preview and update the session at commit. For
+dense changes that still require a full solver pass, see the
+[host-owned Web Worker integration recipe](docs/worker-layout.md): a real
+Chromium/React test demonstrates off-main-thread resolution, stale-response
+handling and cancellation without adding a Worker dependency to the package.
 
 ## DOM And SVG Utilities
 
