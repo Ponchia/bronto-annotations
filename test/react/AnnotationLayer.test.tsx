@@ -673,7 +673,7 @@ describe('React adapter', () => {
     });
   });
 
-  it('previews only the actively dragged note without committing or relaying a new layout', () => {
+  it('previews only the actively dragged note without committing or relaying a new layout', async () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(0, 0, 360, 240));
     const stableAnnotations: Annotation[] = [
       { id: 'first', anchor: { type: 'point', point: { x: 48, y: 60 } },
@@ -712,10 +712,12 @@ describe('React adapter', () => {
     pointer(handle(), 'pointerdown', { clientX: 100, clientY: 55, pointerId: 3 });
     pointer(layer, 'pointermove', { clientX: 124, clientY: 69, pointerId: 3 });
 
-    expect(Number(first().getAttribute('x'))).toBe(initialX + 24);
-    expect(Number(first().getAttribute('y'))).toBe(initialY + 14);
-    expect(Number(handle().getAttribute('cx'))).toBe(initialHandleX + 24);
-    expect(connector().getAttribute('d')).not.toBe(initialConnector);
+    await waitFor(() => {
+      expect(Number(first().getAttribute('x'))).toBe(initialX + 24);
+      expect(Number(first().getAttribute('y'))).toBe(initialY + 14);
+      expect(Number(handle().getAttribute('cx'))).toBe(initialHandleX + 24);
+      expect(connector().getAttribute('d')).not.toBe(initialConnector);
+    });
     expect(Number(second().getAttribute('x'))).toBe(initialSecondX);
     expect(layouts).toHaveLength(1);
     expect(qualities).toHaveLength(1);
@@ -731,7 +733,7 @@ describe('React adapter', () => {
     expect(layouts).toHaveLength(1);
   });
 
-  it('does not rerender untouched custom notes or DOM measurers during dense drag previews', () => {
+  it('does not rerender untouched custom notes or DOM measurers during dense drag previews', async () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(0, 0, 900, 600));
     const many: Annotation[] = Array.from({ length: 32 }, (_, index) => ({
       id: `note-${index}`,
@@ -776,7 +778,9 @@ describe('React adapter', () => {
     pointer(layer, 'pointermove', { clientX: 103, clientY: 89, pointerId: 4 });
     pointer(layer, 'pointermove', { clientX: 112, clientY: 102, pointerId: 4 });
 
-    expect((rendered.get('note-0') ?? 0)).toBeGreaterThan(initial.get('note-0') ?? 0);
+    await waitFor(() => {
+      expect((rendered.get('note-0') ?? 0)).toBeGreaterThan(initial.get('note-0') ?? 0);
+    });
     for (const annotation of many.slice(1)) {
       expect(rendered.get(annotation.id), annotation.id).toBe(initial.get(annotation.id));
     }
@@ -789,7 +793,7 @@ describe('React adapter', () => {
     }
   });
 
-  it('previews anchor moves, ignores unrelated pointers, and rolls back cancelled gestures', () => {
+  it('previews anchor moves, ignores unrelated pointers, and rolls back cancelled gestures', async () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(0, 0, 320, 220));
     const commits: AnnotationLayerEditEvent[] = [];
     const { container } = render(
@@ -813,8 +817,10 @@ describe('React adapter', () => {
     expect(Number(container.querySelector('.pa-annotation__edit-handle--anchor')!.getAttribute('cx'))).toBe(anchorX);
 
     pointer(layer, 'pointermove', { clientX: 190, clientY: 130, pointerId: 7 });
-    expect(Number(container.querySelector('.pa-annotation__edit-handle--anchor')!.getAttribute('cx'))).toBe(anchorX + 30);
-    expect(subject().getAttribute('cx')).not.toBe(initialSubject);
+    await waitFor(() => {
+      expect(Number(container.querySelector('.pa-annotation__edit-handle--anchor')!.getAttribute('cx'))).toBe(anchorX + 30);
+      expect(subject().getAttribute('cx')).not.toBe(initialSubject);
+    });
     expect(commits).toHaveLength(0);
 
     pointer(layer, 'pointercancel', { clientX: 190, clientY: 130, pointerId: 7 });

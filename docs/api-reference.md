@@ -142,7 +142,11 @@ Exports:
 the rendered React layer while keeping navigation state in the host app.
 `editHandleTabIndex` does the same for React edit handles; it defaults to `0`
 for editable layers and can be set to `-1` when the host wants programmatic
-focus only. The opt-in `previewEdits` property renders only the actively edited
+focus only. The optional `previewEdits` renderer coalesces high-frequency
+pointer movements to the latest provisional visual update within one browser
+animation frame, while retaining immediate `onEdit` movement notifications.
+Unfinished preview frames are discarded at pointer release, cancellation or
+component unmount. The opt-in `previewEdits` property renders only the actively edited
 annotation's provisional geometry during pointer movement, with the full layout
 and quality callbacks remaining stable until `onEditEnd` persists a patch.
 Pointer cancellation restores the previous appearance without committing.

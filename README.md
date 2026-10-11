@@ -582,8 +582,12 @@ controls normal arrow-key movement, `keyboardLargeStep` controls Shift+arrow mov
 the host surface. Set `previewEdits` to show the selected note/anchor moving during
 pointer gestures without recomputing the full annotation layout. It is opt-in,
 keeps other notes and layout-quality diagnostics stable, and uses a direct
-connector preview until the host commits with `onEditEnd`. Pointer cancellation
-restores the original drawing without committing a partial edit.
+connector preview until the host commits with `onEditEnd`. In browsers,
+rapid pointer movements are coalesced into the latest visual preview per
+animation frame, while every `onEdit` movement suggestion is delivered
+immediately. Pointer release, cancellation, or unmount drops any pending
+visual frame so a stale preview cannot reappear after the gesture ends.
+The host remains responsible for persisting the final `onEditEnd` suggestion.
 
 **Experimental host-resolved React layouts.** If the host uses
 `createIncrementalAnnotationLayoutSession` for committed edits, pass the

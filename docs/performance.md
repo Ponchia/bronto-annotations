@@ -105,6 +105,12 @@ work but does not by itself guarantee 60 fps rendering on dense canvases.
 For interactive React surfaces, `AnnotationLayer` can opt into
 `previewEdits` to project only the active annotation while dragging. This
 avoids recalculating the full layout or quality report per pointer event.
+High-frequency pointer movement is coalesced to at most one provisional
+React preview update per browser animation frame. Intermediate movement
+callbacks remain synchronous for custom host tools; only the visual
+projection is coalesced, keeping the latest movement. Pending frames are
+canceled on release/cancellation/unmount or when authoritative geometry
+changes. No worker, timing budget or browser-specific public API is added.
 Memoized annotation and edit-handle trees also keep unrelated custom React
 notes and hidden DOM-measurement copies from rendering on each drag update.
 The host still commits and re-resolves once at gesture end. Hosts using an
