@@ -14,7 +14,7 @@ peer lanes.
 | React | `>=18.2.0 || >=19.0.0` | React 18 clean consumer, React 19 packed smoke, React unit tests, browser examples |
 | React DOM | `>=18.2.0 || >=19.0.0` | React SSR/client smoke |
 | Vega | `>=5.0.0 || >=6.0.0` | Vega 5 clean consumer, Vega 6 packed smoke, Vega unit tests, Vega-Lite compile test, browser example |
-| Mermaid | `>=11.0.0` | Mermaid SVG extraction tests and browser example |
+| Mermaid | `>=11.0.0` | Mermaid 11 SVG extraction/browser example on Node 20 and 22; isolated Mermaid 12.1 browser consumer on Node 22 only |
 | D2 | `>=0.1.0` | D2 diagram/SVG tests and browser example |
 | React Flow | `>=12.0.0` | Public-state tests and browser example |
 | Browsers | Modern Chromium-class SVG/DOM APIs | Playwright browser verification |
@@ -42,6 +42,17 @@ without React, Vega, Mermaid, D2, React Flow, or `@ponchia/ui` installed.
   tests.
 - Mermaid 11, D2 0.1, and React Flow 12 are covered by unit tests, packed
   adapter smoke, and browser examples.
+- Mermaid 12.1 declares **Node >=22.12.0** and cannot replace the Mermaid 11
+  test peer while this annotations package supports Node 20. The Node 22-only
+  `npm run test:compatibility:mermaid12` lane installs the **packed** library
+  and Mermaid 12.1 into an isolated Vite consumer, then validates rendered
+  flowchart and sequence SVG anchors, edge/translated-label hooks, seven
+  actual annotations, target alignment and geometry on desktop/mobile in
+  Chromium. CI executes this only on the Node 22 lane, keeping Mermaid 11
+  covered in the Node 20 lane. This is verification of one supported newer
+  host version, **not** a declaration that Mermaid 12 runs on Node 20.
+  Do not remove the conservative Dependabot Mermaid-major deferral until
+  the Node 20/22 peer-strategy is reviewed separately.
 
 ## Policy
 
