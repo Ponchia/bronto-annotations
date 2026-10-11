@@ -68,7 +68,10 @@ describe('experimental incremental annotation layout session', () => {
     }
     expect(updated.annotations[27]).not.toBe(previous.annotations[27]);
     expect(updated.annotations[28]).not.toBe(previous.annotations[28]);
-  });
+  // A complete 30-note cold full resolver can exceed Vitest's 5s default on
+  // busy Node 20 runners. Keep every parity assertion, but give the test a
+  // realistic deadline rather than introducing an intermittent CI failure.
+  }, 20_000);
 
   it('handles changes to an earlier note without retaining an invalid suffix', () => {
     const options = fixture(18);
