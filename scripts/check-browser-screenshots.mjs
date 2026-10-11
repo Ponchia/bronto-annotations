@@ -9,6 +9,13 @@ const screenshotsDir = join(root, '.tmp/screenshots');
 const packedScreenshotsDir = join(root, '.tmp-packed-screenshots');
 const baselinePath = join(root, 'test/visual-baselines/browser-screenshots.json');
 const writeBaseline = process.argv.includes('--write-baseline');
+// Approve an additional compiled example without rewriting baselines for
+// previously reviewed examples or needing unrelated packed screenshots in
+// this one-time visual-review step. Full CI still verifies all screenshots.
+const newExampleArg = process.argv.indexOf('--approve-new-example');
+const newExample = newExampleArg >= 0 ? process.argv[newExampleArg + 1] : undefined;
+assert.ok(newExampleArg < 0 || newExample, 'Usage: --approve-new-example <example-name>');
+assert.ok(!(newExample && writeBaseline), 'Use either --approve-new-example or --write-baseline, not both');
 const baselineTolerances = {
   heightRatio: 0.72,
   byteLengthRatio: 0.35,
@@ -25,6 +32,7 @@ const examples = [
   'index',
   'svg-basic',
   'react-basic',
+  'react-incremental',
   'bronto-report',
   'dom-basic',
   'vega-basic',
@@ -33,6 +41,10 @@ const examples = [
   'react-flow-basic',
   'style-gallery'
 ];
+if (newExample) {
+  assert.ok(examples.includes(newExample), `Unknown visual example: ${newExample}`);
+}
+
 const packedScreenshots = [
   { name: 'packed-browser', file: join(packedScreenshotsDir, 'packed-browser.png'), width: 640, height: 420 },
   { name: 'packed-adapters', file: join(packedScreenshotsDir, 'packed-adapters.png'), width: 920, height: 760 }
@@ -42,7 +54,7 @@ const failures = [];
 const observations = [];
 let verified = 0;
 
-for (const example of examples) {
+for (const example of newExample ? [newExample] : examples) {
   for (const viewport of viewports) {
     const file = join(screenshotsDir, `${example}${viewport.suffix}.png`);
 
@@ -75,7 +87,7 @@ for (const example of examples) {
   }
 }
 
-for (const screenshot of packedScreenshots) {
+for (const screenshot of newExample ? [] : packedScreenshots) {
   try {
     const png = await readPng(screenshot.file);
     const decoded = decodePng(png);
@@ -102,6 +114,22 @@ for (const screenshot of packedScreenshots) {
 
 if (failures.length > 0) {
   throw new Error(`Browser screenshot evidence failed:\n${failures.join('\n')}`);
+}
+
+if (newExample) {
+  const baseline = JSON.parse(await readFile(baselinePath, 'utf8'));
+  assert.equal(baseline.schemaVersion, 1, 'Existing baseline schema must be reviewed first');
+  assert.equal(observations.length, viewports.length, 'Both viewport screenshots are required');
+  for (const observation of observations) {
+    assert.ok(!baseline.screenshots.some((entry) => entry.id === observation.id),
+      `Refusing to replace an already-approved screenshot baseline: ${observation.id}`);
+  }
+  await writeFile(baselinePath, `${JSON.stringify({
+    ...baseline,
+    screenshots: [...baseline.screenshots, ...observations]
+  }, null, 2)}\n`);
+  writeLine(`Approved ${observations.length} new screenshot metrics for ${newExample}; previous baselines preserved.`);
+  process.exit(0);
 }
 
 if (writeBaseline) {

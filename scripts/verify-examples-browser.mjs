@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
@@ -13,6 +14,7 @@ const examples = [
   { name: 'index', text: 'Examples index', minObstacles: 3, verifyExamplesIndex: true },
   { name: 'svg-basic', text: 'Peak response', minObstacles: 1, hostLayerSelector: '.base-chart', verifyStyle: true, verifyMotionMedia: true, verifyForcedColors: true },
   { name: 'react-basic', text: 'Decision point', minObstacles: 3, minEditHandles: 4, verifyEditDrag: true, hostLayerSelector: '.flow-surface__base' },
+  { name: 'react-incremental', text: 'Live marker', minObstacles: 3, minEditHandles: 8, verifyIncrementalDemo: true, hostLayerSelector: '.workflow-base' },
   { name: 'bronto-report', text: 'Primary signal', minObstacles: 3, verifyLegacyBrontoCss: true, verifyBrontoPackageCss: true },
   { name: 'dom-basic', text: 'Measured DOM box', source: 'dom-rect', minObstacles: 2 },
   {
@@ -828,6 +830,10 @@ try {
         await verifyEditDrag(page, label);
       }
 
+      if (example.verifyIncrementalDemo) {
+        await verifyIncrementalDemo(page, label);
+      }
+
       if (example.verifyReactFlowEditDrag) {
         await verifyReactFlowEditDrag(page, label);
       }
@@ -844,6 +850,82 @@ try {
 } finally {
   await browser.close();
   await server.close();
+}
+
+async function verifyIncrementalDemo(page, label) {
+  const first = await page.evaluate(() => {
+    const subject = document.querySelector('g.pa-annotation[data-annotation-id="signal"] .pa-annotation__subject');
+    const box = subject?.getBoundingClientRect();
+    return {
+      info: window.__annotationsExample,
+      signalPoint: box ? { x: box.x + box.width / 2, y: box.y + box.height / 2 } : undefined
+    };
+  });
+  assert.equal(first.info?.name, 'react-incremental', `${label} exposed a real controlled React example`);
+  assert.equal(first.info.annotations.length, 4);
+  assert.equal(first.info.changes, 0);
+
+  await page.locator('#move-note').click();
+  await page.waitForFunction(() => window.__annotationsExample?.action === 'Moved the final anchor');
+  const moved = await page.evaluate(() => {
+    const subject = document.querySelector('g.pa-annotation[data-annotation-id="signal"] .pa-annotation__subject');
+    const box = subject?.getBoundingClientRect();
+    return {
+      info: window.__annotationsExample,
+      point: box ? { x: box.x + box.width / 2, y: box.y + box.height / 2 } : undefined
+    };
+  });
+  assert.equal(moved.info.reused, 3, `${label}: moving last anchor reuses three prior placements`);
+  assert.equal(moved.info.annotations.length, 4);
+  assert.notDeepEqual(moved.info.annotations.find((item) => item.id === 'signal')?.anchor,
+    first.info.annotations.find((item) => item.id === 'signal')?.anchor);
+  assert.notEqual(moved.point, first.signalPoint, `${label}: rendered subject moves on commit`);
+
+  await page.locator('#append-note').click();
+  await page.waitForFunction(() => window.__annotationsExample?.annotations.length === 5);
+  const appended = await page.evaluate(() => window.__annotationsExample);
+  assert.equal(appended.reused, 4, `${label}: appending a note preserves all four old placements`);
+  assert.equal(await page.locator('g.pa-annotation[data-annotation-id="added"]').count(), 1);
+  assert.equal(await page.locator('#append-note').isDisabled(), true);
+
+  await page.locator('#remove-note').click();
+  await page.waitForFunction(() => window.__annotationsExample?.annotations.length === 4);
+  const removed = await page.evaluate(() => window.__annotationsExample);
+  assert.equal(removed.reused, 4, `${label}: removing the final note preserves all earlier winners`);
+  assert.equal(await page.locator('g.pa-annotation[data-annotation-id="added"]').count(), 0);
+  assert.equal(await page.locator('#remove-note').isDisabled(), true);
+
+  await page.locator('#reset-note').click();
+  await page.waitForFunction(() => window.__annotationsExample?.action === 'Reset to initial diagram');
+  const reset = await page.evaluate(() => window.__annotationsExample);
+  assert.equal(reset.annotations.length, 4);
+  assert.equal(reset.quality.ok, true, `${label}: reset layout maintains valid geometry`);
+
+  const handle = page.locator('.pa-annotation__edit-handle--note[data-annotation-id="signal"]').first();
+  await handle.scrollIntoViewIfNeeded();
+  const rect = await handle.boundingBox();
+  assert.ok(rect && rect.width > 0 && rect.height > 0, `${label}: accessible editing control visible`);
+  const start = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+  const before = await page.evaluate(() => {
+    const rect = document.querySelector('g.pa-annotation[data-annotation-id="signal"] .pa-annotation__note-box')?.getBoundingClientRect();
+    return rect ? { x: rect.x, y: rect.y } : undefined;
+  });
+  assert.ok(before, `${label}: initial note is rendered`);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x + 15, start.y + 11, { steps: 4 });
+  await page.waitForFunction((position) => {
+    const rect = document.querySelector('g.pa-annotation[data-annotation-id="signal"] .pa-annotation__note-box')?.getBoundingClientRect();
+    return Boolean(rect && (Math.abs(rect.x - position.x) > 2 || Math.abs(rect.y - position.y) > 2));
+  }, before, { timeout: 5000 });
+  await page.mouse.up();
+  await page.waitForFunction(() => window.__annotationsExample?.action === 'Edited signal by dragging');
+  const dragged = await page.evaluate(() => window.__annotationsExample);
+  assert.equal(dragged.reused, 3, `${label}: dragging the final note retains its prior winners`);
+  assert.equal(dragged.quality.ok, true, `${label}: editing remains valid`);
+  // Return the overflow container to its normal initial position before
+  // screenshot evidence, even when the drag scrolled the narrow viewport.
+  await page.locator('.stage-scroll').evaluate((element) => { element.scrollLeft = 0; });
 }
 
 async function verifyReactFlowEditDrag(page, label) {
