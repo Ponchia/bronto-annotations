@@ -1056,6 +1056,7 @@ Examples:
 - `examples/index`
 - `examples/svg-basic`
 - `examples/react-basic`
+- `examples/react-incremental`
 - `examples/bronto-report`
 - `examples/dom-basic`
 - `examples/vega-basic`
@@ -1069,6 +1070,12 @@ the same adapter after compiling or rendering their Vega-Lite spec through
 public Vega/Vega-Lite APIs.
 `examples/index` is the browsable entry point that links every verified example
 context from a small annotated overview.
+`examples/react-incremental` is a runnable host-owned React editor: commit a
+late-note anchor change, append/remove a low-priority annotation, reset, or
+drag a note handle. It shows how many previously resolved winners survive each
+change, uses `previewEdits` for pointer feedback and passes the authoritative
+incremental `resolvedLayout` to React instead of invoking a second full solve.
+
 `examples/style-gallery` renders every public annotation variant, all tones,
 all motion hints, package-prefixed classes, and Bronto-compatible CSS styling in
 one inspectable SVG layer.

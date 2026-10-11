@@ -21,6 +21,7 @@ Approved visual baselines cover:
 - `index`
 - `svg-basic`
 - `react-basic`
+- `react-incremental`
 - `bronto-report`
 - `dom-basic`
 - `vega-basic`
@@ -32,6 +33,18 @@ Approved visual baselines cover:
 - packed generated-adapter consumer
 
 ## Update Workflow
+
+When adding a **new** example, first run `npm run test:browser` and inspect
+its desktop and mobile screenshots. You can then approve only that example's
+new metrics without modifying established baseline records:
+
+```bash
+node scripts/check-browser-screenshots.mjs --approve-new-example react-incremental
+```
+
+This command checks both real PNGs and refuses to overwrite already-approved
+example baselines. Full `npm run test:screenshots` still validates every example
+and both packed consumers, including the new screenshots.
 
 Regenerate and approve baselines only when a visual change is intentional:
 

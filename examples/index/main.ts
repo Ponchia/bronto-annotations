@@ -97,6 +97,7 @@ Object.assign(window, {
     links: [
       'svg-basic',
       'react-basic',
+      'react-incremental',
       'bronto-report',
       'dom-basic',
       'vega-basic',
