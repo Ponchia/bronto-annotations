@@ -10,7 +10,15 @@ type Reply =
   | { kind: 'error'; id: number; error: string };
 
 self.addEventListener('message', (event: MessageEvent<Request>) => {
-  const { id, options, delayMs = 0 } = event.data;
+  // A dedicated Worker only accepts messages from its owning document.
+  // Worker.postMessage may report an empty MessageEvent.origin, so allow
+  // that browser-defined value while rejecting explicitly foreign origins.
+  if (event.origin !== '' && event.origin !== self.origin) return;
+  const request = event.data;
+  if (!request || !Number.isSafeInteger(request.id) || request.id < 1
+    || !request.options || !Array.isArray(request.options.annotations)
+    || !request.options.bounds) return;
+  const { id, options, delayMs = 0 } = request;
   const calculate = () => {
     try {
       const started = performance.now();

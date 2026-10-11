@@ -859,6 +859,39 @@ try {
 
 async function verifyPublicWorkerDemo(page, label) {
   await page.waitForFunction(() => window.__annotationsWorkerDemo?.ready === true, null, { timeout: 30_000 });
+  const actualWorker = page.workers().find((worker) => worker.url().includes('layout.worker'));
+  assert.ok(actualWorker, `${label}: the demo starts its dedicated module Worker`);
+  // Synthetic MessageEvent origins exercise the guard in the actual compiled
+  // Worker. A dedicated Worker normally receives only owner-document messages,
+  // but foreign/non-owner origins must never invoke the layout resolver.
+  const originCheck = await actualWorker.evaluate(() => {
+    const previousPostMessage = self.postMessage;
+    let posted = 0;
+    try {
+      self.postMessage = () => { posted += 1; };
+      const sample = {
+        id: 99999,
+        options: {
+          annotations: [{ id: 'origin-probe', anchor: { type: 'point', point: { x: 10, y: 10 } },
+            note: { title: 'Test owner origin' } }],
+          bounds: { x: 0, y: 0, width: 200, height: 140 }
+        }
+      };
+      self.dispatchEvent(new MessageEvent('message', {
+        origin: 'https://untrusted.example', data: sample
+      }));
+      const foreignMessages = posted;
+      self.dispatchEvent(new MessageEvent('message', {
+        origin: self.location.origin, data: sample
+      }));
+      return { foreignMessages, ownerMessages: posted - foreignMessages };
+    } finally {
+      self.postMessage = previousPostMessage;
+    }
+  });
+  assert.equal(originCheck.foreignMessages, 0, `${label}: Worker rejects foreign-origin messages`);
+  assert.equal(originCheck.ownerMessages, 1, `${label}: Worker accepts the owning origin`);
+
   const initial = await page.evaluate(() => window.__annotationsWorkerDemo);
   assert.equal(initial?.commits, 0, `${label}: the example starts with an authoritative layout`);
   assert.equal(await page.evaluate(() => window.__annotationsWorkerDemo?.freshParity()), true, `${label}: initial layout has deterministic parity`);
