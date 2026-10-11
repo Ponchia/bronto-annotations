@@ -114,6 +114,7 @@
     "test:pre-release": "node scripts/check-pre-release-goals.mjs",
     "test:compatibility": "node scripts/check-compatibility-matrix.mjs",
     "test:compatibility:lanes": "npm run build && node scripts/smoke-compatibility-lanes.mjs",
+    "test:compatibility:typescript7": "npm run build && node scripts/smoke-typescript7.mjs",
     "test:compatibility:mermaid12": "npm run build && node scripts/smoke-mermaid12-browser.mjs",
     "test:performance": "npm run build && node scripts/benchmark-layout.mjs --assert",
     "benchmark:incremental": "npm run build && node scripts/benchmark-incremental-layout.mjs",

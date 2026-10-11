@@ -1,6 +1,6 @@
 # Compatibility Matrix
 
-This matrix records the supported integration surface for `0.1.x`.
+This matrix records the supported pre-1.0 integration surface.
 `npm run test:compatibility` checks the package metadata, optional-peer
 metadata, CI Node lanes, this document, and the packed-smoke evidence so the
 declared support policy cannot drift silently. `npm run
@@ -10,7 +10,7 @@ peer lanes.
 | Surface | Supported Range | Verification |
 | --- | --- | --- |
 | Node.js | `>=20.19.0`, CI on Node 20 and Node 22 | `npm run test:compatibility`, GitHub CI, `npm run check` |
-| TypeScript | `>=5.8` | TypeScript 6.0 build/types gate, TypeScript 5.8 clean consumer, `npm run test:compatibility` |
+| TypeScript | `>=5.8` | TypeScript 6.0 build/types gate; TypeScript 5.8 clean consumer and TypeScript 7.0 isolated declaration consumer, `npm run test:compatibility` |
 | React | `>=18.2.0 || >=19.0.0` | React 18 clean consumer, React 19 packed smoke, React unit tests, browser examples |
 | React DOM | `>=18.2.0 || >=19.0.0` | React SSR/client smoke |
 | Vega | `>=5.0.0 || >=6.0.0` | Vega 5 clean consumer, Vega 6 packed smoke, Vega unit tests, Vega-Lite compile test, browser example |
@@ -29,6 +29,16 @@ without React, Vega, Mermaid, D2, React Flow, or `@ponchia/ui` installed.
 - TypeScript 5.8 is covered by `npm run test:compatibility:lanes`, which
   installs `typescript@5.8.3` in a clean consumer and compiles the packed root,
   DOM, Mermaid, and Vega declarations.
+- TypeScript 7.0.2 is covered by the isolated
+  `npm run test:compatibility:typescript7` command, run in protected Node 20
+  and Node 22 CI. It installs a **packed** copy of `@ponchia/annotations`
+  beside TypeScript 7, React 19 and public React declarations, then typechecks
+  strict consumers of the headless incremental APIs, DOM, Mermaid and Vega
+  adapter types, and the controlled React component. This verifies new
+  consumers **without** replacing TypeScript 6.0 in the repository build or
+  dropping TypeScript 5.8 verification. The major-version Dependabot deferral
+  remains until a deliberate decision to adopt TypeScript 7 as the build
+  compiler and to reverify lower compiler versions after that change.
 - React 18 is covered by `npm run test:compatibility:lanes`, which installs
   `react@18.2.0` and `react-dom@18.2.0` in a clean consumer and verifies SSR,
   client rendering, layout events, and quality events.

@@ -45,6 +45,12 @@ jobs:
       - name: Check
         run: npm run check
 
+      # Verify TypeScript 7 declarations in a real clean packed consumer on
+      # both Node lanes. The checked-in compiler stays TypeScript 6 and the
+      # minimum TypeScript 5.8 compatibility lane remains unchanged.
+      - name: TypeScript 7 clean declaration consumer
+        run: npm run test:compatibility:typescript7
+
       # Mermaid 12 requires Node >=22.12. Keep Mermaid 11 as the regular
       # Node 20-tested peer instead of raising this package's engine floor.
       - name: Mermaid 12 isolated browser compatibility
