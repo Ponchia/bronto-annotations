@@ -9,13 +9,13 @@
 import type { ResolvedAnnotation, ResolvedLayout } from '@ponchia/annotations';
 
 type LayoutFields = Omit<ResolvedLayout, 'annotations'>;
-export type LayoutSnapshot = {
+type LayoutSnapshot = {
   kind: 'snapshot';
   revision: number;
   baseRevision: number;
   layout: ResolvedLayout;
 };
-export type LayoutPatch = {
+type LayoutPatch = {
   kind: 'patch';
   revision: number;
   baseRevision: number;
