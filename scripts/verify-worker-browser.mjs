@@ -82,7 +82,8 @@ try {
         const proof = window.__workerProof;
         const event = proof?.events.at(-1);
         return event?.action === expected.action && event.id === expected.id
-          && typeof event.noteCount === 'number';
+          && typeof event.noteCount === 'number'
+          && typeof event.reactCommitAfterReceiptMs === 'number';
       }, { action, id: expectedCount }, { timeout: 45000 });
       const event = await page.evaluate(() => window.__workerProof?.events.at(-1));
       assert.ok(event, `${config.name}/${action}: response missing`);
@@ -95,6 +96,16 @@ try {
       assert.ok(event.encodeMs >= 0 && Number.isFinite(event.encodeMs));
       assert.ok(event.postMessageMs >= 0 && Number.isFinite(event.postMessageMs));
       assert.ok(event.admissionMs >= 0 && Number.isFinite(event.admissionMs));
+      // Cross-context relative epoch timestamps separate initial dispatch,
+      // Worker queue/delay and reply scheduling from the solver itself.
+      // These values are observations, not 60fps budgets or pure clone costs.
+      for (const metric of ['requestDeliveryMs', 'workerQueueMs', 'responseDeliveryMs']) {
+        assert.ok(event[metric] >= 0 && Number.isFinite(event[metric]),
+          `${config.name}/${action}: missing finite ${metric}`);
+      }
+      assert.ok(event.reactCommitAfterReceiptMs >= 0
+        && Number.isFinite(event.reactCommitAfterReceiptMs),
+      `${config.name}/${action}: React commit timing missing`);
       assert.ok(event.jsonWireBytes > 0 && event.jsonFullBytes > 0);
       assert.ok(event.changed >= 0 && event.changed <= config.count);
       const parity = await page.evaluate(() => window.__workerProof?.checkParity());
@@ -197,7 +208,7 @@ try {
   writeLine(JSON.stringify({
     proof: 'host-owned-off-main-thread-annotation-layout',
     buildMode: production ? 'production-bundled-worker' : 'vite-development-worker',
-    interpretation: 'Chromium/Vite Worker and React SVG. JSON reply/full sizes approximate bytes; not actual structured-clone payloads. Worker encode, host postMessage, patch admission, React Profiler and rAF timings are separate signals. rAF is not compositor paint and cancellation does not interrupt Worker CPU.',
+        interpretation: 'Chromium/Vite Worker and React SVG. JSON reply/full sizes approximate bytes, not structured-clone bytes. Epoch-relative requestDelivery/responseDelivery include cloning, event-loop scheduling and cross-context clock skew; workerQueue includes deliberate fixture delays. postMessage measures only the synchronous caller interval; React useLayoutEffect timestamps a commit in dev and production; Profiler render duration is development-only, neither measures paint. rAF is not compositor paint, and cancellation does not interrupt Worker CPU.',
     observations
   }, null, 2));
 } finally {

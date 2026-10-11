@@ -1,4 +1,4 @@
-import { Profiler, useCallback, useEffect, useRef, useState } from 'react';
+import { Profiler, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AnnotationLayer } from '@ponchia/annotations/react';
 import { resolveAnnotationLayout } from '@ponchia/annotations';
@@ -33,13 +33,15 @@ const initialOptions: LayoutOptions = {
 const initialLayout = resolveAnnotationLayout(initialOptions);
 
 type Request =
-  | { type: 'resolve'; id: number; baseRevision: number; options: LayoutOptions; delayMs?: number; forceSnapshot?: boolean }
+  | { type: 'resolve'; id: number; baseRevision: number; options: LayoutOptions; delayMs?: number; forceSnapshot?: boolean; hostSentEpochMs: number }
   | { type: 'ack'; revision: number };
 type Reply =
   | { type: 'ready' }
   | {
     type: 'resolved'; id: number; response: LayoutResponse; resolverMs: number;
     encodeMs: number; jsonWireBytes: number; jsonFullBytes: number;
+    workerReceivedEpochMs: number; workerSolveStartedEpochMs: number;
+    workerReplySentEpochMs: number;
   }
   | { type: 'error'; id: number; message: string };
 type Observation = {
@@ -57,7 +59,14 @@ type Observation = {
   encodeMs: number;
   postMessageMs: number;
   admissionMs: number;
+  // Cross-context epoch estimates. requestDelivery also includes queueing;
+  // responseDelivery also includes browser event-loop scheduling. Neither is
+  // an exact measure of structured-clone time or compositor paint.
+  requestDeliveryMs: number;
+  workerQueueMs: number;
+  responseDeliveryMs: number;
   reactRenderMs?: number;
+  reactCommitAfterReceiptMs?: number;
   uiPingsAtCommit: number;
 };
 type Probe = {
@@ -102,13 +111,28 @@ function App() {
   const committedRevision = useRef(0);
   const active = useRef<{
     id: number; action: string; options: LayoutOptions; sentAt: number;
-    uiPingsAtStart: number; forceSnapshot: boolean; postMessageMs: number
+    sentEpochMs: number; uiPingsAtStart: number;
+    forceSnapshot: boolean; postMessageMs: number
   } | null>(null);
   const committed = useRef<LayoutOptions>(initialOptions);
   const resolved = useRef(initialLayout);
   const pingCount = useRef(0);
   const latestReactRenderMs = useRef(0);
+  const pendingReactCommit = useRef<{
+    observation: Observation; acceptedAt: number;
+  } | null>(null);
   const observations = useRef<Observation[]>([]);
+  // React's Profiler onRender is not guaranteed in production builds. A host
+  // layout effect runs after React commits in both dev and production, making
+  // this the correct boundary for a verified commit delay signal.
+  useLayoutEffect(() => {
+    const pending = pendingReactCommit.current;
+    if (pending) {
+      pending.observation.reactCommitAfterReceiptMs =
+        Math.max(0, performance.now() - pending.acceptedAt);
+      pendingReactCommit.current = null;
+    }
+  }, [layout]);
   const dropped = useRef(0);
   const errors = useRef<string[]>([]);
 
@@ -118,6 +142,8 @@ function App() {
     const instance = new Worker(new URL('./layout.worker.ts', import.meta.url), { type: 'module' });
     worker.current = instance;
     instance.addEventListener('message', (event: MessageEvent<Reply>) => {
+      const hostReplyReceivedAt = performance.now();
+      const hostReplyReceivedEpochMs = performance.timeOrigin + hostReplyReceivedAt;
       // Browser Worker events may have an empty serialized origin. A dedicated
       // Worker is bound to its creator; reject a reported foreign origin.
       if (event.origin !== '' && event.origin !== window.location.origin) return;
@@ -195,9 +221,18 @@ function App() {
         encodeMs: message.encodeMs,
         postMessageMs: pending.postMessageMs,
         admissionMs,
+        // Clamp tiny clock-origin skew between Worker and document. The raw
+        // intervals include dispatch, cloning and event-loop waits; they are
+        // deliberately not labelled pure serialization/clone costs.
+        requestDeliveryMs: Math.max(0, message.workerReceivedEpochMs - pending.sentEpochMs),
+        workerQueueMs: Math.max(0,
+          message.workerSolveStartedEpochMs - message.workerReceivedEpochMs),
+        responseDeliveryMs: Math.max(0,
+          hostReplyReceivedEpochMs - message.workerReplySentEpochMs),
         uiPingsAtCommit: pingCount.current - pending.uiPingsAtStart
       };
       observations.current.push(recorded);
+      pendingReactCommit.current = { observation: recorded, acceptedAt: hostReplyReceivedAt };
       window.__workerProof!.events = observations.current;
       window.__workerProof!.lastLayout = assembled;
       active.current = null;
@@ -205,7 +240,6 @@ function App() {
       requestAnimationFrame(() => {
         recorded.rAFMs = performance.now() - pending.sentAt;
         recorded.noteCount = document.querySelectorAll('g.pa-annotation').length;
-        recorded.reactRenderMs = latestReactRenderMs.current;
       });
     });
     instance.addEventListener('error', (event) => {
@@ -222,12 +256,14 @@ function App() {
   function send(action: string, next: LayoutOptions, delayMs = 0, forceSnapshot = false) {
     if (!worker.current) throw new Error('Worker is not ready');
     const id = ++latestId.current;
-    active.current = { id, action, options: next, sentAt: performance.now(),
+    const sentAt = performance.now();
+    const sentEpochMs = performance.timeOrigin + sentAt;
+    active.current = { id, action, options: next, sentAt, sentEpochMs,
       uiPingsAtStart: pingCount.current, forceSnapshot, postMessageMs: 0 };
     window.__workerProof!.pendingId = id;
     setStatus(`Computing ${action} in Worker`);
     const request: Request = { type: 'resolve', id, baseRevision: committedRevision.current,
-      options: next, delayMs, forceSnapshot };
+      options: next, delayMs, forceSnapshot, hostSentEpochMs: sentEpochMs };
     const beforeClone = performance.now();
     worker.current.postMessage(request);
     if (active.current?.id === id) active.current.postMessageMs = performance.now() - beforeClone;
@@ -304,6 +340,9 @@ function App() {
         </svg>
         <Profiler id="worker-annotation-layer" onRender={(_id, _phase, actualDuration) => {
           latestReactRenderMs.current = actualDuration;
+          const pending = pendingReactCommit.current;
+          // Profiler render duration may be unavailable in production.
+          if (pending) pending.observation.reactRenderMs = actualDuration;
         }}>
           <AnnotationLayer
             annotations={annotations}
