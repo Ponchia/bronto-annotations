@@ -64,6 +64,13 @@ jobs:
         if: matrix.node-version == 22
         run: npm run test:compatibility:mermaid12
 
+      # Vitest 5 and jsdom 30 require Node >=22.22.2; keep the normal
+      # Vitest 4 / jsdom 29 suite on both Node 20 and Node 22 unchanged.
+      # Run all real unit tests in a disposable copy with newer test tools.
+      - name: Vitest 5 and jsdom 30 isolated unit suite
+        if: matrix.node-version == 22
+        run: npm run test:compatibility:test-runners-next
+
       - name: Upload browser evidence
         if: always()
         uses: actions/upload-artifact@v7

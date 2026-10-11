@@ -26,8 +26,10 @@ require consumer credentials or a long-lived npm token.
 
 Routine Dependabot npm PRs group compatible **minor and patch** updates for
 optional integrations and development tooling. Major upgrades of `mermaid`,
-`typescript`, `vitest`, and `jsdom` are deferred until their next compatibility
-lane is deliberately reviewed and tested. In particular, Mermaid 12 contains
+`typescript`, `vitest`, and `jsdom` are deferred from the **default**
+verification stack until their compatibility strategy is reviewed. Newer
+Vitest 5 and jsdom 30 are separately tested on Node 22 because they cannot
+run under this package's supported Node 20 floor. In particular, Mermaid 12 contains
 parser dependencies requiring Node 22, while the public package still promises
 Node 20 support; replacing the Mermaid 11 verification lane automatically
 would remove existing compatibility evidence.
