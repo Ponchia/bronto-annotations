@@ -6,6 +6,18 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.6.6 - 2026-10-11
+
+### Performance
+
+- Measure only the DOM note copies named in `ResizeObserver` notifications instead of rescanning every note for each size change. Duplicate observer entries are coalesced and unchanged note sizes retain their React state identity.
+- Preserve the initial full measurement, full reconciliation on annotation/render-note updates, local CSS dimensions under transforms, and cleanup of detached note observers.
+
+### Verification
+
+- Add a 48-note React regression that verifies a one-note resize causes a single DOM geometry read and a two-note resize batch measures each note once. Test unrelated observer notifications, no-op sizes, added/removed notes, and existing zoom behavior.
+- Keep stable exports, default headless placement, peer compatibility, browser/accessibility checks and production dependencies unchanged.
+
 ## 0.6.5 - 2026-10-11
 
 ### Performance
