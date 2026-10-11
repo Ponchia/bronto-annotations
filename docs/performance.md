@@ -256,9 +256,12 @@ CSS style values instead of their disposable wrapper-object identity.
 This optimization applies only to `resolvedLayout` mode. A host changing the
 layout, annotation membership, callbacks, accessibility labels, or editing
 semantics still renders normally. Host target-alignment reporting that reads
-raw annotations remains reactive to their source changes. `onLayout` and
-quality callbacks retain their existing subscription semantics. The caller
-must not mutate an authoritative resolved layout in place; recompute it via
+raw annotations remains reactive to their source changes. The wrapper captures
+scalar edit-option and CSS style values, bounds and annotation IDs on each
+controlled parent render, so in-place host mutations remain visible to the
+memo boundary. `onLayout` and quality callbacks retain their existing
+subscription semantics. The caller must not mutate an authoritative resolved
+layout in place; recompute it via
 `createIncrementalAnnotationLayoutSession.update` when content really changes.
 
 Two independent opt-in desktop/mobile/200-note Chromium profiling runs on the

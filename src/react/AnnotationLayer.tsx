@@ -81,8 +81,28 @@ type BadgeGeometry = {
  * not alter this component's callable type or the existing default renderer.
  */
 export function AnnotationLayer(props: AnnotationLayerProps) {
-  return <MemoizedAnnotationLayer {...props} />;
+  // Read *values* on controlled parent renders. A host may mutate a supported
+  // edit option or style object in place; React's memo comparator otherwise
+  // sees the same old/new reference and incorrectly skips the update. Avoid
+  // snapshot overhead entirely for normal internally resolved React layers.
+  const controlled = props.resolvedLayout !== undefined;
+  return <MemoizedAnnotationLayer
+    {...props}
+    __editableSnapshot={controlled ? inlinePropsSnapshot(props.editable) : ''}
+    __styleSnapshot={controlled ? inlinePropsSnapshot(props.style) : ''}
+    __boundsSnapshot={controlled ? JSON.stringify([
+      props.bounds.x, props.bounds.y, props.bounds.width, props.bounds.height
+    ]) : ''}
+    __idsSnapshot={controlled ? JSON.stringify(props.annotations.map((item) => item.id)) : ''}
+  />;
 }
+
+type InternalRendererProps = AnnotationLayerProps & {
+  readonly __editableSnapshot: string;
+  readonly __styleSnapshot: string;
+  readonly __boundsSnapshot: string;
+  readonly __idsSnapshot: string;
+};
 
 const MemoizedAnnotationLayer = memo(AnnotationLayerRenderer, equalControlledLayerProps);
 
@@ -96,53 +116,26 @@ const CONTROLLED_GEOMETRY_INPUTS = new Set<string>([
   'defaultNoteSize', 'noteSizes', 'refinement', 'editable', 'style'
 ]);
 
-function equalControlledLayerProps(previous: AnnotationLayerProps, next: AnnotationLayerProps): boolean {
+function equalControlledLayerProps(previous: InternalRendererProps, next: InternalRendererProps): boolean {
   if (!previous.resolvedLayout || previous.resolvedLayout !== next.resolvedLayout) return false;
-  const first = previous.bounds;
-  const second = next.bounds;
-  if (first.x !== second.x || first.y !== second.y
-    || first.width !== second.width || first.height !== second.height) return false;
-  if (previous.annotations.length !== next.annotations.length) return false;
-  for (let index = 0; index < previous.annotations.length; index += 1) {
-    if (previous.annotations[index]?.id !== next.annotations[index]?.id) return false;
-  }
-  // Host target-alignment diagnostics read raw annotations (not just the
-  // resolved geometry). Preserve their ordinary semantics on array updates.
-  if (previous.annotations !== next.annotations && (
-    previous.targetAlignmentTargets || next.targetAlignmentTargets
+  // Raw source diagnostics consume annotations directly rather than just the
+  // authoritative resolved geometry. Conservatively keep them reactive.
+  if (previous.targetAlignmentTargets || next.targetAlignmentTargets
     || previous.onTargetAlignment || next.onTargetAlignment
-    || previous.assertTargetAlignment || next.assertTargetAlignment
-  )) return false;
+    || previous.assertTargetAlignment || next.assertTargetAlignment) return false;
 
-  if (!sameEditableOptions(previous.editable, next.editable)) return false;
-  // Inline React style objects frequently have stable primitive CSS values
-  // but a fresh wrapper each parent commit. Compare only their own CSS keys.
-  if (!sameShallowProps(previous.style, next.style)) return false;
   const keys = new Set([...Object.keys(previous), ...Object.keys(next)]);
   for (const key of keys) {
     if (CONTROLLED_GEOMETRY_INPUTS.has(key)) continue;
-    if (previous[key as keyof AnnotationLayerProps] !== next[key as keyof AnnotationLayerProps]) {
-      return false;
-    }
+    if (previous[key as keyof InternalRendererProps] !== next[key as keyof InternalRendererProps]) return false;
   }
   return true;
 }
 
-function sameEditableOptions(first: AnnotationLayerProps['editable'], second: AnnotationLayerProps['editable']): boolean {
-  if (first === second) return true;
-  if (!first || !second || typeof first !== 'object' || typeof second !== 'object') return false;
-  return sameShallowProps(first, second);
-}
-
-function sameShallowProps(first: object | undefined, second: object | undefined): boolean {
-  if (first === second) return true;
-  const a = first ?? {};
-  const b = second ?? {};
-  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-  for (const key of keys) {
-    if (a[key as keyof typeof a] !== b[key as keyof typeof b]) return false;
-  }
-  return true;
+function inlinePropsSnapshot(value: AnnotationLayerProps['editable'] | AnnotationLayerProps['style']): string {
+  if (!value || typeof value !== 'object') return String(value);
+  const record: Record<string, unknown> = value as Record<string, unknown>;
+  return JSON.stringify(Object.keys(record).sort().map((key) => [key, record[key]]));
 }
 
 function AnnotationLayerRenderer({
@@ -181,7 +174,7 @@ function AnnotationLayerRenderer({
   targetAlignmentOptions,
   targetAlignmentTargets,
   style
-}: AnnotationLayerProps) {
+}: InternalRendererProps) {
   const prefix = classPrefix;
   const markerPrefix = markerIdPrefix ?? prefix;
   const svgRef = useRef<SVGSVGElement>(null);

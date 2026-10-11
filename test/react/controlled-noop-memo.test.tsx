@@ -126,6 +126,30 @@ describe('controlled React layout no-op reconciliation', () => {
     expect(onTargetAlignment.mock.calls[1]![0].targetAlignment.aligned).not.toContain('annotation-0');
   });
 
+  it('detects in-place style and annotation ID edits with a stable host layout', () => {
+    const { annotations, noteSizes, session } = fixture(2);
+    const style = { opacity: 0.25 };
+    const { container, rerender } = render(
+      <AnnotationLayer annotations={annotations} bounds={bounds} resolvedLayout={session.layout}
+        noteSizes={noteSizes} style={style} />
+    );
+    expect(container.querySelector('.pa-annotation-layer-wrap')?.getAttribute('style'))
+      .toContain('opacity: 0.25');
+    style.opacity = 0.75;
+    rerender(
+      <AnnotationLayer annotations={annotations} bounds={bounds} resolvedLayout={session.layout}
+        noteSizes={noteSizes} style={style} />
+    );
+    expect(container.querySelector('.pa-annotation-layer-wrap')?.getAttribute('style'))
+      .toContain('opacity: 0.75');
+
+    annotations[0]!.id = 'changed-in-place';
+    expect(() => rerender(
+      <AnnotationLayer annotations={annotations} bounds={bounds} resolvedLayout={session.layout}
+        noteSizes={noteSizes} style={style} />
+    )).toThrow(/exactly the current host annotation IDs/);
+  });
+
   it('preserves validation of changed IDs and bounds even with a stable layout reference', () => {
     const { annotations, noteSizes, session } = fixture(2);
     const { rerender } = render(
