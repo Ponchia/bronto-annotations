@@ -6,6 +6,19 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.6.7 - 2026-10-11
+
+### Performance
+
+- Avoid reconciling a host-controlled React annotation layer when the authoritative `resolvedLayout` and semantic inputs are unchanged, even if the host recreates the annotation array or inline editing/style objects. Unchanged note content and edit controls retain their existing DOM and React identities.
+- Capture immutable snapshots of mutable editing options, CSS style properties, bounds and annotation IDs during controlled updates. In-place changes correctly trigger rendering and controlled-layout validation instead of being hidden behind reference equality.
+
+### Verification
+
+- Add no-op and in-place-change regression coverage for editing controls, keyboard deltas, callback updates, layout identity, target alignment, accessibility labels, changed IDs and bounds.
+- Validate exact fresh-layout parity and use opt-in Chromium desktop/mobile/dense profiles to distinguish React rendering, scripting and next-animation-frame timing. Measurements are illustrative and are not 60 fps guarantees.
+- Preserve the existing headless API, uncontrolled React behavior, supported peers and runtime dependencies.
+
 ## 0.6.6 - 2026-10-11
 
 ### Performance
