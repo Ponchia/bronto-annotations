@@ -98,6 +98,7 @@ Object.assign(window, {
       'svg-basic',
       'react-basic',
       'react-incremental',
+      'react-worker',
       'bronto-report',
       'dom-basic',
       'vega-basic',

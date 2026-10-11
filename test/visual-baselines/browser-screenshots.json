@@ -490,6 +490,46 @@
         "nonBackgroundRatio": 0.1266,
         "luminanceRange": 231.41
       }
+    },
+    {
+      "id": "react-worker-desktop",
+      "kind": "example",
+      "example": "react-worker",
+      "viewport": "desktop",
+      "file": ".tmp/screenshots/react-worker.png",
+      "expected": {
+        "width": 1200,
+        "minHeight": 800
+      },
+      "metrics": {
+        "width": 1200,
+        "height": 1232,
+        "byteLength": 311690,
+        "distinctColors": 899,
+        "nonBackgroundSamples": 1432,
+        "nonBackgroundRatio": 0.0707,
+        "luminanceRange": 231.41
+      }
+    },
+    {
+      "id": "react-worker-mobile",
+      "kind": "example",
+      "example": "react-worker",
+      "viewport": "mobile",
+      "file": ".tmp/screenshots/react-worker-mobile.png",
+      "expected": {
+        "width": 390,
+        "minHeight": 844
+      },
+      "metrics": {
+        "width": 390,
+        "height": 1493,
+        "byteLength": 155935,
+        "distinctColors": 1332,
+        "nonBackgroundSamples": 2093,
+        "nonBackgroundRatio": 0.1042,
+        "luminanceRange": 231.41
+      }
     }
   ]
 }
