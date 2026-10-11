@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { AnnotationLayer } from '@ponchia/annotations/react';
 import { resolveAnnotationLayout } from '@ponchia/annotations';
 import type { Annotation, Box, LayoutOptions, ResolvedAnnotation, ResolvedLayout } from '@ponchia/annotations';
+import { applyWorkerLayout, canReuseWorkerAnnotation, LayoutRevisionMismatchError } from './layout-patch.js';
+import type { LayoutResponse } from './layout-patch.js';
 import '@ponchia/annotations/bronto.css';
 
 const count = Number(new URLSearchParams(location.search).get('count')) || 40;
@@ -30,10 +32,15 @@ const initialOptions: LayoutOptions = {
 };
 const initialLayout = resolveAnnotationLayout(initialOptions);
 
-type Request = { type: 'resolve'; id: number; options: LayoutOptions; delayMs?: number };
+type Request =
+  | { type: 'resolve'; id: number; baseRevision: number; options: LayoutOptions; delayMs?: number; forceSnapshot?: boolean }
+  | { type: 'ack'; revision: number };
 type Reply =
   | { type: 'ready' }
-  | { type: 'resolved'; id: number; layout: ResolvedLayout; resolverMs: number }
+  | {
+    type: 'resolved'; id: number; response: LayoutResponse; resolverMs: number;
+    encodeMs: number; jsonWireBytes: number; jsonFullBytes: number;
+  }
   | { type: 'error'; id: number; message: string };
 type Observation = {
   id: number;
@@ -43,6 +50,14 @@ type Observation = {
   noteCount?: number;
   rAFMs?: number;
   reused: number;
+  changed: number;
+  transport: 'snapshot' | 'patch';
+  jsonWireBytes: number;
+  jsonFullBytes: number;
+  encodeMs: number;
+  postMessageMs: number;
+  admissionMs: number;
+  reactRenderMs?: number;
   uiPingsAtCommit: number;
 };
 type Probe = {
@@ -66,11 +81,7 @@ function shareUnchanged(previous: ResolvedLayout, fresh: ResolvedLayout) {
     // JSON-serializable (for example cyclic objects or BigInt). If value
     // comparison is unavailable, keep the fresh worker result rather than
     // hiding a change behind an incorrectly reused React object.
-    let equivalent = false;
-    if (last) {
-      try { equivalent = JSON.stringify(last) === JSON.stringify(item); }
-      catch { equivalent = false; }
-    }
+    const equivalent = last ? canReuseWorkerAnnotation(last, item) : false;
     if (last && equivalent) {
       reused += 1;
       return last;
@@ -88,12 +99,15 @@ function App() {
   const [pings, setPings] = useState(0);
   const worker = useRef<Worker | null>(null);
   const latestId = useRef(0);
+  const committedRevision = useRef(0);
   const active = useRef<{
-    id: number; action: string; options: LayoutOptions; sentAt: number; uiPingsAtStart: number
+    id: number; action: string; options: LayoutOptions; sentAt: number;
+    uiPingsAtStart: number; forceSnapshot: boolean; postMessageMs: number
   } | null>(null);
   const committed = useRef<LayoutOptions>(initialOptions);
   const resolved = useRef(initialLayout);
   const pingCount = useRef(0);
+  const latestReactRenderMs = useRef(0);
   const observations = useRef<Observation[]>([]);
   const dropped = useRef(0);
   const errors = useRef<string[]>([]);
@@ -127,29 +141,71 @@ function App() {
         return;
       }
       const pending = active.current;
-      const { layout: shared, reused } = shareUnchanged(resolved.current, message.layout);
-      resolved.current = shared;
+      let assembled: ResolvedLayout;
+      let reused: number;
+      let changed: number;
+      const admissionStarted = performance.now();
+      try {
+        const result = applyWorkerLayout(
+          { revision: committedRevision.current, layout: resolved.current }, message.response);
+        if (message.response.kind === 'snapshot') {
+          const shared = shareUnchanged(resolved.current, result.state.layout);
+          assembled = shared.layout;
+          reused = shared.reused;
+          changed = assembled.annotations.length - reused;
+        } else {
+          assembled = result.state.layout;
+          reused = result.reused;
+          changed = result.changed;
+        }
+      } catch (error) {
+        // A baseline divergence must never patch the wrong layout. Recompute a
+        // complete snapshot once, without taking an unsafe stale short-cut.
+        if (error instanceof LayoutRevisionMismatchError && !pending.forceSnapshot) {
+          send(pending.action, pending.options, 0, true);
+        } else {
+          errors.current.push(error instanceof Error ? error.message : String(error));
+          window.__workerProof!.errors = [...errors.current];
+          active.current = null;
+          window.__workerProof!.pendingId = null;
+        }
+        return;
+      }
+      const admissionMs = performance.now() - admissionStarted;
+      resolved.current = assembled;
+      committedRevision.current = message.id;
+      // Only accepted responses advance the Worker's acknowledged baseline;
+      // cancelled, superseded or invalid messages receive no ACK.
+      worker.current?.postMessage({ type: 'ack', revision: message.id } satisfies Request);
       committed.current = pending.options;
       setAnnotations(pending.options.annotations);
       setObstacles(pending.options.obstacles ?? []);
-      setLayout(shared);
-      setStatus(`${pending.action}: ${reused}/${shared.annotations.length} notes retained`);
+      setLayout(assembled);
+      setStatus(`${pending.action}: ${reused}/${assembled.annotations.length} notes retained`);
       const recorded: Observation = {
         id: message.id,
         action: pending.action,
         resolverMs: message.resolverMs,
         workerElapsedMs: performance.now() - pending.sentAt,
         reused,
+        changed,
+        transport: message.response.kind,
+        jsonWireBytes: message.jsonWireBytes,
+        jsonFullBytes: message.jsonFullBytes,
+        encodeMs: message.encodeMs,
+        postMessageMs: pending.postMessageMs,
+        admissionMs,
         uiPingsAtCommit: pingCount.current - pending.uiPingsAtStart
       };
       observations.current.push(recorded);
       window.__workerProof!.events = observations.current;
-      window.__workerProof!.lastLayout = shared;
+      window.__workerProof!.lastLayout = assembled;
       active.current = null;
       window.__workerProof!.pendingId = null;
       requestAnimationFrame(() => {
         recorded.rAFMs = performance.now() - pending.sentAt;
         recorded.noteCount = document.querySelectorAll('g.pa-annotation').length;
+        recorded.reactRenderMs = latestReactRenderMs.current;
       });
     });
     instance.addEventListener('error', (event) => {
@@ -163,14 +219,18 @@ function App() {
     };
   }, []);
 
-  function send(action: string, next: LayoutOptions, delayMs = 0) {
+  function send(action: string, next: LayoutOptions, delayMs = 0, forceSnapshot = false) {
     if (!worker.current) throw new Error('Worker is not ready');
     const id = ++latestId.current;
-    active.current = { id, action, options: next, sentAt: performance.now(), uiPingsAtStart: pingCount.current };
+    active.current = { id, action, options: next, sentAt: performance.now(),
+      uiPingsAtStart: pingCount.current, forceSnapshot, postMessageMs: 0 };
     window.__workerProof!.pendingId = id;
     setStatus(`Computing ${action} in Worker`);
-    const request: Request = { type: 'resolve', id, options: next, delayMs };
+    const request: Request = { type: 'resolve', id, baseRevision: committedRevision.current,
+      options: next, delayMs, forceSnapshot };
+    const beforeClone = performance.now();
     worker.current.postMessage(request);
+    if (active.current?.id === id) active.current.postMessageMs = performance.now() - beforeClone;
   }
 
   function moveAnchor() {
@@ -210,7 +270,10 @@ function App() {
 
   const verifyParity = useCallback(() => {
     const fresh = resolveAnnotationLayout(committed.current);
-    return JSON.stringify(fresh) === JSON.stringify(resolved.current);
+    // Compact patches can preserve the same values while rebuilding an
+    // object with a different property insertion order. Compare semantic
+    // geometry and host metadata rather than JSON key order.
+    return canReuseWorkerAnnotation(fresh, resolved.current);
   }, []);
   useEffect(() => {
     window.__workerProof = {
@@ -239,7 +302,9 @@ function App() {
             return <rect key={item.id} x={p.x - 8} y={p.y - 8} width={16} height={16} fill="#64748b" />;
           })}
         </svg>
-        <Profiler id="worker-annotation-layer" onRender={() => {}}>
+        <Profiler id="worker-annotation-layer" onRender={(_id, _phase, actualDuration) => {
+          latestReactRenderMs.current = actualDuration;
+        }}>
           <AnnotationLayer
             annotations={annotations}
             bounds={bounds}

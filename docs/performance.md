@@ -370,6 +370,9 @@ fresh-layout parity. The Node 22 CI lane also verifies the actual bundled Vite
 production Worker. `npm run benchmark:browser:worker` adds a 200-annotation
 case outside the required CI performance gates. The host still owns the Worker,
 revision tokens and `AnnotationLayer.resolvedLayout` updates; the package's
-synchronous solver stays the default. See [the Worker integration
+synchronous solver stays the default. The browser proof also tests compact,
+acknowledged patches for unchanged annotation results, and records JSON-size
+estimates together with cloning, patch-admission, React and next-rAF timings;
+these measures do not guarantee a frame-rate improvement. See [the Worker integration
 recipe](worker-layout.md) for limitations around CPU cancellation, structured
 cloning, React identity, and end-to-end timings.
