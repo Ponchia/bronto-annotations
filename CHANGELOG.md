@@ -6,6 +6,18 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.6.5 - 2026-10-11
+
+### Performance
+
+- Generate React annotation editing handles only for changed resolved annotations after committed incremental updates. Retain existing committed handle objects and SVG controls for unchanged notes, rather than rebuilding every note/anchor handle and discarding the results.
+- Preserve exact priority-aware paint ordering, keyboard/pointer interactions, accessibility labels and option-change regeneration. No public API or dependency changes.
+
+### Verification
+
+- Add regression coverage for changed last notes, no-op inputs, append/remove of lower-priority annotations, stable note/handle identities and editing-option changes.
+- Provide an optional handle-generation microbenchmark verifying exact object/geometry/ordering parity before reporting the isolated cost. The experiment does not assert or promise a sustained browser-frame speedup.
+
 ## 0.6.4 - 2026-10-11
 
 ### Performance
