@@ -62,6 +62,7 @@ import type {
 } from './types.js';
 
 const PREFIX = 'pa-annotation';
+const EMPTY_NOTE_SIZES: Record<string, Size> = Object.freeze({});
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 type ActiveEdit = {
@@ -122,20 +123,26 @@ export function AnnotationLayer({
   // annotation array remain unchanged until an edit is committed.
   const [activePreview, setActivePreview] = useState<ResolvedAnnotation | null>(null);
   const [measuredSizes, setMeasuredSizes] = useState<Record<string, Size>>({});
+  // A host-controlled resolved layout already owns the final note sizes.
+  // Estimating every note again is wasted O(n) work on each incremental
+  // commit, and merging an unused size map can invalidate other memoization.
+  // Keep both hooks unconditional so switching back to local layout resolution
+  // still computes the correct sizes without changing React hook order.
+  const hasHostLayout = resolvedLayout !== undefined;
   const estimatedSizes = useMemo(
-    () => Object.fromEntries(annotations.map((annotation) => [
+    () => hasHostLayout ? EMPTY_NOTE_SIZES : Object.fromEntries(annotations.map((annotation) => [
       annotation.id,
       estimateNoteSize(annotation, defaultNoteSize)
     ])),
-    [annotations, defaultNoteSize]
+    [annotations, defaultNoteSize, hasHostLayout]
   );
   const resolvedNoteSizes = useMemo(
-    () => ({
+    () => hasHostLayout ? EMPTY_NOTE_SIZES : ({
       ...estimatedSizes,
       ...(noteSizes ?? {}),
       ...(measure === 'dom' ? measuredSizes : {})
     }),
-    [estimatedSizes, noteSizes, measure, measuredSizes]
+    [estimatedSizes, noteSizes, measure, measuredSizes, hasHostLayout]
   );
   const layout = useMemo(() => {
     // A host with an incremental session can supply its committed result.
