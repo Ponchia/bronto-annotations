@@ -104,6 +104,9 @@ function App() {
     const instance = new Worker(new URL('./layout.worker.ts', import.meta.url), { type: 'module' });
     worker.current = instance;
     instance.addEventListener('message', (event: MessageEvent<Reply>) => {
+      // Browser Worker events may have an empty serialized origin. A dedicated
+      // Worker is bound to its creator; reject a reported foreign origin.
+      if (event.origin !== '' && event.origin !== window.location.origin) return;
       const message = event.data;
       if (message.type === 'ready') {
         window.__workerProof!.ready = true;

@@ -21,8 +21,15 @@ type Reply =
 function publish(value: Reply) { self.postMessage(value); }
 
 self.addEventListener('message', (event: MessageEvent<Request>) => {
+  // Dedicated Workers receive messages from their owning document (not
+  // arbitrary cross-origin windows). Some implementations expose an empty
+  // MessageEvent.origin for Worker.postMessage; if origin is provided, refuse
+  // messages from a different origin. Check the request shape regardless.
+  if (event.origin !== '' && event.origin !== self.origin) return;
   const data = event.data;
-  if (data?.type !== 'resolve' || !Number.isSafeInteger(data.id)) return;
+  if (data?.type !== 'resolve' || !Number.isSafeInteger(data.id)
+    || data.id < 1 || !data.options || !Array.isArray(data.options.annotations)
+    || !data.options.bounds) return;
   const calculate = () => {
     try {
       const start = performance.now();
