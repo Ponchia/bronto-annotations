@@ -50,7 +50,8 @@ describe('real npm tarball byte verification', () => {
 
   it('rejects corrupted bytes even when the CDN returns an intact gzip header', async () => {
     const altered = Buffer.from(tgz);
-    altered[altered.length - 3] ^= 0x7f;
+    const byteIndex = altered.length - 3;
+    altered[byteIndex] = (altered[byteIndex] ?? 0) ^ 0x7f;
     await expect(verifyPublishedTarballFile(metadata, archiveFile(altered)))
       .rejects.toThrow('SHA-512 does not match');
   });
