@@ -125,8 +125,11 @@ against an independent fresh full resolution in Chromium.
 The mandatory desktop/mobile test proves that an acknowledged far-obstacle
 update uses a compact patch, and deliberately stale/cancelled replies are
 ignored. The optional 200-note case reports the same evidence without timing
-budgets. `jsonWireBytes` versus `jsonFullBytes` are **UTF-8 JSON size
-estimates**, not actual browser structured-clone transport bytes. The fixture
+budgets. `jsonWireBytes` estimates serialized compact reply size, while
+`jsonFullBytes` uses an **actual full-layout JSON measurement for the first
+snapshot** and a cached acknowledged full-size estimate on subsequent patches.
+This avoids serializing a multi-megabyte unchanged layout simply for profiling.
+Neither field measures actual browser structured-clone transport bytes. The fixture
 separately reports Worker resolve/encode time, host request `postMessage`
 synchronous time, host patch admission, React Profiler render and next-rAF
 callback time. These timings overlap and are not additive; next-rAF is not

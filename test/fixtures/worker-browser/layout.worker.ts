@@ -21,7 +21,13 @@ type Reply =
   | { type: 'error'; id: number; message: string };
 
 let acknowledged: LayoutRevision | undefined;
+// The first snapshot provides an actual full-layout JSON measurement. Later
+// compact responses reuse that acknowledged baseline as an *estimate*, not an
+// exact byte count. Serializing the entire 200-note layout for every patch
+// defeats the point of compact Worker transport.
+let acknowledgedFullJSONBytes = -1;
 const pendingLayouts = new Map<number, ResolvedLayout>();
+const pendingFullJSONBytes = new Map<number, number>();
 function publish(value: Reply) { self.postMessage(value); }
 function jsonBytes(value: unknown): number {
   try { return new Blob([JSON.stringify(value)]).size; }
@@ -40,8 +46,12 @@ self.addEventListener('message', (event: MessageEvent<Request>) => {
     const layout = pendingLayouts.get(data.revision);
     if (!layout) return;
     acknowledged = { revision: data.revision, layout };
+    acknowledgedFullJSONBytes = pendingFullJSONBytes.get(data.revision) ?? -1;
     for (const id of pendingLayouts.keys()) {
-      if (id <= data.revision) pendingLayouts.delete(id);
+      if (id <= data.revision) {
+        pendingLayouts.delete(id);
+        pendingFullJSONBytes.delete(id);
+      }
     }
     return;
   }
@@ -60,12 +70,21 @@ self.addEventListener('message', (event: MessageEvent<Request>) => {
       const response = encodeWorkerLayout(data.id, data.baseRevision, layout,
         data.forceSnapshot ? undefined : acknowledged);
       const jsonWireBytes = jsonBytes(response);
-      const jsonFullBytes = jsonBytes(layout);
+      // Exact only on snapshot/bootstrap. On patches use the previously
+      // acknowledged full size as an explicitly approximate comparison.
+      const jsonFullBytes = response.kind === 'snapshot' || acknowledgedFullJSONBytes <= 0
+        ? jsonBytes(layout)
+        : acknowledgedFullJSONBytes;
       const encodeMs = performance.now() - encodeStarted;
       pendingLayouts.set(data.id, layout);
+      pendingFullJSONBytes.set(data.id, jsonFullBytes);
       // Cap outstanding reply snapshots: a consumer may cancel many requests
       // and never acknowledge those versions.
-      while (pendingLayouts.size > 16) pendingLayouts.delete(pendingLayouts.keys().next().value!);
+      while (pendingLayouts.size > 16) {
+        const expired = pendingLayouts.keys().next().value!;
+        pendingLayouts.delete(expired);
+        pendingFullJSONBytes.delete(expired);
+      }
       publish({ type: 'resolved', id: data.id, response, resolverMs, encodeMs, jsonWireBytes, jsonFullBytes });
     } catch (error) {
       publish({ type: 'error', id: data.id, message: error instanceof Error ? error.message : String(error) });
