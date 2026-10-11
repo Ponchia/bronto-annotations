@@ -618,7 +618,12 @@ component:
 
 In this snippet, `layoutSession` is created once and the initial
 `resolvedLayout` state comes from `layoutSession.layout`; the host owns that
-state and maintains stable callback identities. The supplied layout must
+state and maintains stable callback identities.
+When `resolvedLayout` is provided, the React layer also skips its internal
+note-size estimates and size-map merging: the host's session already owns
+that geometry. This avoids repeating size work on large committed updates.
+Switching back to the normal uncontrolled mode restores the component's
+standard note-size estimation automatically. The supplied layout must
 correspond to the current annotations and bounds. `measure="dom"` cannot be
 combined with `resolvedLayout` because component-owned note measurements
 would bypass the host's layout session; pass explicit `noteSizes` and use the
