@@ -34,16 +34,29 @@ export class LayoutRevisionMismatchError extends Error {
 
 /**
  * Compare plain cloneable data without conflating `undefined` and missing
- * keys (JSON.stringify does). Unknown classes, repeated/cyclic references,
+ * keys (JSON.stringify does). Unknown classes, cyclic references,
  * symbols, non-plain metadata and getter failures conservatively count as
- * changed rather than preserving a potentially stale React node.
+ * changed rather than preserving a potentially stale React node. Shared
+ * aliases must also be structurally identical: comparing two equal-looking
+ * copies with different reference sharing would retain a stale host object.
  */
 export function canReuseWorkerAnnotation(first: unknown, second: unknown): boolean {
+  const seenA = new WeakMap<object, object>();
+  const seenB = new WeakMap<object, object>();
+
   function same(a: unknown, b: unknown, parentsA: Set<object>, parentsB: Set<object>): boolean {
     if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') {
       return Object.is(a, b);
     }
     if (parentsA.has(a) || parentsB.has(b)) return false;
+    // Enforce a one-to-one mapping of references across the *whole* object
+    // graph, not just the current recursion branch. Otherwise two references
+    // to one source object can be misclassified as two independent objects.
+    // Natural aliases in resolved geometry (noteBox/candidate or subject/point)
+    // remain reusable when the other graph has the same alias topology.
+    if (seenA.has(a) || seenB.has(b)) {
+      return seenA.get(a) === b && seenB.get(b) === a;
+    }
     const arrays = Array.isArray(a) && Array.isArray(b);
     if (Array.isArray(a) !== Array.isArray(b)) return false;
     if (arrays && (a as unknown[]).length !== (b as unknown[]).length) return false;
@@ -53,6 +66,8 @@ export function canReuseWorkerAnnotation(first: unknown, second: unknown): boole
     const keysA = Object.keys(a);
     const keysB = Object.keys(b);
     if (keysA.length !== keysB.length) return false;
+    seenA.set(a, b);
+    seenB.set(b, a);
     parentsA.add(a);
     parentsB.add(b);
     try {
@@ -114,6 +129,9 @@ export function applyWorkerLayout(previous: LayoutRevision, response: LayoutResp
     throw new LayoutRevisionMismatchError('Worker response base revision differs from acknowledged host layout');
   }
   if (response.kind === 'snapshot') {
+    if (!response.layout || !Array.isArray(response.layout.annotations)) {
+      throw new LayoutRevisionMismatchError('Worker snapshot has no resolved annotation array');
+    }
     return {
       state: { revision: response.revision, layout: response.layout },
       reused: 0,
@@ -121,6 +139,14 @@ export function applyWorkerLayout(previous: LayoutRevision, response: LayoutResp
     };
   }
 
+  // The Worker is host-owned, but a malformed reply must still trigger the
+  // host's revision-mismatch/snapshot-recovery path rather than crashing React
+  // with a TypeError or installing incomplete global geometry.
+  if (response.kind !== 'patch' || !response.fields
+    || !response.fields.bounds || !response.fields.placementBounds
+    || !response.fields.padding || !Array.isArray(response.fields.obstacles)) {
+    throw new LayoutRevisionMismatchError('Worker patch is missing authoritative layout fields');
+  }
   const before = previous.layout.annotations;
   if (response.count !== before.length || !Array.isArray(response.changed)) {
     throw new LayoutRevisionMismatchError('Worker patch note count does not match host layout');
@@ -128,7 +154,8 @@ export function applyWorkerLayout(previous: LayoutRevision, response: LayoutResp
   const updated = before.slice();
   let lastIndex = -1;
   for (const change of response.changed) {
-    if (!Number.isSafeInteger(change.index) || change.index <= lastIndex
+    if (!change || typeof change !== 'object'
+      || !Number.isSafeInteger(change.index) || change.index <= lastIndex
       || change.index >= updated.length || change.index < 0) {
       throw new LayoutRevisionMismatchError('Worker patch index must be strictly ascending and in bounds');
     }
