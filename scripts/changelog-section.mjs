@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const raw = (process.argv[2] || '').replace(/^v/, '');
 const base = raw.split('-')[0];
-const changelog = readFileSync(resolve(root, 'CHANGELOG.md'), 'utf8');
+// A manual release-notes recovery can use the immutable tag's CHANGELOG.
+const changelog = readFileSync(process.argv[3] ? resolve(process.argv[3]) : resolve(root, 'CHANGELOG.md'), 'utf8');
 const lines = changelog.split('\n');
 
 let start = -1;
