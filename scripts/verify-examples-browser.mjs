@@ -15,6 +15,7 @@ const examples = [
   { name: 'svg-basic', text: 'Peak response', minObstacles: 1, hostLayerSelector: '.base-chart', verifyStyle: true, verifyMotionMedia: true, verifyForcedColors: true },
   { name: 'react-basic', text: 'Decision point', minObstacles: 3, minEditHandles: 4, verifyEditDrag: true, hostLayerSelector: '.flow-surface__base' },
   { name: 'react-incremental', text: 'Live marker', minObstacles: 3, minEditHandles: 8, verifyIncrementalDemo: true, hostLayerSelector: '.workflow-base' },
+  { name: 'react-worker', text: 'Worker', minObstacles: 3, hostLayerSelector: '.workflow-base', verifyPublicWorkerDemo: true },
   { name: 'bronto-report', text: 'Primary signal', minObstacles: 3, verifyLegacyBrontoCss: true, verifyBrontoPackageCss: true },
   { name: 'dom-basic', text: 'Measured DOM box', source: 'dom-rect', minObstacles: 2 },
   {
@@ -834,6 +835,10 @@ try {
         await verifyIncrementalDemo(page, label);
       }
 
+      if (example.verifyPublicWorkerDemo) {
+        await verifyPublicWorkerDemo(page, label);
+      }
+
       if (example.verifyReactFlowEditDrag) {
         await verifyReactFlowEditDrag(page, label);
       }
@@ -850,6 +855,48 @@ try {
 } finally {
   await browser.close();
   await server.close();
+}
+
+async function verifyPublicWorkerDemo(page, label) {
+  await page.waitForFunction(() => window.__annotationsWorkerDemo?.ready === true, null, { timeout: 30_000 });
+  const initial = await page.evaluate(() => window.__annotationsWorkerDemo);
+  assert.equal(initial?.commits, 0, `${label}: the example starts with an authoritative layout`);
+  assert.equal(initial?.freshParity(), true, `${label}: initial layout has deterministic parity`);
+  assert.equal(await page.locator('.pa-annotation').count(), 18, `${label}: shows all annotations`);
+
+  await page.locator('#worker-move').click();
+  await page.waitForFunction(() => window.__annotationsWorkerDemo?.commits === 1, null, { timeout: 30_000 });
+  const moved = await page.evaluate(() => window.__annotationsWorkerDemo);
+  assert.equal(moved?.lastAction, 'Moved final anchor', `${label}: commits Worker-computed anchor geometry`);
+  assert.equal(moved?.freshParity(), true, `${label}: moved anchor matches a fresh headless layout`);
+
+  await page.locator('#worker-obstacle').click();
+  await page.waitForFunction(() => window.__annotationsWorkerDemo?.commits === 2, null, { timeout: 30_000 });
+  assert.equal(await page.evaluate(() => window.__annotationsWorkerDemo?.freshParity()), true,
+    `${label}: Worker obstacle reflow matches a fresh layout`);
+
+  await page.locator('#worker-burst').click();
+  await page.waitForFunction(() => window.__annotationsWorkerDemo?.commits === 3, null, { timeout: 30_000 });
+  await page.waitForFunction(() => (window.__annotationsWorkerDemo?.discarded ?? 0) >= 1, null, { timeout: 30_000 });
+  const latest = await page.evaluate(() => window.__annotationsWorkerDemo);
+  assert.equal(latest?.lastAction, 'Newer revision', `${label}: old Worker reply is discarded`);
+  assert.equal(latest?.freshParity(), true, `${label}: accepted Worker revision stays authoritative`);
+
+  await page.locator('#worker-delay').click();
+  await page.waitForFunction(() => window.__annotationsWorkerDemo?.pending === true);
+  const previousPings = Number(await page.locator('#worker-pings').textContent());
+  await page.locator('#worker-ping').click();
+  const during = await page.evaluate(() => window.__annotationsWorkerDemo);
+  assert.ok((during?.pings ?? 0) > previousPings, `${label}: UI responds while Worker is pending`);
+  assert.equal(during?.pending, true, `${label}: UI interaction did not await Worker completion`);
+  await page.locator('#worker-cancel').click();
+  await page.waitForFunction(() => window.__annotationsWorkerDemo?.pending === false);
+  await page.waitForFunction(() => (window.__annotationsWorkerDemo?.discarded ?? 0) >= 2, null, { timeout: 30_000 });
+  const afterCancel = await page.evaluate(() => window.__annotationsWorkerDemo);
+  assert.equal(afterCancel?.commits, 3, `${label}: cancelled result is not committed`);
+  assert.equal(afterCancel?.freshParity(), true, `${label}: retained layout remains correct`);
+  assert.deepEqual(afterCancel?.errors, [], `${label}: no Worker errors`);
+  assert.equal(await page.locator('.pa-annotation').count(), 18, `${label}: notes remain visible`);
 }
 
 async function verifyIncrementalDemo(page, label) {

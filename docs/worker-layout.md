@@ -14,7 +14,13 @@ placements, a full `resolveAnnotationLayout` may be expensive enough to block
 React's main thread. A host-owned Worker can handle that calculation without
 moving React, the SVG layer, or persistence into the Worker.
 
-The complete Vite + React reference is in
+You can also try the [public interactive Worker demo](../examples/react-worker/)
+and inspect its compact [host source](https://github.com/Ponchia/bronto-annotations/tree/main/examples/react-worker).
+It demonstrates main-thread pings, superseded requests and cancellation with a
+host-owned module Worker; its extra delay makes revision handling visible and
+is **not** a solver benchmark.
+
+The complete Vite + React test reference is in
 [`test/fixtures/worker-browser`](https://github.com/Ponchia/bronto-annotations/tree/main/test/fixtures/worker-browser).
 It is verified in **real Chromium** at desktop and mobile viewports, and has
 an optional 200-annotation stress case. No `@ponchia/annotations` runtime
