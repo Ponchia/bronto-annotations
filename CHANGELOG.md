@@ -6,6 +6,19 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.6.8 - 2026-10-11
+
+### Performance
+
+- Coalesce high-frequency React `previewEdits` pointer movements to the most recent provisional visual update once per browser animation frame, avoiding redundant React reconciliation for sub-frame movement bursts.
+- Preserve immediate `onEdit` notifications for every pointer movement, without changing host-owned persisted edits, authoritative layout resolution or geometry-quality scoring.
+
+### Reliability and verification
+
+- Invalidate pending previews on pointer completion, cancellation, a new drag, unmount, source-layout replacement or disabling previews. Old frame callbacks cannot resurrect completed gesture visuals; headless runtimes without `requestAnimationFrame` keep the previous synchronous fallback.
+- Add deterministic frame-scheduler regressions for a 12-move burst, updated note and connector geometry, stable unaffected neighbors, callback counts and cancellation. Adjust existing React preview tests to await actual browser-frame rendering while retaining geometry, accessibility and keyboard assertions.
+- Keep existing exported APIs, compatible peer ranges and production dependencies unchanged.
+
 ## 0.6.7 - 2026-10-11
 
 ### Performance
