@@ -27,6 +27,7 @@ const exampleNames = [
   'index',
   'svg-basic',
   'react-basic',
+  'react-incremental',
   'bronto-report',
   'dom-basic',
   'vega-basic',

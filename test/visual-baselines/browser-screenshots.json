@@ -450,6 +450,46 @@
         "nonBackgroundRatio": 0.0508,
         "luminanceRange": 242
       }
+    },
+    {
+      "id": "react-incremental-desktop",
+      "kind": "example",
+      "example": "react-incremental",
+      "viewport": "desktop",
+      "file": ".tmp/screenshots/react-incremental.png",
+      "expected": {
+        "width": 1200,
+        "minHeight": 800
+      },
+      "metrics": {
+        "width": 1200,
+        "height": 1151,
+        "byteLength": 251104,
+        "distinctColors": 650,
+        "nonBackgroundSamples": 1993,
+        "nonBackgroundRatio": 0.0996,
+        "luminanceRange": 231.41
+      }
+    },
+    {
+      "id": "react-incremental-mobile",
+      "kind": "example",
+      "example": "react-incremental",
+      "viewport": "mobile",
+      "file": ".tmp/screenshots/react-incremental-mobile.png",
+      "expected": {
+        "width": 390,
+        "minHeight": 844
+      },
+      "metrics": {
+        "width": 390,
+        "height": 1115,
+        "byteLength": 111492,
+        "distinctColors": 1209,
+        "nonBackgroundSamples": 2621,
+        "nonBackgroundRatio": 0.1266,
+        "luminanceRange": 231.41
+      }
     }
   ]
 }

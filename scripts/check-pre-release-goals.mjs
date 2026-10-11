@@ -385,7 +385,7 @@ for (const term of [
 }
 
 assert.equal(visualBaseline.schemaVersion, 1, 'visual baseline schemaVersion must be 1');
-assert.equal(visualBaseline.screenshots.length, 22, 'visual baseline must cover every browser and packed-consumer screenshot');
+assert.equal(visualBaseline.screenshots.length, 24, 'visual baseline must cover every browser and packed-consumer screenshot');
 
 for (const term of [
   'test/visual-baselines/browser-screenshots.json',
