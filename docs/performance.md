@@ -226,6 +226,37 @@ UI frame time exceeds the pure resolver cost, so future work should profile
 React render/quality evaluation and host drawing separately before attempting
 worker-based layout scheduling.
 
+### Optional Chromium renderer main-thread measurements
+
+When investigating dense-editor frame delays, run the **optional** browser
+profile outside the mandatory CI gates:
+
+```bash
+npm run benchmark:browser:profile
+```
+
+This runs the same desktop/mobile/200-annotation React/browser fixture and
+adds `chromiumMainThread` to each committed action. It samples Chromium's
+DevTools Protocol `Performance.getMetrics` before and after a real button
+interaction. The report separates cumulative-counter deltas for JavaScript
+execution (`scriptMs`), style recalculation (`styleRecalcMs`), layout
+(`layoutMs`), and total browser tasks (`browserTaskMs`). It also records style
+and layout operation counts, the final DOM node count and JS heap usage.
+
+These metrics are intended to **identify** whether CPU time is being spent in
+React/scripting or in browser style/layout work. The counters include
+Playwright interaction, callback and measurement overhead; task time overlaps
+JavaScript/style/layout times and must never be added to them. None of these
+is a compositor-paint timestamp or a guarantee of a rendered frame. React
+Profiler `reactRenderMs`, resolver `resolverMs`, and the time to the next
+`requestAnimationFrame` callback remain separate signals. Do not set CI
+budgets or remove accessible/offscreen note DOM based on one busy devbox run.
+
+The optional counters use Chromium CDP only; the library and package itself
+remain browser-agnostic and require no CDP dependency. Reference:
+[Chrome DevTools Performance domain](https://chromedevtools.github.io/devtools-protocol/tot/Performance/)
+and [Playwright CDPSession](https://playwright.dev/docs/api/class-cdpsession).
+
 For annotated generated graphs, widen host-owned handle placement candidates
 according to the **rendered** owner card size. In an additional dense React Flow
 host, a 20–30 px handle offset trapped a callout inside adjacent graph nodes;

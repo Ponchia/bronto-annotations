@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { createServer } from 'vite';
 import { writeLine } from './log.mjs';
+import { summarizeChromiumRenderMetrics } from './chromium-render-metrics.mjs';
 
 const cases = [
   { width: 1200, height: 820, count: 40, name: 'desktop' },
@@ -16,6 +17,9 @@ const cases = [
 if (process.argv.includes('--benchmark')) {
   cases.push({ width: 1365, height: 900, count: 200, name: 'dense-desktop' });
 }
+// Profiling is strictly opt-in. The protected browser tests retain the same
+// event ordering, DOM assertions, and timing gates as before.
+const profileRenderer = process.argv.includes('--profile');
 
 const vite = await createServer({
   configFile: false,
@@ -36,6 +40,7 @@ try {
     const context = await browser.newContext({ viewport: { width: config.width, height: config.height } });
     const page = await context.newPage();
     const errors = [];
+    let cdp;
     page.on('pageerror', (error) => errors.push(error.message));
     page.on('console', (message) => {
       if (message.type() === 'error') errors.push(message.text());
@@ -51,6 +56,10 @@ try {
         config.count,
         { timeout: 30000 }
       );
+      if (profileRenderer) {
+        cdp = await context.newCDPSession(page);
+        await cdp.send('Performance.enable', { timeDomain: 'timeTicks' });
+      }
 
       const actions = config.name === 'dense-desktop'
         ? [
@@ -75,11 +84,28 @@ try {
 
       for (let index = 0; index < actions.length; index += 1) {
         const [buttonId, expectedNotes, expectedReused, stableFirst] = actions[index];
+        // CDP reports cumulative browser renderer counters. Reading before
+        // and after a full real button interaction gives separate JavaScript,
+        // style, layout, and total task durations. The interval also contains
+        // Playwright/callback overhead and is not a compositor paint metric.
+        const beforeMetrics = cdp ? (await cdp.send('Performance.getMetrics')).metrics : undefined;
         await page.locator(`#${buttonId}`).click();
         await page.waitForFunction((seq) => {
           const latest = window.__incrementalBrowser?.events?.at(-1);
           return latest?.seq === seq && typeof latest.paintMs === 'number';
         }, index + 1, { timeout: 30000 });
+        if (cdp && beforeMetrics) {
+          const afterMetrics = (await cdp.send('Performance.getMetrics')).metrics;
+          const renderer = summarizeChromiumRenderMetrics(beforeMetrics, afterMetrics);
+          assert.ok(renderer.scriptMs !== undefined && renderer.browserTaskMs !== undefined,
+            `${config.name}/${buttonId}: Chromium performance counters unavailable`);
+          assert.ok(renderer.layoutMs !== undefined && renderer.styleRecalcMs !== undefined,
+            `${config.name}/${buttonId}: Chromium layout/style counters unavailable`);
+          await page.evaluate((metrics) => {
+            const event = window.__incrementalBrowser?.events.at(-1);
+            if (event) event.chromiumMainThread = metrics;
+          }, renderer);
+        }
 
         const event = await page.evaluate(() => window.__incrementalBrowser?.events.at(-1));
         assert.ok(event, `Missing ${buttonId} event`);
@@ -115,13 +141,16 @@ try {
       }));
       observations.push({ ...config, ...details });
     } finally {
+      await cdp?.detach();
       await context.close();
     }
   }
 
   writeLine(JSON.stringify({
     benchmark: 'real-react-incremental-layout',
-    interpretation: 'Actual Chromium frames and React SVG DOM. Single-run observations, not frame-time SLOs.',
+    interpretation: profileRenderer
+      ? 'Chromium CDP cumulative counter deltas include automation overhead. Script, style and layout durations overlap browser task time; neither next-rAF nor CDP metrics measure compositor paint or define a frame-rate SLO.'
+      : 'Actual Chromium frames and React SVG DOM. Single-run observations, not frame-time SLOs.',
     observations
   }, null, 2));
 } finally {

@@ -104,6 +104,7 @@
     "test:browser": "npm run build && node scripts/verify-examples-browser.mjs",
     "test:browser:incremental": "npm run build && node scripts/verify-incremental-browser.mjs",
     "benchmark:browser:incremental": "npm run build && node scripts/verify-incremental-browser.mjs --benchmark",
+    "benchmark:browser:profile": "npm run build && node scripts/verify-incremental-browser.mjs --benchmark --profile",
     "test:screenshots": "node scripts/check-browser-screenshots.mjs",
     "test:readiness": "node scripts/check-readiness-matrix.mjs",
     "test:completion-audit": "node scripts/check-completion-audit.mjs",
