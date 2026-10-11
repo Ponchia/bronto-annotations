@@ -183,6 +183,12 @@ callbacks, blocking assertions and visual debug boxes use the unchanged
 full-quality semantics; `qualityFormat` changes only the report formatting.
 
 
+For `measure="dom"`, the initial size measurement and changes to the annotation
+collection reconcile all visible note copies. Subsequent `ResizeObserver`
+notifications measure only their changed elements, using computed local CSS
+sizes under zoom and the client rect as fallback. Duplicate observer entries
+for one note are batched, and unchanged values preserve React state identity.
+
 `AnnotationLayerProps.resolvedLayout` is an experimental option for hosts that
 compute the authoritative layout externally, including with the experimental
 `createIncrementalAnnotationLayoutSession`. When provided, the React layer
