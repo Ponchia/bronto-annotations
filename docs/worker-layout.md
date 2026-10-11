@@ -136,12 +136,59 @@ budgets. `jsonWireBytes` estimates serialized compact reply size, while
 `jsonFullBytes` uses an **actual full-layout JSON measurement for the first
 snapshot** and a cached acknowledged full-size estimate on subsequent patches.
 This avoids serializing a multi-megabyte unchanged layout simply for profiling.
-Neither field measures actual browser structured-clone transport bytes. The fixture
-separately reports Worker resolve/encode time, host request `postMessage`
-synchronous time, host patch admission, React Profiler render and next-rAF
-callback time. These timings overlap and are not additive; next-rAF is not
-compositor paint. Use browser profiles and real device data before claiming
-an interactive frame-rate improvement.
+Neither field measures actual browser structured-clone transport bytes.
+
+### Worker transport and React timeline
+
+The Chromium host/Worker fixture now samples `performance.timeOrigin +
+performance.now()` in **both contexts** at request dispatch, first Worker
+message receipt, Worker solver start, Worker reply dispatch, and the first host
+message callback. The resulting measurements distinguish additional delays
+outside the solver:
+
+| Metric | Meaning | Important qualification |
+| --- | --- | --- |
+| `postMessageMs` | Host synchronous `worker.postMessage` call duration | Includes some synchronous clone/dispatch overhead; not network transit |
+| `requestDeliveryMs` | Host dispatch → first Worker message callback | Includes browser clone, queue and Worker scheduling; cross-context clock estimate |
+| `workerQueueMs` | Worker callback → actual solve start | Includes any fixture-only delayed-resolution timer; not solver CPU |
+| `resolverMs` | Synchronous core layout solve inside Worker | Solver CPU, not the complete response time |
+| `encodeMs` | Compute compact patch vs full snapshot + JSON size estimate | JSON size is not actual structured-clone bytes |
+| `responseDeliveryMs` | Worker reply dispatch → host message callback | Includes reply cloning and main-thread event-loop scheduling |
+| `admissionMs` | Host revision validation, patch assembly and structural sharing | Excludes React commit and browser paint |
+| `reactRenderMs` | React Profiler `actualDuration` for annotation subtree | Development/profiling builds only; unavailable in standard React production builds |
+| `reactCommitAfterReceiptMs` | Host reply callback entry → React `useLayoutEffect` after commit | Works in production and development; includes admission/React scheduling, not compositor paint |
+| `rAFMs` | Host request dispatch → next recorded animation-frame callback | **Not** equivalent to actual paint or a stable frame-rate budget |
+
+`requestDeliveryMs`, `workerQueueMs` and `responseDeliveryMs` use cross-context
+epoch-relative timestamps, clamped at zero to absorb small time-origin skew.
+They are approximate queue/delivery intervals, **not isolated structured-clone
+costs**; the numbers should not be summed into an exact critical path because
+some measurements overlap and are taken at different scheduling boundaries.
+The tests assert existence and finite values in real Chromium desktop/mobile
+and optional 200-note cases, with no timing ceilings on shared CI hardware.
+Request supersession, cancellation and Worker ACK behavior remain unchanged.
+
+An additional October 2026 ARM64 Chromium run exposed a more precise
+optimization opportunity for **already acknowledged** compact replies:
+
+| Fixture / 0-note-change obstacle update | Worker solve | Deep comparison + patch encoding | Reply delivery estimate | React commit after host receipt |
+| --- | ---: | ---: | ---: | ---: |
+| 24 notes (mobile) | 27 ms | 68 ms | 0.4 ms | 3.5 ms |
+| 40 notes (desktop) | 68 ms | 113 ms | ~0 ms | 5.4 ms |
+| 200 notes (dense desktop) | 272 ms | **489 ms** | 0.2 ms | 20 ms |
+
+The dense case encoded a **298-byte estimated JSON patch** instead of a
+~28 MB full JSON layout, yet spent far more time comparing candidate/connector
+objects than transferring the compact response or committing the React tree.
+A 200-note **initial snapshot** was different: ~219 ms response-delivery
+estimate and ~505 ms host revision/structural-sharing admission because the
+whole resolved graph had to cross the Worker boundary. These are single-run,
+shared-machine observations—not a regression threshold or proof of exact
+structured-clone costs. They motivate profiling/de-risking the conservative
+`canReuseWorkerAnnotation` value/alias comparator before considering heavier
+Worker scheduling or changing stable public annotation APIs.
+Use browser Performance traces and real device tests before drawing
+conclusions about compositor paint or 60 fps interaction.
 
 ## Actual browser validation
 
