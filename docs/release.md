@@ -87,7 +87,40 @@ A successful trusted `npm publish` may precede public registry visibility by
 minutes. The release workflow checks uncached npm registry HTTP metadata, and
 records the exact published version, dist-tag and integrity once they appear.
 Its observation is advisory: metadata propagation delays do not undo a
-successfully published, immutable npm version.
+successfully published, immutable npm version. **Metadata alone does not mean
+clients can install the new release.** The registry may expose `latest`, the
+new version and its SHA-512 integrity while the actual `.tgz` archive still
+returns HTTP 404. The publishing workflow now performs a *separate*, bounded
+real tarball download and SHA-512 byte check and records the result in the
+release job summary. A pending archive is reported as a warning rather than
+an unsafe instruction to republish an immutable version.
+
+The archive verifier is offline: it consumes the confirmed metadata JSON from
+`verify-published-registry.mjs` and a downloaded archive, verifies the exact
+npm registry URL, checks for a nonempty gzip payload, bounds its size and
+compares its SHA-512 against the public packument:
+
+```bash
+version=X.Y.Z
+proof_dir="$(mktemp -d)"
+curl --fail --silent --show-error \
+  "https://registry.npmjs.org/@ponchia%2fannotations?verify=$version" \
+  -o "$proof_dir/packument.json"
+node scripts/verify-published-registry.mjs \
+  "$proof_dir/packument.json" "$version" latest \
+  > "$proof_dir/confirmed.json"
+curl --fail --silent --show-error \
+  "https://registry.npmjs.org/@ponchia/annotations/-/annotations-$version.tgz" \
+  -o "$proof_dir/package.tgz"
+node scripts/verify-published-tarball.mjs \
+  "$proof_dir/confirmed.json" "$proof_dir/package.tgz"
+```
+
+For prereleases, use the `next` dist-tag instead of `latest`. This checks the
+published bytes without an npm cache; a clean consumer install remains the
+final compatibility check. If archive verification fails, inspect the exact
+published URL and protected release logs before intervening. The release
+workflow's archive observer deliberately does **not** retry `npm publish`.
 
 If an immediate `npm view` reports the previous `latest` or a 404 for the new
 version, verify with a **fresh npm cache** rather than publishing the same

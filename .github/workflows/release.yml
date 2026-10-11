@@ -185,6 +185,33 @@ jobs:
             sleep 10
           done
 
+          # Fresh public packument metadata is only step one: npm's CDN may
+          # advertise a version and SHA-512 digest while returning HTTP 404
+          # for its tarball. Verify real archive bytes before claiming a clean
+          # install can work. Never republish in this observation step.
+          archive_verified=false
+          if [ "$published" = true ]; then
+            archive_url=$(node -p 'JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")).tarball' \
+              "${RUNNER_TEMP}/npm-registry-confirmed.json")
+            # Leave headroom within the protected publish job's 15-minute
+            # timeout even if packument publication took most of its window.
+            for attempt in $(seq 1 12); do
+              if curl --fail --silent --show-error --max-time 15 --max-filesize 33554432 \
+                --proto '=https' -H 'Cache-Control: no-cache' \
+                "$archive_url" -o "${RUNNER_TEMP}/npm-published.tgz" \
+                && node scripts/verify-published-tarball.mjs \
+                  "${RUNNER_TEMP}/npm-registry-confirmed.json" \
+                  "${RUNNER_TEMP}/npm-published.tgz" \
+                  > "${RUNNER_TEMP}/npm-archive-verified.json" \
+                  2> "${RUNNER_TEMP}/npm-archive-last-error.log"; then
+                archive_verified=true
+                break
+              fi
+              echo "npm $version metadata is visible, but the actual tarball has not verified (attempt $attempt/12)."
+              sleep 10
+            done
+          fi
+
           {
             echo ''
             echo '## npm registry state'
@@ -195,6 +222,23 @@ jobs:
               echo '```json'
               cat "${RUNNER_TEMP}/npm-registry-confirmed.json"
               echo '```'
+              echo ''
+              if [ "$archive_verified" = true ]; then
+                echo 'Public npm archive was downloaded and its SHA-512 bytes verified:'
+                echo ''
+                echo '```json'
+                cat "${RUNNER_TEMP}/npm-archive-verified.json"
+                echo '```'
+              else
+                echo '> **Archive not yet installable:** npm metadata and dist-tag are visible, but the actual tarball could not be downloaded and SHA-512 verified within the observation window.'
+                echo ''
+                echo 'An external npm consumer may receive HTTP 404 despite npm reporting this version as latest. Do not republish the immutable version.'
+                if [ -f "${RUNNER_TEMP}/npm-archive-last-error.log" ]; then
+                  echo ''
+                  echo 'Last archive verifier error:'
+                  tail -n 6 "${RUNNER_TEMP}/npm-archive-last-error.log"
+                fi
+              fi
             else
               echo '> npm publish succeeded, but fresh public registry metadata was not visible within the observation window.'
               echo ''
@@ -207,6 +251,13 @@ jobs:
               fi
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+
+          # Observation remains advisory until the immutable publication path
+          # supports idempotent skip-existing recovery. A delayed CDN must not
+          # turn an already-accepted npm publish into an unsafe rerun.
+          if [ "$published" = true ] && [ "$archive_verified" != true ]; then
+            echo '::warning::npm metadata is visible but published tarball bytes are not yet installable/verified.'
+          fi
 
   release-notes:
     name: Publish GitHub release notes
