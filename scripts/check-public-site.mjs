@@ -16,6 +16,7 @@ const examples = [
   'svg-basic',
   'react-basic',
   'react-incremental',
+  'react-worker',
   'bronto-report',
   'dom-basic',
   'vega-basic',
@@ -66,7 +67,7 @@ assert(
 );
 assert(
   examples.every((x) => existing.has('examples/' + x + '/index.html')),
-  'All eleven actual Vite example fixtures must be published',
+  'All twelve actual Vite example fixtures must be published',
 );
 
 const pages = [...existing].filter((x) => extname(x) === '.html');
@@ -181,5 +182,5 @@ console.log(
     pages.length +
     ' HTML pages, ' +
     links +
-    ' internal links, eleven compiled examples, docs search, social assets and a live engine playground.',
+    ' internal links, twelve compiled examples, docs search, social assets and a live engine playground.',
 );
