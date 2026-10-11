@@ -82,3 +82,14 @@ anchors, and host-owned edit patches are browser-proven and test-proven.
   React Flow diagram geometry; broader production-specific Vega, Mermaid, D2,
   and editing surfaces should still keep feeding friction reports before
   widening `0.1.x` stability promises.
+
+### Mermaid 12 clean browser consumer
+
+The optional Node 22 compatibility lane (`npm run test:compatibility:mermaid12`)
+installs Mermaid 12.1 alongside a packed version of the annotations package
+in a fresh Vite project and exercises both a rendered flowchart and sequence
+diagram in Chromium on desktop and mobile. It checks label and stable data
+hooks, path anchors, obstacles, emitted SVG notes/connectors and target
+alignment without replacing the repository's Mermaid 11 / Node 20 lane.
+Mermaid 12 requires Node 22.12+; it does **not** raise the annotations
+package's Node 20 engine floor.

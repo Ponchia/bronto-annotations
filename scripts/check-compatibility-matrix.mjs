@@ -7,6 +7,7 @@ const compatibility = await read('docs/compatibility.md');
 const ciWorkflow = await read('.github/workflows/ci.yml');
 const packedSmoke = await read('scripts/smoke-packed-consumer.mjs');
 const laneSmoke = await read('scripts/smoke-compatibility-lanes.mjs');
+const mermaid12Lane = await read('scripts/smoke-mermaid12-browser.mjs');
 
 const expectedPeers = {
   '@terrastruct/d2': '>=0.1.0',
@@ -31,6 +32,7 @@ const expectedNodeLaneLabels = ['Node 20', 'Node 22'];
 assert.equal(pkg.engines?.node, '>=20.19.0', 'package.json must declare the supported Node floor');
 assert.equal(pkg.scripts?.['test:compatibility'], 'node scripts/check-compatibility-matrix.mjs');
 assert.equal(pkg.scripts?.['test:compatibility:lanes'], 'npm run build && node scripts/smoke-compatibility-lanes.mjs');
+assert.equal(pkg.scripts?.['test:compatibility:mermaid12'], 'npm run build && node scripts/smoke-mermaid12-browser.mjs');
 assert.ok(pkg.scripts?.check?.includes('npm run test:compatibility'), 'npm run check must include test:compatibility');
 assert.ok(pkg.scripts?.check?.includes('npm run test:compatibility:lanes'), 'npm run check must include test:compatibility:lanes');
 assert.equal(pkg.dependencies, undefined, 'root runtime dependencies must stay absent');
@@ -47,6 +49,20 @@ for (const [peer, range] of Object.entries(expectedPeers)) {
   assert.equal(pkg.peerDependencies?.[peer], range, `${peer} peer range must match compatibility matrix`);
   assert.equal(pkg.peerDependenciesMeta?.[peer]?.optional, true, `${peer} peer must be marked optional`);
   assertIncludes(compatibility, `| ${peerLabel(peer)} | \`${range}\` |`, 'docs/compatibility.md');
+}
+
+// Keep the newer Mermaid 12 compatibility proof isolated to Node 22: the
+// package still supports Node 20 through its Mermaid 11 primary peer lane.
+for (const [content, term, label] of [
+  [ciWorkflow, 'if: matrix.node-version == 22', '.github/workflows/ci.yml'],
+  [ciWorkflow, 'run: npm run test:compatibility:mermaid12', '.github/workflows/ci.yml'],
+  [compatibility, 'Mermaid 12.1', 'docs/compatibility.md'],
+  [compatibility, 'Node >=22.12.0', 'docs/compatibility.md'],
+  [mermaid12Lane, 'mermaid@12.1.0', 'scripts/smoke-mermaid12-browser.mjs'],
+  [mermaid12Lane, 'playwright', 'scripts/smoke-mermaid12-browser.mjs'],
+  [mermaid12Lane, 'annotationsRendered', 'scripts/smoke-mermaid12-browser.mjs']
+]) {
+  assertIncludes(content, term, label);
 }
 
 for (const [dependency, term] of Object.entries(expectedDevDependencyTerms)) {
