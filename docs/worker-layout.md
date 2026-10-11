@@ -122,9 +122,16 @@ state, scheduling and cancellation. The synchronous library API is unchanged.
    synchronous Worker CPU; cancellation remains a host-level decision.
 
 The comparison checks plain structured-cloneable data *by value*, including
-own keys and `undefined`. It conservatively marks non-plain/cyclic metadata as
-changed instead of incorrectly retaining a stale React object. The host must
-not mutate previously resolved layout objects in place. Global changes are
+own keys and `undefined`. It also checks the **topology of shared references**:
+if two metadata properties formerly referred to the same object but now hold
+independent equal-looking copies (or vice versa), the annotation is treated
+as changed. Equivalent structured-cloned objects with the same sharing pattern
+remain eligible for reuse, including the natural aliases in resolved geometry.
+Non-plain/cyclic metadata is conservatively treated as changed instead of
+retaining a stale React node. A malformed patch or missing layout fields must
+raise a revision mismatch so the host can request an authoritative snapshot,
+not crash with a generic property-access error. The host must not mutate
+previously resolved layout objects in place. Global changes are
 carried in every patch and all reconstructed results are still compared
 against an independent fresh full resolution in Chromium.
 

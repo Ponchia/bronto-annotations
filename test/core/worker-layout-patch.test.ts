@@ -118,6 +118,71 @@ describe('consumer-owned revisioned Worker layout transport', () => {
     expect(() => applyWorkerLayout(state, { ...result, count: 9 })).toThrow('count');
   });
 
+  it('detects changes in shared-reference aliasing while retaining matching clone graphs', () => {
+    const reused = { status: 'ready', values: [2, 4, 6] };
+    const previous = { first: reused, second: reused };
+    const sameSharing = structuredClone(previous);
+    expect(sameSharing.first).toBe(sameSharing.second);
+    expect(canReuseWorkerAnnotation(previous, sameSharing)).toBe(true);
+
+    const split = {
+      first: { status: 'ready', values: [2, 4, 6] },
+      second: { status: 'ready', values: [2, 4, 6] }
+    };
+    expect(canReuseWorkerAnnotation(previous, split)).toBe(false);
+    expect(canReuseWorkerAnnotation(split, previous)).toBe(false);
+    expect(canReuseWorkerAnnotation(split, structuredClone(split))).toBe(true);
+
+    const left = { x: 1 };
+    const right = { x: 1 };
+    expect(canReuseWorkerAnnotation({ a: left, b: right }, { a: left, b: left })).toBe(false);
+  });
+
+  it('sends an actual patch when metadata aliasing changes without moving geometry', () => {
+    const source = options(9);
+    const shared = { source: 'user', properties: ['a', 'b'] };
+    source.annotations[8]!.metadata = { first: shared, second: shared };
+    const before = resolveAnnotationLayout(source);
+    const updatedOptions = structuredClone(source);
+    updatedOptions.annotations[8]!.metadata = {
+      first: { source: 'user', properties: ['a', 'b'] },
+      second: { source: 'user', properties: ['a', 'b'] }
+    };
+    const after = resolveAnnotationLayout(updatedOptions);
+    const { result, applied } = encodeAndApply(before, after);
+    expect(result.kind).toBe('patch');
+    if (result.kind !== 'patch') throw new Error('Expected compact patch');
+    expect(result.changed.map((entry) => entry.index)).toEqual([8]);
+    expect(applied.reused).toBe(8);
+    const metadata = applied.state.layout.annotations[8]!.annotation.metadata!;
+    expect(metadata.first).not.toBe(metadata.second);
+    for (let i = 0; i < 8; i += 1) {
+      expect(applied.state.layout.annotations[i]).toBe(before.annotations[i]);
+    }
+  });
+
+  it('recovers via revision mismatch for missing fields or malformed reply entries', () => {
+    const before = sample(8);
+    const response = encodeWorkerLayout(3, 2, before, { revision: 2, layout: before });
+    if (response.kind !== 'patch') throw new Error('Expected compact no-op patch');
+    const state = { revision: 2, layout: before };
+    const invalid = (value: unknown) => () => applyWorkerLayout(state, value as typeof response);
+
+    expect(invalid({ ...response, changed: [null] }))
+      .toThrow(LayoutRevisionMismatchError);
+    expect(invalid({ ...response, changed: [null] }))
+      .toThrow('strictly ascending');
+    expect(invalid({ ...response, fields: undefined }))
+      .toThrow(LayoutRevisionMismatchError);
+    expect(invalid({ ...response, fields: { bounds: before.bounds } }))
+      .toThrow('authoritative layout fields');
+    expect(invalid({ ...response, kind: 'unexpected' }))
+      .toThrow(LayoutRevisionMismatchError);
+    expect(invalid({ kind: 'snapshot', revision: 3, baseRevision: 2, layout: null }))
+      .toThrow('snapshot');
+    expect(state.layout).toBe(before);
+  });
+
   it('never confuses omitted keys, sparse array sizes, or cyclic/opaque metadata with equality', () => {
     expect(canReuseWorkerAnnotation({ data: { info: undefined } }, { data: {} })).toBe(false);
     expect(canReuseWorkerAnnotation([,], new Array(2))).toBe(false);
