@@ -6,11 +6,9 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
-export function verifyPublishedRegistry(metadata, version, distTag) {
+export function verifyPublishedVersion(metadata, version) {
   assert.match(version, /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/, 'Expected a release version');
-  assert.ok(['latest', 'next'].includes(distTag), 'Unexpected npm dist-tag');
   assert.equal(metadata?.name, '@ponchia/annotations', 'Registry response must describe the expected package');
-  assert.equal(metadata?.['dist-tags']?.[distTag], version, `${distTag} has not propagated to ${version}`);
 
   const published = metadata?.versions?.[version];
   assert.equal(published?.version, version, `Package version ${version} is not yet visible`);
@@ -28,10 +26,17 @@ export function verifyPublishedRegistry(metadata, version, distTag) {
   return {
     name: published.name,
     version,
-    distTag,
     integrity: published.dist.integrity,
     tarball: published.dist.tarball
   };
+}
+
+export function verifyPublishedRegistry(metadata, version, distTag) {
+  assert.match(version, /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/, 'Expected a release version');
+  assert.ok(['latest', 'next'].includes(distTag), 'Unexpected npm dist-tag');
+  assert.equal(metadata?.name, '@ponchia/annotations', 'Registry response must describe the expected package');
+  assert.equal(metadata?.['dist-tags']?.[distTag], version, `${distTag} has not propagated to ${version}`);
+  return { ...verifyPublishedVersion(metadata, version), distTag };
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

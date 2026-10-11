@@ -1,0 +1,155 @@
+# Maintainer-triggered, notes-only recovery for an immutable npm version whose
+# original tag-driven publish succeeded but its downstream GitHub Release did
+# not complete. Never publish npm from this workflow and never retag anything.
+name: Recover GitHub Release Notes
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Existing published immutable tag, e.g. v0.6.2'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: recover-release-notes-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+jobs:
+  recover-notes:
+    name: Verify signed npm artifact and recover release notes
+    # Only run this trusted write-permission workflow from protected main.
+    if: github.repository == 'Ponchia/bronto-annotations' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout trusted main
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.14.0
+          registry-url: https://registry.npmjs.org
+
+      - name: Validate existing immutable tag and source commit
+        id: source
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          # Treat workflow_dispatch input only as a validated value. Never
+          # interpolate the untrusted tag expression directly into shell code.
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo '::error::Expected an existing vX.Y.Z or vX.Y.Z-prerelease tag'
+            exit 1
+          fi
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          git fetch --no-tags origin "refs/tags/$RELEASE_TAG"
+          commit=$(git rev-parse 'FETCH_HEAD^{commit}')
+          if ! git merge-base --is-ancestor "$commit" refs/remotes/origin/main; then
+            echo '::error::Recovery tag is not reachable from protected main'
+            exit 1
+          fi
+          version="${RELEASE_TAG#v}"
+          tagged_version=$(git show "$commit:package.json" | node -p 'JSON.parse(require("node:fs").readFileSync(0, "utf8")).version')
+          if [ "$version" != "$tagged_version" ]; then
+            echo '::error::Tag version differs from immutable package.json'
+            exit 1
+          fi
+          git show "$commit:CHANGELOG.md" > "${RUNNER_TEMP}/tagged-CHANGELOG.md"
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+
+      - name: Install npm signature verifier
+        run: npm install -g npm@^11.5.1
+
+      - name: Verify immutable public registry tarball bytes
+        env:
+          RELEASE_VERSION: ${{ steps.source.outputs.version }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 25 \
+            -H 'Cache-Control: no-cache' \
+            "https://registry.npmjs.org/@ponchia%2fannotations?recover=${GITHUB_RUN_ID}" \
+            -o "${RUNNER_TEMP}/packument.json"
+          # Check the immutable version rather than `latest`: a later release
+          # may have legitimately advanced the dist-tag since this failure.
+          node scripts/verify-published-version.mjs \
+            "${RUNNER_TEMP}/packument.json" "$RELEASE_VERSION" \
+            > "${RUNNER_TEMP}/confirmed-metadata.json"
+          archive_url=$(node -p 'JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")).tarball' \
+            "${RUNNER_TEMP}/confirmed-metadata.json")
+          curl --fail --silent --show-error --max-time 30 --max-filesize 33554432 \
+            --proto '=https' "$archive_url" \
+            -o "${RUNNER_TEMP}/published-package.tgz"
+          node scripts/verify-published-tarball.mjs \
+            "${RUNNER_TEMP}/confirmed-metadata.json" \
+            "${RUNNER_TEMP}/published-package.tgz" \
+            > "${RUNNER_TEMP}/verified-package-bytes.json"
+
+      - name: Verify npm signatures and signed GitHub workflow identity
+        env:
+          RELEASE_TAG: ${{ steps.source.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.source.outputs.version }}
+          RELEASE_COMMIT: ${{ steps.source.outputs.commit }}
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/signature-consumer"
+          cd "${RUNNER_TEMP}/signature-consumer"
+          echo '{"name":"annotations-recovery-signature-check","private":true,"type":"module"}' > package.json
+          npm install --ignore-scripts --no-audit --no-fund \
+            "@ponchia/annotations@$RELEASE_VERSION"
+          # npm audit checks cryptographic registry, publish and Sigstore
+          # attestations. The helper then checks the signed source identity.
+          npm audit signatures --json --include-attestations \
+            > "${RUNNER_TEMP}/npm-verified-attestations.json"
+          cd "$GITHUB_WORKSPACE"
+          node scripts/verify-published-provenance.mjs \
+            "${RUNNER_TEMP}/npm-verified-attestations.json" \
+            "${RUNNER_TEMP}/confirmed-metadata.json" \
+            "$RELEASE_TAG" "$RELEASE_COMMIT" \
+            > "${RUNNER_TEMP}/verified-source.json"
+
+      - name: Extract immutable release notes from tagged changelog
+        env:
+          RELEASE_TAG: ${{ steps.source.outputs.tag }}
+        run: |
+          set -euo pipefail
+          node scripts/changelog-section.mjs "$RELEASE_TAG" \
+            "${RUNNER_TEMP}/tagged-CHANGELOG.md" > "${RUNNER_TEMP}/release-body.md"
+          test -s "${RUNNER_TEMP}/release-body.md"
+
+      - name: Create notes only when GitHub release is missing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.source.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists: no mutation necessary."
+          else
+            args=("$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag
+              --title "$RELEASE_TAG" --notes-file "${RUNNER_TEMP}/release-body.md")
+            if [[ "$RELEASE_TAG" == *-* ]]; then args+=(--prerelease); fi
+            if ! gh release create "${args[@]}"; then
+              # An existing release may have been created concurrently by the
+              # original tag workflow. Do not overwrite its notes.
+              gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
+            fi
+          fi
+          {
+            echo '## Verified release-notes recovery'
+            echo ''
+            echo "Release: $RELEASE_TAG"
+            echo ''
+            echo 'Published npm archive SHA-512 verified, npm attestations cryptographically verified, and signed source repository/tag/commit matched. No npm publish was attempted.'
+          } >> "$GITHUB_STEP_SUMMARY"

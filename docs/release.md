@@ -134,6 +134,33 @@ npm --cache="$(mktemp -d)" view @ponchia/annotations@X.Y.Z version dist.integrit
 Check the exact version on `https://registry.npmjs.org/@ponchia%2fannotations`
 and inspect the protected publish step before considering intervention.
 
+### Recover missing GitHub Release notes without republishing npm
+
+If the protected tag-driven npm publish succeeded but a later GitHub Release
+step failed, **do not rerun the original tag workflow**: a second `npm publish`
+for the same immutable version will fail. A separate, maintainer-initiated
+notes-only workflow is available:
+
+```bash
+gh workflow run recover-release-notes.yml \
+  --repo Ponchia/bronto-annotations --ref main \
+  -f release_tag=vX.Y.Z
+```
+
+The recovery verifies the existing tag points to a commit reachable from
+protected main and matches its immutable `package.json` version. It then
+checks the exact version on npm, downloads its real tarball and validates its
+SHA-512, runs npm's cryptographic signature/provenance audit, and verifies the
+signed source repository, release workflow, tag and **source commit SHA**.
+Only after those checks does it create the missing GitHub Release notes from
+the *tagged* changelog. If the release already exists, it leaves it untouched.
+
+This workflow is manual-only, uses `contents: write` solely for the GitHub
+release, has no npm publish command or npm token, and does not mutate tags.
+It cannot recover a failed npm upload or publish a missing package. Its audit
+requires signed attestations from the original protected release; if those are
+missing or differ from the immutable tag, recovery fails closed.
+
 ## Post-Release
 
 - Confirm clean install smoke in a new consumer:
