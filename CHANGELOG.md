@@ -6,6 +6,19 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.6.3 - 2026-10-11
+
+### Performance
+
+- Preserve unchanged React SVG editing handle objects across committed incremental layout updates, reducing redundant editing-control reconciliation when the host only changes a later annotation.
+- Stabilize semantically equivalent inline editing options and pointer/keyboard event-handler identities while dispatching through the latest committed host geometry and callbacks.
+- Extend the Chromium desktop, mobile and 200-note profiling fixture with React Profiler render durations and committed render counts. Observed improvements are illustrative rather than strict timing budgets.
+
+### Verification
+
+- Add React regression coverage for unchanged edit-handle identities, no-op input recreation, late-note commits, updated pointer callback targeting, mutable editing options and keyboard steps.
+- Preserve existing DOM semantics, accessibility, deterministic layout geometry and the complete headless API and dependency contract.
+
 ## 0.6.2 - 2026-10-10
 
 ### Performance
