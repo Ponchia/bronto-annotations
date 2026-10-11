@@ -51,6 +51,13 @@ jobs:
       - name: TypeScript 7 clean declaration consumer
         run: npm run test:compatibility:typescript7
 
+      # Browser bundlers emit Worker assets differently in production than
+      # during dev. Keep this explicit Vite production proof in the Node 22
+      # lane without adding a second browser build to every Node 20 gate.
+      - name: Verify bundled module Worker integration
+        if: matrix.node-version == 22
+        run: npm run test:browser:worker:production
+
       # Mermaid 12 requires Node >=22.12. Keep Mermaid 11 as the regular
       # Node 20-tested peer instead of raising this package's engine floor.
       - name: Mermaid 12 isolated browser compatibility

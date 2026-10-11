@@ -360,3 +360,16 @@ adding owner-height-based clearance candidates raised quality from 0 to 86
 with no note/obstacle overlap. See `docs/dogfood-external-consumer-report.md`
 for the strict host evidence and browser repro. This is a host integration
 recipe, not an automatic change to the deterministic core placement policy.
+
+### Off-main-thread full-layout proof
+
+`npm run test:browser:worker` validates a **consumer-owned** module Worker that
+calculates full layouts separately from React. It covers real desktop/mobile
+Chromium, out-of-order responses, stale/cancelled result handling and exact
+fresh-layout parity. The Node 22 CI lane also verifies the actual bundled Vite
+production Worker. `npm run benchmark:browser:worker` adds a 200-annotation
+case outside the required CI performance gates. The host still owns the Worker,
+revision tokens and `AnnotationLayer.resolvedLayout` updates; the package's
+synchronous solver stays the default. See [the Worker integration
+recipe](worker-layout.md) for limitations around CPU cancellation, structured
+cloning, React identity, and end-to-end timings.

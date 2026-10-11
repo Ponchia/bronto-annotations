@@ -18,6 +18,8 @@ incubation evidence and future work.
 - [Integration recipes](integration-recipes.md): host integration examples.
 - [Accessibility](accessibility.md), [performance](performance.md), and
   [release](release.md): maintained quality and release contracts.
+- [Off-main-thread layout](worker-layout.md): tested consumer-owned Web Worker
+  recipe for expensive full reflows, stale replies, and React rendering.
 
 The source tree, exports, tests, and generated package artifacts remain the
 authority when reference prose disagrees.
