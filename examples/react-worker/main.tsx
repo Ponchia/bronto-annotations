@@ -28,11 +28,11 @@ const initialAnnotations: Annotation[] = Array.from({ length: count }, (_, index
     x: 60 + (index % 9) * 125,
     y: 185 + Math.floor(index / 9) * 235
   } },
-  note: { title: `Signal ${index + 1}`, body: 'Resolved in a module Worker.' },
+  note: { title: `Signal ${index + 1}`, body: 'Worker result' },
   placement: { side: index % 2 === 0 ? 'top' : 'bottom', offset: [29, 48], align: 'center' },
   connector: { type: 'straight', routing: 'none' }
 }));
-const noteSizes = Object.fromEntries(initialAnnotations.map((a) => [a.id, { width: 106, height: 52 }]));
+const noteSizes = Object.fromEntries(initialAnnotations.map((a) => [a.id, { width: 106, height: 60 }]));
 const initialOptions: LayoutOptions = {
   annotations: initialAnnotations,
   bounds,
