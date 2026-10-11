@@ -171,6 +171,31 @@ making unverified spatial independence claims. Capturing input value snapshots
 has a small cost per update; benchmark under representative host density before
 enabling the experimental optimization broadly.
 
+### React edit-handle reuse during committed updates
+
+A committed incremental layout preserves unchanged resolved note identities, but
+React editing hosts used to rebuild every SVG edit control anyway. In
+particular, a common inline `editable={{ includeAnchor: true }}` prop
+recreated the options wrapper, and the pointer/keyboard handlers were tied to
+the layout-array identity. `AnnotationLayer` now snapshots the supported scalar
+editing options, reuses handle objects for unchanged resolved annotations,
+and dispatches pointer/keyboard interactions through the latest committed host
+callbacks and geometry. This keeps unchanged SVG handle subtrees memoized while
+still updating their target behavior and accessibility labels when notes or
+editing options actually change.
+
+The browser proof now captures React Profiler *render* duration and committed
+render count in addition to full-solver parity and the next animation frame.
+One heavily shared devbox profiling pair on a 200-note desktop fixture observed
+approximately 58 ms → 23 ms in React render duration and 100 ms → 42 ms to the
+next animation frame for appending one note (200 winners reused). A 200-note
+no-op input recreation observed 42 ms → 19 ms React render duration. These are
+**single-run, resource-contention-sensitive observations**, not controlled
+A/B data, compositor paint measurements, or guarantees of 60 fps. Automated
+checks assert editing-handle identity, current callback semantics, keyboard
+step changes and exact fresh-layout parity instead of imposing fragile timing
+limits. Earlier/route-changing edits can still incur substantial work.
+
 ### Actual browser interaction evidence
 
 `npm run test:browser:incremental` runs a bounded Playwright/Chromium test on

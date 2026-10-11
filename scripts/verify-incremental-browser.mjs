@@ -87,6 +87,10 @@ try {
         assert.equal(event.noteCount, expectedNotes, `${config.name}/${buttonId} painted note count`);
         assert.ok(event.resolverMs >= 0 && Number.isFinite(event.resolverMs));
         assert.ok(event.paintMs >= 0 && Number.isFinite(event.paintMs));
+        assert.ok(Number.isFinite(event.reactRenderMs) && event.reactRenderMs >= 0,
+          `${config.name}/${buttonId}: missing React Profiler render duration`);
+        assert.ok(Number.isInteger(event.reactCommitCount) && event.reactCommitCount >= 1,
+          `${config.name}/${buttonId}: missing React Profiler commit count`);
         if (expectedReused !== null) {
           assert.equal(event.reused, expectedReused, `${config.name}/${buttonId} resolved prefix identity`);
         }

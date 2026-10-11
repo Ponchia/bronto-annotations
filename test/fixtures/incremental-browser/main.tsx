@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { Profiler, useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AnnotationLayer } from '@ponchia/annotations/react';
 import {
@@ -43,6 +43,8 @@ type Result = {
   reused: number;
   resolverMs: number;
   paintMs?: number;
+  reactRenderMs?: number;
+  reactCommitCount?: number;
   qualityScore?: number;
   noteCount?: number;
   exactParity?: boolean;
@@ -96,6 +98,18 @@ function App() {
     if (!window.__incrementalBrowser!.ready) {
       window.__stableFirstNote = document.querySelector('g.pa-annotation[data-annotation-id="annotation-000"]');
       window.__incrementalBrowser!.ready = true;
+    }
+  }, []);
+
+  const onAnnotationRender = useCallback((
+    _id: string,
+    _phase: 'mount' | 'update' | 'nested-update',
+    actualDuration: number
+  ) => {
+    const event = window.__incrementalBrowser?.events.at(-1);
+    if (event && event.paintMs === undefined) {
+      event.reactRenderMs = Math.round(((event.reactRenderMs ?? 0) + actualDuration) * 1000) / 1000;
+      event.reactCommitCount = (event.reactCommitCount ?? 0) + 1;
     }
   }, []);
 
@@ -157,17 +171,19 @@ function App() {
             return <rect key={item.id} x={pt.x - 12} y={pt.y - 12} width={24} height={24} rx={4} fill="#64748b" />;
           })}
         </svg>
-        <AnnotationLayer
-          annotations={annotations}
-          bounds={bounds}
-          defaultNoteSize={{ width: 92, height: 32 }}
-          obstacles={obstacles}
-          resolvedLayout={layout}
-          label="Incremental performance annotation layer"
-          previewEdits
-          editable={{ includeAnchor:true }}
-          style={{position:'absolute',inset:0,pointerEvents:'none'}}
-        />
+        <Profiler id="annotation-layer" onRender={onAnnotationRender}>
+          <AnnotationLayer
+            annotations={annotations}
+            bounds={bounds}
+            defaultNoteSize={{ width: 92, height: 32 }}
+            obstacles={obstacles}
+            resolvedLayout={layout}
+            label="Incremental performance annotation layer"
+            previewEdits
+            editable={{ includeAnchor:true }}
+            style={{position:'absolute',inset:0,pointerEvents:'none'}}
+          />
+        </Profiler>
       </section>
     </main>
   );
