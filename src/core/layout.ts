@@ -146,6 +146,23 @@ export function createIncrementalAnnotationLayoutSession(options: LayoutOptions)
         }
       }
 
+      // A changed (or newly appended) note can reference an object from an
+      // earlier note. If that earlier note was cloned by the host, retaining
+      // the old prefix object would break the new cross-note identity graph.
+      // The ordinary fingerprint already proves unchanged *values*; here we
+      // additionally require source identity only for cross-prefix aliases
+      // that will be reconstructed in the changed suffix.
+      if (reuse > 0 && reuse < nextCount) {
+        const ordered = orderAnnotations(next.annotations);
+        for (let index = reuse; index < nextCount; index += 1) {
+          for (const owner of nextSnapshot.crossAliasOwners[index] ?? []) {
+            if (owner < reuse && ordered[owner] !== current.annotations[owner]?.annotation) {
+              reuse = owner;
+            }
+          }
+        }
+      }
+
       // Preserve the previous object graph for no-op updates so rendered
       // React hosts can avoid rerendering unaffected annotations.
       const identicalLayout = reuse === nextCount
@@ -173,9 +190,12 @@ type IncrementalSnapshot = {
   globals: string | undefined;
   obstacles: Box[];
   annotations: Array<string | undefined>;
+  crossAliasOwners: number[][];
 };
 
 function captureIncrementalSnapshot(options: LayoutOptions): IncrementalSnapshot {
+  const ordered = orderAnnotations(options.annotations);
+  const cross = crossAnnotationTopology(ordered);
   const globals = incrementalFingerprint({
     bounds: options.bounds,
     padding: options.padding,
@@ -189,10 +209,14 @@ function captureIncrementalSnapshot(options: LayoutOptions): IncrementalSnapshot
     // place after the prior update, so retaining the original references is
     // unsafe. Invalid host boxes are removed by the full resolver too.
     obstacles: (options.obstacles ?? []).map(normalizeBox).filter(isFiniteBox),
-    annotations: orderAnnotations(options.annotations).map((annotation) => incrementalFingerprint({
-      annotation,
-      noteSize: noteSizeFor(annotation, options)
-    }))
+    annotations: ordered.map((annotation, index) => {
+      const value = incrementalFingerprint({ annotation, noteSize: noteSizeFor(annotation, options) });
+      const aliases = cross?.signatures[index];
+      return value === undefined || aliases === undefined
+        ? undefined
+        : JSON.stringify([value, aliases]);
+    }),
+    crossAliasOwners: cross?.owners ?? []
   };
 }
 
@@ -276,36 +300,139 @@ function orderAnnotations(annotations: Annotation[]): Annotation[] {
   });
 }
 
-// JSON-compatible geometry snapshots are cheap to compare and capture edits
-// even if a host mutates its input in place. RegExp values matter for wrapping;
-// functions are tracked by identity. Unsupported object types and circular
-// structures cause conservative full recomputation instead of stale reuse.
+type CrossAnnotationTopology = { signatures: string[]; owners: number[][] };
+
+function crossAnnotationTopology(annotations: Annotation[]): CrossAnnotationTopology | undefined {
+  const firstOwner = new WeakMap<object, { index: number; path: string }>();
+  const signatures: string[] = [];
+  const owners: number[][] = [];
+  try {
+    for (let index = 0; index < annotations.length; index += 1) {
+      const inspected = new WeakSet<object>();
+      const aliases: Array<[path: string, owner: number, ownerPath: string]> = [];
+      const referencedOwners = new Set<number>();
+      const pending: Array<{ value: unknown; path: string }> = [
+        { value: annotations[index], path: '$' }
+      ];
+      while (pending.length > 0) {
+        const next = pending.pop()!;
+        const value = next.value;
+        if (!value || typeof value !== 'object' || inspected.has(value)) continue;
+        inspected.add(value);
+        const first = firstOwner.get(value);
+        if (first && first.index !== index) {
+          aliases.push([next.path, first.index, first.path]);
+          referencedOwners.add(first.index);
+        } else if (!first) {
+          firstOwner.set(value, { index, path: next.path });
+        }
+        // Reverse push to preserve property traversal order. Repeated aliases
+        // *within* a note are captured by the per-note fingerprint instead.
+        const keys = Reflect.ownKeys(value);
+        for (let keyIndex = keys.length - 1; keyIndex >= 0; keyIndex -= 1) {
+          const key = keys[keyIndex]!;
+          if (typeof key !== 'string') throw new Error('Symbol host metadata');
+          const descriptor = Object.getOwnPropertyDescriptor(value, key);
+          if (!descriptor || !('value' in descriptor)) {
+            throw new Error('Accessor-backed host metadata');
+          }
+          pending.push({ value: descriptor.value, path: `${next.path}/${JSON.stringify(key)}` });
+        }
+      }
+      signatures.push(JSON.stringify(aliases));
+      owners.push([...referencedOwners]);
+    }
+    return { signatures, owners };
+  } catch {
+    // Unsafe cross-note topology disables reuse through undefined fingerprints.
+    return undefined;
+  }
+}
+
+// Stable and alias-aware snapshots of host inputs. A naive JSON.stringify
+// conflates shared-reference metadata with independent objects of the same
+// value, omitted keys with undefined values, sparse array slots with explicit
+// undefined, and -0 with +0. Any of those would incorrectly preserve a stale
+// resolved annotation after a committed edit. Use an unambiguous tagged value
+// representation, including first-occurrence IDs for repeated references.
+//
+// This is deliberately conservative for cyclic, opaque or accessor-backed
+// values: if no trustworthy snapshot exists, the session resolves afresh.
+// The metadata may be host-supplied, so never invoke getters or toJSON hooks.
 const fingerprintFunctions = new WeakMap<Function, number>();
 let fingerprintFunctionCount = 0;
 function incrementalFingerprint(input: unknown): string | undefined {
-  try {
-    return JSON.stringify(input, (_key, value: unknown) => {
-      if (typeof value === 'function') {
+  const seen = new WeakMap<object, number>();
+  const active = new WeakSet<object>();
+  let nextId = 0;
+
+  function encode(value: unknown): unknown {
+    if (value === null) return ['null'];
+    if (value === undefined) return ['undefined'];
+    switch (typeof value) {
+      case 'boolean': return ['boolean', value];
+      case 'string': return ['string', value];
+      case 'number':
+        if (Number.isNaN(value)) return ['nan'];
+        if (Object.is(value, -0)) return ['negative-zero'];
+        if (!Number.isFinite(value)) return ['nonfinite', String(value)];
+        return ['number', value];
+      case 'bigint': return ['bigint', String(value)];
+      case 'symbol': throw new Error('Uncloneable symbol metadata');
+      case 'function': {
         let id = fingerprintFunctions.get(value);
         if (id === undefined) {
           id = ++fingerprintFunctionCount;
           fingerprintFunctions.set(value, id);
         }
-        return { $functionId: id };
+        return ['function', id];
       }
-      if (value instanceof RegExp) return { $regexp: value.source, $flags: value.flags };
-      if (typeof value === 'number' && !Number.isFinite(value)) return { $nonFinite: String(value) };
-      if (typeof value === 'bigint') return { $bigint: String(value) };
-      if (value && typeof value === 'object' && !Array.isArray(value)
-        && Object.getPrototypeOf(value) !== Object.prototype
-        && Object.getPrototypeOf(value) !== null) {
-        // Non-plain objects are unsupported unless they have a useful
-        // stable JSON representation; fail safe on host/runtime instances.
-        throw new Error('Opaque snapshot value');
+      case 'object': break;
+    }
+
+    const object = value as object;
+    if (active.has(object)) throw new Error('Cyclic annotation metadata');
+    const repeated = seen.get(object);
+    if (repeated !== undefined) return ['reference', repeated];
+    const id = ++nextId;
+    seen.set(object, id);
+    active.add(object);
+    try {
+      if (object instanceof RegExp) {
+        // Match the supported splitter's actual state, including lastIndex
+        // when a host mutates a global/sticky expression in place.
+        if (Reflect.ownKeys(object).some((key) => key !== 'lastIndex')) {
+          throw new Error('Unsupported RegExp metadata fields');
+        }
+        return ['regexp', id, object.source, object.flags, encode(object.lastIndex)];
       }
-      return value;
-    });
+      const array = Array.isArray(object);
+      const prototype = Object.getPrototypeOf(object);
+      if (array ? prototype !== Array.prototype
+        : prototype !== Object.prototype && prototype !== null) {
+        throw new Error('Unsupported host metadata type');
+      }
+      const entries: unknown[] = [];
+      for (const key of Reflect.ownKeys(object)) {
+        if (typeof key !== 'string') throw new Error('Symbol property in metadata');
+        if (array && key === 'length') continue;
+        const descriptor = Object.getOwnPropertyDescriptor(object, key);
+        if (!descriptor || !descriptor.enumerable || !('value' in descriptor)) {
+          throw new Error('Accessor or hidden property in host metadata');
+        }
+        entries.push([key, encode(descriptor.value)]);
+      }
+      return array
+        ? ['array', id, (object as unknown[]).length, entries]
+        : ['object', id, prototype === null ? 'null-prototype' : 'plain', entries];
+    } finally {
+      active.delete(object);
+    }
+  }
+  try {
+    return JSON.stringify(encode(input));
   } catch {
+    // Unsafe snapshots disable prefix reuse, never a successful full solve.
     return undefined;
   }
 }
