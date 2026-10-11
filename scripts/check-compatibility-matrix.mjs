@@ -8,6 +8,7 @@ const ciWorkflow = await read('.github/workflows/ci.yml');
 const packedSmoke = await read('scripts/smoke-packed-consumer.mjs');
 const laneSmoke = await read('scripts/smoke-compatibility-lanes.mjs');
 const mermaid12Lane = await read('scripts/smoke-mermaid12-browser.mjs');
+const typescript7Lane = await read('scripts/smoke-typescript7.mjs');
 
 const expectedPeers = {
   '@terrastruct/d2': '>=0.1.0',
@@ -33,6 +34,7 @@ assert.equal(pkg.engines?.node, '>=20.19.0', 'package.json must declare the supp
 assert.equal(pkg.scripts?.['test:compatibility'], 'node scripts/check-compatibility-matrix.mjs');
 assert.equal(pkg.scripts?.['test:compatibility:lanes'], 'npm run build && node scripts/smoke-compatibility-lanes.mjs');
 assert.equal(pkg.scripts?.['test:compatibility:mermaid12'], 'npm run build && node scripts/smoke-mermaid12-browser.mjs');
+assert.equal(pkg.scripts?.['test:compatibility:typescript7'], 'npm run build && node scripts/smoke-typescript7.mjs');
 assert.ok(pkg.scripts?.check?.includes('npm run test:compatibility'), 'npm run check must include test:compatibility');
 assert.ok(pkg.scripts?.check?.includes('npm run test:compatibility:lanes'), 'npm run check must include test:compatibility:lanes');
 assert.equal(pkg.dependencies, undefined, 'root runtime dependencies must stay absent');
@@ -56,6 +58,11 @@ for (const [peer, range] of Object.entries(expectedPeers)) {
 for (const [content, term, label] of [
   [ciWorkflow, 'if: matrix.node-version == 22', '.github/workflows/ci.yml'],
   [ciWorkflow, 'run: npm run test:compatibility:mermaid12', '.github/workflows/ci.yml'],
+  [ciWorkflow, 'run: npm run test:compatibility:typescript7', '.github/workflows/ci.yml'],
+  [compatibility, 'TypeScript 7.0.2', 'docs/compatibility.md'],
+  [typescript7Lane, 'typescript@7.0.2', 'scripts/smoke-typescript7.mjs'],
+  [typescript7Lane, 'skipLibCheck: false', 'scripts/smoke-typescript7.mjs'],
+  [typescript7Lane, 'resolvedLayout: resolved', 'scripts/smoke-typescript7.mjs'],
   [compatibility, 'Mermaid 12.1', 'docs/compatibility.md'],
   [compatibility, 'Node >=22.12.0', 'docs/compatibility.md'],
   [mermaid12Lane, 'mermaid@12.1.0', 'scripts/smoke-mermaid12-browser.mjs'],
