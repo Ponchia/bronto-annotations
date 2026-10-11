@@ -861,14 +861,14 @@ async function verifyPublicWorkerDemo(page, label) {
   await page.waitForFunction(() => window.__annotationsWorkerDemo?.ready === true, null, { timeout: 30_000 });
   const initial = await page.evaluate(() => window.__annotationsWorkerDemo);
   assert.equal(initial?.commits, 0, `${label}: the example starts with an authoritative layout`);
-  assert.equal(initial?.freshParity(), true, `${label}: initial layout has deterministic parity`);
+  assert.equal(await page.evaluate(() => window.__annotationsWorkerDemo?.freshParity()), true, `${label}: initial layout has deterministic parity`);
   assert.equal(await page.locator('.pa-annotation').count(), 18, `${label}: shows all annotations`);
 
   await page.locator('#worker-move').click();
   await page.waitForFunction(() => window.__annotationsWorkerDemo?.commits === 1, null, { timeout: 30_000 });
   const moved = await page.evaluate(() => window.__annotationsWorkerDemo);
   assert.equal(moved?.lastAction, 'Moved final anchor', `${label}: commits Worker-computed anchor geometry`);
-  assert.equal(moved?.freshParity(), true, `${label}: moved anchor matches a fresh headless layout`);
+  assert.equal(await page.evaluate(() => window.__annotationsWorkerDemo?.freshParity()), true, `${label}: moved anchor matches a fresh headless layout`);
 
   await page.locator('#worker-obstacle').click();
   await page.waitForFunction(() => window.__annotationsWorkerDemo?.commits === 2, null, { timeout: 30_000 });
@@ -880,7 +880,7 @@ async function verifyPublicWorkerDemo(page, label) {
   await page.waitForFunction(() => (window.__annotationsWorkerDemo?.discarded ?? 0) >= 1, null, { timeout: 30_000 });
   const latest = await page.evaluate(() => window.__annotationsWorkerDemo);
   assert.equal(latest?.lastAction, 'Newer revision', `${label}: old Worker reply is discarded`);
-  assert.equal(latest?.freshParity(), true, `${label}: accepted Worker revision stays authoritative`);
+  assert.equal(await page.evaluate(() => window.__annotationsWorkerDemo?.freshParity()), true, `${label}: accepted Worker revision stays authoritative`);
 
   await page.locator('#worker-delay').click();
   await page.waitForFunction(() => window.__annotationsWorkerDemo?.pending === true);
@@ -894,7 +894,7 @@ async function verifyPublicWorkerDemo(page, label) {
   await page.waitForFunction(() => (window.__annotationsWorkerDemo?.discarded ?? 0) >= 2, null, { timeout: 30_000 });
   const afterCancel = await page.evaluate(() => window.__annotationsWorkerDemo);
   assert.equal(afterCancel?.commits, 3, `${label}: cancelled result is not committed`);
-  assert.equal(afterCancel?.freshParity(), true, `${label}: retained layout remains correct`);
+  assert.equal(await page.evaluate(() => window.__annotationsWorkerDemo?.freshParity()), true, `${label}: retained layout remains correct`);
   assert.deepEqual(afterCancel?.errors, [], `${label}: no Worker errors`);
   assert.equal(await page.locator('.pa-annotation').count(), 18, `${label}: notes remain visible`);
 }
