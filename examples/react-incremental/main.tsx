@@ -320,6 +320,12 @@ function App() {
             disabled={view.redoCount === 0} onClick={() => stepHistory('redo')}>Redo</button>
           <span className="history-shortcuts">Undo: Ctrl/⌘ Z · Redo: Ctrl/⌘ Shift Z</span>
         </div>
+        <div className="selection-hint">
+          <span>Click or focus a note on the diagram to select its text.</span>
+          <span role="status" aria-live="polite">
+            Selected: <strong>{selectedTextNote.note.title?.trim() || selectedTextNote.id}</strong>
+          </span>
+        </div>
         <p className="scroll-hint">Swipe sideways to follow the diagram <span aria-hidden="true">↔</span></p>
 
         <div className="stage-scroll" tabIndex={0} aria-label="Scrollable diagram with editable annotations">

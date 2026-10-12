@@ -136,6 +136,8 @@ async function verifyIncremental(browser, origin, viewport, label) {
     await triageNote.click();
     await page.waitForFunction(() =>
       document.querySelector('#text-editor-note')?.value === 'triage');
+    assert.match(await page.locator('.selection-hint [role="status"]').innerText(), /Selected:\s*Triage/,
+      label + ': selecting a canvas note did not update the visible selection status');
     assert.equal(await page.evaluate(() => window.__annotationsExample.changes),
       initialSelectionChanges, label + ': selecting a canvas note committed a diagram edit');
     assert.equal(await page.locator('#undo-edit').isDisabled(), true,
