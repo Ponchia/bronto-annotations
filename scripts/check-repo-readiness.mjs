@@ -4,7 +4,7 @@ import { writeLine } from './log.mjs';
 
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const lock = JSON.parse(await readFile(new URL('../package-lock.json', import.meta.url), 'utf8'));
-const readme = await read('README.md');
+const verification = await read('docs/verification.md');
 const changelog = await read('CHANGELOG.md');
 const contributing = await read('CONTRIBUTING.md');
 const security = await read('SECURITY.md');
@@ -331,7 +331,7 @@ for (const term of [
   'OpenSSF Scorecard',
   'Security policy'
 ]) {
-  assertIncludes(readme, term, 'README.md');
+  assertIncludes(verification, term, 'docs/verification.md');
 }
 
 writeLine('Repository readiness verified: metadata, CI, release, public decisions, templates, lifecycle docs, and package manager policy.');

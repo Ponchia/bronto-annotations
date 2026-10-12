@@ -1,0 +1,138 @@
+# Your first annotation
+
+[Documentation index](README.md) · [Choose an adapter](context-quickstart.md)
+
+The smallest integration has three parts: your host supplies an anchor, the
+engine places a note, and a renderer displays the resolved geometry. Begin with
+one or two notes before adding measurements, editable state, or a Worker.
+
+## Try the existing examples
+
+Use a Node version supported by [the compatibility matrix](compatibility.md).
+From a terminal:
+
+```bash
+git clone https://github.com/Ponchia/bronto-annotations.git
+cd bronto-annotations
+npm ci
+npm run example -- examples/svg-basic
+```
+
+Open the local URL printed by Vite, normally `http://localhost:5173`.
+The example draws a host figure and its annotation layer. Its
+[source](../examples/svg-basic/main.ts) uses the same public imports as an
+application outside the repository. Stop the server with Ctrl+C.
+
+For React, run `npm run example -- examples/react-basic` instead. The
+[example catalog](../examples/README.md) explains the more advanced demos.
+Examples are source fixtures, not separate npm packages; install dependencies
+and run commands at the repository root.
+
+## Use it in a browser application
+
+In an existing TypeScript application whose bundler handles CSS imports:
+
+```bash
+npm install @ponchia/annotations
+```
+
+Put this in a browser entry point that runs after the document body exists:
+
+```ts
+import {
+  resolveAnnotationLayout,
+  renderAnnotationsSvg,
+  type Annotation
+} from '@ponchia/annotations';
+import '@ponchia/annotations/bronto.css';
+
+const annotations: Annotation[] = [{
+  id: 'peak',
+  anchor: { type: 'point', point: { x: 180, y: 120 } },
+  note: { title: 'Peak response', body: 'An explanation attached to this point.' },
+  placement: { side: 'right' }
+}];
+
+const layout = resolveAnnotationLayout({
+  annotations,
+  bounds: { x: 0, y: 0, width: 640, height: 360 },
+  padding: 16
+});
+
+const container = document.createElement('div');
+container.innerHTML = renderAnnotationsSvg(layout, {
+  title: 'An annotated point',
+  markerIdPrefix: 'first-annotation'
+});
+document.body.append(container);
+```
+
+You should see one SVG annotation with the title **Peak response** and its
+connector. This deliberately small example does not render a chart; the point
+coordinates are the geometry your chart would supply. The CSS import styles the
+output but does not install or require BrontoUI.
+
+`renderAnnotationsSvg` returns a complete SVG element. Do not put a complete
+SVG overlay inside a chart's data group accidentally. Mount it in its own
+container, or follow the layering pattern in the [SVG example](../examples/svg-basic/).
+Keep the same `viewBox` coordinate system and `preserveAspectRatio` as the host.
+
+## Use it in React
+
+An existing React application needs the package plus `react` and `react-dom`.
+No D3, Vega, Mermaid, or other host library is required for this component:
+
+```tsx
+import { AnnotationLayer } from '@ponchia/annotations/react';
+import '@ponchia/annotations/bronto.css';
+
+export function AnnotatedPoint() {
+  return (
+    <AnnotationLayer
+      annotations={[{
+        id: 'peak',
+        anchor: { type: 'point', point: { x: 180, y: 120 } },
+        note: { title: 'Peak response' },
+        placement: { side: 'right' }
+      }]}
+      bounds={{ x: 0, y: 0, width: 640, height: 360 }}
+      label="An annotated point"
+      markerIdPrefix="react-first-annotation"
+    />
+  );
+}
+```
+
+Render `<AnnotatedPoint />` from your application. `AnnotationLayer` creates
+its own SVG. For an overlay on an existing chart, align its bounds and transform
+with the host; the [React example](../examples/react-basic/) includes that setup.
+
+Start without editing or custom measurements. When you need them, read
+[React rendering and editing](react-guide.md). The application owns the note
+state; it decides when an edit becomes a persisted change.
+
+## Coordinate and layout basics
+
+`bounds`, anchors, obstacles, manual positions, and note sizes use one coordinate
+space. A screen-pixel rectangle is not automatically a viewBox rectangle. Use the
+[DOM or host adapter](context-quickstart.md) when measuring rendered content.
+
+All note IDs must be stable and unique within a layer. Give independent layers
+distinct `markerIdPrefix` values so their SVG connector definitions do not collide.
+
+Automatic placement chooses among candidates. It cannot make unlimited text fit
+a small viewport. Inspect `evaluateAnnotationLayout`, adjust placement options,
+or reduce the visible notes when a layout is crowded. See the
+[core guide](core-guide.md) and [troubleshooting](troubleshooting.md).
+
+## Version and ownership boundaries
+
+The website and repository examples follow `main`, which can be ahead of npm.
+Match your installed version to its [release notes](https://github.com/Ponchia/bronto-annotations/releases).
+The [compatibility](compatibility.md) and [API stability](api-stability.md) guides
+separate tested support from experimental features.
+
+Chart rendering, graph layout, selection state, undo/redo, Worker lifetime,
+serialization validation, and persistence belong to the host application.
+The examples demonstrate these integration choices; they do not add them to
+the package's public API.

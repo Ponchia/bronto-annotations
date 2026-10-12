@@ -5,6 +5,7 @@ import { writeLine } from './log.mjs';
 const parity = JSON.parse(await readFile(new URL('../docs/d3-annotation-parity.json', import.meta.url), 'utf8'));
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8');
+const presetsGuide = await readFile(new URL('../docs/presets-guide.md', import.meta.url), 'utf8');
 const plan = await readFile(new URL('../docs/e2e-plan.md', import.meta.url), 'utf8');
 const core = await import('@ponchia/annotations');
 
@@ -289,7 +290,7 @@ for (const dependency of ['d3-dispatch', 'd3-drag', 'd3-selection', 'd3-shape', 
 }
 
 for (const term of parity.requiredDocsTerms) {
-  assert.ok(readme.includes(term) || plan.includes(term), `README/docs must include ${JSON.stringify(term)}`);
+  assert.ok(readme.includes(term) || presetsGuide.includes(term) || plan.includes(term), `README/docs must include ${JSON.stringify(term)}`);
 }
 
 writeLine(`d3-annotation parity verified: ${parity.supportedTypeAliases.length} type aliases, ${parity.supportedRuntimeHelpers.length} helpers, ${parity.intentionallyUnsupportedExports.length} explicit non-exported D3 runtime APIs.`);

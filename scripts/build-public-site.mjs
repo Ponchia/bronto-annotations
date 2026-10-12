@@ -23,22 +23,18 @@ import createDOMPurify from 'dompurify';
 const exec = promisify(execFile);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, '_site');
-const exampleNames = [
-  'index',
-  'svg-basic',
-  'react-basic',
-  'react-incremental',
-  'react-worker',
-  'bronto-report',
-  'dom-basic',
-  'vega-basic',
-  'mermaid-basic',
-  'd2-basic',
-  'react-flow-basic',
-  'style-gallery',
-];
+const exampleCatalog = JSON.parse(await readFile(join(root, 'examples/catalog.json'), 'utf8'));
+const exampleNames = Object.keys(exampleCatalog);
 const titles = {
-  'context-quickstart': 'Start here: choose your host',
+  'getting-started': 'Start here: your first annotation',
+  'context-quickstart': 'Choose your host',
+  'core-guide': 'Core layout and geometry',
+  'presets-guide': 'Presets and d3-style migration',
+  'react-guide': 'React rendering and editing',
+  'adapter-guide': 'DOM and generated-surface adapters',
+  'styling-guide': 'Styling annotations',
+  troubleshooting: 'Troubleshooting',
+  'worker-layout': 'Experimental Worker recipe',
   'integration-recipes': 'Integration recipes',
   'api-reference': 'API reference',
   accessibility: 'Accessible annotations',
@@ -50,6 +46,26 @@ const titles = {
   release: 'Releases and publishing',
 };
 const primaryDocs = Object.keys(titles);
+const guideSummaries = {
+  'getting-started': 'Install the package, run a complete example, and render your first note in SVG or React.',
+  'context-quickstart': 'Choose the entry point that matches the chart, diagram, or DOM content you already render.',
+  'core-guide': 'Automatic and manual placement, coordinate geometry, connector options, and layout diagnostics.',
+  'presets-guide': 'Callout types and the migration bridge for d3-style annotation inputs.',
+  'react-guide': 'Render SVG layers, measure notes, and commit host-owned editing changes.',
+  'adapter-guide': 'Attach notes to measured DOM, Vega, Mermaid, D2, and React Flow geometry.',
+  'styling-guide': 'Style notes and connectors with optional CSS, classes, and custom properties.',
+  troubleshooting: 'Diagnose missing notes, coordinate offsets, wrapping, overlap, and slow edits.',
+  'worker-layout': 'An advanced host-owned experiment: revisions, cancellation, and off-main-thread layouts.',
+  'integration-recipes': 'Complete patterns for attaching the annotation layer to generated host surfaces.',
+  'api-reference': 'Look up public types, helpers, renderer options, and adapter entry points.',
+  accessibility: 'Keyboard access, screen-reader summaries, and host-owned accessible note lists.',
+  compatibility: 'Tested browser, runtime, compiler, and optional peer environments.',
+  'api-stability': 'Understand stable and experimental exports before choosing an integration path.',
+  'migration-guide': 'Move existing d3-style and BrontoUI annotation usage onto the standalone package.',
+  performance: 'Read workload-specific measurements and the limits of full and incremental layouts.',
+  'security-automation': 'Maintainer reference for security checks and public runner safeguards.',
+  release: 'Maintainer reference for tags, verification, publication, and recovery.',
+};
 const baseUrl = 'https://ponchia.github.io/bronto-annotations/';
 // Site content comes from tracked Markdown. Sanitize inline HTML as well as
 // Markdown output so authored guides cannot inject active markup into Pages.
@@ -92,6 +108,13 @@ function rewriteMarkdownLinks(html, file) {
     const fragment = match?.[2] ?? '';
     const path = match?.[1] ?? url;
     const actual = resolve(dirname(file), path);
+    // Example-directory links in guides mean runnable demos. Source-file links
+    // still lead to GitHub; do not send readers to a blob URL for a directory.
+    const repositoryPath = web(relative(root, actual));
+    const exampleMatch = /^examples(?:\/([^/]+))?$/.exec(repositoryPath);
+    if (exampleMatch && (!exampleMatch[1] || exampleNames.includes(exampleMatch[1]))) {
+      return 'href="' + esc(web(relative(dirname(file), actual)) + '/' + fragment) + '"';
+    }
     const rootDocs = join(root, 'docs') + sep;
     if (actual === join(root, 'README.md') || !actual.startsWith(rootDocs)) {
       const githubPath = web(relative(root, actual));
@@ -171,7 +194,9 @@ function footer(prefix) {
     prefix +
     'examples/index/">Lab</a>' +
     '<a href="https://github.com/Ponchia/bronto-annotations">GitHub</a>' +
-    '<a href="https://www.npmjs.com/package/@ponchia/annotations">npm</a></nav>' +
+    '<a href="https://www.npmjs.com/package/@ponchia/annotations">npm</a>' +
+    '<a href="https://brontolotto.observer/">Maintainer</a>' +
+    '<a href="https://ko-fi.com/ponchia">Support on Ko-fi</a></nav>' +
     '<small>MIT licensed</small></footer>'
   );
 }
@@ -374,12 +399,10 @@ const listing = orderedDocsFiles.map((file) => {
     slug,
     title,
     summary:
-      slug in titles
-        ? 'Maintained guide and public package contract'
-        : 'Technical reference, decisions or dated verification evidence',
+      guideSummaries[slug] ?? 'Maintainer reference, accepted decisions, or historical verification evidence; check the recorded scope.',
   };
 });
-const cards = listing
+const renderCards = (items) => items
   .map(
     ({ slug, title, summary }) =>
       '<article class="doc-card" data-doc-card data-search="' +
@@ -401,13 +424,20 @@ const cards = listing
   .join('');
 const docsHome =
   '<section class="container docs-hero"><p class="eyebrow">DOCUMENTATION / START HERE</p>' +
-  '<h1>Learn the surface.<br/>Own the outcome.</h1>' +
+  '<h1>Add your first annotation.<br/>Then choose your host.</h1>' +
   '<p>Choose the host you already use. Start with a short complete example, then open the API reference and specialized adapter guides as needed.</p>' +
   '<label for="docs-filter" class="eyebrow">SEARCH THE REFERENCE</label>' +
   '<input type="search" id="docs-filter" class="docs-search" placeholder="Find a guide, adapter, or integration..." autocomplete="off"/>' +
   '<p class="docs-filter-empty" id="docs-filter-empty" role="status">No documentation pages match that search.</p>' +
-  '</section><section class="container"><div class="docs-card-grid" id="docs-results">' +
-  cards +
+  '</section><section class="container" aria-label="Current package guides"><h2>Using the package</h2>' +
+  '<div class="docs-card-grid" id="docs-results">' +
+  renderCards(listing.filter(({ slug }) => primaryDocs.includes(slug))) +
+  '</div></section><section class="container" aria-label="Reference and historical evidence">' +
+  '<h2>Maintainer reference and historical evidence</h2>' +
+  '<p>These documents retain design decisions, verification records, and earlier plans. ' +
+  'They are not the starting point for a new integration or a guarantee for every consumer.</p>' +
+  '<div class="docs-card-grid">' +
+  renderCards(listing.filter(({ slug }) => !primaryDocs.includes(slug))) +
   '</div></section>';
 await writeFile(
   join(out, 'docs/index.html'),
@@ -422,16 +452,14 @@ await writeFile(
 );
 pages.push('docs/');
 const exampleRows = exampleNames
-  .filter((x) => x !== 'index')
-  .map(
-    (name) =>
-      '<a class="doc-card" href="./' +
-      name +
-      '/"><h2>' +
-      esc(name.replaceAll('-', ' ')) +
-      '</h2><p>Real compiled annotation fixture, with source available on GitHub.</p></a>',
-  )
-  .join('');
+  .filter((name) => name !== 'index')
+  .map((name) => {
+    const example = exampleCatalog[name];
+    return '<article class="doc-card"><h2>' + esc(example.title) +
+      '</h2><p>' + esc(example.summary) + '</p><a href="./' + name +
+      '/">Open demo ↗</a> · <a href="https://github.com/Ponchia/bronto-annotations/tree/main/examples/' +
+      name + '">Source and setup ↗</a></article>';
+  }).join('');
 await writeFile(
   join(out, 'examples/index.html'),
   shell({
@@ -442,7 +470,9 @@ await writeFile(
     prefix: '../',
     body:
       '<section class="container docs-hero"><p class="eyebrow">THE LABORATORY</p>' +
-      '<h1>Actual renderers.<br/>Real annotations.</h1><p>Compiled example projects using the public package and host APIs. Read the source in the repository.</p></section>' +
+      '<h1>Actual renderers.<br/>Real annotations.</h1><p>Start with SVG figure or React annotation layer. Each demo includes source and setup instructions. The editor and Worker are advanced host-owned recipes.</p>' +
+      '<p><a href="../docs/getting-started.html">First annotation guide ↗</a> · ' +
+      '<a href="https://github.com/Ponchia/bronto-annotations/blob/main/examples/README.md">Run the examples locally ↗</a></p></section>' +
       '<section class="container"><div class="docs-card-grid">' +
       exampleRows +
       '</div><p><a href="./index/">Open the annotated visual index ↗</a></p></section>',

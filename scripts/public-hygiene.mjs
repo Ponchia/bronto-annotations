@@ -10,7 +10,10 @@ const includeFiles = [
   'package.json',
   'CHANGELOG.md',
   'CONTRIBUTING.md',
-  'SECURITY.md'
+  'SECURITY.md',
+  'FUNDING.md',
+  'SUPPORT.md',
+  'AGENTS.md'
 ];
 const privateNames = [
   ['home', 'tolotto'],

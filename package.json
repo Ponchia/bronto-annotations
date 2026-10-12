@@ -12,7 +12,12 @@
     "react-flow",
     "data-visualization",
     "diagram",
-    "layout"
+    "layout",
+    "callouts",
+    "collision-detection",
+    "headless",
+    "typescript",
+    "connector-routing"
   ],
   "homepage": "https://ponchia.github.io/bronto-annotations/",
   "bugs": {
@@ -40,7 +45,9 @@
     "dist",
     "README.md",
     "LICENSE",
-    "docs"
+    "docs",
+    "FUNDING.md",
+    "SUPPORT.md"
   ],
   "exports": {
     ".": {
@@ -86,7 +93,7 @@
     "typecheck": "npm run build && tsc --noEmit",
     "check:dead": "knip --treat-config-hints-as-errors",
     "test": "vitest run",
-    "test:docs-snippets": "vitest run test/docs/snippets.test.ts",
+    "test:docs-snippets": "npm run build && vitest run test/docs",
     "test:types": "npm run build && tsc -p test/tsconfig.exports.json --noEmit",
     "test:exports": "npm run build && node scripts/check-package-exports.mjs",
     "test:api-reference": "node scripts/check-api-reference.mjs",
@@ -133,7 +140,8 @@
     "release:prep": "node scripts/release-prep.mjs",
     "check": "npm run typecheck && node scripts/check-build-reuse.mjs && export PONCHIA_ANNOTATIONS_REUSE_BUILD=1 && npm test && npm run check:dead && npm run test:docs-snippets && npm run test:types && npm run test:exports && npm run test:api-reference && npm run test:api-stability && npm run test:canary && npm run test:d3-parity && npm run test:bronto-parity && npm run test:bronto-upstream && npm run test:examples && npm run test:pack && npm run test:dogfood && npm run test:dogfood:bronto-report && npm run test:dogfood:self-report && npm run test:dogfood:external && npm run test:browser && npm run test:browser:incremental && npm run test:browser:worker && npm run test:worker:transport && npm run test:screenshots && npm run test:readiness && npm run test:completion-audit && npm run test:repo && npm run test:release && npm run test:security-automation && npm run test:pre-release && npm run test:compatibility && npm run test:compatibility:lanes && npm run test:performance && npm run test:hygiene && npm run test:site",
     "site:build": "npm run build && node scripts/build-public-site.mjs",
-    "test:site": "npm run site:build && node scripts/check-public-site.mjs && node scripts/verify-public-site-browser.mjs"
+    "test:site": "npm run site:build && node scripts/check-public-site.mjs && node scripts/verify-public-site-browser.mjs",
+    "example": "npm run build && vite"
   },
   "peerDependencies": {
     "@terrastruct/d2": ">=0.1.0",
@@ -191,5 +199,9 @@
   "author": {
     "name": "Zeno Trevisan",
     "url": "https://brontolotto.observer/"
+  },
+  "funding": {
+    "type": "ko-fi",
+    "url": "https://ko-fi.com/ponchia"
   }
 }

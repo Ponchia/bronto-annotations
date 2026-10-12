@@ -1,44 +1,62 @@
 # Documentation
 
-**Browse the published documentation:** https://ponchia.github.io/bronto-annotations/docs/
-The interactive placement playground and actual rendered adapter examples are on the [product website](https://ponchia.github.io/bronto-annotations/).
+[Published guides](https://ponchia.github.io/bronto-annotations/docs/) ·
+[Runnable examples](../examples/README.md) · [Repository](../README.md)
 
-Use this page to distinguish the maintained package contract from dated
-incubation evidence and future work.
+## Start here
 
-## Current
+Read [Your first annotation](getting-started.md) for a complete browser or React
+example. Then use the [adapter chooser](context-quickstart.md) to connect the
+engine to the surface you already render. Start with a few notes; Workers and
+incremental sessions are advanced, optional paths.
 
-- [Repository README](../README.md): product boundary, package surface, and
-  consumer quick start.
-- [Context quick start](context-quickstart.md): use annotations in a host
-  context.
-- [API reference](api-reference.md): public models and helpers.
-- [API stability](api-stability.md): compatibility policy.
-- [Compatibility](compatibility.md): supported environments and adapters.
-- [Integration recipes](integration-recipes.md): host integration examples.
-- [Accessibility](accessibility.md), [performance](performance.md), and
-  [release](release.md): maintained quality and release contracts.
-- [Off-main-thread layout](worker-layout.md): tested consumer-owned Web Worker
-  recipe for expensive full reflows, stale replies, and React rendering.
+## Current consumer guides
 
-The source tree, exports, tests, and generated package artifacts remain the
-authority when reference prose disagrees.
+| Question | Guide |
+| --- | --- |
+| How do I install it and see a note? | [Getting started](getting-started.md) |
+| Which import fits my chart or diagram? | [Choose an adapter](context-quickstart.md) |
+| How do placement, manual positions, and diagnostics work? | [Core layout and geometry](core-guide.md) |
+| Which callout types exist? How do I migrate d3-style input? | [Presets and migration](presets-guide.md) |
+| How do I render, measure, or edit notes in React? | [React guide](react-guide.md) |
+| How do I measure real rendered targets? | [DOM and generated-surface adapters](adapter-guide.md) |
+| How do I change the appearance? | [Styling](styling-guide.md) |
+| Why are notes missing, shifted, or overlapping? | [Troubleshooting](troubleshooting.md) |
+| Where is a complete host integration? | [Examples](../examples/README.md) and [integration recipes](integration-recipes.md) |
+| What is the API contract? | [API reference](api-reference.md), [stability](api-stability.md), and [compatibility](compatibility.md) |
+| What should I know before shipping? | [Accessibility](accessibility.md) and [performance](performance.md) |
+| How can a host run layouts off the main thread? | [Experimental Worker recipe](worker-layout.md) |
 
-## Decisions
+The site and these guides track `main`. Consult the installed package's
+[release notes](https://github.com/Ponchia/bronto-annotations/releases) when
+using a published npm version. The source, public exports, tests, and package
+artifacts remain authoritative if prose disagrees.
 
-Accepted decisions live under [`adr/`](adr/). They explain why the package is a
-standalone product and do not replace current API documentation.
+## Contributor and maintainer reference
 
-## Evidence and proposals
+[Contributing](../CONTRIBUTING.md) describes setup and pull requests.
+[Development and verification](verification.md) explains the complete check
+pipeline. [Release](release.md) and [security automation](security-automation.md)
+cover publishing and repository safeguards. For help or optional funding, read
+[SUPPORT.md](../SUPPORT.md) and [FUNDING.md](../FUNDING.md).
 
-Files named `dogfood-*`, `*-report`, `*-proof`, `*-plan`, and `*-roadmap` are
-dated evaluation evidence or proposals. They are not current API contracts.
-Keep these plans source-dated, or move them under `docs/archive/` when they no longer
-inform an open decision.
+Accepted [architecture decisions](adr/) explain the standalone package boundary.
+The API, parity, readiness, and completion JSON manifests are generated/reference
+material: their owning verification commands live in `package.json` and
+`scripts/`. They are not a substitute for a consumer guide or usability evidence.
 
-## Lifecycle
+## Historical evidence and open proposals
 
-- Current guides change with the code they describe.
-- Generated/reference material changes through its owning generator.
-- Historical evaluations remain frozen evidence.
-- Open plans are proposals, not claims that a feature is absent.
+`dogfood-*`, `*-report`, `*-proof`, `*-plan`, and `*-roadmap` documents retain
+integration evidence or proposals from earlier development. Their scope is the
+recorded fixture and revision, not a claim of current independent adoption or
+universal support. Historical `0.1.x` release planning does not mean `0.1.x` is
+the current npm release. Use current guides above for installation and API use.
+
+## Documentation lifecycle
+
+**Current** guides change with the implementation. **Generated/reference**
+material changes through its generator or verifier. **Archive** material is
+historical evidence, not current instructions. **Proposals** describe open work,
+not missing functionality. A retired path should retain a **tombstone** link to
+its replacement instead of silently breaking existing references.

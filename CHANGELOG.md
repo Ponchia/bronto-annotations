@@ -8,6 +8,15 @@ reasonable.
 
 ## Unreleased
 
+### Documentation and discovery
+
+- Refocus the README on first use and move detailed API examples into maintained
+  topic guides without removing verification evidence.
+- Add executable onboarding snippets, troubleshooting, a documented example
+  catalog, per-example READMEs, and a simple local example command.
+- Add optional Ko-fi funding links for GitHub and npm, a funding guide, and
+  support/contribution routes. No runtime API or release version changes.
+
 ### Interactive authoring examples
 
 - Ensure an appended annotation stays below imported negative-priority notes
