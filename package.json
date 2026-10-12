@@ -122,6 +122,7 @@
     "test:compatibility:mermaid12": "npm run build && node scripts/smoke-mermaid12-browser.mjs",
     "test:performance": "npm run build && node scripts/benchmark-layout.mjs --assert",
     "benchmark:incremental": "npm run build && node scripts/benchmark-incremental-layout.mjs",
+    "benchmark:obstacle-cache": "npm run build && node scripts/benchmark-obstacle-proof-cache.mjs",
     "benchmark:react:handles": "npm run build && node scripts/benchmark-react-handles.mjs",
     "test:hygiene": "node scripts/public-hygiene.mjs",
     "release:prep": "node scripts/release-prep.mjs",
