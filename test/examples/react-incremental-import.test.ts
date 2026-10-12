@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createIncrementalAnnotationLayoutSession, resolveAnnotationLayout } from '../../src/index.js';
-import { parseEditorAnnotationJson } from '../../examples/react-incremental/json-import.js';
+import { EDITOR_MAX_NOTES, parseEditorAnnotationJson } from '../../examples/react-incremental/json-import.js';
 import type { Annotation } from '../../src/index.js';
 
 const base: Annotation[] = [
@@ -52,6 +52,21 @@ describe('host-owned JSON import for the incremental React example', () => {
         side: 'right', offset: 14, crossOffset: 0
       }
     }]);
+  });
+
+  it('keeps the maximum accepted document size explicit and round-trippable', () => {
+    const maximal = Array.from({ length: EDITOR_MAX_NOTES }, (_, index) => ({
+      id: `note-${index}`,
+      anchor: { type: 'point', point: { x: 45 + index * 70, y: 410 } },
+      note: { title: `Imported ${index + 1}` }
+    }));
+    const accepted = parseEditorAnnotationJson(JSON.stringify(maximal));
+    expect(accepted).toEqual(maximal);
+    expect(accepted).toHaveLength(EDITOR_MAX_NOTES);
+    const extra = [...maximal, { ...maximal[0], id: 'extra' }];
+    expect(() => parseEditorAnnotationJson(JSON.stringify(extra))).toThrow(
+      `1 to ${EDITOR_MAX_NOTES} annotation objects`
+    );
   });
 
   it('rejects malformed, duplicate and non-finite entries with useful errors', () => {

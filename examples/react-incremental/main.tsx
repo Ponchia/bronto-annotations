@@ -10,7 +10,7 @@ import { AnnotationLayer } from '@ponchia/annotations/react';
 import '@ponchia/annotations/bronto.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { parseEditorAnnotationJson } from './json-import.js';
+import { EDITOR_MAX_NOTES, parseEditorAnnotationJson } from './json-import.js';
 import {
   createEditorHistory, pushEditorHistory, undoEditorHistory, redoEditorHistory,
   type EditorHistory
@@ -108,6 +108,7 @@ function App() {
   const [importError, setImportError] = useState('');
   const [importStatus, setImportStatus] = useState('');
   const hasAddedNote = view.annotations.some((annotation) => annotation.id === 'added');
+  const atNoteLimit = view.annotations.length >= EDITOR_MAX_NOTES;
   const hasSignal = view.annotations.some((annotation) => annotation.id === 'signal');
 
   // Only authoritative edits enter this history: a pointer-move preview
@@ -258,7 +259,9 @@ function App() {
   }
 
   function addAnnotation() {
-    if (hasAddedNote) return;
+    // Keep every host-authored export within this demo importer's own bounds,
+    // even after somebody loads an arbitrary ten-note JSON document.
+    if (hasAddedNote || history.current!.present.annotations.length >= EDITOR_MAX_NOTES) return;
     commit([...history.current!.present.annotations, {
       id: 'added', priority: 0,
       anchor: { type: 'point', point: { x: 689, y: 250 } },
@@ -308,7 +311,9 @@ function App() {
       <section className="demo-card" aria-label="Live incremental annotation editor">
         <div className="toolbar" role="group" aria-label="Annotation editing actions">
           <button id="move-note" type="button" onClick={moveLastAnchor} disabled={!hasSignal}>Move final anchor</button>
-          <button id="append-note" type="button" onClick={addAnnotation} disabled={hasAddedNote}>Add annotation</button>
+          <button id="append-note" type="button" onClick={addAnnotation}
+            disabled={hasAddedNote || atNoteLimit}
+            title={atNoteLimit ? `This demo supports at most ${EDITOR_MAX_NOTES} notes` : undefined}>Add annotation</button>
           <button id="remove-note" type="button" onClick={removeAnnotation} disabled={!hasAddedNote}>Remove added note</button>
           <button id="reset-note" type="button" onClick={() => commit(structuredClone(initialAnnotations), 'Reset to initial diagram')}>Reset</button>
           <button id="undo-edit" type="button" aria-keyshortcuts="Control+Z Meta+Z"
@@ -383,7 +388,7 @@ function App() {
           <div className="annotation-import">
             <label htmlFor="annotation-import-input">Load annotation JSON into this example</label>
             <p id="annotation-import-help">Paste an exported annotation array or start with the current JSON.
-              This demo accepts 1–10 notes with point/box anchors, note text and basic placement settings;
+              This demo accepts 1–{EDITOR_MAX_NOTES} notes with point/box anchors, note text and basic placement settings;
               other annotation features require validation in your own host application.
               Failed imports leave the current layout unchanged.</p>
             <textarea

@@ -176,6 +176,31 @@ async function verifyIncremental(browser, origin, viewport, label) {
     assert.equal(await page.evaluate(() => window.__annotationsExample.changes),
       committedBeforeInvalid, label + ': JSON draft undo changed committed history');
 
+    // Imported inputs and the toolbar must honor the *same* maximum. Never
+    // allow a generated 11th note whose exported JSON cannot be reloaded.
+    const maximum = Array.from({ length: 10 }, (_, index) => ({
+      id: `imported-${index}`,
+      anchor: { type: 'point', point: { x: 65 + index * 72, y: 410 } },
+      note: { title: `Imported ${index + 1}` }
+    }));
+    await importField.fill(JSON.stringify(maximum));
+    await page.locator('#load-annotation-json').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Imported 10 annotations from JSON');
+    assert.equal((await exportedAnnotations()).length, 10);
+    assert.equal(await page.locator('#append-note').isDisabled(), true,
+      label + ': add action would exceed importable annotation limit');
+    await page.locator('#undo-edit').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Undid: Imported 10 annotations from JSON');
+    assert.equal((await exportedAnnotations()).length, 4);
+    assert.equal(await page.locator('#append-note').isEnabled(), true);
+    await page.locator('#redo-edit').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Redid: Imported 10 annotations from JSON');
+    assert.equal((await exportedAnnotations()).length, 10);
+    assert.equal(await page.locator('#append-note').isDisabled(), true);
+
     await page.locator('#reset-note').click();
     await page.waitForFunction(() =>
       window.__annotationsExample?.action === 'Reset to initial diagram');
