@@ -247,6 +247,24 @@
           ]
         },
         {
+          "file": "src/react/svg-annotation-parts.tsx",
+          "terms": [
+            "renderSubject",
+            "renderConnector",
+            "renderDebugBoxes",
+            "badgeGeometry",
+            "aria-hidden"
+          ]
+        },
+        {
+          "file": "test/react/svg-annotation-parts.test.tsx",
+          "terms": [
+            "private resolved annotation SVG geometry",
+            "data-debug-kind",
+            "directional badges"
+          ]
+        },
+        {
           "file": "src/react/dom-measurements.ts",
           "terms": [
             "ResizeObserver",
