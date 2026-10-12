@@ -72,7 +72,7 @@ async function visit(browser, origin, route, viewport, label) {
     await close();
     throw error;
   }
-  return { page, context, errors, close };
+  return { page, errors, close };
 }
 
 async function verifyAccessibility(page, label) {
@@ -87,7 +87,7 @@ async function verifyAccessibility(page, label) {
 }
 
 async function verifyIncremental(browser, origin, viewport, label) {
-  const { page, context, errors, close } = await visit(browser, origin, '/examples/react-incremental/', viewport, label);
+  const { page, errors, close } = await visit(browser, origin, '/examples/react-incremental/', viewport, label);
   try {
     await page.waitForFunction(() =>
       window.__annotationsExample?.name === 'react-incremental'
@@ -244,7 +244,7 @@ async function verifyIncremental(browser, origin, viewport, label) {
 }
 
 async function verifyDomMeasurements(browser, origin, viewport, label) {
-  const { page, context, errors, close } = await visit(browser, origin, '/examples/react-basic/', viewport, label);
+  const { page, errors, close } = await visit(browser, origin, '/examples/react-basic/', viewport, label);
   try {
     // This example uses AnnotationLayer measure="dom" and a live ResizeObserver.
     // The hidden DOM note copies are measured in *local CSS units*, not pixels
@@ -364,7 +364,7 @@ async function verifyDomMeasurements(browser, origin, viewport, label) {
 }
 
 async function verifyReactFlow(browser, origin, viewport, label) {
-  const { page, context, errors, close } = await visit(browser, origin, '/examples/react-flow-basic/', viewport, label);
+  const { page, errors, close } = await visit(browser, origin, '/examples/react-flow-basic/', viewport, label);
   try {
     await page.waitForFunction(() => {
       const sample = window.__annotationsExample;
@@ -450,7 +450,7 @@ async function verifyReactFlow(browser, origin, viewport, label) {
 }
 
 async function verifyWorker(browser, origin, viewport, label) {
-  const { page, context, errors, close } = await visit(browser, origin, '/examples/react-worker/', viewport, label);
+  const { page, errors, close } = await visit(browser, origin, '/examples/react-worker/', viewport, label);
   try {
     await page.waitForFunction(() => window.__annotationsWorkerDemo?.ready === true,
       null, { timeout: 45000 });
