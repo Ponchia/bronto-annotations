@@ -15,7 +15,7 @@ export const EDITOR_BODY_MAX_LENGTH = 400;
 // The editor's import/export guard must also bound priorities assigned by
 // host-owned toolbar actions. Keep these limits in one place.
 export const EDITOR_PRIORITY_MIN = -100;
-export const EDITOR_PRIORITY_MAX = 100;
+const EDITOR_PRIORITY_MAX = 100;
 const SIDE = ['top', 'right', 'bottom', 'left'] as const;
 const ALIGN = ['start', 'center', 'end'] as const;
 
