@@ -11,7 +11,7 @@ import '@ponchia/annotations/bronto.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { EDITOR_MAX_NOTES, parseEditorAnnotationJson } from './json-import.js';
-import { appendDemoNote, removeFinalNote } from './note-actions.js';
+import { appendDemoNote, removeFinalNote, moveFinalNoteAnchor } from './note-actions.js';
 import { editAnnotationText } from './note-text-editor.js';
 import { NoteTextEditor } from './NoteTextEditor.js';
 import {
@@ -113,7 +113,6 @@ function App() {
   const [importStatus, setImportStatus] = useState('');
   const atNoteLimit = view.annotations.length >= EDITOR_MAX_NOTES;
   const canRemoveLastNote = view.annotations.length > 1;
-  const hasSignal = view.annotations.some((annotation) => annotation.id === 'signal');
   const selectedTextNote = view.annotations.find((item) => item.id === selectedNoteId)
     ?? view.annotations[0]!;
 
@@ -251,16 +250,9 @@ function App() {
   }
 
   function moveLastAnchor() {
-    const next = history.current!.present.annotations.map((item) => item.id === 'signal'
-      ? {
-          ...item,
-          anchor: {
-            type: 'point' as const,
-            point: { x: item.anchor.type === 'point' && item.anchor.point.x === 435 ? 490 : 435,
-              y: item.anchor.type === 'point' && item.anchor.point.y === 248 ? 300 : 248 }
-          }
-        }
-      : item);
+    const previous = history.current!.present.annotations;
+    const next = moveFinalNoteAnchor(previous);
+    if (next === previous) return;
     commit(next, 'Moved the final anchor');
   }
 
@@ -313,7 +305,8 @@ function App() {
 
       <section className="demo-card" aria-label="Live incremental annotation editor">
         <div className="toolbar" role="group" aria-label="Annotation editing actions">
-          <button id="move-note" type="button" onClick={moveLastAnchor} disabled={!hasSignal}>Move final anchor</button>
+          <button id="move-note" type="button" onClick={moveLastAnchor}
+            title="Move the final annotation anchor, including after importing your own JSON">Move final anchor</button>
           <button id="append-note" type="button" onClick={addAnnotation}
             disabled={atNoteLimit}
             title={atNoteLimit ? `This demo supports at most ${EDITOR_MAX_NOTES} notes` : undefined}>Add annotation</button>
