@@ -23,20 +23,28 @@ export function canReuseWorkerAnnotation(first: unknown, second: unknown): boole
     if (arrays && (a as unknown[]).length !== (b as unknown[]).length) return false;
     if (!arrays && (Object.getPrototypeOf(a) !== Object.prototype
       || Object.getPrototypeOf(b) !== Object.prototype)) return false;
-    if (Object.getOwnPropertySymbols(a).length || Object.getOwnPropertySymbols(b).length) return false;
-    const keysA = Object.keys(a);
-    const keysB = Object.keys(b);
-    if (keysA.length !== keysB.length) return false;
+    // Object.keys only sees enumerable properties. A structured clone can
+    // discard a non-enumerable metadata field, which would otherwise make a
+    // previous annotation appear unchanged and resurrect the hidden value.
+    // Refuse reuse for hidden/accessor/symbol properties; Array.length is the
+    // sole supported non-enumerable intrinsic and was checked above.
+    const keysA = Reflect.ownKeys(a);
+    const keysB = Reflect.ownKeys(b);
+    if (keysA.length !== keysB.length
+      || keysA.some((key) => typeof key !== 'string')
+      || keysB.some((key) => typeof key !== 'string')) return false;
     seenA.set(a, b);
     seenB.set(b, a);
     parentsA.add(a);
     parentsB.add(b);
     try {
       for (const key of keysA) {
+        if (arrays && key === 'length') continue;
         if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
         const left = Object.getOwnPropertyDescriptor(a, key);
         const right = Object.getOwnPropertyDescriptor(b, key);
-        if (!left || !right || !('value' in left) || !('value' in right)) return false;
+        if (!left?.enumerable || !right?.enumerable
+          || !('value' in left) || !('value' in right)) return false;
         if (!same(left.value, right.value, parentsA, parentsB)) return false;
       }
       return true;

@@ -136,7 +136,8 @@ as the compact transport fixture, rather than `JSON.stringify` equality.
 Both paths also check cross-annotation sharing in host-owned source data:
 if shared references split/join, or one member of a shared group changes,
 the entire Worker result is installed instead of mixing new objects with old
-siblings. Unsupported metadata causes safe non-reuse without calling getters.
+siblings. Unsupported metadata, including non-enumerable own properties, causes safe
+non-reuse without invoking getters.
 This improves correctness but does **not** speed up deep comparison and does
 not turn the experimental patch protocol into a package export.
 
