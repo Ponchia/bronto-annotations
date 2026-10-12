@@ -153,8 +153,11 @@ describe('high-frequency React pointer previews', () => {
 
     pointer(layer, 'pointerup', 140, 80, 23);
     expect(commits).toHaveLength(0);
-    pointer(layer, 'pointercancel', 140, 80, 5);
+    // The pointer that began the now-stale drag must not submit a placement
+    // derived from the geometry that existed before the host replacement.
+    pointer(layer, 'pointerup', 140, 80, 5);
     expect(commits).toHaveLength(0);
+    expect(edits.filter((event) => event.phase === 'end')).toHaveLength(0);
     expect(Number(note().getAttribute('x'))).toBe(originalX);
 
     // A new gesture is free to schedule a fresh frame generation.
