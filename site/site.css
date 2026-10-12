@@ -512,6 +512,95 @@ select:focus-visible {
   padding-block: 110px 125px;
   scroll-margin-top: 20px;
 }
+.editing-lab {
+  margin-bottom: 34px;
+  padding: 29px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.editing-lab-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 26px;
+  margin-bottom: 23px;
+}
+.editing-lab-intro .eyebrow { margin: 0 0 9px; }
+.editing-lab-intro h3 {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.8vw, 1.85rem);
+  line-height: 1.2;
+  letter-spacing: -0.045em;
+}
+.editing-lab-intro > p {
+  color: var(--muted);
+  font-size: 0.89rem;
+  line-height: 1.65;
+  max-width: 340px;
+  margin: 0;
+}
+.editing-lab-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.editing-lab-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  padding: 26px;
+}
+.editing-lab-card > .eyebrow { margin: 0; }
+.editing-lab-card h4 {
+  font-size: 1.34rem;
+  letter-spacing: -0.035em;
+  line-height: 1.25;
+  margin: 11px 0;
+}
+.editing-lab-card > p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.65;
+  margin: 0;
+}
+.editing-lab-card ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  list-style: none;
+  padding: 0;
+  margin: 21px 0 23px;
+}
+.editing-lab-card li {
+  padding: 5px 9px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.66rem;
+  color: #44575e;
+  background: var(--soft);
+  border: 1px solid var(--line);
+}
+.editing-lab-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  margin-top: auto;
+}
+.editing-lab-links a {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: #d28c9f;
+  text-underline-offset: 5px;
+}
+.editing-lab-links a:hover { color: var(--accent-dark); }
+.editing-lab-note {
+  margin: 20px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
 .example-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1086,6 +1175,14 @@ select:focus-visible {
   .feature-grid h3 {
     margin-top: 14px;
   }
+  .editing-lab { padding: 18px; }
+  .editing-lab-intro {
+    align-items: start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .editing-lab-grid { grid-template-columns: 1fr; }
+  .editing-lab-card { padding: 20px; }
   .example-grid {
     grid-template-columns: 1fr;
   }
