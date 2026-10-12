@@ -3,7 +3,8 @@
 **A headless engine for explanatory notes on your existing UI.**
 
 [Explore the website](https://ponchia.github.io/bronto-annotations/) ·
-[Try the live placement playground](https://ponchia.github.io/bronto-annotations/#playground) ·
+[Try placement](https://ponchia.github.io/bronto-annotations/#playground) ·
+[Try interactive editing](https://ponchia.github.io/bronto-annotations/examples/react-incremental/) ·
 [Browse real examples](https://ponchia.github.io/bronto-annotations/#examples) ·
 [Read the guides](https://ponchia.github.io/bronto-annotations/docs/)
 
@@ -14,6 +15,11 @@
 or open a [complete SVG example](https://github.com/Ponchia/bronto-annotations/blob/main/examples/svg-basic/main.ts).
 The visual examples are runnable source from the repository, not illustrations of an imaginary API.
 
+For editing-heavy React integrations, try the
+[interactive incremental example](https://ponchia.github.io/bronto-annotations/examples/react-incremental/)
+or the [module Worker example](https://ponchia.github.io/bronto-annotations/examples/react-worker/).
+Preview movement and committed layout are separate: the host owns annotation
+state, Worker scheduling, cancellation, and persistence.
 
 `@ponchia/annotations` is a DOM-independent annotation engine with rendering
 helpers and adapters for geometry supplied by host applications.

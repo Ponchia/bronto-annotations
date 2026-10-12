@@ -6,6 +6,55 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## Unreleased
+
+### Fixed
+
+- Make incremental annotation snapshots sensitive to reference sharing, including
+  cross-note aliases, omitted fields and unsafe host metadata. A changed suffix
+  cannot accidentally reuse an earlier resolved note with stale source identity.
+  Fingerprinting and Worker equality checks do not invoke metadata getters.
+- Preserve reference topology in the experimental host-owned Worker compact
+  reply example. Split/join changes, hidden properties and affected shared
+  note groups fall back to authoritative snapshots rather than mixing
+  incompatible old and new object graphs.
+- Cancel active React pointer gestures after host layout replacement,
+  unexpected pointer-capture loss, or disabling editing. An interrupted drag
+  cannot commit stale coordinates through a later pointer release; completed
+  edits and keyboard behavior retain their normal semantics.
+
+### Performance
+
+- Reuse immutable priority-prefix annotation results in the host-managed Worker
+  session and skip redundant deep comparison when identical resolved winners
+  have already been proven safe. Keep acknowledgement, cancellation, revision
+  mismatch recovery and snapshot fallbacks in the host integration.
+- Cache exhaustive, conservative candidate footprints across repeated
+  independent obstacle changes in the experimental incremental session.
+  Invalidate affected or globally changed geometry and preserve full-resolution
+  fallbacks for obstacle-dependent connector routing. Exact geometry and
+  layout-quality parity are tested against fresh synchronous resolution.
+- Offer an optional 40/200-note obstacle-cache benchmark. Its single-run
+  development-host timings are observational, not performance budgets or
+  frame-rate guarantees.
+
+### Examples, accessibility and compatibility
+
+- Feature runnable React incremental editing and native module Worker
+  demonstrations alongside the existing static adapter examples, with clearer
+  host ownership and first-use documentation.
+- Verify actual desktop and mobile pointer editing, revision-safe Worker
+  responses, accessibility and React Flow viewport transforms using Playwright
+  Firefox and WebKit, while retaining mandatory Chromium coverage.
+- Simplify private React internals into editing geometry, SVG subject/connector
+  rendering, marker definitions, data attributes, DOM measurement and
+  frame-coalesced preview scheduling. Preserve the public component and package
+  exports, memoization, SSR behavior and DOM semantics.
+- Strengthen release tooling with a pinned modern npm only in the isolated
+  Vitest 5/jsdom 30 check. Update Playwright/Vite, Vega-Lite and pinned GitHub
+  Actions development tooling without raising the supported Node floor or
+  adding package runtime dependencies.
+
 ## 0.6.8 - 2026-10-11
 
 ### Performance
