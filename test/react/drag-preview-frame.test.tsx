@@ -111,6 +111,63 @@ describe('high-frequency React pointer previews', () => {
     expect(onLayout).toHaveBeenCalledTimes(1);
   });
 
+  it('discards stale frames after host geometry changes and ignores unrelated pointers', () => {
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(boundingRect());
+    const frames = scheduledFrames();
+    const edits: AnnotationLayerEditEvent[] = [];
+    const commits: AnnotationLayerEditEvent[] = [];
+    const { container, rerender } = render(
+      <AnnotationLayer annotations={annotations} bounds={bounds}
+        editable previewEdits onEdit={(event) => edits.push(event)}
+        onEditEnd={(event) => commits.push(event)} />
+    );
+    const layer = container.querySelector('svg.pa-annotation-layer')!;
+    const note = () => container.querySelector(
+      'g.pa-annotation[data-annotation-id="selected"] foreignObject')!;
+    const handle = () => container.querySelector(
+      '.pa-annotation__edit-handle--note[data-annotation-id="selected"]')!;
+    const originalX = Number(note().getAttribute('x'));
+
+    pointer(handle(), 'pointerdown', 100, 70, 5);
+    // Another pointer cannot hijack the active gesture, its pending frame, or
+    // any host edit callbacks.
+    pointer(layer, 'pointermove', 120, 78, 23);
+    expect(frames.request).not.toHaveBeenCalled();
+    expect(edits.filter((event) => event.phase === 'move')).toHaveLength(0);
+    pointer(layer, 'pointermove', 138, 80, 5);
+    expect(frames.request).toHaveBeenCalledTimes(1);
+    const oldFrame = [...frames.frames.values()][0]!;
+
+    // The host commits new authoritative coordinates during the gesture.
+    // Its old preview projection must be rejected even if a browser invokes
+    // an already-queued callback despite cancelAnimationFrame.
+    rerender(
+      <AnnotationLayer annotations={annotations} bounds={{ ...bounds, width: 540 }}
+        editable previewEdits onEdit={(event) => edits.push(event)}
+        onEditEnd={(event) => commits.push(event)} />
+    );
+    expect(frames.cancel).toHaveBeenCalledTimes(1);
+    expect(frames.frames.size).toBe(0);
+    act(() => oldFrame(performance.now()));
+    expect(Number(note().getAttribute('x'))).toBe(originalX);
+
+    pointer(layer, 'pointerup', 140, 80, 23);
+    expect(commits).toHaveLength(0);
+    pointer(layer, 'pointercancel', 140, 80, 5);
+    expect(commits).toHaveLength(0);
+    expect(Number(note().getAttribute('x'))).toBe(originalX);
+
+    // A new gesture is free to schedule a fresh frame generation.
+    pointer(handle(), 'pointerdown', 100, 70, 5);
+    pointer(layer, 'pointermove', 129, 86, 5);
+    expect(frames.request).toHaveBeenCalledTimes(2);
+    frames.flush();
+    expect(Number(note().getAttribute('x'))).not.toBe(originalX);
+    pointer(layer, 'pointercancel', 129, 86, 5);
+    expect(Number(note().getAttribute('x'))).toBe(originalX);
+    expect(commits).toHaveLength(0);
+  });
+
   it('cancels unpainted movement on pointerup, pointercancel and component unmount', () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(boundingRect());
     const frames = scheduledFrames();
