@@ -371,15 +371,16 @@ select:focus-visible {
 }
 .plot-metrics {
   border-top: 1px solid #e6ebec;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0;
   padding: 19px 14px;
 }
 .plot-metrics > div {
   display: flex;
   flex-direction: column;
-  min-width: 28%;
-  padding-inline: 17px;
+  min-width: 0;
+  padding-inline: 12px;
   border-right: 1px solid #e7ebec;
 }
 .plot-metrics > div:last-child {
@@ -457,6 +458,13 @@ select:focus-visible {
 }
 .reset-control:hover {
   background: #f2f5f5;
+}
+.controls-panel .placement-mode-note {
+  margin-top: -16px;
+  margin-bottom: 25px;
+  color: #52676a;
+  font-size: 0.74rem;
+  line-height: 1.5;
 }
 .controls-panel .fine-print {
   border-top: 1px solid #e6eaea;
@@ -1142,11 +1150,20 @@ select:focus-visible {
     margin-block: 16px;
   }
   .plot-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 15px 2px;
+    row-gap: 13px;
   }
   .plot-metrics > div {
     padding-inline: 12px;
-    min-width: 30%;
+    min-width: 0;
+  }
+  .plot-metrics > div:nth-child(2) {
+    border-right: 0;
+  }
+  .controls-panel > .placement-mode-note {
+    margin-top: -16px;
+    margin-bottom: 12px;
   }
   .plot-metrics span {
     font-size: 0.52rem;

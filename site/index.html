@@ -165,7 +165,7 @@
                 <span
                   ><span class="live-dot" aria-hidden="true"></span> LIVE
                   GEOMETRY</span
-                ><span>HOST-CONTROLLED SVG</span>
+                ><span id="plot-mode-label">COLLISION-AWARE</span>
               </div>
               <div class="chart-stage">
                 <svg
@@ -229,14 +229,28 @@
                 <div>
                   <span>NOTE OVERLAP</span><strong id="overlap-count">—</strong>
                 </div>
+                <div>
+                  <span>OBSTACLE OVERLAP</span><strong id="obstacle-overlap-count">—</strong>
+                </div>
               </div>
             </div>
             <form class="controls-panel" id="annotation-controls">
               <p class="eyebrow">CONFIGURE THE SCENE</p>
               <h3>Move the conditions.<br />Keep the context.</h3>
               <p>
-                Every update recomputes note candidates against obstacles and
-                existing placements.
+                Compare a simple fixed-offset baseline with collision-aware
+                placement using the same chart, notes and measured quality.
+              </p>
+              <label class="control-block" for="placement-mode">
+                <span>Placement method</span>
+                <select id="placement-mode" aria-describedby="placement-mode-note">
+                  <option value="automatic">Collision-aware</option>
+                  <option value="fixed">Fixed offsets (baseline)</option>
+                </select>
+              </label>
+              <p class="placement-mode-note" id="placement-mode-note" aria-live="polite">
+                Automatic placement searches alternatives to avoid crowding.
+                Switch to fixed offsets to see the difference.
               </p>
               <label class="control-block" for="notes-count"
                 ><span

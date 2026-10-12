@@ -13,6 +13,8 @@ const notesInput = document.querySelector<HTMLInputElement>('#notes-count');
 const obstacleInput =
   document.querySelector<HTMLInputElement>('#obstacle-size');
 const routeInput = document.querySelector<HTMLSelectElement>('#route-style');
+const placementInput = document.querySelector<HTMLSelectElement>('#placement-mode');
+const placementNote = document.querySelector<HTMLElement>('#placement-mode-note');
 const overlay = document.querySelector<HTMLElement>('#annotation-overlay');
 const obstacleRect = document.querySelector<SVGRectElement>('#plot-obstacle');
 const countOutput = document.querySelector<HTMLOutputElement>('#notes-display');
@@ -21,6 +23,8 @@ const obstacleOutput =
 const scoreOutput = document.querySelector<HTMLElement>('#layout-score');
 const placedOutput = document.querySelector<HTMLElement>('#placed-count');
 const overlapOutput = document.querySelector<HTMLElement>('#overlap-count');
+const obstacleOverlapOutput = document.querySelector<HTMLElement>('#obstacle-overlap-count');
+const plotModeLabel = document.querySelector<HTMLElement>('#plot-mode-label');
 
 const bounds: Box = { x: 0, y: 0, width: 760, height: 430 };
 const points = [
@@ -60,19 +64,24 @@ function updateLayout() {
     !notesInput ||
     !obstacleInput ||
     !routeInput ||
+    !placementInput ||
+    !placementNote ||
     !overlay ||
     !obstacleRect ||
     !countOutput ||
     !obstacleOutput ||
     !scoreOutput ||
     !placedOutput ||
-    !overlapOutput
+    !overlapOutput ||
+    !obstacleOverlapOutput ||
+    !plotModeLabel
   )
     return;
 
   const count = Math.min(5, Math.max(2, Number(notesInput.value) || 3));
   const width = Math.min(215, Math.max(80, Number(obstacleInput.value) || 150));
   const routing = routeInput.value === 'none' ? 'none' : 'orthogonal';
+  const placementMode = placementInput.value === 'fixed' ? 'fixed' : 'automatic';
   const obstacle: Box = { x: 350, y: 219, width, height: 90 };
   obstacleRect.setAttribute('width', String(width));
   countOutput.textContent = String(count);
@@ -82,7 +91,19 @@ function updateLayout() {
     id: 'demo-' + i,
     anchor: { type: 'point', point: { x: point.x, y: point.y } },
     note: { title: point.title, body: point.body, wrap: 22, maxLines: 2 },
-    placement: { side: i % 2 ? 'left' : 'right' },
+    // The illustrative baseline always places the note at the same offset
+    // from its anchor. Both modes use the *same engine and quality evaluator*;
+    // only the placement recipe differs. This is not a comparison with a
+    // competing layout library or its actual algorithm.
+    placement: placementMode === 'fixed'
+      ? {
+          manual: {
+            x: point.x + 18,
+            y: point.y - 24,
+            side: 'right' as const,
+          },
+        }
+      : { side: i % 2 ? 'left' as const : 'right' as const },
     connector: { type: 'elbow', end: 'dot', routing },
     variant: 'callout',
     tone: point.tone,
@@ -113,6 +134,19 @@ function updateLayout() {
     quality.metrics.noteOverlapArea === 0
       ? 'None'
       : String(Math.round(quality.metrics.noteOverlapArea)) + 'px²';
+  obstacleOverlapOutput.textContent =
+    quality.metrics.obstacleOverlapArea === 0
+      ? 'None'
+      : String(Math.round(quality.metrics.obstacleOverlapArea)) + 'px²';
+  plotModeLabel.textContent = placementMode === 'fixed'
+    ? 'FIXED OFFSETS'
+    : 'COLLISION-AWARE';
+  placementNote.textContent = placementMode === 'fixed'
+    ? 'Illustrative baseline: each note stays 18 units right and 24 units above its anchor. No collision-aware candidate search is used.'
+    : 'Collision-aware placement searches multiple candidates around notes and obstacles. The metrics below come from the resolved geometry.';
+  overlay.dataset.mode = placementMode;
+  overlay.dataset.noteOverlap = String(Math.round(quality.metrics.noteOverlapArea));
+  overlay.dataset.obstacleOverlap = String(Math.round(quality.metrics.obstacleOverlapArea));
   overlay.dataset.placed = String(layout.annotations.length);
   overlay.dataset.route = routing;
   overlay.dataset.score = String(Math.round(quality.score));
