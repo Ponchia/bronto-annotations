@@ -105,9 +105,13 @@ This controlled path needs **host-owned note sizes**; it cannot use the
 component's `measure="dom"` mode. See the
 [interactive incremental React example](../examples/react-incremental/) for
 working source and browser behavior. Its live JSON inspector shows the exact
-host-authored annotation inputs after committed edits. You can copy these
-inputs into your app; the example does not serialize or persist resolved
-layout candidates and the package does not own your saved state.
+host-authored annotation inputs after committed edits. The example now also
+lets you paste those inputs back into the editor, with guarded parsing and a
+new authoritative host layout session. Invalid JSON leaves the current layout
+untouched. Its deliberately small importer accepts point/box anchors, note
+text and basic placement options for at most ten notes. It is **not** a general
+package serialization API: validate the complete schema your application
+supports and own any actual persistence.
 
 If global geometry changes are too expensive on the main thread, try the
 [React + module Worker example](../examples/react-worker/). The host is

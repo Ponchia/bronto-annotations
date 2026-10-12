@@ -42,6 +42,20 @@ h1 { font-size: clamp(30px, 4.3vw, 49px); font-weight: 680; letter-spacing: -0.0
 .annotation-source-actions button:focus-visible, .annotation-source pre:focus-visible { outline: 3px solid #58b3c0; outline-offset: 3px; }
 .annotation-source-actions span { color: #466477; font-size: 12px; line-height: 1.4; }
 .annotation-source pre { max-height: 290px; overflow: auto; background: #f5f8fb; color: #21394c; font-size: 11px; line-height: 1.6; padding: 15px; margin: 0; border: 1px solid #dde6ed; border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.annotation-import { border-top: 1px solid #dde6ed; margin-top: 20px; padding-top: 20px; }
+.annotation-import label { display: block; font-size: 13px; font-weight: 730; color: #2d546a; margin-bottom: 7px; }
+.annotation-import > p { font-size: 12px; color: #526574; line-height: 1.6; margin: 0 0 12px; max-width: 730px; }
+.annotation-import textarea { display: block; width: 100%; min-height: 130px; resize: vertical; padding: 13px; font-size: 12px; line-height: 1.55; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; color: #203b4d; background: #f8fafc; border: 1px solid #c9d9e4; border-radius: 8px; }
+.annotation-import textarea:focus-visible { outline: 3px solid #58b3c0; outline-offset: 3px; }
+.annotation-import textarea[aria-invalid="true"] { border-color: #ad4b53; }
+.annotation-import-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 11px; margin-bottom: 8px; }
+.annotation-import-actions button { padding: 9px 13px; color: #2e5164; background: #fff; border: 1px solid #bfd3dd; border-radius: 8px; font-size: 12px; font-weight: 680; font-family: inherit; cursor: pointer; }
+.annotation-import-actions button:last-child { color: white; border-color: #247e8f; background: #247e8f; }
+.annotation-import-actions button:not(:disabled):hover { filter: brightness(.94); }
+.annotation-import-actions button:focus-visible { outline: 3px solid #58b3c0; outline-offset: 3px; }
+.annotation-import > .annotation-import-error { color: #9a303a; margin: 9px 0 0; font-weight: 650; }
+.annotation-import > .annotation-import-status { color: #235e4f; margin: 9px 0 0; }
+.annotation-import > .annotation-import-status:empty { display: none; }
 .footnote { font-size: 13px; color: #526574; line-height: 1.65; max-width: 825px; margin: 18px 0 0; }
 @media (max-width: 750px) {
   .demo-heading { align-items: flex-start; flex-direction: column; gap: 16px; }

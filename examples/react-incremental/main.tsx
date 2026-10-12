@@ -10,6 +10,7 @@ import { AnnotationLayer } from '@ponchia/annotations/react';
 import '@ponchia/annotations/bronto.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { parseEditorAnnotationJson } from './json-import.js';
 import './styles.css';
 
 // Everything here belongs to the host. The annotation library owns the
@@ -93,7 +94,11 @@ function App() {
     [view.annotations]
   );
   const [copyStatus, setCopyStatus] = useState('');
+  const [importText, setImportText] = useState('');
+  const [importError, setImportError] = useState('');
+  const [importStatus, setImportStatus] = useState('');
   const hasAddedNote = view.annotations.some((annotation) => annotation.id === 'added');
+  const hasSignal = view.annotations.some((annotation) => annotation.id === 'signal');
 
   // Commit once. Pointer-move previews do not touch host state or rerun the
   // solver. The host owns when to update and what state to persist.
@@ -103,6 +108,7 @@ function App() {
     const oldById = new Map(previous.annotations.map((item) => [item.id, item]));
     const reused = next.annotations.filter((item) => oldById.get(item.id) === item).length;
     setCopyStatus('');
+    setImportStatus('');
     setView((last) => ({
       annotations: nextAnnotations,
       layout: next,
@@ -122,6 +128,36 @@ function App() {
     } catch {
       setCopyStatus('Clipboard unavailable here. Select and copy the JSON below.');
     }
+  }
+
+  function loadAnnotationJson() {
+    try {
+      // Parse first and construct a *new* host-owned session before changing
+      // React state. A malformed input or failed resolution leaves the prior
+      // editor and its authoritative geometry untouched.
+      const nextAnnotations = parseEditorAnnotationJson(importText);
+      const replacement = createIncrementalAnnotationLayoutSession(optionsFor(nextAnnotations));
+      session.current = replacement;
+      setImportError('');
+      setImportStatus(`Loaded ${nextAnnotations.length} annotations. Continue editing or copy the updated JSON.`);
+      setCopyStatus('');
+      setView((last) => ({
+        annotations: nextAnnotations,
+        layout: replacement.layout,
+        reused: 0,
+        action: `Imported ${nextAnnotations.length} annotations from JSON`,
+        changes: last.changes + 1
+      }));
+    } catch (error) {
+      setImportStatus('');
+      setImportError(error instanceof Error ? error.message : 'Unable to read annotations.');
+    }
+  }
+
+  function editCurrentJson() {
+    setImportText(annotationJson);
+    setImportError('');
+    setImportStatus('Current host inputs copied into the editor below. Change them, then load the JSON.');
   }
 
   function moveLastAnchor() {
@@ -186,7 +222,7 @@ function App() {
 
       <section className="demo-card" aria-label="Live incremental annotation editor">
         <div className="toolbar" role="group" aria-label="Annotation editing actions">
-          <button id="move-note" type="button" onClick={moveLastAnchor}>Move final anchor</button>
+          <button id="move-note" type="button" onClick={moveLastAnchor} disabled={!hasSignal}>Move final anchor</button>
           <button id="append-note" type="button" onClick={addAnnotation} disabled={hasAddedNote}>Add annotation</button>
           <button id="remove-note" type="button" onClick={removeAnnotation} disabled={!hasAddedNote}>Remove added note</button>
           <button id="reset-note" type="button" onClick={() => commit(structuredClone(initialAnnotations), 'Reset to initial diagram')}>Reset</button>
@@ -253,6 +289,40 @@ function App() {
             <span role="status" aria-live="polite" id="copy-status">{copyStatus}</span>
           </div>
           <pre id="annotation-json" tabIndex={0} aria-label="Current host annotation JSON">{annotationJson}</pre>
+
+          <div className="annotation-import">
+            <label htmlFor="annotation-import-input">Load annotation JSON into this example</label>
+            <p id="annotation-import-help">Paste an exported annotation array or start with the current JSON.
+              This demo accepts 1–10 notes with point/box anchors, note text and basic placement settings;
+              other annotation features require validation in your own host application.
+              Failed imports leave the current layout unchanged.</p>
+            <textarea
+              id="annotation-import-input"
+              aria-describedby="annotation-import-help"
+              aria-invalid={Boolean(importError)}
+              spellCheck={false}
+              value={importText}
+              onChange={(event) => {
+                setImportText(event.target.value);
+                setImportError('');
+                setImportStatus('');
+              }}
+              placeholder='[{"id":"my-note","anchor":{"type":"point","point":{"x":300,"y":100}},"note":{"title":"My note"}}]'
+              rows={6}
+            />
+            <div className="annotation-import-actions">
+              <button id="edit-current-json" type="button" onClick={editCurrentJson}>
+                Edit current JSON
+              </button>
+              <button id="load-annotation-json" type="button" onClick={loadAnnotationJson}>
+                Load into editor
+              </button>
+            </div>
+            {importError ? (
+              <p className="annotation-import-error" role="alert" id="annotation-import-error">{importError}</p>
+            ) : null}
+            <p className="annotation-import-status" role="status" aria-live="polite" id="annotation-import-status">{importStatus}</p>
+          </div>
         </details>
       </section>
       <p className="footnote">The host commits an edit once, then passes its resolved layout back to React. Drag feedback is visual-only until release. Global geometry changes may still require a full resolution.</p>

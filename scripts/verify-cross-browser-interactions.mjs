@@ -119,6 +119,44 @@ async function verifyIncremental(browser, origin, viewport, label) {
       label + ': computed placement candidates should not be exported');
     assert.equal(await page.locator('#copy-annotations').isEnabled(), true);
 
+    // Round-trip host-authored inputs in the *same* editor without changing
+    // the library API or persisting candidate/diagnostic layouts.
+    await page.locator('#edit-current-json').click();
+    const importField = page.locator('#annotation-import-input');
+    assert.deepEqual(JSON.parse(await importField.inputValue()), originalData,
+      label + ': starting draft differs from exported authored JSON');
+    const imported = structuredClone(originalData);
+    imported.find((note) => note.id === 'signal').placement.manual.x += 15;
+    await importField.fill(JSON.stringify(imported));
+    await page.locator('#load-annotation-json').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Imported 4 annotations from JSON');
+    assert.equal(await page.locator('#annotation-import-error').count(), 0);
+    assert.equal(await page.evaluate(() => window.__annotationsExample?.reused), 0,
+      label + ': importing a new authoritative session must not report old reuse');
+    assert.equal((await exportedAnnotations()).find((note) => note.id === 'signal')
+      ?.placement?.manual?.x, 322);
+    assert.equal(await page.evaluate(() => window.__annotationsExample.quality.ok), true);
+
+    const committedBeforeInvalid = await page.evaluate(() =>
+      window.__annotationsExample.changes);
+    const duplicate = structuredClone(imported);
+    duplicate[1].id = duplicate[0].id;
+    await importField.fill(JSON.stringify(duplicate));
+    await page.locator('#load-annotation-json').click();
+    await page.locator('#annotation-import-error').waitFor();
+    assert.match(await page.locator('#annotation-import-error').innerText(), /duplicate annotation id/i);
+    assert.equal(await page.evaluate(() => window.__annotationsExample.changes),
+      committedBeforeInvalid, label + ': malformed import modified committed state');
+    assert.equal((await exportedAnnotations()).find((note) => note.id === 'signal')
+      ?.placement?.manual?.x, 322, label + ': failed import replaced the layout');
+
+    await page.locator('#reset-note').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Reset to initial diagram');
+    assert.equal((await exportedAnnotations()).find((note) => note.id === 'signal')
+      ?.placement?.manual?.x, 307);
+
     await page.locator('#move-note').click();
     await page.waitForFunction(() =>
       window.__annotationsExample?.action === 'Moved the final anchor');
