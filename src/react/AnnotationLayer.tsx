@@ -41,6 +41,7 @@ import {
   formatAnchorAlignmentReport
 } from '../adapters/diagnostics.js';
 import { dataAttributes, annotationStyle } from './render-data.js';
+import { useMeasurementNodeRegistration, useDomNoteMeasurementObserver } from './dom-measurements.js';
 import { markerId, MemoMarkerDefs } from './marker-defs.js';
 import {
   groupEditHandles,
@@ -576,93 +577,10 @@ function AnnotationLayerRenderer({
     currentEdit?.(endEvent);
   }, [makeEditEvent]);
 
-  const setMeasureNode = useCallback((id: string, node: HTMLDivElement | null) => {
-    if (node) {
-      measureNodes.current.set(id, node);
-    } else {
-      measureNodes.current.delete(id);
-    }
-  }, []);
-
-  useIsomorphicLayoutEffect(() => {
-    if (measure !== 'dom') {
-      return undefined;
-    }
-
-    // Initial mount or a changed annotation collection must measure all
-    // visible notes, including added/removed ones. ResizeObserver callbacks
-    // have a much narrower meaning: only their listed elements changed.
-    // Scanning every note on a one-note resize creates O(n) forced geometry
-    // reads and computed-style lookups in dense DOM-measured editors.
-    const measureNode = (node: HTMLDivElement): Size | undefined => {
-      const rect = node.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return undefined;
-
-      // getBoundingClientRect reports post-transform pixels: under a scaled
-      // ancestor, use computed local border-box dimensions for layout units.
-      // Keep the client rect fallback for headless/test DOMs returning "auto".
-      const style = typeof globalThis.getComputedStyle === 'function'
-        ? globalThis.getComputedStyle(node)
-        : undefined;
-      const localWidth = style ? Number.parseFloat(style.width) : Number.NaN;
-      const localHeight = style ? Number.parseFloat(style.height) : Number.NaN;
-      return {
-        width: Math.ceil(Number.isFinite(localWidth) && localWidth > 0 ? localWidth : rect.width),
-        height: Math.ceil(Number.isFinite(localHeight) && localHeight > 0 ? localHeight : rect.height)
-      };
-    };
-
-    const updateAll = () => {
-      const next: Record<string, Size> = {};
-      for (const [id, node] of measureNodes.current.entries()) {
-        const size = measureNode(node);
-        if (size) next[id] = size;
-      }
-      setMeasuredSizes((current) => shallowSizesEqual(current, next) ? current : next);
-    };
-
-    updateAll();
-    if (typeof globalThis.ResizeObserver === 'undefined') return undefined;
-
-    // The observer owns the actual node->ID mapping. Do not rely on DOM IDs
-    // or class names, which custom note renderers are free to override.
-    const idsByNode = new Map<Element, string>();
-    const observer = new globalThis.ResizeObserver((entries) => {
-      const changed = new Set<string>();
-      for (const entry of entries) {
-        const id = idsByNode.get(entry.target);
-        if (id) changed.add(id);
-      }
-      if (changed.size === 0) return;
-
-      const updates = new Map<string, Size | undefined>();
-      for (const id of changed) {
-        const node = measureNodes.current.get(id);
-        if (node && idsByNode.get(node) === id) updates.set(id, measureNode(node));
-      }
-      if (updates.size === 0) return;
-      setMeasuredSizes((current) => {
-        let next: Record<string, Size> | undefined;
-        for (const [id, size] of updates) {
-          const previous = current[id];
-          if (size) {
-            if (previous?.width === size.width && previous.height === size.height) continue;
-            next ??= { ...current };
-            next[id] = size;
-          } else if (previous) {
-            next ??= { ...current };
-            delete next[id];
-          }
-        }
-        return next ?? current;
-      });
-    });
-    for (const [id, node] of measureNodes.current.entries()) {
-      idsByNode.set(node, id);
-      observer.observe(node);
-    }
-    return () => observer.disconnect();
-  }, [annotations, measure, renderNote]);
+  const setMeasureNode = useMeasurementNodeRegistration(measureNodes);
+  useDomNoteMeasurementObserver({
+    annotations, measure, renderNote, measureNodes, setMeasuredSizes
+  });
 
   return (
     <div
@@ -1341,17 +1259,6 @@ function badgeGeometry(
 
 function badgePath(anchor: Point, first: Point, second: Point): string {
   return `M${round(anchor.x)},${round(anchor.y)}L${round(first.x)},${round(first.y)}L${round(second.x)},${round(second.y)}Z`;
-}
-
-function shallowSizesEqual(a: Record<string, Size>, b: Record<string, Size>): boolean {
-  const aKeys = Object.keys(a);
-  const bKeys = Object.keys(b);
-
-  if (aKeys.length !== bKeys.length) {
-    return false;
-  }
-
-  return aKeys.every((key) => a[key]?.width === b[key]?.width && a[key]?.height === b[key]?.height);
 }
 
 function maxPadding(padding: AnnotationSubjectOptions['padding']): number {

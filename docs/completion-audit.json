@@ -232,7 +232,6 @@
         {
           "file": "src/react/AnnotationLayer.tsx",
           "terms": [
-            "ResizeObserver",
             "renderNote",
             "noteTabIndex",
             "editHandleTabIndex",
@@ -245,6 +244,24 @@
             "qualityDebug",
             "aria-hidden",
             "typeof window"
+          ]
+        },
+        {
+          "file": "src/react/dom-measurements.ts",
+          "terms": [
+            "ResizeObserver",
+            "getBoundingClientRect",
+            "getComputedStyle",
+            "idsByNode",
+            "active = false",
+            "shallowSizesEqual"
+          ]
+        },
+        {
+          "file": "test/react/dom-resize-delta.test.tsx",
+          "terms": [
+            "ResizeObserver measures only changed DOM notes",
+            "first.emit(priorNode)"
           ]
         },
         {
