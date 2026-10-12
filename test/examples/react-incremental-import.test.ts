@@ -36,7 +36,7 @@ describe('host-owned JSON import for the incremental React example', () => {
 
   it('accepts a validated custom note and basic manual placement options', () => {
     const notes = parseEditorAnnotationJson(JSON.stringify([{
-      id: 'note-1',
+      id: 'Nota 1: Übersicht',
       anchor: { type: 'point', point: { x: 220, y: 80 } },
       note: { body: 'Additional comment', ariaLabel: 'Detail', visible: true, align: 'center' },
       placement: {
@@ -45,7 +45,7 @@ describe('host-owned JSON import for the incremental React example', () => {
       }
     }]));
     expect(notes).toEqual([{
-      id: 'note-1', anchor: { type: 'point', point: { x: 220, y: 80 } },
+      id: 'Nota 1: Übersicht', anchor: { type: 'point', point: { x: 220, y: 80 } },
       note: { body: 'Additional comment', ariaLabel: 'Detail', visible: true, align: 'center' },
       placement: {
         manual: { x: 310, y: 90, side: 'right', align: 'start', clamp: true },
@@ -75,6 +75,9 @@ describe('host-owned JSON import for the incremental React example', () => {
     const wrongSide = structuredClone(base);
     wrongSide[1]!.placement!.manual!.side = 'outside' as never;
     expect(() => parseEditorAnnotationJson(JSON.stringify(wrongSide))).toThrow('must be one of');
+    const badId = structuredClone(base);
+    badId[1]!.id = 'bad\u0000id';
+    expect(() => parseEditorAnnotationJson(JSON.stringify(badId))).toThrow('control characters');
     const missingNote = structuredClone(base);
     missingNote[0]!.note = {};
     expect(() => parseEditorAnnotationJson(JSON.stringify(missingNote))).toThrow('needs a title or body');

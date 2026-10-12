@@ -157,8 +157,11 @@ export function parseEditorAnnotationJson(raw: string): Annotation[] {
     const label = `Annotation ${index + 1}`;
     const data = object(entry, label);
     allowed(data, ['id', 'priority', 'anchor', 'note', 'placement'], label);
-    if (typeof data.id !== 'string' || !/^[a-zA-Z][a-zA-Z0-9_-]{0,39}$/.test(data.id)) {
-      fail(`${label}.id needs 1–40 characters: letters, digits, underscores or hyphens, starting with a letter.`);
+    // Host annotation IDs are strings, not CSS identifiers. Keep Unicode,
+    // spaces and punctuation; exclude empty or control-character IDs.
+    if (typeof data.id !== 'string' || !data.id.trim() || data.id.length > 80
+      || /[\u0000-\u001f\u007f]/u.test(data.id)) {
+      fail(`${label}.id needs 1–80 visible characters, without control characters.`);
     }
     const id = data.id as string;
     if (seen.has(id)) fail(`Duplicate annotation ID "${id}".`);
