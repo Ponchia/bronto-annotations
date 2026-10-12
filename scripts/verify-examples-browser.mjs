@@ -990,7 +990,9 @@ async function verifyIncrementalDemo(page, label) {
   const appended = await page.evaluate(() => window.__annotationsExample);
   assert.equal(appended.reused, 4, `${label}: appending a note preserves all four old placements`);
   assert.equal(await page.locator('g.pa-annotation[data-annotation-id="added"]').count(), 1);
-  assert.equal(await page.locator('#append-note').isDisabled(), true);
+  // The toolbar supports multiple generated notes up to the shared import
+  // limit, rather than reserving a single global "added" identifier.
+  assert.equal(await page.locator('#append-note').isEnabled(), true);
 
   // Appending a note is one committed action; undo removes it and redo
   // restores it through the authoritative incremental host session.
@@ -1008,7 +1010,8 @@ async function verifyIncrementalDemo(page, label) {
   const removed = await page.evaluate(() => window.__annotationsExample);
   assert.equal(removed.reused, 4, `${label}: removing the final note preserves all earlier winners`);
   assert.equal(await page.locator('g.pa-annotation[data-annotation-id="added"]').count(), 0);
-  assert.equal(await page.locator('#remove-note').isDisabled(), true);
+  // Remove final note is an explicit operation, not a special-ID toggle.
+  assert.equal(await page.locator('#remove-note').isEnabled(), true);
 
   await page.locator('#reset-note').click();
   await page.waitForFunction(() => window.__annotationsExample?.action === 'Reset to initial diagram');

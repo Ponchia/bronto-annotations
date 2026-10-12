@@ -238,6 +238,50 @@ async function verifyIncremental(browser, origin, viewport, label) {
     assert.equal((await exportedAnnotations()).length, 10);
     assert.equal(await page.locator('#append-note').isDisabled(), true);
 
+    // Imports may use the demo's historical "added" ID legitimately. The
+    // toolbar must generate a fresh ID rather than treating that imported
+    // document as its own previously-added note.
+    const withCollision = [
+      { id: 'added', anchor: { type: 'point', point: { x: 125, y: 120 } },
+        note: { title: 'Imported added' } },
+      { id: 'custom', anchor: { type: 'point', point: { x: 420, y: 130 } },
+        note: { title: 'Other imported note' } }
+    ];
+    await importField.fill(JSON.stringify(withCollision));
+    await page.locator('#load-annotation-json').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Imported 2 annotations from JSON');
+    assert.equal(await page.locator('#append-note').isEnabled(), true);
+    assert.equal(await page.locator('#remove-note').isEnabled(), true);
+    await page.locator('#append-note').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Appended a lower-priority note');
+    const appended = await exportedAnnotations();
+    assert.deepEqual(appended.map((item) => item.id), ['added', 'custom', 'added-2'],
+      label + ': adding a note overwrote an imported reserved-looking ID');
+    assert.deepEqual(appended[0], withCollision[0]);
+    await page.locator('#remove-note').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Removed the final note');
+    assert.deepEqual(await exportedAnnotations(), withCollision,
+      label + ': remove-final deleted a different imported annotation');
+    await page.locator('#undo-edit').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Undid: Removed the final note');
+    assert.deepEqual((await exportedAnnotations()).map((item) => item.id),
+      ['added', 'custom', 'added-2']);
+    await page.locator('#redo-edit').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Redid: Removed the final note');
+    assert.deepEqual(await exportedAnnotations(), withCollision);
+
+    await importField.fill(JSON.stringify([withCollision[0]]));
+    await page.locator('#load-annotation-json').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Imported 1 annotations from JSON');
+    assert.equal(await page.locator('#remove-note').isDisabled(), true,
+      label + ': demo allowed deletion of its sole imported note');
+
     await page.locator('#reset-note').click();
     await page.waitForFunction(() =>
       window.__annotationsExample?.action === 'Reset to initial diagram');
