@@ -421,11 +421,14 @@ function AnnotationLayerRenderer({
   });
 
   // The preview scheduler does not own authoritative host geometry or gesture
-  // state. Cancel the in-flight gesture when those inputs change, so a later
-  // pointer release cannot submit a suggested placement from an old layout.
+  // state. Cancel the in-flight gesture and any pending preview when these
+  // inputs or the edit controls change. Disabling authoring must not let an
+  // old animation frame paint, nor let a captured pointer commit on release.
   useIsomorphicLayoutEffect(() => {
+    cancelQueuedPreview();
+    setActivePreview(null);
     setActiveEdit(null);
-  }, [layout, previewEdits]);
+  }, [layout, previewEdits, editOptions, cancelQueuedPreview, setActivePreview]);
 
   // Also validate at event-dispatch time: a pointer event racing a committed
   // host layout update must fail closed even before effects flush.
@@ -581,6 +584,10 @@ function AnnotationLayerRenderer({
         onPointerMove={handleEditPointerMove}
         onPointerUp={finishEdit}
         onPointerCancel={cancelEdit}
+        // Pointer capture can be lost without a pointercancel (for example,
+        // when another target takes capture). It arrives at the captured edit
+        // handle and bubbles to this SVG; cancel instead of committing.
+        onLostPointerCapture={cancelEdit}
       >
         <MemoMarkerDefs annotations={layout.annotations} prefix={prefix} markerPrefix={markerPrefix} />
         {displayedAnnotations.map((item) => (
