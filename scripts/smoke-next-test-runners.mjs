@@ -19,6 +19,10 @@ const exec = promisify(execFile);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const vitestVersion = '5.0.3';
 const jsdomVersion = '30.1.2';
+// npm 10 can crash in Arborist peer-set resolution with newer Vitest optional
+// peers (npm/cli#9787). Use a pinned newer npm only for this disposable
+// experiment; the normal Node 20/22 project install remains unchanged.
+const installNpmVersion = '11.19.1';
 
 const nodeParts = process.versions.node.split('.').map(Number);
 const supported = (nodeParts[0] === 22 && (nodeParts[1] > 22 || nodeParts[1] === 22 && nodeParts[2] >= 2))
@@ -52,7 +56,16 @@ try {
   await writeFile(packageFile, JSON.stringify(pkg, null, 2) + '\n');
 
   const env = { ...process.env, npm_config_engine_strict: 'true' };
-  await exec('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund'], {
+  // Keep normal npm peer checks; --legacy-peer-deps would hide the very
+  // compatibility conflicts this lane is meant to detect. npx downloads the
+  // exact npm CLI into its isolated cache without changing the runner's npm.
+  const installer = ['--yes', `npm@${installNpmVersion}`];
+  const { stdout: observedInstaller } = await exec('npx', [...installer, '--version'], {
+    cwd: workdir, env, maxBuffer
+  });
+  assert.equal(observedInstaller.trim(), installNpmVersion,
+    'The isolated test-runner installer must use the pinned npm version');
+  await exec('npx', [...installer, 'install', '--ignore-scripts', '--no-audit', '--no-fund'], {
     cwd: workdir, env, maxBuffer
   });
 
@@ -76,6 +89,7 @@ try {
     node: process.version,
     vitest: vitestVersion,
     jsdom: jsdomVersion,
+    installerNpm: installNpmVersion,
     typecheck: 'passed',
     unitTests: 'passed',
     sourceFiles: files.length,
