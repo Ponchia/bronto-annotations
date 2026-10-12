@@ -10,9 +10,13 @@ on:
 permissions:
   contents: read
 
+# Pages is a mutable public deployment, not an immutable package release.
+# An environment-gated previous commit must not hold newer, fully verified
+# main builds in the pending slot for hours. Supersede stale site runs; do
+# not change the protected npm publication environment or its concurrency.
 concurrency:
   group: annotations-pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
