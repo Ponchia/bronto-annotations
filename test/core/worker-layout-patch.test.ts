@@ -276,5 +276,27 @@ describe('consumer-owned revisioned Worker layout transport', () => {
     expect(canReuseWorkerAnnotation(cyclicA, cyclicB)).toBe(false);
     expect(canReuseWorkerAnnotation({ score: Number.NaN }, { score: Number.NaN })).toBe(true);
     expect(canReuseWorkerAnnotation({ score: -0 }, { score: 0 })).toBe(false);
+    // JSON/stringify-like enumeration would miss hidden changes. Workers
+    // discard non-enumerable host fields during structured clone, so retaining
+    // the old annotation must be prohibited, even if visible keys match.
+    const hidden: Record<string, unknown> = { status: 'ready' };
+    Object.defineProperty(hidden, 'internal', {
+      value: { version: 1 }, enumerable: false
+    });
+    const copied = structuredClone(hidden);
+    expect(Object.hasOwn(copied, 'internal')).toBe(false);
+    expect(canReuseWorkerAnnotation(hidden, copied)).toBe(false);
+    expect(canReuseWorkerAnnotation({ metadata: hidden }, { metadata: copied })).toBe(false);
+    let getterReads = 0;
+    const backed: Record<string, unknown> = { status: 'ready' };
+    Object.defineProperty(backed, 'lazy', {
+      enumerable: false,
+      get() { getterReads++; return 'not evaluated'; }
+    });
+    expect(canReuseWorkerAnnotation(backed, { status: 'ready' })).toBe(false);
+    expect(getterReads).toBe(0);
+    const customArray = [1, 2] as number[] & { hidden?: string };
+    Object.defineProperty(customArray, 'hidden', { value: 'one', enumerable: false });
+    expect(canReuseWorkerAnnotation(customArray, [1, 2])).toBe(false);
   });
 });
