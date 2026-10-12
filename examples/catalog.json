@@ -16,7 +16,7 @@
   "react-incremental": {
     "title": "Interactive annotation editor",
     "summary": "Drag and edit notes, inspect JSON, and undo committed changes with host-owned history.",
-    "try": "Drag a note handle, use Move final anchor, edit a note title and apply it, then Undo and Redo. Copy the current JSON and load it back. Invalid JSON must leave the current state untouched.",
+    "try": "Click or Tab to a note in the diagram to select it for text editing. Drag a note handle, use Move final anchor, edit a note title and apply it, then Undo and Redo. Copy the current JSON and load it back. Invalid JSON must leave the current state untouched.",
     "boundary": "History, selection, forms, JSON validation, and persistence decisions are application code. The small importer accepts point/box annotations and at most ten notes; it is not a general package serializer.",
     "guide": "react-guide"
   },

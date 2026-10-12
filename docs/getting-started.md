@@ -28,6 +28,48 @@ For React, run `npm run example -- examples/react-basic` instead. The
 Examples are source fixtures, not separate npm packages; install dependencies
 and run commands at the repository root.
 
+## Start a new application without cloning this repository
+
+For a small independent browser project, use the Vite 8 major tested by this
+repository and a Node version from the [compatibility matrix](compatibility.md):
+
+```bash
+mkdir annotation-demo
+cd annotation-demo
+npm init -y
+npm install @ponchia/annotations
+npm install --save-dev vite@8
+```
+
+Create `index.html` with:
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My first annotation</title>
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>
+```
+
+Create `main.ts` next to it using the complete browser example below. Then run:
+
+```bash
+npx vite --host 127.0.0.1
+```
+
+Open the printed local URL. This project installs the **published npm package**,
+not a link to this repository. To produce a static build, run `npx vite build`;
+`npx vite preview --host 127.0.0.1` serves that build for a local check.
+Vite transforms TypeScript for the browser; it does not replace a separate
+TypeScript typecheck in your application's CI.
+
 ## Use it in a browser application
 
 In an existing TypeScript application whose bundler handles CSS imports:
@@ -48,18 +90,21 @@ import '@ponchia/annotations/bronto.css';
 
 const annotations: Annotation[] = [{
   id: 'peak',
-  anchor: { type: 'point', point: { x: 180, y: 120 } },
+  anchor: { type: 'point', point: { x: 60, y: 120 } },
   note: { title: 'Peak response', body: 'An explanation attached to this point.' },
   placement: { side: 'right' }
 }];
 
 const layout = resolveAnnotationLayout({
   annotations,
-  bounds: { x: 0, y: 0, width: 640, height: 360 },
+  bounds: { x: 0, y: 0, width: 400, height: 240 },
   padding: 16
 });
 
 const container = document.createElement('div');
+container.style.maxWidth = '640px';
+container.style.fontFamily = 'system-ui, sans-serif';
+container.style.aspectRatio = '400 / 240';
 container.innerHTML = renderAnnotationsSvg(layout, {
   title: 'An annotated point',
   markerIdPrefix: 'first-annotation'
@@ -70,7 +115,10 @@ document.body.append(container);
 You should see one SVG annotation with the title **Peak response** and its
 connector. This deliberately small example does not render a chart; the point
 coordinates are the geometry your chart would supply. The CSS import styles the
-output but does not install or require BrontoUI.
+output but does not install or require BrontoUI. The container keeps the same
+aspect ratio as the 400 × 240 coordinate space and scales down on narrow screens.
+In an existing application, mount it inside your own surface rather than
+appending a second overlay to the document body.
 
 `renderAnnotationsSvg` returns a complete SVG element. Do not put a complete
 SVG overlay inside a chart's data group accidentally. Mount it in its own
@@ -79,8 +127,15 @@ Keep the same `viewBox` coordinate system and `preserveAspectRatio` as the host.
 
 ## Use it in React
 
-An existing React application needs the package plus `react` and `react-dom`.
-No D3, Vega, Mermaid, or other host library is required for this component:
+In an existing React application, install the annotation package:
+
+```bash
+npm install @ponchia/annotations
+```
+
+React and React DOM remain peer dependencies: keep the application's existing
+supported versions rather than installing another React copy. No D3, Vega,
+Mermaid, or other host library is required for this component:
 
 ```tsx
 import { AnnotationLayer } from '@ponchia/annotations/react';
@@ -91,11 +146,12 @@ export function AnnotatedPoint() {
     <AnnotationLayer
       annotations={[{
         id: 'peak',
-        anchor: { type: 'point', point: { x: 180, y: 120 } },
+        anchor: { type: 'point', point: { x: 60, y: 120 } },
         note: { title: 'Peak response' },
         placement: { side: 'right' }
       }]}
-      bounds={{ x: 0, y: 0, width: 640, height: 360 }}
+      bounds={{ x: 0, y: 0, width: 400, height: 240 }}
+      style={{ width: '100%', maxWidth: 640, height: 'auto', aspectRatio: '400 / 240' }}
       label="An annotated point"
       markerIdPrefix="react-first-annotation"
     />
@@ -104,8 +160,9 @@ export function AnnotatedPoint() {
 ```
 
 Render `<AnnotatedPoint />` from your application. `AnnotationLayer` creates
-its own SVG. For an overlay on an existing chart, align its bounds and transform
-with the host; the [React example](../examples/react-basic/) includes that setup.
+its own SVG and wrapper. The `style` above overrides the wrapper's default
+fixed dimensions so this example scales within a narrow parent. For an overlay
+on an existing chart, align its bounds and transform with the host; the [React example](../examples/react-basic/) includes that setup.
 
 Start without editing or custom measurements. When you need them, read
 [React rendering and editing](react-guide.md). The application owns the note

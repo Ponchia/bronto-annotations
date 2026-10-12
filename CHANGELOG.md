@@ -19,6 +19,13 @@ reasonable.
 
 ### Documentation and discovery
 
+- Make the first-use SVG and React snippets responsive; verify the exact snippets
+  in clean packed consumers as well as the documentation fixtures. Document a
+  standalone Vite application setup without cloning the repository.
+- Add in-page section navigation, search guide descriptions, and verify static
+  fragment targets in the published HTML. Keep current guides separate from
+  maintainer reference and historical evidence in search results.
+
 - Refocus the README on first use and move detailed API examples into maintained
   topic guides without removing verification evidence.
 - Add executable onboarding snippets, troubleshooting, a documented example

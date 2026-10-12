@@ -235,8 +235,16 @@ try {
     assert((await docs.locator('[data-doc-card]').count()) >= 25);
     await docs.locator('#docs-filter').fill('context quickstart');
     assert.equal(await docs.locator('[data-doc-card]:visible').count(), 1);
+    await docs.locator('#docs-filter').fill('  WRAPPING    missing  ');
+    assert.equal(await docs.locator('[data-doc-card]:visible').count(), 1,
+      'Search must match normalized words from the guide description, not just its title');
+    assert((await docs.locator('[data-doc-card]:visible h2').innerText()).includes('Troubleshooting'));
+    assert.equal(await docs.locator('[data-doc-group]:visible').count(), 1,
+      'Unmatched documentation groups should not leave empty headings behind');
     await docs.locator('#docs-filter').fill('not-found-search-term');
     assert.equal(await docs.locator('[data-doc-card]:visible').count(), 0);
+    assert.equal(await docs.locator('[data-doc-group]:visible').count(), 0);
+    assert(await docs.locator('#docs-filter-empty').isVisible());
     const docAudit = await new AxeBuilder({ page: docs })
       .withTags(wcagTags)
       .analyze();
@@ -267,6 +275,15 @@ try {
         `Guide ${path} (${width}px) axe violations: ` +
           guideAudit.violations.map((x) => x.id).join(', '),
       );
+      if (path === '/docs/getting-started.html') {
+        await guide.locator('details.docs-contents summary').click();
+        await guide.locator('nav[aria-label="On this page"] a[href="#use-it-in-react"]').click();
+        assert.equal(new URL(guide.url()).hash, '#use-it-in-react');
+        const y = await guide.locator('#use-it-in-react').evaluate((node) => node.getBoundingClientRect().top);
+        assert(y >= 0 && y < 100, 'Section link must scroll to the actual React heading');
+        await guide.evaluate(() => scrollTo(0, 0));
+        await guide.locator('details.docs-contents summary').click();
+      }
       await guide.screenshot({ path: resolve(onboardingEvidence, `${evidenceName}-${width}.png`), fullPage: false });
       variants++;
       await guide.context().close();

@@ -2,8 +2,8 @@
 
 [Documentation index](README.md) · [First annotation](getting-started.md)
 
-This maintained guide contains the detailed examples previously in the root
-README. Read only the sections relevant to your integration.
+Connect annotations to geometry already produced by the DOM, a chart,
+or a diagram renderer.
 
 ## DOM And SVG Utilities
 

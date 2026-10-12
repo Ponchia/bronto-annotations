@@ -23,6 +23,13 @@ describe('executable first-use documentation', () => {
     expect(document.body.textContent).toContain('An explanation attached to this point.');
   });
 
+  it('keeps the standalone Vite HTML entry synchronized with the executable consumer', () => {
+    const entry = read('./browser-entry.html').trim();
+    expect(read('../../docs/getting-started.md')).toContain(`\`\`\`html\n${entry}\n\`\`\``);
+    expect(entry).toContain('name="viewport"');
+    expect(entry).toContain('src="/main.ts"');
+  });
+
   it('server-renders the exact React component printed in the first-use guide', () => {
     const fixture = read('./react-example.tsx').trim();
     expect(read('../../docs/getting-started.md')).toContain(`\`\`\`tsx\n${fixture}\n\`\`\``);

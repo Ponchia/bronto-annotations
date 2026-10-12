@@ -17,7 +17,7 @@ rebuilding library code, and running the complete published site locally.
 
 ## What to try
 
-Drag a note handle, use Move final anchor, edit a note title and apply it, then Undo and Redo. Copy the current JSON and load it back. Invalid JSON must leave the current state untouched.
+Click or Tab to a note in the diagram to select it for text editing. Drag a note handle, use Move final anchor, edit a note title and apply it, then Undo and Redo. Copy the current JSON and load it back. Invalid JSON must leave the current state untouched.
 
 ## Host and package boundary
 

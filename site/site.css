@@ -1245,3 +1245,25 @@ select:focus-visible {
     animation-duration: 0.01ms !important;
   }
 }
+
+.docs-contents {
+  border-block: 1px solid var(--line);
+  padding-block: 12px;
+  margin-block: 18px 26px;
+}
+.docs-contents summary {
+  cursor: pointer;
+  font-weight: 650;
+  color: var(--ink);
+}
+.docs-contents ul {
+  margin-block: 10px 0;
+  padding-left: 24px;
+}
+.docs-prose :is(h2, h3) {
+  scroll-margin-top: 24px;
+}
+[data-doc-group][hidden],
+[data-doc-card][hidden] {
+  display: none;
+}

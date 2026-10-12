@@ -45,7 +45,8 @@ const titles = {
   'security-automation': 'Security and development',
   release: 'Releases and publishing',
 };
-const primaryDocs = Object.keys(titles);
+const maintainerDocs = new Set(['security-automation', 'release']);
+const primaryDocs = Object.keys(titles).filter((name) => !maintainerDocs.has(name));
 const guideSummaries = {
   'getting-started': 'Install the package, run a complete example, and render your first note in SVG or React.',
   'context-quickstart': 'Choose the entry point that matches the chart, diagram, or DOM content you already render.',
@@ -295,6 +296,35 @@ for (const file of docsFiles) {
   );
   parsed = rewriteMarkdownLinks(parsed, file);
   parsed = namedHeadings(parsed);
+  // Native disclosure keeps longer guides navigable without a new JS runtime.
+  // Derive links from the actual rendered headings, never a duplicated list.
+  const fragment = JSDOM.fragment(parsed);
+  const sections = [...fragment.querySelectorAll('h2')];
+  if (sections.length >= 2) {
+    const contents = fragment.ownerDocument.createElement('details');
+    contents.className = 'docs-contents';
+    const summary = fragment.ownerDocument.createElement('summary');
+    summary.textContent = 'On this page';
+    contents.append(summary);
+    const nav = fragment.ownerDocument.createElement('nav');
+    nav.setAttribute('aria-label', 'On this page');
+    const list = fragment.ownerDocument.createElement('ul');
+    for (const heading of sections) {
+      const item = fragment.ownerDocument.createElement('li');
+      const link = fragment.ownerDocument.createElement('a');
+      link.href = '#' + heading.id;
+      link.textContent = heading.textContent;
+      item.append(link);
+      list.append(item);
+    }
+    nav.append(list);
+    contents.append(nav);
+    const title = fragment.querySelector('h1');
+    if (title) title.after(contents);
+    const wrapper = fragment.ownerDocument.createElement('div');
+    wrapper.append(fragment);
+    parsed = wrapper.innerHTML;
+  }
   const sidebar =
     '<aside class="docs-sidebar" aria-label="Documentation topics">' +
     '<h2>Documentation</h2><a class="sidebar-index" href="' +
@@ -410,7 +440,7 @@ const renderCards = (items) => items
         (
           title +
           ' ' +
-          slug.replaceAll('-', ' ').replaceAll('/', ' ')
+          slug.replaceAll('-', ' ').replaceAll('/', ' ') + ' ' + summary
         ).toLowerCase(),
       ) +
       '"><h2>' +
@@ -429,10 +459,10 @@ const docsHome =
   '<label for="docs-filter" class="eyebrow">SEARCH THE REFERENCE</label>' +
   '<input type="search" id="docs-filter" class="docs-search" placeholder="Find a guide, adapter, or integration..." autocomplete="off"/>' +
   '<p class="docs-filter-empty" id="docs-filter-empty" role="status">No documentation pages match that search.</p>' +
-  '</section><section class="container" aria-label="Current package guides"><h2>Using the package</h2>' +
+  '</section><section class="container" data-doc-group aria-label="Current package guides"><h2>Using the package</h2>' +
   '<div class="docs-card-grid" id="docs-results">' +
   renderCards(listing.filter(({ slug }) => primaryDocs.includes(slug))) +
-  '</div></section><section class="container" aria-label="Reference and historical evidence">' +
+  '</div></section><section class="container" data-doc-group aria-label="Reference and historical evidence">' +
   '<h2>Maintainer reference and historical evidence</h2>' +
   '<p>These documents retain design decisions, verification records, and earlier plans. ' +
   'They are not the starting point for a new integration or a guarantee for every consumer.</p>' +

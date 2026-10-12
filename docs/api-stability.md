@@ -5,6 +5,20 @@
 `@ponchia/annotations` is currently pre-1.0. The package is usable, but its
 experimental authoring API can still evolve before `1.0.0`.
 
+## Choosing an API today
+
+Prefer the stable rendering and layout APIs for a first integration. Consult the
+[release notes](https://github.com/Ponchia/bronto-annotations/releases) for the
+exact version installed in your application, especially across minor updates.
+The `0.1.x` label below is the historical policy identifier in the verification
+manifest, **not an instruction to install version 0.1**. The manifest still
+classifies the current exported names; this guide does not broaden their
+compatibility guarantees beyond the recorded policy.
+
+For experimental editing or incremental layout, pin the version in your
+application and test upgrades against your own interactions and geometry.
+Example-only history, JSON forms, and Worker protocols are not public package APIs.
+
 ## Stability Labels
 
 - Stable for `0.1.x`: expected to remain source-compatible across patch
@@ -55,9 +69,12 @@ subpath is listed exactly once as stable or experimental.
 - Dense-layout tuning constants and scoring weights.
 - Low-level adapter finder/traversal helpers such as rendered SVG finders, D2
   traversal helpers, and React Flow geometry helpers.
-- Visual regression baseline file format, which is an internal verification
-  fixture and not a package API.
-- Any canary-only package publishing workflow before the first public release.
+
+## Maintainer-only formats
+
+Visual regression baseline files and canary publishing workflows are internal
+verification tools, not exported APIs. Historical pre-release evidence does not
+turn these formats into a compatibility promise for consumers.
 
 ## API Change Rules
 

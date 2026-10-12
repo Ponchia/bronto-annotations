@@ -2,8 +2,8 @@
 
 [Documentation index](README.md) · [First annotation](getting-started.md)
 
-This maintained guide contains the detailed examples previously in the root
-README. Read only the sections relevant to your integration.
+Choose callout types and migrate d3-style input without importing a D3
+runtime into the headless core.
 
 ## Presets
 

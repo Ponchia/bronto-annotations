@@ -1,5 +1,6 @@
+import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { access, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { chromium } from 'playwright';
@@ -708,6 +709,10 @@ function assertPackContents(packResult) {
   const required = [
     'LICENSE',
     'README.md',
+    'FUNDING.md',
+    'SUPPORT.md',
+    'docs/getting-started.md',
+    'docs/troubleshooting.md',
     'package.json',
     'dist/index.js',
     'dist/index.d.ts',
@@ -858,6 +863,8 @@ async function smokeBrowserBundle(tarball) {
     };
   `);
 
+  await prepareFirstUse(workdir, 'svg');
+
   const server = await createServer({
     root: workdir,
     configFile: false,
@@ -947,6 +954,7 @@ async function smokeBrowserBundle(tarball) {
       path: join(packedScreenshotsDir, 'packed-browser.png'),
       fullPage: true
     });
+    await smokeFirstUse(page, `http://127.0.0.1:${address.port}`, 'svg');
     await page.close();
   } finally {
     await browser.close();
@@ -1520,6 +1528,8 @@ async function smokeBrowserAdapters(tarball) {
     createRoot(document.querySelector('#flow-root')).render(<FlowApp />);
   `);
 
+  await prepareFirstUse(workdir, 'react');
+
   const server = await createServer({
     root: workdir,
     configFile: false,
@@ -1754,10 +1764,84 @@ async function smokeBrowserAdapters(tarball) {
       path: join(packedScreenshotsDir, 'packed-adapters.png'),
       fullPage: true
     });
+    await smokeFirstUse(page, `http://127.0.0.1:${address.port}`, 'react');
     await page.close();
   } finally {
     await browser.close();
     await server.close();
+  }
+}
+
+// Reuse the already installed root/React packed consumers and their browsers.
+// The exact fixtures are also synchronized against the public Markdown in Vitest.
+async function prepareFirstUse(workdir, renderer) {
+  const entry = await readFile(new URL('../test/docs/browser-entry.html', import.meta.url), 'utf8');
+  const fixture = renderer === 'svg' ? 'readme-example.ts' : 'react-example.tsx';
+  await writeFile(join(workdir, fixture), await readFile(new URL(`../test/docs/${fixture}`, import.meta.url), 'utf8'));
+  const main = renderer === 'svg'
+    ? "import './readme-example.ts';\n"
+    : "import { createElement } from 'react';\n"
+      + "import { createRoot } from 'react-dom/client';\n"
+      + "import { AnnotatedPoint } from './react-example.tsx';\n"
+      + "const target = document.createElement('div'); document.body.append(target);\n"
+      + "createRoot(target).render(createElement(AnnotatedPoint));\n";
+  await writeFile(join(workdir, 'main.ts'), main);
+  await writeFile(join(workdir, 'quickstart.html'), entry);
+  // Explicitly describe the host JSX setting; do not inherit the repository's tsconfig.
+  await writeFile(join(workdir, 'tsconfig.json'), JSON.stringify({
+    compilerOptions: { target: 'ES2022', module: 'ESNext', moduleResolution: 'Bundler', jsx: 'react-jsx' }
+  }));
+}
+
+async function smokeFirstUse(page, baseUrl, renderer) {
+  const failures = [];
+  const onError = (error) => failures.push(error.message);
+  const onResponse = (response) => {
+    if (response.status() >= 400) failures.push(`${response.status()}: ${response.url()}`);
+  };
+  page.on('pageerror', onError);
+  page.on('response', onResponse);
+  try {
+    for (const width of [390, 1200]) {
+      await page.setViewportSize({ width, height: 844 });
+      const response = await page.goto(baseUrl + '/quickstart.html', { waitUntil: 'networkidle' });
+      assert.equal(response?.status(), 200);
+      await page.locator('.pa-annotation__title').waitFor();
+      const result = await page.evaluate(() => {
+        const svg = document.querySelector('svg.pa-annotation-layer');
+        const note = document.querySelector('.pa-annotation__note-box');
+        const title = document.querySelector('.pa-annotation__title');
+        const connector = document.querySelector('.pa-annotation__connector');
+        return {
+          svg: svg?.getBoundingClientRect().toJSON(),
+          note: note?.getBoundingClientRect().toJSON(),
+          title: title?.textContent,
+          count: document.querySelectorAll('.pa-annotation').length,
+          overflow: document.documentElement.scrollWidth - innerWidth,
+          connectorStroke: connector ? getComputedStyle(connector).stroke : '',
+          textFill: title ? getComputedStyle(title).fill : '',
+          titlePixels: title && svg
+            ? Number.parseFloat(getComputedStyle(title).fontSize) * svg.getBoundingClientRect().width / svg.viewBox.baseVal.width
+            : 0,
+        };
+      });
+      const context = `${renderer} quickstart at ${width}px: ${JSON.stringify(result)}`;
+      assert.equal(result.count, 1, context);
+      assert.equal(result.title, 'Peak response', context);
+      assert(result.svg?.width > 300 && result.svg.height > 150, context);
+      assert(result.note?.width > 0 && result.note.height > 0, context);
+      assert(result.note.left >= result.svg.left - 1 && result.note.right <= result.svg.right + 1, context);
+      assert(result.note.top >= result.svg.top - 1 && result.note.bottom <= result.svg.bottom + 1, context);
+      assert(result.overflow <= 0, context);
+      assert(result.titlePixels >= 12, 'First-use title should remain readable rather than only fit: ' + context);
+      assert(visibleColor(result.connectorStroke) && visibleColor(result.textFill), context);
+      assert.deepEqual(failures, [], context);
+      await page.screenshot({ path: join(packedScreenshotsDir, `first-use-${renderer}-${width}.png`) });
+    }
+    console.log(`Exact ${renderer} first-use snippet verified from the installed tarball at 390px and 1200px.`);
+  } finally {
+    page.off('pageerror', onError);
+    page.off('response', onResponse);
   }
 }
 

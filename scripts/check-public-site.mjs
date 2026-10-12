@@ -77,9 +77,12 @@ assert(
 
 const pages = [...existing].filter((x) => extname(x) === '.html');
 let links = 0;
+const anchors = new Map();
+const fragmentLinks = [];
 for (const rel of pages) {
   const doc = new JSDOM(await readFile(join(target, rel), 'utf8'));
   const html = doc.window.document;
+  anchors.set(rel, new Set([...html.querySelectorAll('[id]')].map((node) => node.id)));
   assert(
     html.querySelector('html[lang="en"]'),
     'Missing document language: ' + rel,
@@ -112,7 +115,6 @@ for (const rel of pages) {
     const raw = node.getAttribute('href') ?? node.getAttribute('src');
     if (
       !raw ||
-      raw.startsWith('#') ||
       raw.startsWith('data:') ||
       raw.startsWith('mailto:')
     )
@@ -139,10 +141,21 @@ for (const rel of pages) {
       existing.has(resolved),
       'Broken published link from ' + rel + ': ' + raw + ' -> ' + resolved,
     );
+    if (url.hash && extname(resolved) === '.html') {
+      fragmentLinks.push({ source: rel, target: resolved, id: decodeURIComponent(url.hash.slice(1)), raw });
+    }
     links++;
   }
   doc.window.close();
 }
+for (const link of fragmentLinks) {
+  assert(anchors.get(link.target)?.has(link.id),
+    `Broken published section link from ${link.source}: ${link.raw}`);
+}
+const firstGuide = new JSDOM(await readFile(join(target, 'docs/getting-started.html'), 'utf8'));
+const sectionLinks = firstGuide.window.document.querySelectorAll('details.docs-contents nav a[href^="#"]');
+assert(sectionLinks.length >= 5, 'First-use guide must offer derived in-page section links');
+firstGuide.window.close();
 const homepage = await readFile(join(target, 'index.html'), 'utf8');
 const home = new JSDOM(homepage);
 assert(
@@ -219,5 +232,5 @@ console.log(
     pages.length +
     ' HTML pages, ' +
     links +
-    ' internal links, twelve compiled examples, docs search, social assets and a live engine playground.',
+    ' internal links (' + fragmentLinks.length + ' checked fragments), twelve compiled examples, docs search, social assets and a live engine playground.',
 );
