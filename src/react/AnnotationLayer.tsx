@@ -40,6 +40,10 @@ import {
 import { dataAttributes, annotationStyle } from './render-data.js';
 import { renderSubject, renderConnector, renderDebugBoxes } from './svg-annotation-parts.js';
 import { useMeasurementNodeRegistration, useDomNoteMeasurementObserver } from './dom-measurements.js';
+import {
+  useAnnotationPreviewScheduler,
+  usePreviewLayoutInvalidation
+} from './preview-scheduler.js';
 import { MemoMarkerDefs } from './marker-defs.js';
 import {
   groupEditHandles,
@@ -179,16 +183,9 @@ function AnnotationLayerRenderer({
   const svgRef = useRef<SVGSVGElement>(null);
   const measureNodes = useRef(new Map<string, HTMLDivElement>());
   const [activeEdit, setActiveEdit] = useState<ActiveEdit | null>(null);
-  // Local paint-only preview. The resolved layout, quality report, and host
-  // annotation array remain unchanged until an edit is committed.
-  const [activePreview, setActivePreview] = useState<ResolvedAnnotation | null>(null);
-  // High-frequency pointer streams can produce several moves per animation
-  // frame. Keep only the latest visual preview request and avoid reconciling
-  // the entire SVG layer on every individual pointer event. Host onEdit
-  // callbacks still receive every movement synchronously.
-  const pendingPreview = useRef<(() => ResolvedAnnotation) | null>(null);
-  const previewFrame = useRef<number | null>(null);
-  const previewGeneration = useRef(0);
+  const {
+    activePreview, setActivePreview, cancelQueuedPreview, schedulePreview
+  } = useAnnotationPreviewScheduler();
   const [measuredSizes, setMeasuredSizes] = useState<Record<string, Size>>({});
   // A host-controlled resolved layout already owns the final note sizes.
   // Estimating every note again is wasted O(n) work on each incremental
@@ -416,41 +413,9 @@ function AnnotationLayerRenderer({
     editDispatch.current = { layout, clientPoint, editOptions, onEdit, onEditStart, onEditEnd };
   }, [layout, clientPoint, editOptions, onEdit, onEditStart, onEditEnd]);
 
-  const cancelQueuedPreview = useCallback(() => {
-    previewGeneration.current += 1;
-    if (previewFrame.current !== null) {
-      globalThis.cancelAnimationFrame?.(previewFrame.current);
-      previewFrame.current = null;
-    }
-    pendingPreview.current = null;
-  }, []);
-
-  // A host can update authoritative geometry mid-gesture. Discard visual
-  // projections based on the old layout, and clean up on component unmount.
-  useIsomorphicLayoutEffect(() => {
-    // If the host replaces authoritative geometry or disables previewEdits
-    // mid-gesture, also remove any already painted projection of the old state.
-    setActivePreview(null);
-    return cancelQueuedPreview;
-  }, [cancelQueuedPreview, layout, previewEdits]);
-
-  const schedulePreview = useCallback((build: () => ResolvedAnnotation) => {
-    if (typeof globalThis.requestAnimationFrame !== 'function') {
-      // Nonvisual test environments lack rAF; preserve synchronous behavior.
-      setActivePreview(build());
-      return;
-    }
-    pendingPreview.current = build;
-    if (previewFrame.current !== null) return;
-    const generation = previewGeneration.current;
-    previewFrame.current = globalThis.requestAnimationFrame(() => {
-      if (previewGeneration.current !== generation) return;
-      previewFrame.current = null;
-      const latest = pendingPreview.current;
-      pendingPreview.current = null;
-      if (latest) setActivePreview(latest());
-    });
-  }, []);
+  usePreviewLayoutInvalidation({
+    layout, previewEdits, setActivePreview, cancelQueuedPreview
+  });
 
   const handleEditPointerDown = useCallback((
     handle: AnnotationEditHandle,

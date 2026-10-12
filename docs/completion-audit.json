@@ -247,6 +247,23 @@
           ]
         },
         {
+          "file": "src/react/preview-scheduler.ts",
+          "terms": [
+            "useAnnotationPreviewScheduler",
+            "usePreviewLayoutInvalidation",
+            "previewGeneration",
+            "cancelAnimationFrame"
+          ]
+        },
+        {
+          "file": "test/react/drag-preview-frame.test.tsx",
+          "terms": [
+            "unrelated pointers",
+            "host geometry changes",
+            "stale frames"
+          ]
+        },
+        {
           "file": "src/react/svg-annotation-parts.tsx",
           "terms": [
             "renderSubject",
