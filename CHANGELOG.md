@@ -8,6 +8,8 @@ reasonable.
 
 ## Unreleased
 
+## 0.6.9 - 2026-10-12
+
 ### Fixed
 
 - Make incremental annotation snapshots sensitive to reference sharing, including
