@@ -9,7 +9,7 @@ import type { Annotation } from '@ponchia/annotations';
 
 export const EDITOR_HISTORY_LIMIT = 30;
 
-export type EditorHistoryEntry = Readonly<{
+type EditorHistoryEntry = Readonly<{
   annotations: Annotation[];
   action: string;
 }>;
