@@ -116,7 +116,16 @@ function App() {
   function commit(nextAnnotations: Annotation[], action: string) {
     const current = history.current!;
     const recorded = pushEditorHistory(current, nextAnnotations, action);
-    if (recorded === current) return; // A no-op does not discard redo.
+    if (recorded === current) {
+      // Reset at the initial scene is still a meaningful UI acknowledgement.
+      // Do not create an undo entry, rerun the solver or discard redo when
+      // the authoritative input graph was already identical.
+      setCopyStatus('');
+      setImportError('');
+      setImportStatus('');
+      setView((last) => last.action === action ? last : { ...last, action });
+      return;
+    }
     const previous = session.current!.layout;
     const next = session.current!.update(optionsFor(nextAnnotations));
     const oldById = new Map(previous.annotations.map((item) => [item.id, item]));

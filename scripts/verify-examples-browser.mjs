@@ -946,6 +946,13 @@ async function verifyIncrementalDemo(page, label) {
   assert.equal(first.info.changes, 0);
   assert.equal(await page.locator('#undo-edit').isDisabled(), true);
   assert.equal(await page.locator('#redo-edit').isDisabled(), true);
+  // Resetting an already-initial diagram acknowledges the action without
+  // consuming a history slot or performing a redundant layout commit.
+  await page.locator('#reset-note').click();
+  await page.waitForFunction(() =>
+    window.__annotationsExample?.action === 'Reset to initial diagram');
+  assert.equal(await page.evaluate(() => window.__annotationsExample?.changes), 0);
+  assert.equal(await page.locator('#undo-edit').isDisabled(), true);
   const targetBoxes = await page.locator('.pa-annotation__edit-hit').evaluateAll(
     (elements) => elements.map((element) => {
       const box = element.getBoundingClientRect();
