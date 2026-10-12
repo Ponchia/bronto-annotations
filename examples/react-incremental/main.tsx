@@ -11,6 +11,10 @@ import '@ponchia/annotations/bronto.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { parseEditorAnnotationJson } from './json-import.js';
+import {
+  createEditorHistory, pushEditorHistory, undoEditorHistory, redoEditorHistory,
+  type EditorHistory
+} from './editor-history.js';
 import './styles.css';
 
 // Everything here belongs to the host. The annotation library owns the
@@ -65,6 +69,8 @@ type DemoView = {
   reused: number;
   action: string;
   changes: number;
+  undoCount: number;
+  redoCount: number;
 };
 
 function noteContent(item: ResolvedAnnotation) {
@@ -79,12 +85,16 @@ function noteContent(item: ResolvedAnnotation) {
 function App() {
   const session = useRef<ReturnType<typeof createIncrementalAnnotationLayoutSession> | null>(null);
   if (!session.current) session.current = createIncrementalAnnotationLayoutSession(optionsFor(initialAnnotations));
+  const history = useRef<EditorHistory | null>(null);
+  if (!history.current) history.current = createEditorHistory(initialAnnotations);
   const [view, setView] = useState<DemoView>(() => ({
     annotations: initialAnnotations,
     layout: session.current!.layout,
     reused: 0,
     action: 'Initial layout',
-    changes: 0
+    changes: 0,
+    undoCount: 0,
+    redoCount: 0
   }));
   const quality = useMemo(() => evaluateAnnotationLayout(view.layout), [view.layout]);
   // Expose just the host-authored inputs, not the large candidate/quality
@@ -100,23 +110,81 @@ function App() {
   const hasAddedNote = view.annotations.some((annotation) => annotation.id === 'added');
   const hasSignal = view.annotations.some((annotation) => annotation.id === 'signal');
 
-  // Commit once. Pointer-move previews do not touch host state or rerun the
-  // solver. The host owns when to update and what state to persist.
+  // Only authoritative edits enter this history: a pointer-move preview
+  // remains visual-only and does not create a user-visible undo step.
+  // The imported source, history and layout session remain host-owned.
   function commit(nextAnnotations: Annotation[], action: string) {
+    const current = history.current!;
+    const recorded = pushEditorHistory(current, nextAnnotations, action);
+    if (recorded === current) return; // A no-op does not discard redo.
     const previous = session.current!.layout;
     const next = session.current!.update(optionsFor(nextAnnotations));
     const oldById = new Map(previous.annotations.map((item) => [item.id, item]));
     const reused = next.annotations.filter((item) => oldById.get(item.id) === item).length;
+    history.current = recorded;
     setCopyStatus('');
+    setImportError('');
     setImportStatus('');
     setView((last) => ({
-      annotations: nextAnnotations,
+      annotations: recorded.present.annotations,
       layout: next,
       reused,
       action,
-      changes: last.changes + 1
+      changes: last.changes + 1,
+      undoCount: recorded.past.length,
+      redoCount: 0
     }));
   }
+
+  function stepHistory(direction: 'undo' | 'redo') {
+    const current = history.current!;
+    const nextHistory = direction === 'undo'
+      ? undoEditorHistory(current) : redoEditorHistory(current);
+    if (current === nextHistory) return;
+    // The same incremental resolver accepts earlier authored inputs; it
+    // remains the authoritative layout and retains safe unaffected winners.
+    const before = session.current!.layout;
+    const next = session.current!.update(optionsFor(nextHistory.present.annotations));
+    const oldById = new Map(before.annotations.map((item) => [item.id, item]));
+    const reused = next.annotations.filter((item) => oldById.get(item.id) === item).length;
+    history.current = nextHistory;
+    setCopyStatus('');
+    setImportError('');
+    setImportStatus('');
+    setView((last) => ({
+      annotations: nextHistory.present.annotations,
+      layout: next,
+      reused,
+      action: direction === 'undo'
+        ? `Undid: ${current.present.action}`
+        : `Redid: ${nextHistory.present.action}`,
+      changes: last.changes + 1,
+      undoCount: nextHistory.past.length,
+      redoCount: nextHistory.future.length
+    }));
+  }
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.isComposing || event.altKey || !(event.ctrlKey || event.metaKey)) return;
+      const target = event.target;
+      // Native input and contenteditable undo must stay local to the draft:
+      // editing JSON must never silently undo an already-committed diagram.
+      if (target instanceof Element && target.closest(
+        'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
+      )) return;
+      const key = event.key.toLowerCase();
+      const direction = key === 'z' && !event.shiftKey ? 'undo'
+        : (key === 'z' && event.shiftKey) || key === 'y' ? 'redo' : null;
+      if (!direction) return;
+      const current = history.current!;
+      if (!(direction === 'undo' ? current.past.length : current.future.length)) return;
+      event.preventDefault();
+      stepHistory(direction);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   async function copyAnnotations() {
     try {
@@ -137,7 +205,11 @@ function App() {
       // editor and its authoritative geometry untouched.
       const nextAnnotations = parseEditorAnnotationJson(importText);
       const replacement = createIncrementalAnnotationLayoutSession(optionsFor(nextAnnotations));
+      const nextHistory = pushEditorHistory(
+        history.current!, nextAnnotations, `Imported ${nextAnnotations.length} annotations from JSON`
+      );
       session.current = replacement;
+      history.current = nextHistory;
       setImportError('');
       setImportStatus(`Loaded ${nextAnnotations.length} annotations. Continue editing or copy the updated JSON.`);
       setCopyStatus('');
@@ -146,7 +218,9 @@ function App() {
         layout: replacement.layout,
         reused: 0,
         action: `Imported ${nextAnnotations.length} annotations from JSON`,
-        changes: last.changes + 1
+        changes: last.changes + 1,
+        undoCount: nextHistory.past.length,
+        redoCount: nextHistory.future.length
       }));
     } catch (error) {
       setImportStatus('');
@@ -161,7 +235,7 @@ function App() {
   }
 
   function moveLastAnchor() {
-    const next = view.annotations.map((item) => item.id === 'signal'
+    const next = history.current!.present.annotations.map((item) => item.id === 'signal'
       ? {
           ...item,
           anchor: {
@@ -176,7 +250,7 @@ function App() {
 
   function addAnnotation() {
     if (hasAddedNote) return;
-    commit([...view.annotations, {
+    commit([...history.current!.present.annotations, {
       id: 'added', priority: 0,
       anchor: { type: 'point', point: { x: 689, y: 250 } },
       note: { title: 'New annotation', body: 'Earlier placements are unchanged.' },
@@ -186,7 +260,7 @@ function App() {
 
   function removeAnnotation() {
     if (!hasAddedNote) return;
-    commit(view.annotations.filter((item) => item.id !== 'added'), 'Removed the final note');
+    commit(history.current!.present.annotations.filter((item) => item.id !== 'added'), 'Removed the final note');
   }
 
   useEffect(() => {
@@ -199,6 +273,8 @@ function App() {
         action: view.action,
         reused: view.reused,
         changes: view.changes,
+        undoCount: view.undoCount,
+        redoCount: view.redoCount,
         annotations: view.layout.annotations.map((item) => ({
           id: item.id,
           anchor: item.annotation.anchor,
@@ -226,6 +302,11 @@ function App() {
           <button id="append-note" type="button" onClick={addAnnotation} disabled={hasAddedNote}>Add annotation</button>
           <button id="remove-note" type="button" onClick={removeAnnotation} disabled={!hasAddedNote}>Remove added note</button>
           <button id="reset-note" type="button" onClick={() => commit(structuredClone(initialAnnotations), 'Reset to initial diagram')}>Reset</button>
+          <button id="undo-edit" type="button" aria-keyshortcuts="Control+Z Meta+Z"
+            disabled={view.undoCount === 0} onClick={() => stepHistory('undo')}>Undo</button>
+          <button id="redo-edit" type="button" aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y"
+            disabled={view.redoCount === 0} onClick={() => stepHistory('redo')}>Redo</button>
+          <span className="history-shortcuts">Undo: Ctrl/⌘ Z · Redo: Ctrl/⌘ Shift Z</span>
         </div>
         <p className="scroll-hint">Swipe sideways to follow the diagram <span aria-hidden="true">↔</span></p>
 
@@ -264,7 +345,7 @@ function App() {
               renderNote={noteContent}
               onEditEnd={(event) => {
                 if (!event.suggestedAnnotation) return;
-                commit(view.annotations.map((item) => item.id === event.annotationId
+                commit(history.current!.present.annotations.map((item) => item.id === event.annotationId
                   ? event.suggestedAnnotation! : item), `Edited ${event.annotationId} by dragging`);
               }}
               style={{ width: '100%', height: '100%' }}
