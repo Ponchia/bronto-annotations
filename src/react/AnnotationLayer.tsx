@@ -73,6 +73,9 @@ const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : us
 
 type ActiveEdit = {
   annotation: ResolvedAnnotation;
+  // Capture the committed layout that authorized this gesture. A later host
+  // replacement must not allow pointerup to persist placement on stale data.
+  layoutAtStart: ResolvedLayout;
   handle: AnnotationEditHandle;
   origin: { x: number; y: number };
   pointerId: number;
@@ -417,6 +420,23 @@ function AnnotationLayerRenderer({
     layout, previewEdits, setActivePreview, cancelQueuedPreview
   });
 
+  // The preview scheduler does not own authoritative host geometry or gesture
+  // state. Cancel the in-flight gesture when those inputs change, so a later
+  // pointer release cannot submit a suggested placement from an old layout.
+  useIsomorphicLayoutEffect(() => {
+    setActiveEdit(null);
+  }, [layout, previewEdits]);
+
+  // Also validate at event-dispatch time: a pointer event racing a committed
+  // host layout update must fail closed even before effects flush.
+  const rejectStaleGesture = useCallback((active: ActiveEdit): boolean => {
+    if (editDispatch.current.layout === active.layoutAtStart) return false;
+    cancelQueuedPreview();
+    setActivePreview(null);
+    setActiveEdit(null);
+    return true;
+  }, [cancelQueuedPreview]);
+
   const handleEditPointerDown = useCallback((
     handle: AnnotationEditHandle,
     event: ReactPointerEvent<SVGCircleElement>
@@ -434,8 +454,9 @@ function AnnotationLayerRenderer({
     event.currentTarget.setPointerCapture?.(event.pointerId);
 
     const point = currentPoint(event);
-    const active = {
+    const active: ActiveEdit = {
       annotation,
+      layoutAtStart: currentLayout,
       handle,
       origin: point,
       pointerId: event.pointerId
@@ -451,7 +472,8 @@ function AnnotationLayerRenderer({
   }, [cancelQueuedPreview, makeEditEvent]);
 
   const handleEditPointerMove = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!activeEdit || event.pointerId !== activeEdit.pointerId) {
+    if (!activeEdit || event.pointerId !== activeEdit.pointerId
+      || rejectStaleGesture(activeEdit)) {
       return;
     }
 
@@ -463,10 +485,11 @@ function AnnotationLayerRenderer({
       schedulePreview(() => previewAnnotationEdit(activeEdit.annotation, editEvent, layout.placementBounds));
     }
     onEdit?.(editEvent);
-  }, [activeEdit, clientPoint, layout.placementBounds, makeEditEvent, onEdit, previewEdits, schedulePreview]);
+  }, [activeEdit, clientPoint, layout.placementBounds, makeEditEvent, onEdit, previewEdits, schedulePreview, rejectStaleGesture]);
 
   const finishEdit = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!activeEdit || event.pointerId !== activeEdit.pointerId) {
+    if (!activeEdit || event.pointerId !== activeEdit.pointerId
+      || rejectStaleGesture(activeEdit)) {
       return;
     }
 
@@ -477,7 +500,7 @@ function AnnotationLayerRenderer({
     setActiveEdit(null);
     onEditEnd?.(editEvent);
     onEdit?.(editEvent);
-  }, [activeEdit, cancelQueuedPreview, clientPoint, makeEditEvent, onEdit, onEditEnd]);
+  }, [activeEdit, cancelQueuedPreview, clientPoint, makeEditEvent, onEdit, onEditEnd, rejectStaleGesture]);
 
   const cancelEdit = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
     if (!activeEdit || event.pointerId !== activeEdit.pointerId) {
@@ -510,8 +533,9 @@ function AnnotationLayerRenderer({
     event.preventDefault();
     event.stopPropagation();
 
-    const active = {
+    const active: ActiveEdit = {
       annotation,
+      layoutAtStart: currentLayout,
       handle,
       origin: handle.point,
       pointerId: -1

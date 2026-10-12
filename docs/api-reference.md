@@ -150,6 +150,10 @@ component unmount. The opt-in `previewEdits` property renders only the actively 
 annotation's provisional geometry during pointer movement, with the full layout
 and quality callbacks remaining stable until `onEditEnd` persists a patch.
 Pointer cancellation restores the previous appearance without committing.
+A host replacement of the authoritative layout (or a change to `previewEdits`)
+also cancels an in-flight pointer gesture: releasing that original pointer
+does **not** emit `onEditEnd` for now-stale geometry. The host may begin a
+new gesture against the updated layout.
 Non-React hosts can use the experimental DOM-free `previewAnnotationEdit`
 from the root package for the same visual-only geometry; its previous candidate
 scores and diagnostics are not recomputed.
