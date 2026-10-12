@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveAnnotationLayout } from '../../src/index.js';
+import { createIncrementalAnnotationLayoutSession, resolveAnnotationLayout } from '../../src/index.js';
 import type { Annotation, LayoutOptions, ResolvedLayout } from '../../src/index.js';
 import {
   applyWorkerLayout,
@@ -65,6 +65,46 @@ describe('consumer-owned revisioned Worker layout transport', () => {
     const fullJSONBytes = Buffer.byteLength(JSON.stringify(after), 'utf8');
     const patchJSONBytes = Buffer.byteLength(JSON.stringify(result), 'utf8');
     expect(patchJSONBytes).toBeLessThan(fullJSONBytes / 4);
+  });
+
+  it('encodes unchanged incremental winners without deep-scanning their metadata', () => {
+    const initial = options(40);
+    const session = createIncrementalAnnotationLayoutSession(initial);
+    const original = session.layout;
+    const nextOptions = structuredClone(initial);
+    // Every candidate remains separated from this obstacle. With disabled
+    // routing, the incremental solver can *prove* 40 identical winners.
+    nextOptions.obstacles![0]!.x += 9;
+    const next = session.update(nextOptions);
+    expect(next).toEqual(resolveAnnotationLayout(nextOptions));
+    for (let index = 0; index < 40; index++) {
+      expect(next.annotations[index]).toBe(original.annotations[index]);
+    }
+    // Mutating existing objects would be forbidden; a genuine change must
+    // use a fresh source and update the session, invalidating the suffix.
+    const encoded = encodeWorkerLayout(3, 2, next, { revision: 2, layout: original });
+    expect(encoded.kind).toBe('patch');
+    if (encoded.kind !== 'patch') throw new Error('Expected compact incremental result');
+    expect(encoded.changed).toEqual([]);
+    const installed = applyWorkerLayout({ revision: 2, layout: original }, encoded);
+    expect(installed.reused).toBe(40);
+    expect(installed.state.layout).toEqual(resolveAnnotationLayout(nextOptions));
+
+    const editedOptions = structuredClone(nextOptions);
+    editedOptions.annotations[39]!.note.title = 'Updated last note';
+    const changed = session.update(editedOptions);
+    expect(changed).toEqual(resolveAnnotationLayout(editedOptions));
+    for (let index = 0; index < 39; index++) {
+      expect(changed.annotations[index]).toBe(next.annotations[index]);
+    }
+    expect(changed.annotations[39]).not.toBe(next.annotations[39]);
+    const patch = encodeWorkerLayout(4, 3, changed,
+      { revision: 3, layout: installed.state.layout });
+    expect(patch.kind).toBe('patch');
+    if (patch.kind !== 'patch') throw new Error('Expected late-edit patch');
+    expect(patch.changed.map((item) => item.index)).toEqual([39]);
+    expect(applyWorkerLayout({ revision: 3, layout: installed.state.layout }, patch).state.layout)
+      .toEqual(resolveAnnotationLayout(editedOptions));
   });
 
   it('keeps global obstacle metadata correct even when none of the notes change', () => {
