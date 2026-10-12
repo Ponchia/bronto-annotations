@@ -197,6 +197,21 @@ making unverified spatial independence claims. Capturing input value snapshots
 has a small cost per update; benchmark under representative host density before
 enabling the experimental optimization broadly.
 
+### Independent DOM note measurements
+
+Each hidden React DOM measurement copy uses its own max-content border-box
+width, rather than stretching to the widest sibling in the hidden measurer.
+This prevents a resized note from changing unrelated notes' measured widths
+and eliminates cascading unnecessary layout invalidations. The painted note
+inside the SVG foreignObject still fills the width computed for *its* note.
+
+The Firefox/WebKit browser suite includes real ResizeObserver tests under a
+CSS-scaled host surface: local computed dimensions must update the edited
+note's authoritative layout, while the other note's size remains unchanged.
+It also verifies that boundingClientRect's transformed screen pixels are not
+misinterpreted as SVG local dimensions. No performance timing budget is
+asserted.
+
 ### Repeated distant-obstacle edits
 
 A host-managed incremental session can reuse the exhaustive candidate geometry

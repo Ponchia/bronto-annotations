@@ -26,6 +26,12 @@ assert(requestedIndex < 0 || Object.hasOwn(engines, requestedName),
 const suites = requestedName
   ? [[requestedName, engines[requestedName]]]
   : [['firefox', firefox], ['webkit', webkit]];
+// Limit a local repro to one existing suite without affecting the protected
+// default, which continues to verify every example in both browser engines.
+const scenarioIndex = process.argv.indexOf('--scenario');
+const scenario = scenarioIndex < 0 ? undefined : process.argv[scenarioIndex + 1];
+assert(scenarioIndex < 0 || ['incremental', 'dom-measure', 'react-flow', 'worker'].includes(scenario),
+  'Use --scenario incremental, dom-measure, react-flow or worker');
 const viewports = [
   { width: 1200, height: 820, name: 'desktop' },
   { width: 390, height: 844, name: 'mobile' }
@@ -221,6 +227,126 @@ async function verifyIncremental(browser, origin, viewport, label) {
   }
 }
 
+async function verifyDomMeasurements(browser, origin, viewport, label) {
+  const { page, context, errors } = await visit(browser, origin, '/examples/react-basic/', viewport);
+  try {
+    // This example uses AnnotationLayer measure="dom" and a live ResizeObserver.
+    // The hidden DOM note copies are measured in *local CSS units*, not pixels
+    // already scaled by the host surface's transform.
+    const noteId = 'queue';
+    await page.waitForFunction((id) => {
+      const host = window.__annotationsExample;
+      const measurement = Array.from(document.querySelectorAll(
+        '.pa-annotation-layer__measurer > .pa-annotation__note-box'
+      )).find((node) => node.querySelector('.pa-annotation__title')?.textContent === 'Input queue');
+      const cssWidth = measurement && Number.parseFloat(getComputedStyle(measurement).width);
+      const layoutWidth = host?.annotations?.find((note) => note.id === id)?.noteBox?.width;
+      return host?.name === 'react-basic' && host.quality?.ok === true
+        && Number.isFinite(cssWidth) && cssWidth > 0
+        && Math.abs(layoutWidth - Math.ceil(cssWidth)) <= 1;
+    }, noteId, { timeout: 30000 });
+
+    const before = await page.evaluate((id) => {
+      const host = window.__annotationsExample;
+      const measurement = Array.from(document.querySelectorAll(
+        '.pa-annotation-layer__measurer > .pa-annotation__note-box'
+      )).find((node) => node.querySelector('.pa-annotation__title')?.textContent === 'Input queue');
+      const note = host.annotations.find((item) => item.id === id);
+      const sibling = host.annotations.find((item) => item.id === 'decision');
+      return {
+        width: note.noteBox.width,
+        height: note.noteBox.height,
+        siblingWidth: sibling.noteBox.width,
+        computed: Number.parseFloat(getComputedStyle(measurement).width),
+        screen: measurement.getBoundingClientRect().width
+      };
+    }, noteId);
+    assert(before.width > 0 && before.height > 0 && before.siblingWidth > 0,
+      label + ': initial DOM note measurement missing');
+
+    const changed = await page.evaluate((original) => {
+      const surface = document.querySelector('.flow-surface');
+      const measurement = Array.from(document.querySelectorAll(
+        '.pa-annotation-layer__measurer > .pa-annotation__note-box'
+      )).find((node) => node.querySelector('.pa-annotation__title')?.textContent === 'Input queue');
+      if (!surface || !measurement) throw new Error('DOM measurement fixture missing');
+      surface.style.transformOrigin = 'top left';
+      surface.style.transform = 'scale(0.8)';
+      // A known local border-box change must not be confused with its
+      // transform-scaled getBoundingClientRect counterpart.
+      const newWidth = Math.ceil(original.computed) + 14;
+      measurement.style.width = `${newWidth}px`;
+      const computed = Number.parseFloat(getComputedStyle(measurement).width);
+      const screen = measurement.getBoundingClientRect().width;
+      return { newWidth, computed, screen };
+    }, before);
+
+    assert(Math.abs(changed.computed - changed.newWidth) < 1,
+      label + ': note style did not change its local width');
+    assert(Math.abs(changed.screen / changed.computed - 0.8) < 0.04,
+      label + ': transform did not produce a meaningfully different screen-space measurement');
+
+    // The real ResizeObserver must report the changed note. The renderer
+    // should use local computed dimensions, preserving the unrelated note.
+    try {
+      await page.waitForFunction(({ id, expected, siblingWidth }) => {
+        const host = window.__annotationsExample;
+        const note = host?.annotations?.find((item) => item.id === id);
+        const other = host?.annotations?.find((item) => item.id === 'decision');
+        return Math.abs((note?.noteBox?.width ?? 0) - expected) < 1
+          && Math.abs((other?.noteBox?.width ?? 0) - siblingWidth) < 1;
+      }, { id: noteId, expected: changed.newWidth, siblingWidth: before.siblingWidth },
+      { timeout: 9000 });
+    } catch (cause) {
+      const diagnostics = await page.evaluate(() => {
+        const host = window.__annotationsExample;
+        const nodes = Array.from(document.querySelectorAll(
+          '.pa-annotation-layer__measurer > .pa-annotation__note-box'
+        ));
+        return {
+          quality: host?.quality,
+          annotations: host?.annotations?.map((item) =>
+            ({ id: item.id, noteBox: item.noteBox })),
+          notes: nodes.map((node) => ({
+            text: node.querySelector('.pa-annotation__title')?.textContent,
+            style: node.getAttribute('style'),
+            computed: getComputedStyle(node).width,
+            rect: node.getBoundingClientRect().width
+          })),
+          scale: getComputedStyle(document.querySelector('.flow-surface')).transform,
+          computedNoteCount: nodes.length
+        };
+      });
+      throw new Error(label + ': DOM ResizeObserver did not converge: ' +
+        JSON.stringify({ before, changed, diagnostics, errors }), { cause });
+    }
+
+    const after = await page.evaluate((id) => {
+      const host = window.__annotationsExample;
+      const measurement = Array.from(document.querySelectorAll(
+        '.pa-annotation-layer__measurer > .pa-annotation__note-box'
+      )).find((node) => node.querySelector('.pa-annotation__title')?.textContent === 'Input queue');
+      return {
+        noteBox: host.annotations.find((item) => item.id === id)?.noteBox,
+        cssWidth: Number.parseFloat(getComputedStyle(measurement).width),
+        screenWidth: measurement.getBoundingClientRect().width,
+        qualityOk: host.quality?.ok
+      };
+    }, noteId);
+    assert(after.noteBox?.width === changed.newWidth,
+      label + ': local DOM width was not propagated into authoritative note geometry');
+    assert(Math.abs(after.screenWidth / after.cssWidth - 0.8) < 0.04,
+      label + ': scaled screen width disagreed with local layout width');
+    assert(after.qualityOk === true,
+      label + ': changed DOM measurement invalidated annotation layout quality');
+
+    await verifyAccessibility(page, label + '/DOM-measure');
+    assert.deepEqual(errors, [], label + ': DOM-measured browser console or runtime errors');
+  } finally {
+    await context.close();
+  }
+}
+
 async function verifyReactFlow(browser, origin, viewport, label) {
   const { page, context, errors } = await visit(browser, origin, '/examples/react-flow-basic/', viewport);
   try {
@@ -379,11 +505,18 @@ try {
     try {
       for (const viewport of viewports) {
         const label = `${name}/${viewport.name}`;
-        await verifyIncremental(browser, origin, viewport, label);
-        await verifyReactFlow(browser, origin, viewport, label);
-        await verifyWorker(browser, origin, viewport, label);
-        verified += 3;
-        process.stdout.write(`PASS ${label}: incremental editing, transformed React Flow edits and Worker revision/cancel\n`);
+        const scenarios = [
+          ['incremental', verifyIncremental],
+          ['dom-measure', verifyDomMeasurements],
+          ['react-flow', verifyReactFlow],
+          ['worker', verifyWorker]
+        ];
+        for (const [scenarioName, verify] of scenarios) {
+          if (scenario && scenario !== scenarioName) continue;
+          await verify(browser, origin, viewport, `${label}/${scenarioName}`);
+          verified += 1;
+          process.stdout.write(`PASS ${label}/${scenarioName}\n`);
+        }
       }
     } finally {
       await browser.close();
