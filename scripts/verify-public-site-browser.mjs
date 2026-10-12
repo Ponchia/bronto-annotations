@@ -266,6 +266,20 @@ try {
       ['/examples/', 'example-catalog'],
     ]) {
       const guide = await visit(path, width);
+      if (path.startsWith('/docs/')) {
+        const article = await guide.locator('.docs-prose').boundingBox();
+        const sidebar = await guide.locator('.docs-sidebar').boundingBox();
+        assert(article && sidebar, 'Published guides must have prose and topic navigation');
+        if (width >= 1000) {
+          assert(article.width > sidebar.width * 2,
+            `Desktop guide prose must own the wide column: ${path} article=${article.width}, sidebar=${sidebar.width}`);
+          assert(sidebar.x >= article.x + article.width,
+            'Desktop topic navigation must follow the article on its right');
+        } else {
+          assert(article.width >= width - 60,
+            'Mobile guide prose must use the available single-column width');
+        }
+      }
       const guideAudit = await new AxeBuilder({ page: guide })
         .withTags(wcagTags)
         .analyze();
