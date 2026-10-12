@@ -86,6 +86,13 @@ function App() {
     changes: 0
   }));
   const quality = useMemo(() => evaluateAnnotationLayout(view.layout), [view.layout]);
+  // Expose just the host-authored inputs, not the large candidate/quality
+  // graph. This stays independent of package serialization or persistence.
+  const annotationJson = useMemo(
+    () => JSON.stringify(view.annotations, null, 2),
+    [view.annotations]
+  );
+  const [copyStatus, setCopyStatus] = useState('');
   const hasAddedNote = view.annotations.some((annotation) => annotation.id === 'added');
 
   // Commit once. Pointer-move previews do not touch host state or rerun the
@@ -95,6 +102,7 @@ function App() {
     const next = session.current!.update(optionsFor(nextAnnotations));
     const oldById = new Map(previous.annotations.map((item) => [item.id, item]));
     const reused = next.annotations.filter((item) => oldById.get(item.id) === item).length;
+    setCopyStatus('');
     setView((last) => ({
       annotations: nextAnnotations,
       layout: next,
@@ -102,6 +110,18 @@ function App() {
       action,
       changes: last.changes + 1
     }));
+  }
+
+  async function copyAnnotations() {
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error('Clipboard API unavailable');
+      }
+      await navigator.clipboard.writeText(annotationJson);
+      setCopyStatus('Current annotations copied.');
+    } catch {
+      setCopyStatus('Clipboard unavailable here. Select and copy the JSON below.');
+    }
   }
 
   function moveLastAnchor() {
@@ -219,6 +239,18 @@ function App() {
           <div className="metric"><span>Visible annotations</span><strong id="annotation-count">{view.layout.annotations.length}</strong></div>
           <div className="metric"><span>Layout quality</span><strong id="quality-score">{quality.score} / 100</strong></div>
         </div>
+        <details className="annotation-source">
+          <summary>Inspect current annotations (JSON)</summary>
+          <p>These are the host-owned annotation inputs after committed edits.
+            Resolved candidates and computed placements remain engine output.</p>
+          <div className="annotation-source-actions">
+            <button id="copy-annotations" type="button" onClick={() => void copyAnnotations()}>
+              Copy current JSON
+            </button>
+            <span role="status" aria-live="polite" id="copy-status">{copyStatus}</span>
+          </div>
+          <pre id="annotation-json" tabIndex={0} aria-label="Current host annotation JSON">{annotationJson}</pre>
+        </details>
       </section>
       <p className="footnote">The host commits an edit once, then passes its resolved layout back to React. Drag feedback is visual-only until release. Global geometry changes may still require a full resolution.</p>
     </main>
