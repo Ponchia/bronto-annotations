@@ -239,6 +239,61 @@ Worker scheduling or changing stable public annotation APIs.
 Use browser Performance traces and real device tests before drawing
 conclusions about compositor paint or 60 fps interaction.
 
+### Separate Node structured-clone / MessageChannel cost envelope
+
+For repeatable, **opt-in transport comparisons** that do not require launching
+a browser, run:
+
+```bash
+npm run benchmark:worker:transport
+# Small deterministic smoke for troubleshooting:
+npm run benchmark:worker:transport -- --counts=8 --rounds=1
+```
+
+This command compiles and imports the **same host-owned revisioned layout-patch
+codec** used by the browser Worker fixture (through the existing Vite
+transformer). It creates deterministic 40/200-note inputs and checks four
+scenarios: a distant obstacle, a late edit, an early edit and changed global
+bounds. Each result is reconstructed through the real patch/snapshot decoder
+and checked against a fresh full solve and quality report. It records
+incremental/independent solver time, encoder time, an input clone, the median
+synchronous `structuredClone` cost for a complete layout versus the actual
+encoded reply, and `node:worker_threads` MessageChannel post/callback
+durations. The command asserts parity, not latency or allocation budgets. The normal
+package check also runs the tiny eight-note, single-round version on Node 20
+and Node 22 to ensure the real codec can still be loaded and reconstructed;
+larger 40/200-note measurements remain opt-in.
+
+**Interpretation:** these are timings from Node's *same-process* structured
+clone and MessageChannel, not byte counts or isolated browser Worker
+postMessage costs. JSON lengths are only estimates of text size. Delivery
+timings include event-loop scheduling; even a separately measured Node
+structuredClone is not a browser clone or React commit measurement. The
+browser timeline above remains the authoritative integration test and can
+differ substantially. Profile warmed/cold cases on real target devices before
+claiming a user-perceived improvement.
+
+An October 12, 2026, **two-repeat development-host** run of the deterministic
+200-note Node fixture produced this descriptive cost envelope:
+
+| Changed input | Reply | JSON full → reply | Synchronous Node clone, full → reply | Node MessageChannel dispatch-to-callback, full → reply |
+| --- | --- | --- | --- | --- |
+| Distant obstacle | Patch, 0 notes | 343.6 KB → 298 B | 4.98 → 0.02 ms | 5.02 → 0.08 ms |
+| Last note title | Patch, 1 note | 343.6 KB → 2.1 KB | 8.41 → 0.07 ms | 5.86 → 0.11 ms |
+| First note title | Patch, 1 note | 343.6 KB → 2.0 KB | 5.78 → 0.07 ms | 7.30 → 0.40 ms |
+| Bounds widened | Patch, 0 notes | 343.6 KB → 298 B | 5.36 → 0.02 ms | 5.27 → 0.65 ms |
+
+All four changes were reconstructed through the actual patch decoder, with
+exact independent full-layout geometry and quality parity. An *early* edit or
+global bounds change can still require a full core relayout even when its
+final reply uses a compact patch: for this sparse 200-note fixture, the early
+incremental update took 49.8 ms versus 43.9 ms for an independent full solve.
+The fixture intentionally uses a small number of candidates per note, so its
+343.6 KB full-layout JSON representation is **not** the separate ~28 MB dense
+browser fixture. This table is a two-sample snapshot, not a statistically
+stable cross-machine performance result or an allocation/structured-clone
+byte estimate.
+
 ## Actual browser validation
 
 Run the mandatory mobile and desktop smoke without timing thresholds:
