@@ -48,6 +48,17 @@ jobs:
       # Verify TypeScript 7 declarations in a real clean packed consumer on
       # both Node lanes. The checked-in compiler stays TypeScript 6 and the
       # minimum TypeScript 5.8 compatibility lane remains unchanged.
+      # Keep non-Chromium browser smoke focused on interactive editing and
+      # revisioned Worker behavior. Chromium still owns the full visual/parity
+      # suite above; only one Node lane pays for extra browser engines.
+      - name: Install Firefox and WebKit for cross-engine editing
+        if: matrix.node-version == 22
+        run: npx playwright install --with-deps firefox webkit
+
+      - name: Verify Firefox and WebKit interactive editing
+        if: matrix.node-version == 22
+        run: npm run test:browser:cross-engine
+
       - name: TypeScript 7 clean declaration consumer
         run: npm run test:compatibility:typescript7
 

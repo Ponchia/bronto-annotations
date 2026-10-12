@@ -105,6 +105,7 @@
     "test:browser:incremental": "npm run build && node scripts/verify-incremental-browser.mjs --profile",
     "test:browser:worker": "npm run build && node scripts/verify-worker-browser.mjs",
     "test:browser:worker:production": "npm run build && node scripts/verify-worker-browser.mjs --production",
+    "test:browser:cross-engine": "npm run build && node scripts/verify-cross-engine-browser.mjs",
     "benchmark:browser:worker": "npm run build && node scripts/verify-worker-browser.mjs --benchmark",
     "benchmark:browser:incremental": "npm run build && node scripts/verify-incremental-browser.mjs --benchmark",
     "benchmark:browser:profile": "npm run build && node scripts/verify-incremental-browser.mjs --benchmark --profile",

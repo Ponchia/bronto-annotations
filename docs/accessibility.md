@@ -34,6 +34,13 @@ The React and Vega examples demonstrate this alongside the annotation layer.
 The public-site browser checks run axe-core over every compiled example at
 both narrow and desktop widths, including the host graphics.
 
+In addition to the full Chromium tests, the opt-in
+`npm run test:browser:cross-engine` runs the actual React incremental drag and
+module Worker revision/cancellation demos in Firefox and WebKit at desktop and
+390px mobile widths. It includes focusable SVG semantics and axe A/AA checks
+in each engine. It is required on the Node 22 CI lane after installing those
+browser engines; no browser-frame timing threshold is inferred.
+
 ## Interactive SVG Layer Semantics
 
 Passive SVG output is labeled as a single image (`role="img"`). Once the
