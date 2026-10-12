@@ -96,6 +96,8 @@ async function verifyIncremental(browser, origin, viewport, label) {
     assert.equal(await page.locator('svg.pa-annotation-layer').getAttribute('role'), 'group',
       label + ': interactive SVG must expose keyboard-focusable descendants');
     assert.equal(await page.locator('g.pa-annotation').count(), 4);
+    assert.equal(await page.locator('#undo-edit').isDisabled(), true);
+    assert.equal(await page.locator('#redo-edit').isDisabled(), true);
     // CSS style values are checked in Firefox/WebKit; only Chromium can run
     // the real touchStart/move/end/cancel CDP gesture below in its own lane.
     const touchStyles = await page.evaluate(() => ({
@@ -137,6 +139,23 @@ async function verifyIncremental(browser, origin, viewport, label) {
     assert.equal((await exportedAnnotations()).find((note) => note.id === 'signal')
       ?.placement?.manual?.x, 322);
     assert.equal(await page.evaluate(() => window.__annotationsExample.quality.ok), true);
+    assert.equal(await page.locator('#undo-edit').isEnabled(), true);
+    assert.equal(await page.locator('#redo-edit').isDisabled(), true);
+
+    // Import is one reversible transaction: it never records intermediate
+    // candidate geometry or adds one history entry per imported annotation.
+    await page.locator('#undo-edit').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Undid: Imported 4 annotations from JSON');
+    assert.equal((await exportedAnnotations()).find((note) => note.id === 'signal')
+      ?.placement?.manual?.x, 307);
+    assert.equal(await page.locator('#redo-edit').isEnabled(), true);
+    await page.locator('#redo-edit').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Redid: Imported 4 annotations from JSON');
+    assert.equal((await exportedAnnotations()).find((note) => note.id === 'signal')
+      ?.placement?.manual?.x, 322);
+    assert.equal(await page.evaluate(() => window.__annotationsExample.quality.ok), true);
 
     const committedBeforeInvalid = await page.evaluate(() =>
       window.__annotationsExample.changes);
@@ -150,6 +169,12 @@ async function verifyIncremental(browser, origin, viewport, label) {
       committedBeforeInvalid, label + ': malformed import modified committed state');
     assert.equal((await exportedAnnotations()).find((note) => note.id === 'signal')
       ?.placement?.manual?.x, 322, label + ': failed import replaced the layout');
+    // Ctrl+Z while authoring JSON is the browser's native field undo. It must
+    // not revert the host's previously committed annotations.
+    await importField.focus();
+    await importField.press('Control+z');
+    assert.equal(await page.evaluate(() => window.__annotationsExample.changes),
+      committedBeforeInvalid, label + ': JSON draft undo changed committed history');
 
     await page.locator('#reset-note').click();
     await page.waitForFunction(() =>
@@ -162,6 +187,19 @@ async function verifyIncremental(browser, origin, viewport, label) {
       window.__annotationsExample?.action === 'Moved the final anchor');
     assert.equal(await page.evaluate(() => window.__annotationsExample?.reused), 3,
       label + ': late anchor move should keep the earlier placements');
+
+    // Shortcuts work outside text editors; they undo committed host state.
+    await page.locator('#move-note').focus();
+    await page.keyboard.press('Control+z');
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Undid: Moved the final anchor');
+    assert.deepEqual((await exportedAnnotations()).find((note) => note.id === 'signal')?.anchor,
+      originalData.find((note) => note.id === 'signal')?.anchor,
+      label + ': Ctrl+Z did not restore the prior anchor');
+    await page.keyboard.press('Control+Shift+z');
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Redid: Moved the final anchor');
+    assert.equal(await page.evaluate(() => window.__annotationsExample.quality.ok), true);
     await page.locator('#append-note').click();
     await page.waitForFunction(() => window.__annotationsExample?.annotations.length === 5);
     assert.equal(await page.evaluate(() => window.__annotationsExample?.reused), 4);
@@ -216,6 +254,19 @@ async function verifyIncremental(browser, origin, viewport, label) {
     assert.equal(exportedAfterDrag.length, 4);
     assert.notEqual(exportedAfterDrag.find((note) => note.id === 'signal')?.placement?.manual?.x, 307,
       label + ': live JSON must reflect the completed pointer edit');
+
+    // Pointer movement did not pollute undo history: undo reverts the one
+    // committed drag, and redo restores exactly that authored placement.
+    await page.locator('#undo-edit').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Undid: Edited signal by dragging');
+    assert.equal((await exportedAnnotations()).find((note) => note.id === 'signal')
+      ?.placement?.manual?.x, 307);
+    await page.locator('#redo-edit').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Redid: Edited signal by dragging');
+    assert.equal((await exportedAnnotations()).find((note) => note.id === 'signal')
+      ?.placement?.manual?.x, exportedAfterDrag.find((note) => note.id === 'signal')?.placement?.manual?.x);
 
     // Real pointer capture can end without pointercancel. Releasing capture on
     // the actual SVG edit handle must abandon the gesture, restore the

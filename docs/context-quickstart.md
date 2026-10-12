@@ -113,6 +113,13 @@ text and basic placement options for at most ten notes. It is **not** a general
 package serialization API: validate the complete schema your application
 supports and own any actual persistence.
 
+The demo also keeps a bounded, host-owned **undo/redo history of committed
+annotation inputs** from drags, button actions, resets and valid JSON imports.
+The resolved layout, pointer-move previews and candidate diagnostics are not
+stored as history entries. Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z work outside form
+fields; editing the JSON textarea preserves the browser's native text undo.
+This is an application-level example, not a package history or persistence API.
+
 If global geometry changes are too expensive on the main thread, try the
 [React + module Worker example](../examples/react-worker/). The host is
 responsible for request revisions, cancellation, Worker lifetime and accepted

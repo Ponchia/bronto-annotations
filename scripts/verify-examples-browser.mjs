@@ -944,6 +944,15 @@ async function verifyIncrementalDemo(page, label) {
   assert.equal(first.info?.name, 'react-incremental', `${label} exposed a real controlled React example`);
   assert.equal(first.info.annotations.length, 4);
   assert.equal(first.info.changes, 0);
+  assert.equal(await page.locator('#undo-edit').isDisabled(), true);
+  assert.equal(await page.locator('#redo-edit').isDisabled(), true);
+  // Resetting an already-initial diagram acknowledges the action without
+  // consuming a history slot or performing a redundant layout commit.
+  await page.locator('#reset-note').click();
+  await page.waitForFunction(() =>
+    window.__annotationsExample?.action === 'Reset to initial diagram');
+  assert.equal(await page.evaluate(() => window.__annotationsExample?.changes), 0);
+  assert.equal(await page.locator('#undo-edit').isDisabled(), true);
   const targetBoxes = await page.locator('.pa-annotation__edit-hit').evaluateAll(
     (elements) => elements.map((element) => {
       const box = element.getBoundingClientRect();
@@ -983,6 +992,17 @@ async function verifyIncrementalDemo(page, label) {
   assert.equal(await page.locator('g.pa-annotation[data-annotation-id="added"]').count(), 1);
   assert.equal(await page.locator('#append-note').isDisabled(), true);
 
+  // Appending a note is one committed action; undo removes it and redo
+  // restores it through the authoritative incremental host session.
+  await page.locator('#undo-edit').click();
+  await page.waitForFunction(() =>
+    window.__annotationsExample?.action === 'Undid: Appended a lower-priority note');
+  assert.equal(await page.locator('g.pa-annotation[data-annotation-id="added"]').count(), 0);
+  await page.locator('#redo-edit').click();
+  await page.waitForFunction(() =>
+    window.__annotationsExample?.action === 'Redid: Appended a lower-priority note');
+  assert.equal(await page.locator('g.pa-annotation[data-annotation-id="added"]').count(), 1);
+
   await page.locator('#remove-note').click();
   await page.waitForFunction(() => window.__annotationsExample?.annotations.length === 4);
   const removed = await page.evaluate(() => window.__annotationsExample);
@@ -1018,6 +1038,20 @@ async function verifyIncrementalDemo(page, label) {
   const dragged = await page.evaluate(() => window.__annotationsExample);
   assert.equal(dragged.reused, 3, `${label}: dragging the final note retains its prior winners`);
   assert.equal(dragged.quality.ok, true, `${label}: editing remains valid`);
+  const draggedManual = dragged.annotations.find((item) => item.id === 'signal')?.manual;
+  await page.locator('#undo-edit').click();
+  await page.waitForFunction(() =>
+    window.__annotationsExample?.action === 'Undid: Edited signal by dragging');
+  assert.equal(await page.evaluate(() =>
+    window.__annotationsExample?.annotations.find((item) => item.id === 'signal')?.manual?.x), 307,
+    `${label}: undo did not recover the pre-drag source placement`);
+  await page.locator('#redo-edit').click();
+  await page.waitForFunction(() =>
+    window.__annotationsExample?.action === 'Redid: Edited signal by dragging');
+  assert.deepEqual(await page.evaluate(() =>
+    window.__annotationsExample?.annotations.find((item) => item.id === 'signal')?.manual),
+  draggedManual, `${label}: redo did not restore the committed drag`);
+  assert.equal(await page.evaluate(() => window.__annotationsExample?.quality?.ok), true);
   // Return the overflow container to its normal initial position before
   // screenshot evidence, even when the drag scrolled the narrow viewport.
   await page.locator('.stage-scroll').evaluate((element) => { element.scrollLeft = 0; });
