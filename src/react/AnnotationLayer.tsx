@@ -73,6 +73,9 @@ const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : us
 
 type ActiveEdit = {
   annotation: ResolvedAnnotation;
+  // Capture the committed layout that authorized this gesture. A later host
+  // replacement must not allow pointerup to persist placement on stale data.
+  layoutAtStart: ResolvedLayout;
   handle: AnnotationEditHandle;
   origin: { x: number; y: number };
   pointerId: number;
@@ -183,6 +186,10 @@ function AnnotationLayerRenderer({
   const svgRef = useRef<SVGSVGElement>(null);
   const measureNodes = useRef(new Map<string, HTMLDivElement>());
   const [activeEdit, setActiveEdit] = useState<ActiveEdit | null>(null);
+  // A stable SVG edit-handle callback must see the current pointer even
+  // before React commits the pointerdown state update. Reading this ref also
+  // avoids forcing every memoized handle to rerender on each gesture change.
+  const activeGestureRef = useRef<ActiveEdit | null>(null);
   const {
     activePreview, setActivePreview, cancelQueuedPreview, schedulePreview
   } = useAnnotationPreviewScheduler();
@@ -417,6 +424,31 @@ function AnnotationLayerRenderer({
     layout, previewEdits, setActivePreview, cancelQueuedPreview
   });
 
+  // The preview scheduler does not own authoritative host geometry or gesture
+  // state. Cancel the in-flight gesture and any pending preview when these
+  // inputs or the edit controls change. Disabling authoring must not let an
+  // old animation frame paint, nor let a captured pointer commit on release.
+  useIsomorphicLayoutEffect(() => {
+    activeGestureRef.current = null;
+    cancelQueuedPreview();
+    setActivePreview(null);
+    setActiveEdit(null);
+  }, [layout, previewEdits, editOptions, cancelQueuedPreview, setActivePreview]);
+  useIsomorphicLayoutEffect(() => {
+    activeGestureRef.current = activeEdit;
+  }, [activeEdit]);
+
+  // Also validate at event-dispatch time: a pointer event racing a committed
+  // host layout update must fail closed even before effects flush.
+  const rejectStaleGesture = useCallback((active: ActiveEdit): boolean => {
+    if (editDispatch.current.layout === active.layoutAtStart) return false;
+    activeGestureRef.current = null;
+    cancelQueuedPreview();
+    setActivePreview(null);
+    setActiveEdit(null);
+    return true;
+  }, [cancelQueuedPreview]);
+
   const handleEditPointerDown = useCallback((
     handle: AnnotationEditHandle,
     event: ReactPointerEvent<SVGCircleElement>
@@ -434,14 +466,16 @@ function AnnotationLayerRenderer({
     event.currentTarget.setPointerCapture?.(event.pointerId);
 
     const point = currentPoint(event);
-    const active = {
+    const active: ActiveEdit = {
       annotation,
+      layoutAtStart: currentLayout,
       handle,
       origin: point,
       pointerId: event.pointerId
     };
 
     cancelQueuedPreview();
+    activeGestureRef.current = active;
     setActiveEdit(active);
     setActivePreview(null);
 
@@ -451,7 +485,11 @@ function AnnotationLayerRenderer({
   }, [cancelQueuedPreview, makeEditEvent]);
 
   const handleEditPointerMove = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!activeEdit || event.pointerId !== activeEdit.pointerId) {
+    // Capture may be lost just before React commits the cancellation state.
+    // The gesture ref is invalidated synchronously by the handle itself, so
+    // subsequent move/up events cannot resurrect a queued preview or commit.
+    if (!activeEdit || activeGestureRef.current !== activeEdit
+      || event.pointerId !== activeEdit.pointerId || rejectStaleGesture(activeEdit)) {
       return;
     }
 
@@ -463,31 +501,49 @@ function AnnotationLayerRenderer({
       schedulePreview(() => previewAnnotationEdit(activeEdit.annotation, editEvent, layout.placementBounds));
     }
     onEdit?.(editEvent);
-  }, [activeEdit, clientPoint, layout.placementBounds, makeEditEvent, onEdit, previewEdits, schedulePreview]);
+  }, [activeEdit, clientPoint, layout.placementBounds, makeEditEvent, onEdit, previewEdits, schedulePreview, rejectStaleGesture]);
 
   const finishEdit = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!activeEdit || event.pointerId !== activeEdit.pointerId) {
+    // Capture may be lost just before React commits the cancellation state.
+    // The gesture ref is invalidated synchronously by the handle itself, so
+    // subsequent move/up events cannot resurrect a queued preview or commit.
+    if (!activeEdit || activeGestureRef.current !== activeEdit
+      || event.pointerId !== activeEdit.pointerId || rejectStaleGesture(activeEdit)) {
       return;
     }
 
     event.preventDefault();
     const editEvent = makeEditEvent(activeEdit, 'end', clientPoint(event));
+    activeGestureRef.current = null;
     cancelQueuedPreview();
     setActivePreview(null);
     setActiveEdit(null);
     onEditEnd?.(editEvent);
     onEdit?.(editEvent);
-  }, [activeEdit, cancelQueuedPreview, clientPoint, makeEditEvent, onEdit, onEditEnd]);
+  }, [activeEdit, cancelQueuedPreview, clientPoint, makeEditEvent, onEdit, onEditEnd, rejectStaleGesture]);
 
   const cancelEdit = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
     if (!activeEdit || event.pointerId !== activeEdit.pointerId) {
       return;
     }
     // Cancellation must not persist an incomplete gesture in the host app.
+    activeGestureRef.current = null;
     cancelQueuedPreview();
     setActivePreview(null);
     setActiveEdit(null);
   }, [activeEdit, cancelQueuedPreview]);
+
+  // lostpointercapture originates on the captured circle. Do not rely on
+  // bubbling to the outer SVG: attach a stable handler to each actual capture
+  // target and read the most recently started pointer through a ref.
+  const handleLostCapture = useCallback((event: ReactPointerEvent<SVGCircleElement>) => {
+    const active = activeGestureRef.current;
+    if (!active || event.pointerId !== active.pointerId) return;
+    activeGestureRef.current = null;
+    cancelQueuedPreview();
+    setActivePreview(null);
+    setActiveEdit(null);
+  }, [cancelQueuedPreview]);
 
   const handleEditKeyDown = useCallback((
     handle: AnnotationEditHandle,
@@ -510,8 +566,9 @@ function AnnotationLayerRenderer({
     event.preventDefault();
     event.stopPropagation();
 
-    const active = {
+    const active: ActiveEdit = {
       annotation,
+      layoutAtStart: currentLayout,
       handle,
       origin: handle.point,
       pointerId: -1
@@ -581,6 +638,7 @@ function AnnotationLayerRenderer({
                 tabIndex={editHandleTabIndex}
                 onPointerDown={handleEditPointerDown}
                 onKeyDown={handleEditKeyDown}
+                onLostPointerCapture={handleLostCapture}
               />
             ))}
           </g>
@@ -675,13 +733,15 @@ const PaintedEditHandle = memo(function PaintedEditHandle({
   prefix,
   tabIndex,
   onPointerDown,
-  onKeyDown
+  onKeyDown,
+  onLostPointerCapture
 }: {
   handle: AnnotationEditHandle;
   prefix: string;
   tabIndex: number;
   onPointerDown: (handle: AnnotationEditHandle, event: ReactPointerEvent<SVGCircleElement>) => void;
   onKeyDown: (handle: AnnotationEditHandle, event: ReactKeyboardEvent<SVGCircleElement>) => void;
+  onLostPointerCapture: (event: ReactPointerEvent<SVGCircleElement>) => void;
 }) {
   return (
     <g
@@ -699,6 +759,7 @@ const PaintedEditHandle = memo(function PaintedEditHandle({
         data-edit-handle-position={editHandlePosition(handle)}
         style={{ cursor: handle.cursor }}
         onPointerDown={(event) => onPointerDown(handle, event)}
+        onLostPointerCapture={onLostPointerCapture}
       />
       <circle
         aria-label={handle.ariaLabel}
@@ -715,6 +776,7 @@ const PaintedEditHandle = memo(function PaintedEditHandle({
         aria-keyshortcuts="ArrowUp ArrowRight ArrowDown ArrowLeft Shift+ArrowUp Shift+ArrowRight Shift+ArrowDown Shift+ArrowLeft"
         onKeyDown={(event) => onKeyDown(handle, event)}
         onPointerDown={(event) => onPointerDown(handle, event)}
+        onLostPointerCapture={onLostPointerCapture}
       />
     </g>
   );
