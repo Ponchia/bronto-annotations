@@ -1,5 +1,8 @@
 # Context Quickstart
 
+New to the package? Start with [your first annotation](getting-started.md) for
+a complete runnable example. This page helps choose the host-specific path.
+
 Use this page when choosing the first integration path. Every example below
 uses public package imports and keeps host rendering, state, persistence, and
 layout ownership outside this package.

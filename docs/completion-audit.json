@@ -885,7 +885,7 @@
         {
           "file": "AGENTS.md",
           "terms": [
-            "Assume the repository will become public",
+            "publishes the public `@ponchia/annotations` package",
             "Public Boundary"
           ]
         },

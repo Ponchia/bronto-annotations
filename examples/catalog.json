@@ -1,0 +1,86 @@
+{
+  "svg-basic": {
+    "title": "SVG figure",
+    "summary": "Host-rendered SVG with notes, subjects, connectors, and layout diagnostics.",
+    "try": "Open the figure, inspect its callouts, then change one note or anchor in main.ts. Compare the resulting geometry.",
+    "boundary": "The fixture draws the underlying figure. The package resolves and renders only the annotations.",
+    "guide": "core-guide"
+  },
+  "react-basic": {
+    "title": "React annotation layer",
+    "summary": "A React-rendered workflow with a separate annotation SVG layer.",
+    "try": "Inspect the workflow and notes together, then change a note in main.tsx and observe the rendered update.",
+    "boundary": "React state, the underlying workflow SVG, and overlay mounting belong to this host.",
+    "guide": "react-guide"
+  },
+  "react-incremental": {
+    "title": "Interactive annotation editor",
+    "summary": "Drag and edit notes, inspect JSON, and undo committed changes with host-owned history.",
+    "try": "Drag a note handle, use Move final anchor, edit a note title and apply it, then Undo and Redo. Copy the current JSON and load it back. Invalid JSON must leave the current state untouched.",
+    "boundary": "History, selection, forms, JSON validation, and persistence decisions are application code. The small importer accepts point/box annotations and at most ten notes; it is not a general package serializer.",
+    "guide": "react-guide"
+  },
+  "react-worker": {
+    "title": "Worker layout experiment",
+    "summary": "Host-owned module Worker with revision-safe results and responsive UI controls.",
+    "try": "Move the final anchor or host obstacle, supersede a request, and start a cancellable job. Use Ignore pending result and the UI response control to observe the distinction between result admission and background solver work.",
+    "boundary": "The host creates the Worker, tracks revisions, and decides which result to accept. Ignoring a result does not interrupt solver CPU work. This is an experimental recipe, not a public Worker API.",
+    "guide": "worker-layout"
+  },
+  "react-flow-basic": {
+    "title": "React Flow diagram",
+    "summary": "Callouts attached to public node, handle, edge, and viewport geometry.",
+    "try": "Inspect the generated graph and annotated targets. Change a node or viewport input in main.tsx and compare target alignment.",
+    "boundary": "React Flow owns graph rendering and state. The annotations adapter consumes its public geometry instead of owning graph layout.",
+    "guide": "adapter-guide"
+  },
+  "dom-basic": {
+    "title": "DOM regions",
+    "summary": "Annotations attached to measured regions of an ordinary HTML surface.",
+    "try": "Inspect the two host regions and their notes. Change a region size or position and observe the measured overlay.",
+    "boundary": "The host owns DOM content, measurement timing, and mounting. All measured rectangles must be converted into the overlay coordinate space.",
+    "guide": "adapter-guide"
+  },
+  "vega-basic": {
+    "title": "Vega and Vega-Lite",
+    "summary": "Notes attached to rendered chart marks and geometry supplied by Vega.",
+    "try": "Inspect the real chart marks and callouts, then change a target specification in main.ts. Check adapter diagnostics rather than assuming a mark matched.",
+    "boundary": "Vega renders the chart. The adapter uses its produced geometry; the annotations core does not manage scales or chart data.",
+    "guide": "adapter-guide"
+  },
+  "mermaid-basic": {
+    "title": "Mermaid diagrams",
+    "summary": "Annotations on actual rendered Mermaid diagram geometry.",
+    "try": "Inspect the rendered diagram targets and notes. Change a label or target specification, then check missing-target diagnostics.",
+    "boundary": "Mermaid parses and lays out the diagram. The adapter runs after rendering and uses SVG geometry, not a second diagram parser.",
+    "guide": "adapter-guide"
+  },
+  "d2-basic": {
+    "title": "D2 diagram",
+    "summary": "Callouts on D2 compiled or rendered shape and connection geometry.",
+    "try": "Inspect the rendered D2 shapes and annotation targets. Change a target specification and compare the validation report.",
+    "boundary": "D2 compiles and renders the diagram. The adapter consumes shape/route geometry without taking over D2 layout.",
+    "guide": "adapter-guide"
+  },
+  "bronto-report": {
+    "title": "Annotated report",
+    "summary": "Annotations over report geometry with an optional Bronto styling bridge.",
+    "try": "Inspect note placement over the report and compare the migrated static annotation with the resolved layer.",
+    "boundary": "The report content and layout belong to the host. Bronto-compatible CSS is optional; the engine does not require a design system.",
+    "guide": "styling-guide"
+  },
+  "style-gallery": {
+    "title": "Annotation styles",
+    "summary": "A visual reference for callout variants and the optional annotation CSS.",
+    "try": "Inspect the visual variants, then change a style token or annotation option and compare the result.",
+    "boundary": "This is a styling fixture, not an application editor or a chart engine.",
+    "guide": "styling-guide"
+  },
+  "index": {
+    "title": "Visual example index",
+    "summary": "An annotated overview with links to the individual demonstration surfaces.",
+    "try": "Use the published index to navigate between examples. For local cross-example navigation, build and serve the full site as described in the catalog.",
+    "boundary": "The index illustrates the annotation grammar. Each linked page is a separate host fixture.",
+    "guide": "getting-started"
+  }
+}

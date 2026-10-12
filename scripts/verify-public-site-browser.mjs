@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { readdir } from 'node:fs/promises';
+import { mkdir, readdir } from 'node:fs/promises';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
@@ -27,6 +27,8 @@ const url = 'http://127.0.0.1:' + port.port;
 const browser = await chromium.launch({ headless: true });
 const wcagTags = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
 let variants = 0;
+const onboardingEvidence = resolve(root, '.tmp/screenshots/public-onboarding');
+await mkdir(onboardingEvidence, { recursive: true });
 
 async function visit(path, width) {
   const context = await browser.newContext({
@@ -245,20 +247,30 @@ try {
         docAudit.violations.map((x) => x.id).join(', '),
     );
     variants++;
+    await docs.locator('#docs-filter').fill('');
+    await docs.screenshot({ path: resolve(onboardingEvidence, `docs-index-${width}.png`), fullPage: false });
     await docs.context().close();
 
-    const guide = await visit('/docs/context-quickstart.html', width);
-    const guideAudit = await new AxeBuilder({ page: guide })
-      .withTags(wcagTags)
-      .analyze();
-    assert.equal(
-      guideAudit.violations.length,
-      0,
-      'Guide axe violations: ' +
-        guideAudit.violations.map((x) => x.id).join(', '),
-    );
-    variants++;
-    await guide.context().close();
+    for (const [path, evidenceName] of [
+      ['/docs/context-quickstart.html', 'adapter-chooser'],
+      ['/docs/getting-started.html', 'getting-started'],
+      ['/docs/troubleshooting.html', 'troubleshooting'],
+      ['/examples/', 'example-catalog'],
+    ]) {
+      const guide = await visit(path, width);
+      const guideAudit = await new AxeBuilder({ page: guide })
+        .withTags(wcagTags)
+        .analyze();
+      assert.equal(
+        guideAudit.violations.length,
+        0,
+        `Guide ${path} (${width}px) axe violations: ` +
+          guideAudit.violations.map((x) => x.id).join(', '),
+      );
+      await guide.screenshot({ path: resolve(onboardingEvidence, `${evidenceName}-${width}.png`), fullPage: false });
+      variants++;
+      await guide.context().close();
+    }
   }
   for (const width of [390, 1200]) {
     for (const name of publishedExamples) {

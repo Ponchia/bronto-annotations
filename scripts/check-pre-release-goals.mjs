@@ -3,7 +3,7 @@ import { access, readFile, readdir } from 'node:fs/promises';
 import { writeLine } from './log.mjs';
 
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
-const readme = await read('README.md');
+const verification = await read('docs/verification.md');
 const roadmap = await read('docs/pre-release-roadmap.md');
 const apiStability = await read('docs/api-stability.md');
 const apiStabilityManifest = JSON.parse(await read('docs/api-stability.manifest.json'));
@@ -496,7 +496,7 @@ for (const term of [
   'npm run test:compatibility:lanes',
   'npm run test:performance'
 ]) {
-  assertIncludes(readme, term, 'README.md');
+  assertIncludes(verification, term, 'docs/verification.md');
 }
 
 writeLine('Pre-release goals verified: roadmap, API stability, compatibility, dogfood, self-dogfood, external dogfood, visual regression, performance, accessibility, adapter recipes, and public release decisions.');

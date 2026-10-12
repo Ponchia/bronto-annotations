@@ -29,6 +29,11 @@ const required = [
   'index.html',
   'docs/index.html',
   'docs/context-quickstart.html',
+  'docs/getting-started.html',
+  'docs/troubleshooting.html',
+  'docs/core-guide.html',
+  'docs/react-guide.html',
+  'docs/adapter-guide.html',
   'docs/integration-recipes.html',
   'docs/api-reference.html',
   'examples/index.html',
@@ -173,6 +178,20 @@ assert(
   home.window.document.querySelector('meta[property="og:image"]'),
   'Public social preview missing',
 );
+assert(home.window.document.querySelector('a[href="./docs/getting-started.html"]'),
+  'Homepage must lead to the complete first-annotation guide');
+for (const destination of ['https://ko-fi.com/ponchia', 'https://brontolotto.observer/']) {
+  assert(home.window.document.querySelector(`footer a[href="${destination}"]`),
+    `Homepage footer must expose the existing support/maintainer destination: ${destination}`);
+}
+const chooser = new JSDOM(await readFile(join(target, 'docs/context-quickstart.html'), 'utf8'));
+assert(chooser.window.document.querySelector('a[href="../examples/react-incremental/"]'),
+  'Guide example links must open the live demonstration, not a GitHub blob directory');
+chooser.window.close();
+const catalog = new JSDOM(await readFile(join(target, 'examples/index.html'), 'utf8'));
+assert.equal(catalog.window.document.querySelectorAll('.doc-card a[href^="https://github.com/Ponchia/bronto-annotations/tree/main/examples/"]').length, 11,
+  'Every demo card must provide its source and setup instructions');
+catalog.window.close();
 home.window.close();
 const index = new JSDOM(
   await readFile(join(target, 'docs/index.html'), 'utf8'),

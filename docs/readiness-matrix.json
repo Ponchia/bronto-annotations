@@ -763,7 +763,7 @@
           ]
         },
         {
-          "file": "README.md",
+          "file": "docs/presets-guide.md",
           "terms": [
             "collection-level generator-style configs",
             "createD3StyleAnnotationBuilder",
@@ -1233,7 +1233,7 @@
           "file": "package.json",
           "terms": [
             "test:docs-snippets",
-            "test/docs/snippets.test.ts"
+            "vitest run test/docs"
           ]
         }
       ]
@@ -1561,7 +1561,7 @@
           ]
         },
         {
-          "file": "README.md",
+          "file": "docs/verification.md",
           "terms": [
             "Repository Quality",
             "CI runs `npm run check`",

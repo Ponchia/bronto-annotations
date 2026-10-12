@@ -1,8 +1,23 @@
 # Contributing
 
-`@ponchia/annotations` is a public-package-shaped annotation engine. Keep
+`@ponchia/annotations` is a public, headless annotation engine. Keep
 changes focused on annotation models, anchors, placement, collision handling,
 connector geometry, render helpers, and adapter contracts.
+
+Small documentation fixes, reproducible bug reports, and examples from real
+integrations are welcome. For usage questions, start with [SUPPORT.md](SUPPORT.md).
+Financial support is optional and separate from contribution in [FUNDING.md](FUNDING.md).
+
+## Find your way around
+
+| Area | Start here |
+| --- | --- |
+| Consumer guides and troubleshooting | [Documentation index](docs/README.md) |
+| Runnable hosts and expected behavior | [Example catalog](examples/README.md) |
+| Models, placement, connectors, and layout quality | `src/core/` |
+| Renderers and integrations | `src/svg/`, `src/react/`, `src/dom/`, `src/adapters/` |
+| Behavior, package consumers, and documentation regressions | `test/` |
+| Build, browser, release, and compatibility checks | [Verification guide](docs/verification.md) |
 
 ## Product Boundaries
 
@@ -22,8 +37,13 @@ rendered SVG/DOM geometry.
 
 ```bash
 npm ci
+npx playwright install chromium
 npm run check
 ```
+
+On Linux, Playwright may also need system libraries; CI installs them with
+`npx playwright install --with-deps chromium`. The ordinary examples do not
+require a Playwright browser download.
 
 `npm run check` is the required gate. It builds the package, runs whole-repo
 type checks, unit tests, dead-code/dependency checks, validates public exports
@@ -50,6 +70,22 @@ check rather than silently publishing or testing stale JavaScript.
 Run `npm run test:build-reuse` to verify that fresh output is reused unchanged,
 while an added source or dist file is correctly rejected. To repair a failed
 reuse check, run `npm run build` without the reuse environment variable.
+
+## Documentation and examples
+
+Keep the root README focused on adoption. Put detailed options in the relevant
+current guide and link it from `docs/README.md`. Preserve useful historical
+records, but label their scope instead of presenting them as current setup.
+
+The first-use code blocks are synchronized with executable, typechecked fixtures
+in `test/docs/`. Update the fixture and guide together. Each runnable example
+has a README with setup, expected behavior, and the host/package ownership
+boundary; its catalog entry lives in `examples/catalog.json`. The public site
+uses that catalog, and documentation tests check it against the source tree.
+
+For an initial focused check use `npm run test:docs-snippets`; changes to the
+published site also need `npm run test:site`. These do not replace the full
+`npm run check` gate before a PR is ready to merge.
 
 ## Pull Requests
 

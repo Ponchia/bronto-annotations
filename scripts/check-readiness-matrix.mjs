@@ -12,7 +12,8 @@ const exportScript = await readFile(new URL('../scripts/check-package-exports.mj
 const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8');
 const e2ePlan = await readFile(new URL('../docs/e2e-plan.md', import.meta.url), 'utf8');
 const integrationRecipes = await readFile(new URL('../docs/integration-recipes.md', import.meta.url), 'utf8');
-const docsText = `${readme}\n${e2ePlan}\n${integrationRecipes}`;
+const guides = (await Promise.all(['core-guide', 'presets-guide', 'react-guide', 'adapter-guide', 'styling-guide', 'verification'].map((name) => readFile(new URL(`../docs/${name}.md`, import.meta.url), 'utf8')))).join('\n');
+const docsText = `${readme}\n${e2ePlan}\n${integrationRecipes}\n${guides}`;
 
 assert.equal(matrix.schemaVersion, 1, 'readiness matrix schemaVersion must be 1');
 assert.equal(matrix.status, 'usable-public-package-with-known-limits');
@@ -96,7 +97,7 @@ for (const context of matrix.contexts) {
   }
 
   for (const term of context.docsTerms) {
-    assertIncludes(docsText, term, 'README.md/docs/e2e-plan.md');
+    assertIncludes(docsText, term, 'current guides/docs/e2e-plan.md');
   }
 }
 

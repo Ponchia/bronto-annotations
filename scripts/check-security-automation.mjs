@@ -11,7 +11,7 @@ const scorecard = await read('.github/workflows/scorecard.yml');
 const dependabot = await read('.github/dependabot.yml');
 const securityPolicy = await read('SECURITY.md');
 const docs = await read('docs/security-automation.md');
-const readme = await read('README.md');
+const verification = await read('docs/verification.md');
 
 assert.equal(pkg.scripts?.['test:security-automation'], 'node scripts/check-security-automation.mjs');
 assert.ok(pkg.scripts?.check?.includes('npm run test:security-automation'), 'npm run check must include test:security-automation');
@@ -149,7 +149,7 @@ for (const term of [
   'standard GitHub-hosted',
   'docs/security-automation.md'
 ]) {
-  assertIncludes(readme, term, 'README.md');
+  assertIncludes(verification, term, 'docs/verification.md');
 }
 
 writeLine('Security automation verified: CodeQL, Dependency Review, Scorecard, Dependabot docs, public runner policy, and public security settings guidance.');
