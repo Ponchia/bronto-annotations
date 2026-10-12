@@ -42,6 +42,17 @@ establish a stable cross-browser support policy. Install missing browsers with
 `npx playwright install --with-deps firefox webkit`. Neither this check nor
 the existing Chromium timing metrics promise a frame rate.
 
+The cross-browser GitHub Actions workflow retains a **seven-day browser evidence
+artifact** with one viewport PNG per attempted scenario, plus a structured
+`results.json` listing browser, viewport, scenario, pass/fail, time spent,
+runtime errors and screenshot capture outcome. Evidence is written in a
+`finally` path even if an assertion fails. These screenshots are diagnostic
+snapshots, **not approved pixel-diff visual baselines** or screen-reader test
+results. To collect locally, set
+`ANNOTATIONS_CROSS_BROWSER_EVIDENCE_DIR=/absolute/path` when running
+`node scripts/verify-cross-browser-interactions.mjs --browser chromium --scenario incremental`
+after the build. Without the variable, existing test behavior is unchanged.
+
 ## Checked Lanes
 
 - Node 20 and Node 22 run the full GitHub CI `npm run check` job.

@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .tmp/
+/browser-evidence/
 .tmp-packed-screenshots/
 .tmp-dogfood/
 .playwright-cli/
