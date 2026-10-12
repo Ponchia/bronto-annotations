@@ -637,8 +637,14 @@ function noteSizeFor(annotation: Annotation, options: LayoutOptions): Size {
     return { width: 0, height: 0 };
   }
 
-  return options.noteSizes?.[annotation.id]
-    ?? estimateNoteSize(annotation, options.defaultNoteSize ?? DEFAULT_NOTE_SIZE);
+  // Annotation IDs are arbitrary host strings, including "__proto__" and
+  // "constructor". A plain noteSizes object inherits those properties even
+  // when the host never specified a size for the annotation. Only an *own*
+  // entry may override the estimate, regardless of the map's prototype.
+  const sizes = options.noteSizes;
+  const supplied = sizes && Object.hasOwn(sizes, annotation.id)
+    ? sizes[annotation.id] : undefined;
+  return supplied ?? estimateNoteSize(annotation, options.defaultNoteSize ?? DEFAULT_NOTE_SIZE);
 }
 
 function mergePlacement(

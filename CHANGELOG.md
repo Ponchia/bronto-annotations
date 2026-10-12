@@ -8,6 +8,15 @@ reasonable.
 
 ## Unreleased
 
+### Fixed
+
+- Only use an explicitly owned `LayoutOptions.noteSizes` entry for an
+  annotation ID. Host IDs such as `__proto__`, `constructor` and
+  `toString` no longer resolve inherited object properties as note sizes
+  or produce invalid/NaN note geometry. Explicit own entries in standard
+  and null-prototype dictionaries remain supported, including in incremental
+  sessions and imported interactive-editor documents.
+
 ### Interactive authoring examples
 
 - Ensure an appended annotation stays below imported negative-priority notes
