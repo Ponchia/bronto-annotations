@@ -13,6 +13,7 @@
 import assert from 'node:assert/strict';
 import { firefox, webkit } from 'playwright';
 import { createServer } from 'vite';
+import AxeBuilder from '@axe-core/playwright';
 
 const suites = [
   ['firefox', firefox],
@@ -45,6 +46,17 @@ async function visit(browser, origin, route, viewport) {
   const response = await page.goto(origin + route, { waitUntil: 'networkidle', timeout: 45000 });
   assert.equal(response?.status(), 200, `Bad HTTP response for ${route}`);
   return { page, context, errors };
+}
+
+async function verifyAccessibility(page, label) {
+  const report = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  assert.deepEqual(report.violations.map((issue) => ({
+    id: issue.id,
+    impact: issue.impact,
+    targets: issue.nodes.map((node) => node.target.join(' '))
+  })), [], label + ': Firefox/WebKit A/AA accessibility regressions');
 }
 
 async function verifyIncremental(browser, origin, viewport, label) {
@@ -104,6 +116,7 @@ async function verifyIncremental(browser, origin, viewport, label) {
     const edited = await page.evaluate(() => window.__annotationsExample);
     assert.equal(edited.reused, 3, label + ': commit should reuse unaffected winners');
     assert.equal(edited.quality.ok, true, label + ': quality must remain valid');
+    await verifyAccessibility(page, label);
     assert.deepEqual(errors, [], label + ': unexpected browser errors');
   } finally {
     await context.close();
@@ -150,6 +163,7 @@ async function verifyWorker(browser, origin, viewport, label) {
     assert.equal(state.commits, 2, label + ': cancelled result must not commit');
     assert.equal(state.parity, true, label + ': committed state must remain authoritative');
     assert.deepEqual(state.workerErrors, [], label + ': Worker runtime errors');
+    await verifyAccessibility(page, label);
     assert.deepEqual(errors, [], label + ': browser console or runtime errors');
 
     if (viewport.width < 500) {
@@ -157,6 +171,9 @@ async function verifyWorker(browser, origin, viewport, label) {
       const range = await scroll.evaluate((node) =>
         ({ visible: node.clientWidth, content: node.scrollWidth }));
       assert(range.content > range.visible, label + ': mobile diagram must be scrollable');
+      await scroll.evaluate((node) => { node.scrollLeft = 220; });
+      assert((await scroll.evaluate((node) => node.scrollLeft)) > 0,
+        label + ': mobile horizontal scrolling did not respond');
     }
   } finally {
     await context.close();

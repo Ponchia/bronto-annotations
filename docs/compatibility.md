@@ -27,8 +27,11 @@ without React, Vega, Mermaid, D2, React Flow, or `@ponchia/ui` installed.
 `npm run test:browser:cross` exercises the published React incremental-editor
 and native module Worker demos in **Firefox and WebKit** at 1200px and 390px.
 It verifies a visible pointer-move preview before commit, stable unchanged
-placements, note editing focus, quality checks, obsolete/cancelled Worker
-responses, fresh-layout parity and mobile horizontal navigation. This is
+placements, note editing focus, quality checks, browser-specific axe WCAG A/AA
+scans, obsolete/cancelled Worker responses, fresh-layout parity and mobile
+horizontal navigation. The separate workflow is path-scoped to annotation
+source, browser examples and dependency/test changes rather than running for
+every documentation or release change. This is
 separate from mandatory Chromium CI until repeated runs on supported hosts
 establish a stable cross-browser support policy. Install missing browsers with
 `npx playwright install --with-deps firefox webkit`. Neither this check nor
