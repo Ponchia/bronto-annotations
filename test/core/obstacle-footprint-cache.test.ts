@@ -163,6 +163,75 @@ describe('session-local exhaustive obstacle footprint cache', () => {
     expectFreshParity(reproof, next);
   });
 
+  it('keeps fractional coordinates and closed-box boundary contacts conservative', () => {
+    candidateSearch.mockClear();
+    const source = scenario(4);
+    source.annotations[0]!.anchor = {
+      type: 'point', point: { x: 56.123456789123, y: 140.987654321987 }
+    };
+    source.noteSizes!['note-000'] = { width: 88.123456789123, height: 40.987654321987 };
+    const session = createIncrementalAnnotationLayoutSession(source);
+    const first = structuredClone(source);
+    first.obstacles![0]!.x += 11.125;
+    const warm = session.update(first);
+    expectFreshParity(warm, first);
+
+    // Closed contact must conservatively invalidate the old winner. This
+    // differs from half-open drawing semantics, intentionally favoring parity
+    // over reuse of a potentially affected connector segment.
+    const box = warm.annotations[0]!.noteBox;
+    const touching = structuredClone(first);
+    touching.obstacles![0] = {
+      x: box.x + box.width,
+      y: box.y + box.height / 2,
+      width: 17.125, height: 6.375
+    };
+    const touched = session.update(touching);
+    expect(touched.annotations[0]).not.toBe(warm.annotations[0]);
+    expectFreshParity(touched, touching);
+
+    // Float64 cache coordinates retain subpixel data; repeated unaffected
+    // updates after a geometry change still match the independent full solve.
+    const farAgain = structuredClone(touching);
+    farAgain.obstacles![0] = { x: 2780.123456789123, y: 510, width: 10, height: 10 };
+    const repacked = session.update(farAgain);
+    expectFreshParity(repacked, farAgain);
+    const next = structuredClone(farAgain);
+    next.obstacles![0]!.x += 0.0000000001;
+    const reused = session.update(next);
+    expectFreshParity(reused, next);
+  });
+
+  it('falls back rather than retaining an oversized all-candidate footprint cache', async () => {
+    const original = await vi.importActual<typeof import('../../src/core/placement.js')>(
+      '../../src/core/placement.js'
+    );
+    candidateSearch.mockImplementation((input) => {
+      const candidates = original.allPlacementCandidates(input);
+      if (input.annotation.id !== 'note-000'
+        || input.obstacles.length !== 0
+        || input.placedNotes.length !== 0) return candidates;
+      expect(candidates.length).toBeGreaterThan(0);
+      // The original resolver deliberately retains fewer candidates, but
+      // the proof must account for *every* placement. This many would exceed
+      // the private 128 KiB/note cache budget.
+      return Array.from({ length: 4097 }, (_, index) => candidates[index % candidates.length]!);
+    });
+    try {
+      const initial = scenario(1);
+      const session = createIncrementalAnnotationLayoutSession(initial);
+      const before = session.layout;
+      const next = structuredClone(initial);
+      next.obstacles![0]!.x += 10;
+      const updated = session.update(next);
+      // Cache refusal must never lead to an unsupported reused identity.
+      expect(updated.annotations[0]).not.toBe(before.annotations[0]);
+      expectFreshParity(updated, next);
+    } finally {
+      candidateSearch.mockImplementation(original.allPlacementCandidates);
+    }
+  });
+
   it('does not cache unsafe route-dependent geometry', () => {
     candidateSearch.mockClear();
     const initial = scenario(6);

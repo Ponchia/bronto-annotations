@@ -8,6 +8,17 @@ reasonable.
 
 ## Unreleased
 
+### Performance and memory
+
+- Store the experimental incremental session's exhaustive obstacle candidate
+  footprints as a compact Float64 coordinate buffer rather than individual
+  JavaScript rectangles, retaining the same conservative collision semantics.
+  Decline oversized per-note proof caches and use normal full-resolution
+  fallbacks instead of retaining unbounded auxiliary geometry.
+- Add an opt-in GC-assisted dense cache memory probe with exact layout/quality
+  parity assertions. Measured retained-memory improvements on one development
+  host are observational rather than guarantees for other runtimes.
+
 ## 0.6.9 - 2026-10-12
 
 ### Fixed

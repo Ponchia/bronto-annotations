@@ -246,6 +246,37 @@ These are individual non-controlled timings; they illustrate why repeated
 spatial-independence proofs are worth caching and do **not** promise a similar
 speedup on other hosts, layouts, or routed connectors.
 
+The session cache now stores each conservative candidate footprint as four
+**Float64** coordinates (left, top, right, bottom), rather than keeping a
+separate JavaScript object for every note/connector segment. This preserves
+double-precision intersection semantics, including fractional coordinates and
+boundary contact. The cache declines more than 4,096 footprints per annotation
+(128 KiB of stored coordinates), conservatively recomputing instead of keeping
+an oversized auxiliary proof. Host-owned note counts and placement options
+still determine the overall cost.
+
+Run the independent, **opt-in** memory probe with Node's explicit GC:
+
+```bash
+npm run benchmark:obstacle-cache:memory -- --count=200 --updates=14
+```
+
+On two separate runs of a 200-note, many-candidate fixture on the October
+2026 shared ARM development host, the pre-compaction object-based cache
+retained about **26.84–26.86 MB** more heap plus ArrayBuffer memory after the
+first distant-obstacle proof. The Float64 cache retained about
+**8.68 MB**, mostly as ArrayBuffers, with exact priority-prefix, layout and
+quality parity. In this fixture that was roughly **68% less** additional
+retained memory. After another 14 distant-obstacle updates, both variants
+showed under 0.35 MB of additional measured heap and no additional ArrayBuffer
+retention for the compact case.
+
+Those figures are GC-assisted V8 observations from independent processes,
+not guaranteed application heap savings, binary message sizes, leak-proof
+evidence, or browser memory measurements. RSS and one-run solve timings remain
+sensitive to the allocator, JIT, load and garbage collection. Benchmark your
+own obstacle/candidate density before relying on these observations.
+
 ### Incremental DOM note-size measurements
 
 React hosts using `AnnotationLayer measure="dom"` still need an initial full
