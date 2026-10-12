@@ -28,6 +28,9 @@ h1 { font-size: clamp(30px, 4.3vw, 49px); font-weight: 680; letter-spacing: -0.0
 .workflow-stage .pa-annotation__note { font-family: inherit; }
 .workflow-stage .pa-annotation__title { font-size: 13px; }
 .workflow-stage .pa-annotation__body { font-size: 11px; line-height: 1.4; }
+.workflow-stage .pa-annotation__note-box { cursor: pointer; }
+.workflow-stage .pa-annotation__note-box:hover { outline: 2px solid #8cb9c9; outline-offset: -2px; }
+.workflow-stage .pa-annotation__note-box:focus-visible { outline: 3px solid #3292a3; outline-offset: -2px; }
 .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid #e4eaf0; }
 .metric { padding: 18px 22px 20px; min-width: 0; }
 .metric + .metric { border-left: 1px solid #e4eaf0; }

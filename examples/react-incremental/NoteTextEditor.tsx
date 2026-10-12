@@ -41,7 +41,7 @@ export function NoteTextEditor({
     <section className="note-text-editor" aria-labelledby="note-text-editor-title">
       <div className="note-text-editor-heading">
         <h2 id="note-text-editor-title">Edit annotation text</h2>
-        <p>Change the text without editing JSON. Apply creates one undoable commit.</p>
+        <p>Click or focus a note in the diagram to select it, or use the menu. Apply creates one undoable commit.</p>
       </div>
       <form onSubmit={apply}>
         <div className="note-text-editor-grid">
