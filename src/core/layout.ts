@@ -331,12 +331,18 @@ function crossAnnotationTopology(annotations: Annotation[]): CrossAnnotationTopo
         const keys = Reflect.ownKeys(value);
         for (let keyIndex = keys.length - 1; keyIndex >= 0; keyIndex -= 1) {
           const key = keys[keyIndex]!;
-          if (typeof key !== 'string') throw new Error('Symbol host metadata');
           const descriptor = Object.getOwnPropertyDescriptor(value, key);
-          if (!descriptor || !('value' in descriptor)) {
-            throw new Error('Accessor-backed host metadata');
-          }
-          pending.push({ value: descriptor.value, path: `${next.path}/${JSON.stringify(key)}` });
+          if (!descriptor) throw new Error('Uninspectable host metadata');
+          // Accessors are not stored references. Never invoke a getter: the
+          // per-annotation fingerprint separately forbids reuse of the note
+          // containing it. Still inspect the remaining *data* properties so
+          // an unrelated safe prefix need not be discarded, and so aliases
+          // from this invalidated suffix to earlier notes remain visible.
+          if (!('value' in descriptor)) continue;
+          // Symbol-bearing objects also fail the per-annotation fingerprint;
+          // follow their data references for cross-note owner detection.
+          const segment = typeof key === 'string' ? JSON.stringify(key) : 'symbol';
+          pending.push({ value: descriptor.value, path: `${next.path}/${segment}` });
         }
       }
       signatures.push(JSON.stringify(aliases));
@@ -344,7 +350,8 @@ function crossAnnotationTopology(annotations: Annotation[]): CrossAnnotationTopo
     }
     return { signatures, owners };
   } catch {
-    // Unsafe cross-note topology disables reuse through undefined fingerprints.
+    // Proxy traps or other uninspectable metadata make cross-note sharing
+    // unknowable. In those cases, a complete resolution is safer than reuse.
     return undefined;
   }
 }

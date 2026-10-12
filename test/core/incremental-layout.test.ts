@@ -317,6 +317,46 @@ describe('experimental incremental annotation layout session', () => {
     expect(Object.is(result.annotations[9]!.annotation.metadata!.coordinate, 0)).toBe(true);
   });
 
+  it('keeps unrelated prefix notes when an unsafe suffix also holds stored aliases', () => {
+    const opts = fixture(8);
+    const shared = { source: 'earlier note' };
+    opts.annotations[0]!.metadata = { shared };
+    let called = 0;
+    const late: Record<string, unknown> = { shared };
+    Object.defineProperty(late, 'computed', {
+      enumerable: true,
+      get() { called++; return 'not inspected'; }
+    });
+    opts.annotations[7]!.metadata = late;
+    const session = createIncrementalAnnotationLayoutSession(opts);
+    const before = session.layout;
+
+    // A non-cloning update keeps the safe prefix. The suffix is always fresh.
+    const same = session.update(opts);
+    assertFullParity(same, opts);
+    expect(same.annotations[0]).toBe(before.annotations[0]);
+    expect(same.annotations[7]).not.toBe(before.annotations[7]);
+    expect(called).toBe(0);
+
+    // If a cloned prefix owner is now shared with the unsafe suffix, retaining
+    // the old owner would detach the source object's reference graph.
+    const clonedShared = { source: 'earlier note' };
+    const cloned = fixture(8);
+    cloned.annotations[0]!.metadata = { shared: clonedShared };
+    const otherLate: Record<string, unknown> = { shared: clonedShared };
+    Object.defineProperty(otherLate, 'computed', {
+      enumerable: true,
+      get() { called++; return 'not inspected'; }
+    });
+    cloned.annotations[7]!.metadata = otherLate;
+    const updated = session.update(cloned);
+    assertFullParity(updated, cloned);
+    expect(updated.annotations[0]).not.toBe(same.annotations[0]);
+    expect(updated.annotations[0]!.annotation.metadata!.shared)
+      .toBe(updated.annotations[7]!.annotation.metadata!.shared);
+    expect(called).toBe(0);
+  });
+
   it('falls back without calling metadata getters or hiding cyclic/opaque values', () => {
     const opts = fixture(8);
     let getterCalls = 0;
