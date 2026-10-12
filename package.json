@@ -106,6 +106,7 @@
     "test:browser:worker": "npm run build && node scripts/verify-worker-browser.mjs",
     "test:browser:cross": "npm run build && node scripts/verify-cross-browser-interactions.mjs",
     "test:browser:worker:production": "npm run build && node scripts/verify-worker-browser.mjs --production",
+    "test:browser:touch": "npm run build && node scripts/verify-touch-browser.mjs",
     "benchmark:browser:worker": "npm run build && node scripts/verify-worker-browser.mjs --benchmark",
     "benchmark:worker:transport": "npm run build && node scripts/benchmark-worker-transport.mjs",
     "test:worker:transport": "node scripts/benchmark-worker-transport.mjs --counts=8 --rounds=1",

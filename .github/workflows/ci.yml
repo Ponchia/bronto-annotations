@@ -60,6 +60,14 @@ jobs:
 
       # Mermaid 12 requires Node >=22.12. Keep Mermaid 11 as the regular
       # Node 20-tested peer instead of raising this package's engine floor.
+      # Real mobile Chromium touch input exercises the browser's
+      # touch-action / pointercancel negotiation, not just synthetic pointer
+      # events. Only editable circles suppress browser panning; background
+      # swipes must keep the host diagram horizontally scrollable.
+      - name: Verify mobile touch annotation editing
+        if: matrix.node-version == 22
+        run: npm run test:browser:touch
+
       - name: Mermaid 12 isolated browser compatibility
         if: matrix.node-version == 22
         run: npm run test:compatibility:mermaid12
