@@ -59,9 +59,13 @@ The editable SVG note/anchor handles and their enlarged hit circles opt out of
 native pan/zoom gestures via `touch-action: none`. This keeps pointermove events
 available for the host while a finger moves a note, rather than allowing the
 browser to interpret the gesture as scrolling and dispatch pointercancel.
-The declaration is **not** applied to the entire annotation layer or host
-diagram: swipes outside the edit controls remain native and should scroll
-overflowing content normally.
+A private non-passive `touchstart` listener on the SVG root also prevents
+native scrolling when the original target is an editable
+`g[data-edit-handle]` group. This is a narrow fallback for browser paths that
+still negotiate scrolling despite an inner SVG circle reporting
+`touch-action: none`. No touchmove listener is installed; the handler never
+suppresses touch defaults on regular notes, the surrounding stage or the
+host diagram. Swipes outside the edit controls remain native and can scroll.
 
 `npm run test:browser:touch` uses real Chromium CDP touchStart/move/end/cancel
 input in a narrow mobile, touch-enabled context. It verifies authoritative

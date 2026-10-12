@@ -40,6 +40,7 @@ import {
 import { dataAttributes, annotationStyle } from './render-data.js';
 import { renderSubject, renderConnector, renderDebugBoxes } from './svg-annotation-parts.js';
 import { useMeasurementNodeRegistration, useDomNoteMeasurementObserver } from './dom-measurements.js';
+import { useEditableSvgTouchBoundary } from './touch-gestures.js';
 import {
   useAnnotationPreviewScheduler,
   usePreviewLayoutInvalidation
@@ -393,6 +394,9 @@ function AnnotationLayerRenderer({
   const layerRole = Number.isFinite(noteTabIndex) || editHandles.length > 0 || renderNote
     ? 'group'
     : 'img';
+  // Native mobile scroll fallback only while editing is enabled; it never
+  // suppresses touches on the surrounding stage or ordinary note content.
+  useEditableSvgTouchBoundary(svgRef, Boolean(editOptions));
 
   const makeEditEvent = useCallback((
     active: ActiveEdit,

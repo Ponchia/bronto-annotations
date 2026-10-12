@@ -115,6 +115,27 @@ try {
   });
   assert(beforeNoteRect, 'Missing initial visual note geometry');
   const scrollBefore = await getScroll();
+  const startHit = await page.evaluate(({ x, y }) => {
+    const at = document.elementFromPoint(x, y);
+    const rect = at?.getBoundingClientRect();
+    return {
+      tag: at?.tagName,
+      className: at?.getAttribute('class'),
+      touchAction: at ? getComputedStyle(at).touchAction : null,
+      pointerEvents: at ? getComputedStyle(at).pointerEvents : null,
+      rect: rect ? { x: rect.x, y: rect.y, width: rect.width, height: rect.height } : null
+    };
+  }, start);
+  await page.evaluate(() => {
+    const traces = [];
+    window.__annotationsTouchTrace = traces;
+    for (const name of ['pointerdown', 'pointermove', 'pointercancel', 'pointerup', 'lostpointercapture']) {
+      document.addEventListener(name, (event) => traces.push({
+        name, pointerType: event.pointerType, target: event.target?.getAttribute?.('class'),
+        touchAction: event.target instanceof Element ? getComputedStyle(event.target).touchAction : null
+      }), { capture: true });
+    }
+  });
   await touch('touchStart', start);
   try {
     await moveTouch(start, 28, 14);
@@ -127,8 +148,11 @@ try {
     }, beforeNoteRect, { timeout: 12000 });
     assert.equal((await getEditor()).action, 'Reset to initial diagram',
       'Preview moved without an authoritative host commit');
-    assert(Math.abs(await getScroll() - scrollBefore) < 3,
-      'Dragging an edit handle unexpectedly scrolled the diagram');
+    const scrollAfter = await getScroll();
+    const eventTrace = await page.evaluate(() => window.__annotationsTouchTrace?.slice(0, 22));
+    assert(Math.abs(scrollAfter - scrollBefore) < 3,
+      'Dragging an edit handle unexpectedly scrolled the diagram: '
+      + JSON.stringify({ scrollBefore, scrollAfter, start, startHit, eventTrace }));
   } finally {
     await touch('touchEnd', start);
   }
