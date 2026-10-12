@@ -112,6 +112,7 @@ describe('ResizeObserver measures only changed DOM notes', () => {
     );
     await waitFor(() => expect(noteWidth(layouts.at(-1), 5)).toBe(80));
     const first = ManualResizeObserver.instances.at(-1)!;
+    const priorNode = container.querySelector('.pa-annotation-layer__measurer > div')!;
     measured.length = 0;
     first.emit(document.createElement('div'));
     expect(measured).toHaveLength(0);
@@ -122,6 +123,11 @@ describe('ResizeObserver measures only changed DOM notes', () => {
     const addedObserver = ManualResizeObserver.instances.at(-1)!;
     expect(first.disconnect).toHaveBeenCalled();
     expect(addedObserver.observed.size).toBe(7);
+    // The stale observer is disconnected, but simulate a callback already
+    // queued before cleanup. It must not read or update retained DOM nodes.
+    measured.length = 0;
+    first.emit(priorNode);
+    expect(measured).toHaveLength(0);
 
     rerender(<AnnotationLayer annotations={annotations.slice(0, 4)} bounds={bounds}
       measure="dom" onLayout={onLayout} />);
