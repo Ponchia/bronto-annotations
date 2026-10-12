@@ -8,17 +8,6 @@ reasonable.
 
 ## Unreleased
 
-### Performance and memory
-
-- Store the experimental incremental session's exhaustive obstacle candidate
-  footprints as a compact Float64 coordinate buffer rather than individual
-  JavaScript rectangles, retaining the same conservative collision semantics.
-  Decline oversized per-note proof caches and use normal full-resolution
-  fallbacks instead of retaining unbounded auxiliary geometry.
-- Add an opt-in GC-assisted dense cache memory probe with exact layout/quality
-  parity assertions. Measured retained-memory improvements on one development
-  host are observational rather than guarantees for other runtimes.
-
 ## 0.6.9 - 2026-10-12
 
 ### Fixed
@@ -55,6 +44,28 @@ reasonable.
 - Offer an optional 40/200-note obstacle-cache benchmark. Its single-run
   development-host timings are observational, not performance budgets or
   frame-rate guarantees.
+- Store exhaustive candidate collision footprints in compact Float64 buffers
+  rather than separate JavaScript boxes, preserving conservative collision
+  proofs and bounding per-note proof-cache size. An opt-in GC-assisted memory
+  probe checks exact placement and quality parity; sample memory savings are
+  development-host observations, not universal guarantees.
+- Compare actual Worker patch and snapshot messages using Node structured
+  cloning, including byte-size observations, without conflating JSON payload
+  estimates or next-rAF callbacks with transport bytes or compositor paint.
+
+### Interactive authoring examples
+
+- Show a runnable comparison of fixed-offset versus collision-aware note
+  placement, with live geometry and diagnostics rather than static mockups.
+- Provide a host-owned JSON inspector, copy action, guarded import, one-step
+  undo/redo history, keyboard shortcuts and note-text editing form. Draft
+  changes never commit layout work until the host explicitly applies them.
+- Keep the demo's add/remove actions within the same small JSON import limits,
+  generate conflict-free IDs even when user-supplied notes are named `added`,
+  and preserve at least one authored note. No general-purpose serialization,
+  persistence, command framework or form system is exported by the package.
+- Improve SVG touch gesture ownership and increase practical hit areas while
+  keeping visible controls compact and leaving diagram scrolling available.
 
 ### Examples, accessibility and compatibility
 
@@ -63,7 +74,8 @@ reasonable.
   host ownership and first-use documentation.
 - Verify actual desktop and mobile pointer editing, revision-safe Worker
   responses, accessibility and React Flow viewport transforms using Playwright
-  Firefox and WebKit, while retaining mandatory Chromium coverage.
+  Firefox and WebKit, while retaining mandatory Chromium coverage. Retain
+  per-scenario screenshots and browser logs to support diagnosis.
 - Simplify private React internals into editing geometry, SVG subject/connector
   rendering, marker definitions, data attributes, DOM measurement and
   frame-coalesced preview scheduling. Preserve the public component and package
