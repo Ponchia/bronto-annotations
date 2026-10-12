@@ -150,6 +150,45 @@ try {
       3,
     );
     assert((await home.locator('#layout-score').innerText()).match(/^\d+$/));
+    // Compare the same geometry and annotation set under fixed offsets versus
+    // collision-aware candidate search. Both modes use the real resolver,
+    // renderer and quality evaluator; no illustrative score is hardcoded.
+    const mode = home.locator('#placement-mode');
+    const overlay = home.locator('#annotation-overlay');
+    const readMetrics = () => home.evaluate(() => {
+      const element = document.querySelector('#annotation-overlay');
+      return {
+        mode: element?.getAttribute('data-mode'),
+        score: Number(element?.getAttribute('data-score')),
+        noteOverlap: Number(element?.getAttribute('data-note-overlap')),
+        obstacleOverlap: Number(element?.getAttribute('data-obstacle-overlap')),
+        noteCount: Number(element?.getAttribute('data-placed'))
+      };
+    });
+    const automatic = await readMetrics();
+    assert.equal(automatic.mode, 'automatic');
+    assert.equal(automatic.noteCount, 3);
+    await mode.selectOption('fixed');
+    const fixed = await readMetrics();
+    assert.equal(fixed.mode, 'fixed');
+    assert.equal(await home.locator('#plot-mode-label').innerText(), 'FIXED OFFSETS');
+    assert.equal(fixed.noteCount, automatic.noteCount);
+    assert(fixed.noteOverlap + fixed.obstacleOverlap > 0,
+      'The fixed offset baseline should visibly encounter this scene');
+    assert(fixed.score < automatic.score,
+      'Automatic placement should outperform the documented fixed-offset baseline');
+    assert.match(await home.locator('#placement-mode-note').innerText(), /18 units right/);
+    assert.equal(
+      await home.locator('#obstacle-overlap-count').innerText() === 'None',
+      fixed.obstacleOverlap === 0
+    );
+    await mode.selectOption('automatic');
+    const recovered = await readMetrics();
+    assert.deepEqual(recovered, automatic,
+      'Switching the same inputs back to automatic must restore the exact metrics');
+    assert.equal(await overlay.getAttribute('data-mode'), 'automatic');
+    assert.equal(await home.locator('#plot-mode-label').innerText(), 'COLLISION-AWARE');
+
     const range = home.locator('#notes-count');
     await range.evaluate((el) => {
       el.value = '5';
@@ -166,11 +205,16 @@ try {
       await home.locator('#annotation-overlay').getAttribute('data-route'),
       'none',
     );
+    await mode.selectOption('fixed');
     await home.locator('.reset-control').click();
     await home.waitForFunction(
-      () => document.querySelector('#placed-count')?.textContent === '3',
+      () => document.querySelector('#placed-count')?.textContent === '3'
+        && document.querySelector('#annotation-overlay')?.getAttribute('data-mode') === 'automatic',
     );
     assert.equal(await home.locator('#placed-count').innerText(), '3');
+    assert.equal(await mode.inputValue(), 'automatic');
+    assert.deepEqual(await readMetrics(), automatic,
+      'Native reset restores both the placement mode and measured metrics');
     const audit = await new AxeBuilder({ page: home })
       .withTags(wcagTags)
       .analyze();
