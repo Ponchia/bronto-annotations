@@ -8,6 +8,8 @@ reasonable.
 
 ## Unreleased
 
+## 0.6.9 - 2026-10-12
+
 ### Fixed
 
 - Make incremental annotation snapshots sensitive to reference sharing, including
@@ -22,6 +24,11 @@ reasonable.
   unexpected pointer-capture loss, or disabling editing. An interrupted drag
   cannot commit stale coordinates through a later pointer release; completed
   edits and keyboard behavior retain their normal semantics.
+- Size React's hidden DOM-measured note copies independently rather than
+  stretching every note to the longest sibling. A note's CSS resize now
+  updates only that note's measured width; browser regressions verify correct
+  local border-box geometry beneath scaled ancestors in Chromium, Firefox
+  and WebKit without treating transformed screen pixels as layout units.
 
 ### Performance
 
