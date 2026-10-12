@@ -14,6 +14,7 @@ import { EDITOR_MAX_NOTES, parseEditorAnnotationJson } from './json-import.js';
 import { appendDemoNote, removeFinalNote, moveFinalNoteAnchor } from './note-actions.js';
 import { editAnnotationText } from './note-text-editor.js';
 import { NoteTextEditor } from './NoteTextEditor.js';
+import { noteIdFromCanvasTarget } from './note-selection.js';
 import {
   createEditorHistory, pushEditorHistory, undoEditorHistory, redoEditorHistory,
   type EditorHistory
@@ -319,10 +320,28 @@ function App() {
             disabled={view.redoCount === 0} onClick={() => stepHistory('redo')}>Redo</button>
           <span className="history-shortcuts">Undo: Ctrl/⌘ Z · Redo: Ctrl/⌘ Shift Z</span>
         </div>
+        <div className="selection-hint">
+          <span>Click or focus a note on the diagram to select its text.</span>
+          <span role="status" aria-live="polite">
+            Selected: <strong>{selectedTextNote.note.title?.trim() || selectedTextNote.id}</strong>
+          </span>
+        </div>
         <p className="scroll-hint">Swipe sideways to follow the diagram <span aria-hidden="true">↔</span></p>
 
         <div className="stage-scroll" tabIndex={0} aria-label="Scrollable diagram with editable annotations">
-          <div className="workflow-stage">
+          <div className="workflow-stage"
+            onClickCapture={(event) => {
+              const id = noteIdFromCanvasTarget(event.target, event.currentTarget);
+              if (id) setSelectedNoteId(id);
+            }}
+            onFocusCapture={(event) => {
+              // A keyboard user can Tab directly to a note to select its text
+              // for editing. Selecting a visual note never changes the
+              // authoritative layout or adds an undo entry.
+              const id = noteIdFromCanvasTarget(event.target, event.currentTarget);
+              if (id) setSelectedNoteId(id);
+            }}
+          >
             <svg className="workflow-base" role="img" aria-label="Intake flows through Triage to Delivery" viewBox="0 0 860 500">
               <defs>
                 <marker id="workflow-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">

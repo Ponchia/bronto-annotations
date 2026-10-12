@@ -18,6 +18,9 @@ h1 { font-size: clamp(30px, 4.3vw, 49px); font-weight: 680; letter-spacing: -0.0
 .toolbar button:disabled { cursor: not-allowed; opacity: .45; }
 .toolbar .history-shortcuts { margin-left: auto; color: #617381; font-size: 11px; line-height: 1.4; }
 .toolbar button:focus-visible, .stage-scroll:focus-visible { outline: 3px solid #58b3c0; outline-offset: 3px; }
+.selection-hint { display: flex; flex-wrap: wrap; gap: 5px 18px; align-items: center; justify-content: space-between; padding: 11px 22px; font-size: 12px; line-height: 1.5; color: #526574; background: #f9fbfd; border-bottom: 1px solid #e4eaf0; }
+.selection-hint [role="status"] { color: #276072; overflow-wrap: anywhere; }
+.selection-hint strong { font-weight: 750; }
 .scroll-hint { display: none; }
 .stage-scroll { overflow-x: auto; scrollbar-color: #bdcbd4 transparent; }
 .workflow-stage { background: radial-gradient(circle at center, #fafcfe 0, #f5f8fb 100%); position: relative; width: 100%; min-width: 690px; aspect-ratio: 860 / 500; }
@@ -28,6 +31,13 @@ h1 { font-size: clamp(30px, 4.3vw, 49px); font-weight: 680; letter-spacing: -0.0
 .workflow-stage .pa-annotation__note { font-family: inherit; }
 .workflow-stage .pa-annotation__title { font-size: 13px; }
 .workflow-stage .pa-annotation__body { font-size: 11px; line-height: 1.4; }
+/* The package overlay is intentionally pointer-transparent. This specific
+   authoring host opts only its visible note foreignObjects back into hit
+   testing; connectors, subjects and the base workflow remain unchanged. */
+.workflow-stage .pa-annotation__note { pointer-events: auto; }
+.workflow-stage .pa-annotation__note-box { cursor: pointer; pointer-events: auto; }
+.workflow-stage .pa-annotation__note-box:hover { outline: 2px solid #8cb9c9; outline-offset: -2px; }
+.workflow-stage .pa-annotation__note-box:focus-visible { outline: 3px solid #3292a3; outline-offset: -2px; }
 .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid #e4eaf0; }
 .metric { padding: 18px 22px 20px; min-width: 0; }
 .metric + .metric { border-left: 1px solid #e4eaf0; }
