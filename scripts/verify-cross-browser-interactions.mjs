@@ -282,6 +282,49 @@ async function verifyIncremental(browser, origin, viewport, label) {
     assert.equal(await page.locator('#remove-note').isDisabled(), true,
       label + ': demo allowed deletion of its sole imported note');
 
+    // The move action is about the final authored anchor, not the built-in
+    // "signal" ID. A fully imported one-note *box* document must retain its
+    // anchor type, dimensions, note text and exact JSON round-trip.
+    const importedBox = [{
+      id: 'host-box',
+      anchor: {
+        type: 'box', side: 'left',
+        box: { x: 120, y: 210, width: 75, height: 38 }
+      },
+      note: { title: 'Host supplied box' }
+    }];
+    await importField.fill(JSON.stringify(importedBox));
+    await page.locator('#load-annotation-json').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Imported 1 annotations from JSON');
+    assert.equal(await page.locator('#move-note').isEnabled(), true,
+      label + ': Move final anchor is disabled for an imported box without signal');
+    await page.locator('#move-note').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Moved the final anchor');
+    const movedHost = await exportedAnnotations();
+    assert.deepEqual(movedHost[0].anchor, {
+      type: 'box', side: 'left',
+      box: { x: 175, y: 262, width: 75, height: 38 }
+    }, label + ': move final anchor changed the imported box type or dimensions');
+    assert.deepEqual(movedHost[0].note, importedBox[0].note);
+    await page.locator('#edit-current-json').click();
+    await page.locator('#load-annotation-json').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Imported 1 annotations from JSON');
+    assert.equal(await page.locator('#annotation-import-error').count(), 0,
+      label + ': a moved imported box can no longer round-trip through JSON');
+    assert.deepEqual(await exportedAnnotations(), movedHost);
+    await page.locator('#undo-edit').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Undid: Moved the final anchor');
+    assert.deepEqual(await exportedAnnotations(), importedBox,
+      label + ': no-op reimport added a false undo step or lost the old box');
+    await page.locator('#redo-edit').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Redid: Moved the final anchor');
+    assert.deepEqual(await exportedAnnotations(), movedHost);
+
     await page.locator('#reset-note').click();
     await page.waitForFunction(() =>
       window.__annotationsExample?.action === 'Reset to initial diagram');
