@@ -944,6 +944,21 @@ async function verifyIncrementalDemo(page, label) {
   assert.equal(first.info?.name, 'react-incremental', `${label} exposed a real controlled React example`);
   assert.equal(first.info.annotations.length, 4);
   assert.equal(first.info.changes, 0);
+  const targetBoxes = await page.locator('.pa-annotation__edit-hit').evaluateAll(
+    (elements) => elements.map((element) => {
+      const box = element.getBoundingClientRect();
+      return { width: box.width, height: box.height };
+    })
+  );
+  assert.equal(targetBoxes.length, 8, `${label}: four note and four anchor touch targets`);
+  // The transparent hit target is a circle. A 24 CSS px axis-aligned square
+  // fits inside a circle if the on-screen diameter is >= 24 * sqrt(2).
+  // This example verifies its responsive target size; the headless engine
+  // cannot promise that every host's viewBox/zoom has the same physical size.
+  for (const target of targetBoxes) {
+    assert(Math.min(target.width, target.height) >= 24 * Math.SQRT2,
+      `${label}: the responsive edit target is smaller than a 24px inscribed square: ${JSON.stringify(target)}`);
+  }
 
   await page.locator('#move-note').click();
   await page.waitForFunction(() => window.__annotationsExample?.action === 'Moved the final anchor');

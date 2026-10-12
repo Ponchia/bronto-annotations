@@ -219,7 +219,10 @@ function App() {
               padding={16}
               refinement={false}
               resolvedLayout={view.layout}
-              editable={{ includeAnchor: true, noteHandlePosition: 'bottom-right' }}
+              // The transparent hit circle is larger than the visible knob.
+              // Under this demo's scaled mobile viewBox it still provides an
+              // easily targetable touch area without covering the full stage.
+              editable={{ includeAnchor: true, noteHandlePosition: 'bottom-right', hitRadius: 24 }}
               previewEdits
               noteTabIndex={0}
               renderNote={noteContent}
