@@ -5,22 +5,27 @@
  *
  * Run after building:
  *   npm run test:browser:cross
+ *   node scripts/verify-cross-browser-interactions.mjs --browser chromium
  * Install browser engines when needed:
  *   npx playwright install --with-deps firefox webkit
  *
  * No fixed FPS, solve time or compositor-paint expectations.
  */
 import assert from 'node:assert/strict';
-import { firefox, webkit } from 'playwright';
+import { chromium, firefox, webkit } from 'playwright';
 import { createServer } from 'vite';
 import AxeBuilder from '@axe-core/playwright';
 
-const suites = [
-  ['firefox', firefox],
-  ['webkit', webkit]
-].filter(([name]) => !process.argv.includes('--browser') ||
-  process.argv.includes(name));
-assert(suites.length > 0, 'Use --browser firefox or --browser webkit');
+// Run Firefox and WebKit in opt-in CI. Allow an explicit Chromium-only
+// developer repro without adding Chromium to the cross-engine CI workload.
+const requestedIndex = process.argv.indexOf('--browser');
+const requestedName = requestedIndex >= 0 ? process.argv[requestedIndex + 1] : undefined;
+const engines = { chromium, firefox, webkit };
+assert(requestedIndex < 0 || Object.hasOwn(engines, requestedName),
+  'Use --browser chromium, firefox or webkit');
+const suites = requestedName
+  ? [[requestedName, engines[requestedName]]]
+  : [['firefox', firefox], ['webkit', webkit]];
 const viewports = [
   { width: 1200, height: 820, name: 'desktop' },
   { width: 390, height: 844, name: 'mobile' }
@@ -123,6 +128,92 @@ async function verifyIncremental(browser, origin, viewport, label) {
   }
 }
 
+async function verifyReactFlow(browser, origin, viewport, label) {
+  const { page, context, errors } = await visit(browser, origin, '/examples/react-flow-basic/', viewport);
+  try {
+    await page.waitForFunction(() => {
+      const sample = window.__annotationsExample;
+      return sample?.name === 'react-flow-basic'
+        && sample.viewportTransformActive === true
+        && sample.annotations?.some((note) => note.id === 'flow-review');
+    }, null, { timeout: 45000 });
+
+    const original = await page.evaluate(() => {
+      const note = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box');
+      const rect = note?.getBoundingClientRect();
+      const sample = window.__annotationsExample;
+      return {
+        box: rect ? { x: rect.x, y: rect.y } : null,
+        viewport: sample?.viewport,
+        transformed: sample?.viewportTransformActive,
+        quality: sample?.quality
+      };
+    });
+    assert(original.box && original.transformed && original.quality?.ok,
+      label + ': initial transformed graph annotations must be valid');
+
+    const handle = page.locator('.pa-annotation__edit-handle--note[data-annotation-id="flow-review"]').first();
+    await handle.scrollIntoViewIfNeeded();
+    await handle.focus();
+    assert.equal(await handle.evaluate((element) => element === document.activeElement), true,
+      label + ': transformed edit handle must support keyboard focus');
+    const geometry = await handle.boundingBox();
+    assert(geometry && geometry.width > 0 && geometry.height > 0,
+      label + ': transformed React Flow edit control missing');
+
+    const start = { x: geometry.x + geometry.width / 2, y: geometry.y + geometry.height / 2 };
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    try {
+      await page.mouse.move(start.x + 14, start.y + 10, { steps: 5 });
+      await page.waitForFunction((before) => {
+        const rect = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box')
+          ?.getBoundingClientRect();
+        return Boolean(rect && (Math.abs(rect.x - before.x) > 2 || Math.abs(rect.y - before.y) > 2));
+      }, original.box, { timeout: 15000 });
+      assert.equal(await page.evaluate(() =>
+        window.__annotationsExample?.editPatchIds?.includes('flow-review') ?? false),
+      false, label + ': preview must not persist before pointer release');
+    } finally {
+      await page.mouse.up();
+    }
+
+    await page.waitForFunction(() => {
+      const sample = window.__annotationsExample;
+      const edit = window.__annotationsLastEdit;
+      return edit?.annotationId === 'flow-review'
+        && edit.phase === 'end'
+        && sample?.editPatchIds?.includes('flow-review')
+        && sample.annotations?.find((note) => note.id === 'flow-review')?.manual;
+    }, null, { timeout: 15000 });
+    const committed = await page.evaluate(() => {
+      const sample = window.__annotationsExample;
+      const manual = sample.annotations.find((note) => note.id === 'flow-review')?.manual;
+      return { x: manual?.x, quality: sample.quality, transformed: sample.viewportTransformActive };
+    });
+    assert(Number.isFinite(committed.x) && committed.quality?.ok && committed.transformed,
+      label + ': transformed drag must commit a valid host-owned placement');
+
+    // Keyboard editing uses the same coordinate adapter but must not depend
+    // on pointer capture or the transient pointer preview.
+    const updatedHandle = page.locator('.pa-annotation__edit-handle--note[data-annotation-id="flow-review"]').first();
+    await updatedHandle.focus();
+    await updatedHandle.press('ArrowRight');
+    await page.waitForFunction((previousX) => {
+      const sample = window.__annotationsExample;
+      const manual = sample?.annotations?.find((note) => note.id === 'flow-review')?.manual;
+      return Number.isFinite(manual?.x) && Math.abs(manual.x - previousX) >= 0.5;
+    }, committed.x, { timeout: 15000 });
+    assert.equal(await page.evaluate(() => window.__annotationsExample?.quality?.ok), true,
+      label + ': keyboard editing must preserve layout quality');
+
+    await verifyAccessibility(page, label);
+    assert.deepEqual(errors, [], label + ': transformed React Flow browser errors');
+  } finally {
+    await context.close();
+  }
+}
+
 async function verifyWorker(browser, origin, viewport, label) {
   const { page, context, errors } = await visit(browser, origin, '/examples/react-worker/', viewport);
   try {
@@ -196,9 +287,10 @@ try {
       for (const viewport of viewports) {
         const label = `${name}/${viewport.name}`;
         await verifyIncremental(browser, origin, viewport, label);
+        await verifyReactFlow(browser, origin, viewport, label);
         await verifyWorker(browser, origin, viewport, label);
-        verified += 2;
-        process.stdout.write(`PASS ${label}: host-controlled edit preview/commit, Worker revision/cancel and parity\n`);
+        verified += 3;
+        process.stdout.write(`PASS ${label}: incremental editing, transformed React Flow edits and Worker revision/cancel\n`);
       }
     } finally {
       await browser.close();
