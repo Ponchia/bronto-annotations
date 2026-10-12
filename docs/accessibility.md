@@ -22,6 +22,25 @@ annotation list.
 - Use `onQuality` and `onTargetAlignment` to surface generated-report issues in
   tests or authoring tools.
 
+### Touch Target Sizing
+
+Editable SVG handles have a separate invisible hit circle. Increase
+`AnnotationLayer.editable.hitRadius` without increasing the visible
+`radius` when a small touch control is difficult to select.
+
+The value is in **annotation viewBox units**, not CSS pixels. In the
+[interactive React example](../examples/react-incremental/), the host sets
+`hitRadius: 24`. Its desktop/mobile Chromium browser checks measure the
+actual post-transform SVG hit circles and require enough space for a 24 CSS
+pixel square to fit inside each. This is an example-specific check, not a
+universal promise for arbitrary host zoom or overlapping edit handles.
+
+For your own host, inspect the final on-screen hit geometry and spacing after
+scaling or zooming the diagram. Dense adjacent targets may still need a
+different editing pattern, such as a host-owned selected-annotation panel or
+a larger separately positioned control. See WCAG 2.2 criterion 2.5.8
+(Target Size Minimum) for size and spacing exceptions.
+
 ## Host Chart And Diagram Semantics
 
 The annotation layer supplements the host graphic's accessibility rather than
