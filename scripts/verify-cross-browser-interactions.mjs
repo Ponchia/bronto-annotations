@@ -255,7 +255,7 @@ async function verifyIncremental(browser, origin, viewport, label) {
     assert.equal(await page.locator('#remove-note').isEnabled(), true);
     await page.locator('#append-note').click();
     await page.waitForFunction(() =>
-      window.__annotationsExample?.action === 'Appended a lower-priority note');
+      window.__annotationsExample?.action === 'Appended an annotation');
     const appended = await exportedAnnotations();
     assert.deepEqual(appended.map((item) => item.id), ['added', 'custom', 'added-2'],
       label + ': adding a note overwrote an imported reserved-looking ID');

@@ -260,7 +260,7 @@ function App() {
     const previous = history.current!.present.annotations;
     const next = appendDemoNote(previous);
     if (next === previous) return;
-    commit(next, 'Appended a lower-priority note');
+    commit(next, 'Appended an annotation');
   }
 
   function removeAnnotation() {
