@@ -58,7 +58,13 @@ export function encodeWorkerLayout(
     const next = layout.annotations[index]!;
     const previous = acknowledged.layout.annotations[index]!;
     if (previous.id !== next.id) return snapshot();
-    if (!canReuseWorkerAnnotation(previous, next)) changed.push({ index, annotation: next });
+    // An incremental session retains exact, immutable ResolvedAnnotation
+    // objects for proven-unaffected priority prefixes. Object identity is a
+    // much cheaper proof than traversing the candidate/connector graph again.
+    // Callers must never mutate a returned resolved layout in place.
+    if (previous !== next && !canReuseWorkerAnnotation(previous, next)) {
+      changed.push({ index, annotation: next });
+    }
   }
   // Per-note comparison alone cannot preserve aliases that cross note
   // boundaries. A changed shared owner/sibling must travel as one graph.

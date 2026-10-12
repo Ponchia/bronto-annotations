@@ -105,6 +105,29 @@ unchanged `ResolvedAnnotation` entries by value and reuses the prior objects
 only on exact equivalence. Hosts may use a different structural-sharing
 strategy as long as unchanged identities never conceal changed values.
 
+## Reuse inside the Worker
+
+The real Chromium Worker reference in `test/fixtures/worker-browser/` now
+owns a private `createIncrementalAnnotationLayoutSession`. It receives complete
+host-authored options with every revision. Unchanged priority prefixes and
+spatially independent obstacles can therefore retain the *same immutable*
+`ResolvedAnnotation` objects across solves. The compact response codec first
+checks those object identities before examining an unchanged candidate graph
+by value. This avoids redundant full solves **and** large deep comparisons for
+incremental cases where the core has already proved reuse.
+
+The very first request, globally invalidated layouts and iterative refinement
+still require full resolution. The session is a speculative computational
+cache only: cancelled or superseded requests never advance the host's accepted
+revision. Receiving a later complete input snapshot reestablishes the correct
+layout independently of any unacknowledged worker calculation.
+
+This is an experimental host recipe, not a public package-owned Worker API,
+and object-identity shortcuts assume the returned resolved layouts are not
+mutated in place. Browser parity, rejection of obsolete replies and responsive
+main-thread interactions remain required; benchmark timing is illustrative,
+not a 60 fps guarantee.
+
 ## Compact revisioned Worker replies (host-owned example)
 
 A Worker can finish a dense solve quickly yet still block its host while it
@@ -136,7 +159,8 @@ as the compact transport fixture, rather than `JSON.stringify` equality.
 Both paths also check cross-annotation sharing in host-owned source data:
 if shared references split/join, or one member of a shared group changes,
 the entire Worker result is installed instead of mixing new objects with old
-siblings. Unsupported metadata causes safe non-reuse without calling getters.
+siblings. Unsupported metadata, including non-enumerable own properties, causes safe
+non-reuse without invoking getters.
 This improves correctness but does **not** speed up deep comparison and does
 not turn the experimental patch protocol into a package export.
 
