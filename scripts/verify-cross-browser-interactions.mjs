@@ -15,6 +15,9 @@ import assert from 'node:assert/strict';
 import { chromium, firefox, webkit } from 'playwright';
 import { createServer } from 'vite';
 import AxeBuilder from '@axe-core/playwright';
+import {
+  captureBrowserEvidence, evidenceError, writeBrowserEvidence
+} from './browser-evidence.mjs';
 
 // Run Firefox and WebKit in opt-in CI. Allow an explicit Chromium-only
 // developer repro without adding Chromium to the cross-engine CI workload.
@@ -45,8 +48,11 @@ const server = await createServer({
   server: { host: '127.0.0.1', port: 0, strictPort: false }
 });
 let verified = 0;
+const evidenceDir = process.env.ANNOTATIONS_CROSS_BROWSER_EVIDENCE_DIR?.trim();
+const captureByScenario = new Map();
+const outcomeCases = [];
 
-async function visit(browser, origin, route, viewport) {
+async function visit(browser, origin, route, viewport, label) {
   const context = await browser.newContext({ viewport, reducedMotion: 'reduce' });
   const page = await context.newPage();
   const errors = [];
@@ -54,9 +60,19 @@ async function visit(browser, origin, route, viewport) {
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(message.text());
   });
-  const response = await page.goto(origin + route, { waitUntil: 'networkidle', timeout: 45000 });
-  assert.equal(response?.status(), 200, `Bad HTTP response for ${route}`);
-  return { page, context, errors };
+  async function close() {
+    const result = await captureBrowserEvidence(page, evidenceDir, label);
+    captureByScenario.set(label, { ...result, browserErrors: errors.slice(-20) });
+    await context.close();
+  }
+  try {
+    const response = await page.goto(origin + route, { waitUntil: 'networkidle', timeout: 45000 });
+    assert.equal(response?.status(), 200, `Bad HTTP response for ${route}`);
+  } catch (error) {
+    await close();
+    throw error;
+  }
+  return { page, context, errors, close };
 }
 
 async function verifyAccessibility(page, label) {
@@ -71,7 +87,7 @@ async function verifyAccessibility(page, label) {
 }
 
 async function verifyIncremental(browser, origin, viewport, label) {
-  const { page, context, errors } = await visit(browser, origin, '/examples/react-incremental/', viewport);
+  const { page, context, errors, close } = await visit(browser, origin, '/examples/react-incremental/', viewport, label);
   try {
     await page.waitForFunction(() =>
       window.__annotationsExample?.name === 'react-incremental'
@@ -223,12 +239,12 @@ async function verifyIncremental(browser, origin, viewport, label) {
     await verifyAccessibility(page, label);
     assert.deepEqual(errors, [], label + ': unexpected browser errors');
   } finally {
-    await context.close();
+    await close();
   }
 }
 
 async function verifyDomMeasurements(browser, origin, viewport, label) {
-  const { page, context, errors } = await visit(browser, origin, '/examples/react-basic/', viewport);
+  const { page, context, errors, close } = await visit(browser, origin, '/examples/react-basic/', viewport, label);
   try {
     // This example uses AnnotationLayer measure="dom" and a live ResizeObserver.
     // The hidden DOM note copies are measured in *local CSS units*, not pixels
@@ -343,12 +359,12 @@ async function verifyDomMeasurements(browser, origin, viewport, label) {
     await verifyAccessibility(page, label + '/DOM-measure');
     assert.deepEqual(errors, [], label + ': DOM-measured browser console or runtime errors');
   } finally {
-    await context.close();
+    await close();
   }
 }
 
 async function verifyReactFlow(browser, origin, viewport, label) {
-  const { page, context, errors } = await visit(browser, origin, '/examples/react-flow-basic/', viewport);
+  const { page, context, errors, close } = await visit(browser, origin, '/examples/react-flow-basic/', viewport, label);
   try {
     await page.waitForFunction(() => {
       const sample = window.__annotationsExample;
@@ -429,12 +445,12 @@ async function verifyReactFlow(browser, origin, viewport, label) {
     await verifyAccessibility(page, label);
     assert.deepEqual(errors, [], label + ': transformed React Flow browser errors');
   } finally {
-    await context.close();
+    await close();
   }
 }
 
 async function verifyWorker(browser, origin, viewport, label) {
-  const { page, context, errors } = await visit(browser, origin, '/examples/react-worker/', viewport);
+  const { page, context, errors, close } = await visit(browser, origin, '/examples/react-worker/', viewport, label);
   try {
     await page.waitForFunction(() => window.__annotationsWorkerDemo?.ready === true,
       null, { timeout: 45000 });
@@ -486,10 +502,11 @@ async function verifyWorker(browser, origin, viewport, label) {
         label + ': mobile horizontal scrolling did not respond');
     }
   } finally {
-    await context.close();
+    await close();
   }
 }
 
+let failure;
 try {
   await server.listen();
   const address = server.httpServer?.address();
@@ -513,9 +530,28 @@ try {
         ];
         for (const [scenarioName, verify] of scenarios) {
           if (scenario && scenario !== scenarioName) continue;
-          await verify(browser, origin, viewport, `${label}/${scenarioName}`);
-          verified += 1;
-          process.stdout.write(`PASS ${label}/${scenarioName}\n`);
+          const caseLabel = `${label}/${scenarioName}`;
+          const start = performance.now();
+          try {
+            await verify(browser, origin, viewport, caseLabel);
+            const captured = captureByScenario.get(caseLabel) ?? {};
+            assert(!evidenceDir || captured.screenshot,
+              `${caseLabel}: screenshot missing: ${captured.screenshotError ?? 'unknown cause'}`);
+            outcomeCases.push({
+              label: caseLabel, outcome: 'passed',
+              durationMs: Math.round(performance.now() - start), ...captured
+            });
+            verified += 1;
+            process.stdout.write(`PASS ${caseLabel}\n`);
+          } catch (error) {
+            outcomeCases.push({
+              label: caseLabel, outcome: 'failed',
+              durationMs: Math.round(performance.now() - start),
+              error: evidenceError(error),
+              ...(captureByScenario.get(caseLabel) ?? {})
+            });
+            throw error;
+          }
         }
       }
     } finally {
@@ -523,6 +559,27 @@ try {
     }
   }
   process.stdout.write(`Cross-browser verified: ${verified} integration cases; no frame-rate or paint guarantee.\n`);
+} catch (error) {
+  failure = error;
 } finally {
-  await server.close();
+  try {
+    await server.close();
+  } catch (error) {
+    failure ??= error;
+  }
+  try {
+    await writeBrowserEvidence(evidenceDir, {
+      kind: 'annotation-browser-interactions',
+      generatedAt: new Date().toISOString(),
+      headSha: process.env.GITHUB_SHA || null,
+      engines: suites.map(([name]) => name),
+      viewports,
+      verified,
+      cases: outcomeCases,
+      passed: !failure
+    });
+  } catch (error) {
+    failure ??= error;
+  }
 }
+if (failure) throw failure;

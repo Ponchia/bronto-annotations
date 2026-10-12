@@ -30,6 +30,8 @@ jobs:
     name: Firefox and WebKit editing
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      ANNOTATIONS_CROSS_BROWSER_EVIDENCE_DIR: ${{ runner.temp }}/annotations-cross-browser
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -41,3 +43,11 @@ jobs:
         run: npx playwright install --with-deps firefox webkit
       - name: Verify real interactive editing and Worker revisions
         run: npm run test:browser:cross
+      - name: Retain browser screenshots and structured regression results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: annotations-cross-browser-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/annotations-cross-browser/
+          retention-days: 7
+          if-no-files-found: warn
