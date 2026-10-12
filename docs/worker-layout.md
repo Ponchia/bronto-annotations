@@ -154,6 +154,15 @@ state, scheduling and cancellation. The synchronous library API is unchanged.
    silently advance the patch baseline. Acknowledgement itself does not stop
    synchronous Worker CPU; cancellation remains a host-level decision.
 
+The public React Worker demo now uses the same conservative deep comparator
+as the compact transport fixture, rather than `JSON.stringify` equality.
+Both paths also check cross-annotation sharing in host-owned source data:
+if shared references split/join, or one member of a shared group changes,
+the entire Worker result is installed instead of mixing new objects with old
+siblings. Unsupported metadata causes safe non-reuse without calling getters.
+This improves correctness but does **not** speed up deep comparison and does
+not turn the experimental patch protocol into a package export.
+
 The comparison checks plain structured-cloneable data *by value*, including
 own keys and `undefined`. It also checks the **topology of shared references**:
 if two metadata properties formerly referred to the same object but now hold

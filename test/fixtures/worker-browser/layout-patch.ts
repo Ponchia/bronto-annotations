@@ -32,64 +32,13 @@ export class LayoutRevisionMismatchError extends Error {
   }
 }
 
-/**
- * Compare plain cloneable data without conflating `undefined` and missing
- * keys (JSON.stringify does). Unknown classes, cyclic references,
- * symbols, non-plain metadata and getter failures conservatively count as
- * changed rather than preserving a potentially stale React node. Shared
- * aliases must also be structurally identical: comparing two equal-looking
- * copies with different reference sharing would retain a stale host object.
- */
-export function canReuseWorkerAnnotation(first: unknown, second: unknown): boolean {
-  const seenA = new WeakMap<object, object>();
-  const seenB = new WeakMap<object, object>();
-
-  function same(a: unknown, b: unknown, parentsA: Set<object>, parentsB: Set<object>): boolean {
-    if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') {
-      return Object.is(a, b);
-    }
-    if (parentsA.has(a) || parentsB.has(b)) return false;
-    // Enforce a one-to-one mapping of references across the *whole* object
-    // graph, not just the current recursion branch. Otherwise two references
-    // to one source object can be misclassified as two independent objects.
-    // Natural aliases in resolved geometry (noteBox/candidate or subject/point)
-    // remain reusable when the other graph has the same alias topology.
-    if (seenA.has(a) || seenB.has(b)) {
-      return seenA.get(a) === b && seenB.get(b) === a;
-    }
-    const arrays = Array.isArray(a) && Array.isArray(b);
-    if (Array.isArray(a) !== Array.isArray(b)) return false;
-    if (arrays && (a as unknown[]).length !== (b as unknown[]).length) return false;
-    if (!arrays && (Object.getPrototypeOf(a) !== Object.prototype
-      || Object.getPrototypeOf(b) !== Object.prototype)) return false;
-    if (Object.getOwnPropertySymbols(a).length || Object.getOwnPropertySymbols(b).length) return false;
-    const keysA = Object.keys(a);
-    const keysB = Object.keys(b);
-    if (keysA.length !== keysB.length) return false;
-    seenA.set(a, b);
-    seenB.set(b, a);
-    parentsA.add(a);
-    parentsB.add(b);
-    try {
-      for (const key of keysA) {
-        if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
-        const left = Object.getOwnPropertyDescriptor(a, key);
-        const right = Object.getOwnPropertyDescriptor(b, key);
-        if (!left || !right || !('value' in left) || !('value' in right)) return false;
-        if (!same(left.value, right.value, parentsA, parentsB)) return false;
-      }
-      return true;
-    } finally {
-      parentsA.delete(a);
-      parentsB.delete(b);
-    }
-  }
-  try {
-    return same(first, second, new Set(), new Set());
-  } catch {
-    return false;
-  }
-}
+// Share the exact conservative comparator with the published Worker example.
+// Neither the comparator nor the patch protocol is a package runtime export.
+import {
+  canReuseWorkerAnnotation,
+  canReuseWorkerCrossNoteGraph
+} from '../../../examples/react-worker/layout-equality.js';
+export { canReuseWorkerAnnotation } from '../../../examples/react-worker/layout-equality.js';
 
 export function encodeWorkerLayout(
   revision: number,
@@ -117,6 +66,13 @@ export function encodeWorkerLayout(
       changed.push({ index, annotation: next });
     }
   }
+  // Per-note comparison alone cannot preserve aliases that cross note
+  // boundaries. A changed shared owner/sibling must travel as one graph.
+  // A full snapshot is the conservative recovery for topology changes.
+  if (!canReuseWorkerCrossNoteGraph(
+    acknowledged.layout.annotations, layout.annotations,
+    changed.map((item) => item.index)
+  )) return snapshot();
   // Dense changes are unlikely to make a patch smaller than a snapshot.
   if (changed.length > layout.annotations.length / 2) return snapshot();
   const { annotations: _annotations, ...fields } = layout;

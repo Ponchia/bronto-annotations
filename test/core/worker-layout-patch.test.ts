@@ -7,6 +7,7 @@ import {
   encodeWorkerLayout,
   LayoutRevisionMismatchError
 } from '../fixtures/worker-browser/layout-patch.js';
+import { shareUnchangedWorkerLayout } from '../../examples/react-worker/layout-equality.js';
 
 function options(count: number): LayoutOptions {
   const annotations: Annotation[] = Array.from({ length: count }, (_, i) => ({
@@ -199,6 +200,87 @@ describe('consumer-owned revisioned Worker layout transport', () => {
     for (let i = 0; i < 8; i += 1) {
       expect(applied.state.layout.annotations[i]).toBe(before.annotations[i]);
     }
+  });
+
+  it('sends a full snapshot when two annotations split or join an equal-valued shared object', () => {
+    const original = options(9);
+    const shared = { stable: true, measurements: [1, 2] };
+    original.annotations[0]!.metadata = shared;
+    original.annotations[8]!.metadata = shared;
+    const before = resolveAnnotationLayout(original);
+    const split = structuredClone(original);
+    split.annotations[8]!.metadata = { stable: true, measurements: [1, 2] };
+    const after = resolveAnnotationLayout(split);
+    const response = encodeWorkerLayout(3, 2, after, { revision: 2, layout: before });
+    expect(response.kind).toBe('snapshot');
+    const installed = applyWorkerLayout({ revision: 2, layout: before }, response).state.layout;
+    expect(installed.annotations[0]!.annotation.metadata)
+      .not.toBe(installed.annotations[8]!.annotation.metadata);
+    expect(shareUnchangedWorkerLayout(before, after).reused).toBe(0);
+
+    const rejoined = structuredClone(original);
+    const again = resolveAnnotationLayout(rejoined);
+    expect(encodeWorkerLayout(4, 3, again, { revision: 3, layout: after }).kind)
+      .toBe('snapshot');
+    expect(shareUnchangedWorkerLayout(after, again).reused).toBe(0);
+    expect(again.annotations[0]!.annotation.metadata)
+      .toBe(again.annotations[8]!.annotation.metadata);
+  });
+
+  it('keeps cross-note aliases intact when one member changes content', () => {
+    const source = options(9);
+    const metadata = { source: 'host', copy: { count: 5 } };
+    source.annotations[0]!.metadata = metadata;
+    source.annotations[8]!.metadata = metadata;
+    const before = resolveAnnotationLayout(source);
+    const next = structuredClone(source);
+    next.annotations[8]!.note.title = 'Edited shared annotation';
+    const after = resolveAnnotationLayout(next);
+    expect(encodeWorkerLayout(3, 2, after, { revision: 2, layout: before }).kind)
+      .toBe('snapshot');
+    const shared = shareUnchangedWorkerLayout(before, after);
+    expect(shared.reused).toBe(0);
+    expect(shared.layout.annotations[0]!.annotation.metadata)
+      .toBe(shared.layout.annotations[8]!.annotation.metadata);
+  });
+
+  it('retains compact reuse when the change is unrelated to shared annotations', () => {
+    const source = options(9);
+    const metadata = { tags: ['shared'] };
+    source.annotations[0]!.metadata = metadata;
+    source.annotations[1]!.metadata = metadata;
+    const before = resolveAnnotationLayout(source);
+    const next = structuredClone(source);
+    next.annotations[8]!.note.title = 'Unrelated edit';
+    const after = resolveAnnotationLayout(next);
+    const response = encodeWorkerLayout(3, 2, after, { revision: 2, layout: before });
+    expect(response.kind).toBe('patch');
+    const committed = applyWorkerLayout({ revision: 2, layout: before }, response);
+    expect(committed.changed).toBe(1);
+    expect(committed.reused).toBe(8);
+    expect(committed.state.layout.annotations[0]!.annotation.metadata)
+      .toBe(committed.state.layout.annotations[1]!.annotation.metadata);
+    const publiclyShared = shareUnchangedWorkerLayout(before, after);
+    expect(publiclyShared.reused).toBe(8);
+    expect(publiclyShared.layout.annotations[0]!.annotation.metadata)
+      .toBe(publiclyShared.layout.annotations[1]!.annotation.metadata);
+  });
+
+  it('uses complete results rather than triggering host getters during reuse inspection', () => {
+    const source = options(4);
+    let reads = 0;
+    const metadata = { stable: 'value' } as Record<string, unknown>;
+    Object.defineProperty(metadata, 'computed', {
+      enumerable: true,
+      get() { reads++; return 'private'; }
+    });
+    source.annotations[3]!.metadata = metadata;
+    const before = resolveAnnotationLayout(source);
+    const after = resolveAnnotationLayout(source);
+    const reply = encodeWorkerLayout(3, 2, after, { revision: 2, layout: before });
+    expect(reply.kind).toBe('snapshot');
+    expect(shareUnchangedWorkerLayout(before, after).reused).toBe(0);
+    expect(reads).toBe(0);
   });
 
   it('recovers via revision mismatch for missing fields or malformed reply entries', () => {
