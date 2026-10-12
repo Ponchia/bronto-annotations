@@ -104,7 +104,10 @@ Pass its result to `AnnotationLayer.resolvedLayout` to avoid a second solve.
 This controlled path needs **host-owned note sizes**; it cannot use the
 component's `measure="dom"` mode. See the
 [interactive incremental React example](../examples/react-incremental/) for
-working source and browser behavior.
+working source and browser behavior. Its live JSON inspector shows the exact
+host-authored annotation inputs after committed edits. You can copy these
+inputs into your app; the example does not serialize or persist resolved
+layout candidates and the package does not own your saved state.
 
 If global geometry changes are too expensive on the main thread, try the
 [React + module Worker example](../examples/react-worker/). The host is
