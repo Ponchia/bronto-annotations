@@ -260,9 +260,19 @@ function obstacleChanges(before: Box[], after: Box[]): Box[] {
  * Cached boxes prove only spatial independence; they never substitute for
  * an authoritative layout when intersection is possible.
  */
+// Each stored rectangle occupies 4 doubles (32 bytes). Decline to cache
+// unusually large per-note candidate sets rather than retaining an unbounded
+// auxiliary geometry graph. A skipped proof always triggers the ordinary
+// authoritative suffix/full-resolution fallback, never unsafe reuse.
+const MAX_CACHED_FOOTPRINTS_PER_ANNOTATION = 4096;
+
+// Four Float64 values per conservative candidate footprint, ordered
+// [left, top, right, bottom]. Using doubles preserves the existing geometric
+// comparisons without retaining thousands of short-lived Box objects and
+// connector-segment arrays in a dense host-owned session.
 type ObstacleFootprintCacheEntry = {
   fingerprint: string;
-  footprints: Box[] | null;
+  footprints: Float64Array | null;
 };
 
 function safeFromObstacleChanges(
@@ -292,12 +302,16 @@ function safeFromObstacleChanges(
   }
   if (!cached.footprints) return false;
 
-  for (const box of cached.footprints) {
+  for (let offset = 0; offset < cached.footprints.length; offset += 4) {
+    const left = cached.footprints[offset]!;
+    const top = cached.footprints[offset + 1]!;
+    const right = cached.footprints[offset + 2]!;
+    const bottom = cached.footprints[offset + 3]!;
     for (const changed of changedObstacles) {
       // Closed boundaries deliberately over-invalidate: collision and routing
       // checks have different touch semantics. Recompute whenever uncertain.
-      if (box.x <= changed.x + changed.width && box.x + box.width >= changed.x
-        && box.y <= changed.y + changed.height && box.y + box.height >= changed.y) {
+      if (left <= changed.x + changed.width && right >= changed.x
+        && top <= changed.y + changed.height && bottom >= changed.y) {
         return false;
       }
     }
@@ -309,7 +323,7 @@ function collectObstacleFootprints(
   annotation: Annotation,
   options: LayoutOptions,
   placementBounds: Box
-): Box[] | null {
+): Float64Array | null {
   const completePlacement = mergePlacement(options.placement, annotation.placement);
   delete completePlacement.maxCandidates;
   const candidates = allPlacementCandidates({
@@ -322,21 +336,45 @@ function collectObstacleFootprints(
   });
   if (candidates.length === 0) return null;
 
-  const footprints: Box[] = [];
+  // The all-candidate proof is intentionally exhaustive, even when the host
+  // retains only a few ranked/debug candidates. Calculate the exact storage
+  // needed once instead of allocating a Box per connector line segment.
+  let count = 0;
   for (const candidate of candidates) {
-    const bounds = [candidate.noteBox, ...candidate.connector.points.slice(1).map((point, index) => {
-      const from = candidate.connector.points[index]!;
-      return {
-        x: Math.min(from.x, point.x),
-        y: Math.min(from.y, point.y),
-        width: Math.abs(from.x - point.x),
-        height: Math.abs(from.y - point.y)
-      };
-    })];
-    for (const box of bounds) {
-      if (!isFiniteBox(box)) return null;
-      // Boxes are a small, immutable proof artifact owned by this session.
-      footprints.push(box);
+    count += 1 + Math.max(candidate.connector.points.length - 1, 0);
+    // At most 128 KiB of retained footprint coordinates per annotation.
+    // All-candidate geometry can legitimately exceed this for unusual custom
+    // placement searches; it is safer to re-resolve than cache a huge proof.
+    if (!Number.isSafeInteger(count) || count > MAX_CACHED_FOOTPRINTS_PER_ANNOTATION) {
+      return null;
+    }
+  }
+  const footprints = new Float64Array(count * 4);
+  let offset = 0;
+  const append = (x: number, y: number, width: number, height: number): boolean => {
+    // Identical safety predicate to isFiniteBox. Keep overflowed right/bottom
+    // endpoints conservative just as Box.x + Box.width was before.
+    if (!Number.isFinite(x) || !Number.isFinite(y)
+      || !Number.isFinite(width) || !Number.isFinite(height)
+      || width < 0 || height < 0) return false;
+    footprints[offset++] = x;
+    footprints[offset++] = y;
+    footprints[offset++] = x + width;
+    footprints[offset++] = y + height;
+    return true;
+  };
+  for (const candidate of candidates) {
+    const box = candidate.noteBox;
+    if (!append(box.x, box.y, box.width, box.height)) return null;
+    const points = candidate.connector.points;
+    for (let index = 1; index < points.length; index += 1) {
+      const from = points[index - 1]!;
+      const to = points[index]!;
+      const x = Math.min(from.x, to.x);
+      const y = Math.min(from.y, to.y);
+      const width = Math.abs(from.x - to.x);
+      const height = Math.abs(from.y - to.y);
+      if (!append(x, y, width, height)) return null;
     }
   }
   return footprints;
