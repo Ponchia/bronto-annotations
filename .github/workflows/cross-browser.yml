@@ -8,6 +8,7 @@ on:
       - 'scripts/verify-cross-browser-interactions.mjs'
       - '.github/workflows/cross-browser.yml'
       - 'examples/react-incremental/**'
+      - 'examples/react-flow-basic/**'
       - 'examples/react-worker/**'
       # Edits to core/React/SVG geometry can be browser-specific even when
       # the example fixtures remain unchanged.
