@@ -1,0 +1,42 @@
+name: Cross-browser smoke (experimental)
+
+on:
+  # Verify edits to the opt-in lane before merging without making every
+  # ordinary release or dependency PR install two additional browser engines.
+  pull_request:
+    paths:
+      - 'scripts/verify-cross-browser-interactions.mjs'
+      - '.github/workflows/cross-browser.yml'
+      - 'examples/react-incremental/**'
+      - 'examples/react-flow-basic/**'
+      - 'examples/react-worker/**'
+      # Edits to core/React/SVG geometry can be browser-specific even when
+      # the example fixtures remain unchanged.
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cross-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Firefox and WebKit editing
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Firefox and WebKit
+        run: npx playwright install --with-deps firefox webkit
+      - name: Verify real interactive editing and Worker revisions
+        run: npm run test:browser:cross

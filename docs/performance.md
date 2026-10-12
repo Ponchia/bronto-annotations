@@ -137,10 +137,30 @@ obstacles can keep a valid prefix; affected routed connectors fall back. This
 is a conservative dependency proof rather than a spatial-index-based solver,
 so partial updates are **not** guaranteed for arbitrary changed topology.
 
+The experimental input fingerprint also preserves metadata alias topology,
+explicit `undefined`, sparse arrays and negative zero. It invalidates a note
+when shared metadata becomes independent (or vice versa), even if the values
+look identical in JSON. Cross-annotation reference sharing is also tracked:
+unchanged sharing patterns retain stable prefixes, while new relationships
+between a changed suffix and cloned earlier notes invalidate the affected
+owners as well. Cyclic, opaque or accessor-backed metadata conservatively
+falls back to full resolution instead of reusing potentially stale objects.
+This favors reference correctness without needlessly sacrificing incremental
+updates for ordinary host sharing.
+
 Hosts should continue using the visual-only `previewAnnotationEdit` during
 pointer movement and the authoritative incremental session only when
-committing edits. Worker-backed asynchronous resolution remains future work;
-no public synchronous API or quality threshold was changed.
+committing edits. Consumer-owned Web Worker resolution has been tested in real
+Chromium and can keep the main thread responsive during expensive full reflows;
+see `docs/worker-layout.md` for measured transport and React timeline caveats.
+A **package-owned** asynchronous Worker API remains future work, and no
+public synchronous API or quality threshold was changed.
+The host-owned Worker proof now isolates request/reply scheduling and React
+commit from Worker comparison/encoding. In a 200-annotation compact update,
+~489 ms of comparison/patch encoding dominated a ~0.2 ms reply-delivery
+estimate; see the measured one-run observations in `docs/worker-layout.md`.
+Future gains should address safe value/alias comparison rather than assuming
+postMessage transport is the entire bottleneck.
 
 ### Incremental late-edit benchmark
 
@@ -176,6 +196,40 @@ even if all resolved note identities can be reused. These conditions avoid
 making unverified spatial independence claims. Capturing input value snapshots
 has a small cost per update; benchmark under representative host density before
 enabling the experimental optimization broadly.
+
+### Repeated distant-obstacle edits
+
+A host-managed incremental session can reuse the exhaustive candidate geometry
+needed to prove that a changed obstacle is disjoint from every placement
+alternative. On the first distant-obstacle update, the conservative proof still
+enumerates all candidates, including those excluded from the retained
+`maxCandidates` list. Later commits reuse that **session-local proof** when
+the annotation value/size fingerprint and global bounds, placement, padding,
+and refinement settings are unchanged.
+
+The cache stores geometry only for annotation indices in the current session;
+it is cleared on changed/unsafe global settings and pruned when notes disappear.
+Routing-dependent connectors still use the existing full-resolution fallback,
+and any possible obstacle intersection invalidates the affected suffix. Hosts
+must keep returned resolved layouts immutable. The public synchronous APIs,
+candidate scoring and placement quality are unchanged.
+
+Run `npm run benchmark:obstacle-cache` to compare a first exhaustive proof,
+two cached distant-obstacle updates, and an independent fresh full resolution
+for 40/200 notes. The script asserts exact geometry and quality parity but
+**does not impose timing budgets**. A cold solve and genuinely affected
+topology can still be expensive.
+
+One October 2026 shared-development-host observation, in milliseconds:
+
+| Fixture | First exhaustive proof | Cached second update | Cached third update | Fresh full solve |
+| --- | ---: | ---: | ---: | ---: |
+| 40 notes | 17.9 | 4.2 | 2.1 | 12.1 |
+| 200 notes | 46.1 | 8.2 | 8.9 | 42.3 |
+
+These are individual non-controlled timings; they illustrate why repeated
+spatial-independence proofs are worth caching and do **not** promise a similar
+speedup on other hosts, layouts, or routed connectors.
 
 ### Incremental DOM note-size measurements
 
@@ -370,6 +424,10 @@ fresh-layout parity. The Node 22 CI lane also verifies the actual bundled Vite
 production Worker. `npm run benchmark:browser:worker` adds a 200-annotation
 case outside the required CI performance gates. The host still owns the Worker,
 revision tokens and `AnnotationLayer.resolvedLayout` updates; the package's
-synchronous solver stays the default. See [the Worker integration
+synchronous solver stays the default. The browser proof also tests compact,
+acknowledged patches for unchanged annotation results, and records JSON-size
+estimates (caching the full-size baseline instead of reserializing all notes on
+every compact response) together with cloning, patch-admission, React and next-rAF timings;
+these measures do not guarantee a frame-rate improvement. See [the Worker integration
 recipe](worker-layout.md) for limitations around CPU cancellation, structured
 cloning, React identity, and end-to-end timings.

@@ -17,10 +17,29 @@ peer lanes.
 | Mermaid | `>=11.0.0` | Mermaid 11 SVG extraction/browser example on Node 20 and 22; isolated Mermaid 12.1 browser consumer on Node 22 only |
 | D2 | `>=0.1.0` | D2 diagram/SVG tests and browser example |
 | React Flow | `>=12.0.0` | Public-state tests and browser example |
-| Browsers | Modern Chromium-class SVG/DOM APIs | Playwright browser verification |
+| Browsers | Modern Chromium-class SVG/DOM APIs | Mandatory Chromium Playwright verification; experimental opt-in Firefox/WebKit real editing/Worker smoke |
 
 optional peers are marked optional in `package.json`. Root imports must work
 without React, Vega, Mermaid, D2, React Flow, or `@ponchia/ui` installed.
+
+### Experimental browser-portability check
+
+`npm run test:browser:cross` exercises the published React incremental-editor,
+transformed React Flow editor, and native module Worker demos in **Firefox and
+WebKit** at 1200px and 390px. A developer can also reproduce the scenarios
+locally with `node scripts/verify-cross-browser-interactions.mjs --browser chromium`
+after building.
+It verifies a visible pointer-move preview before commit, stable unchanged
+placements, note editing focus, React Flow fitView coordinate transforms,
+pointer/keyboard commits, quality checks, browser-specific axe WCAG A/AA
+scans, obsolete/cancelled Worker responses, fresh-layout parity and mobile
+horizontal navigation. The separate workflow is path-scoped to annotation
+source, browser examples and dependency/test changes rather than running for
+every documentation or release change. This is
+separate from mandatory Chromium CI until repeated runs on supported hosts
+establish a stable cross-browser support policy. Install missing browsers with
+`npx playwright install --with-deps firefox webkit`. Neither this check nor
+the existing Chromium timing metrics promise a frame rate.
 
 ## Checked Lanes
 
@@ -59,7 +78,10 @@ without React, Vega, Mermaid, D2, React Flow, or `@ponchia/ui` installed.
   fresh isolated dependencies, not the primary lockfile, and does **not**
   change the publicly supported Node `>=20.19.0` runtime. Vitest 5 requires
   Node >=22.12 and jsdom 30 requires >=22.22.2; they therefore run only in
-  the Node 22 protected CI lane. The normal `npm run check` continues to use
+  the Node 22 protected CI lane. Only this disposable install invokes a pinned
+  npm 11.19.1 CLI, avoiding an npm 10 Arborist peer-graph crash without
+  disabling peer checks; the primary package-manager installation is unchanged.
+  The normal `npm run check` continues to use
   Vitest 4 and jsdom 29 on both Node 20 and 22. Keep their Dependabot major
   deferrals until any default-runner change is deliberately considered.
 - Mermaid 12.1 declares **Node >=22.12.0** and cannot replace the Mermaid 11

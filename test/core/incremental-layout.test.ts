@@ -177,4 +177,216 @@ describe('experimental incremental annotation layout session', () => {
     expect(updated.annotations[0]).toBe(original.annotations[0]);
     expect(updated.annotations[11]).not.toBe(original.annotations[11]);
   });
+  it('invalidates a late note when equally valued metadata changes alias sharing', () => {
+    const opts = fixture(20);
+    const shared = { key: 'same', nested: { score: 5 } };
+    opts.annotations[19]!.metadata = { first: shared, second: shared };
+    const session = createIncrementalAnnotationLayoutSession(opts);
+    const prior = session.layout;
+    const next = structuredClone(opts);
+    next.annotations[19]!.metadata = {
+      first: { key: 'same', nested: { score: 5 } },
+      second: { key: 'same', nested: { score: 5 } }
+    };
+    const resolved = session.update(next);
+    assertFullParity(resolved, next);
+    expect(resolved.annotations[0]).toBe(prior.annotations[0]);
+    expect(resolved.annotations[19]).not.toBe(prior.annotations[19]);
+    const metadata = resolved.annotations[19]!.annotation.metadata!;
+    expect(metadata.first).not.toBe(metadata.second);
+
+    const linked = structuredClone(next);
+    const sharedAgain = { key: 'same', nested: { score: 5 } };
+    linked.annotations[19]!.metadata = { first: sharedAgain, second: sharedAgain };
+    const reverted = session.update(linked);
+    assertFullParity(reverted, linked);
+    expect(reverted.annotations[19]).not.toBe(resolved.annotations[19]);
+    expect(reverted.annotations[19]!.annotation.metadata!.first)
+      .toBe(reverted.annotations[19]!.annotation.metadata!.second);
+  });
+
+  it('preserves cross-note alias topology on semantic no-ops and invalidates changed sharing', () => {
+    const opts = fixture(8);
+    const reusedAcrossNotes = { shared: { source: 'host', count: 3 } };
+    opts.annotations[0]!.metadata = reusedAcrossNotes;
+    opts.annotations[7]!.metadata = reusedAcrossNotes;
+    const session = createIncrementalAnnotationLayoutSession(opts);
+    const previous = session.layout;
+
+    // A stable sharing relation is safe to reuse, even when a host clones its
+    // source objects while preserving the same alias graph.
+    expect(session.update(opts)).toBe(previous);
+    expect(session.update(structuredClone(opts))).toBe(previous);
+
+    // Splitting one alias into an independent, value-equivalent object only
+    // changes the later note. Keep earlier identity and recompute its suffix.
+    const detached = structuredClone(opts);
+    detached.annotations[7]!.metadata = { shared: { source: 'host', count: 3 } };
+    const next = session.update(detached);
+    assertFullParity(next, detached);
+    expect(next.annotations[0]).toBe(previous.annotations[0]);
+    expect(next.annotations[7]).not.toBe(previous.annotations[7]);
+    expect(next.annotations[0]!.annotation.metadata).not.toBe(next.annotations[7]!.annotation.metadata);
+
+    const rejoined = structuredClone(opts);
+    const restored = session.update(rejoined);
+    assertFullParity(restored, rejoined);
+    // Rejoined suffix uses a *cloned* owner metadata object, so refreshing the
+    // owner is required to keep cross-note identity correct on this commit.
+    expect(restored.annotations[0]).not.toBe(next.annotations[0]);
+    expect(restored.annotations[7]).not.toBe(next.annotations[7]);
+    expect(restored.annotations[0]!.annotation.metadata).toBe(restored.annotations[7]!.annotation.metadata);
+  });
+
+  it('invalidates cloned prefix owners when a new suffix note aliases them', () => {
+    const opts = fixture(8);
+    const session = createIncrementalAnnotationLayoutSession(opts);
+    const previous = session.layout;
+
+    const appended = structuredClone(opts);
+    appended.annotations.push({
+      ...appended.annotations[0]!, id: 'last', priority: -1000
+    });
+    const updated = session.update(appended);
+    assertFullParity(updated, appended);
+    // The newly appended note shares a cloned anchor and note with the first
+    // source annotation. Retaining the prior first note here would break that
+    // cross-note reference graph even though its values are unchanged.
+    expect(updated.annotations[0]).not.toBe(previous.annotations[0]);
+    expect(updated.annotations.at(-1)!.annotation.anchor).toBe(updated.annotations[0]!.annotation.anchor);
+    expect(updated.annotations.at(-1)!.annotation.note).toBe(updated.annotations[0]!.annotation.note);
+
+    // A separate append sharing the *original* owner preserves prefix objects.
+    const oldInput = fixture(8);
+    const oldSession = createIncrementalAnnotationLayoutSession(oldInput);
+    const oldLayout = oldSession.layout;
+    const sharingOld = { ...oldInput, annotations: [...oldInput.annotations, {
+      ...oldInput.annotations[0]!, id: 'suffix', priority: -1000
+    }] };
+    const withOldAlias = oldSession.update(sharingOld);
+    assertFullParity(withOldAlias, sharingOld);
+    for (let i = 0; i < 8; i++) expect(withOldAlias.annotations[i]).toBe(oldLayout.annotations[i]);
+    expect(withOldAlias.annotations.at(-1)!.annotation.anchor).toBe(withOldAlias.annotations[0]!.annotation.anchor);
+  });
+
+  it('distinguishes omitted metadata fields from explicit undefined values', () => {
+    const opts = fixture(14);
+    opts.annotations[13]!.metadata = { details: { present: true, extra: undefined } };
+    const session = createIncrementalAnnotationLayoutSession(opts);
+    const prior = session.layout;
+    const edited = structuredClone(opts);
+    edited.annotations[13]!.metadata = { details: { present: true } };
+    const result = session.update(edited);
+    assertFullParity(result, edited);
+    expect(result.annotations[0]).toBe(prior.annotations[0]);
+    expect(result.annotations[13]).not.toBe(prior.annotations[13]);
+    expect(Object.hasOwn(result.annotations[13]!.annotation.metadata!.details as object, 'extra'))
+      .toBe(false);
+  });
+
+  it('distinguishes sparse arrays from explicit undefined entries', () => {
+    const opts = fixture(10);
+    opts.annotations[9]!.metadata = { values: [10, , 30] };
+    const session = createIncrementalAnnotationLayoutSession(opts);
+    const prior = session.layout;
+    const updated = structuredClone(opts);
+    updated.annotations[9]!.metadata = { values: [10, undefined, 30] };
+    const result = session.update(updated);
+    assertFullParity(result, updated);
+    expect(result.annotations[0]).toBe(prior.annotations[0]);
+    expect(result.annotations[9]).not.toBe(prior.annotations[9]);
+    const entries = result.annotations[9]!.annotation.metadata!.values as unknown[];
+    expect(Object.hasOwn(entries, 1)).toBe(true);
+  });
+
+  it('recognizes negative zero and RegExp lastIndex changes that JSON masks', () => {
+    const opts = fixture(10);
+    opts.annotations[9]!.metadata = { coordinate: -0 };
+    const splitter = /\s+/g;
+    splitter.lastIndex = 2;
+    opts.annotations[9]!.note.wrapSplitter = splitter;
+    const session = createIncrementalAnnotationLayoutSession(opts);
+    const first = session.layout;
+    const next = structuredClone(opts);
+    next.annotations[9]!.metadata = { coordinate: 0 };
+    (next.annotations[9]!.note.wrapSplitter as RegExp).lastIndex = 5;
+    const result = session.update(next);
+    assertFullParity(result, next);
+    expect(result.annotations[0]).toBe(first.annotations[0]);
+    expect(result.annotations[9]).not.toBe(first.annotations[9]);
+    expect(Object.is(result.annotations[9]!.annotation.metadata!.coordinate, 0)).toBe(true);
+  });
+
+  it('keeps unrelated prefix notes when an unsafe suffix also holds stored aliases', () => {
+    const opts = fixture(8);
+    const shared = { source: 'earlier note' };
+    opts.annotations[0]!.metadata = { shared };
+    let called = 0;
+    const late: Record<string, unknown> = { shared };
+    Object.defineProperty(late, 'computed', {
+      enumerable: true,
+      get() { called++; return 'not inspected'; }
+    });
+    opts.annotations[7]!.metadata = late;
+    const session = createIncrementalAnnotationLayoutSession(opts);
+    const before = session.layout;
+
+    // A non-cloning update keeps the safe prefix. The suffix is always fresh.
+    const same = session.update(opts);
+    assertFullParity(same, opts);
+    expect(same.annotations[0]).toBe(before.annotations[0]);
+    expect(same.annotations[7]).not.toBe(before.annotations[7]);
+    expect(called).toBe(0);
+
+    // If a cloned prefix owner is now shared with the unsafe suffix, retaining
+    // the old owner would detach the source object's reference graph.
+    const clonedShared = { source: 'earlier note' };
+    const cloned = fixture(8);
+    cloned.annotations[0]!.metadata = { shared: clonedShared };
+    const otherLate: Record<string, unknown> = { shared: clonedShared };
+    Object.defineProperty(otherLate, 'computed', {
+      enumerable: true,
+      get() { called++; return 'not inspected'; }
+    });
+    cloned.annotations[7]!.metadata = otherLate;
+    const updated = session.update(cloned);
+    assertFullParity(updated, cloned);
+    expect(updated.annotations[0]).not.toBe(same.annotations[0]);
+    expect(updated.annotations[0]!.annotation.metadata!.shared)
+      .toBe(updated.annotations[7]!.annotation.metadata!.shared);
+    expect(called).toBe(0);
+  });
+
+  it('falls back without calling metadata getters or hiding cyclic/opaque values', () => {
+    const opts = fixture(8);
+    let getterCalls = 0;
+    const metadata: Record<string, unknown> = { title: 'safe' };
+    Object.defineProperty(metadata, 'private', {
+      configurable: true, enumerable: true,
+      get() { getterCalls += 1; return 'invisible'; }
+    });
+    opts.annotations[7]!.metadata = metadata;
+    const session = createIncrementalAnnotationLayoutSession(opts);
+    const previous = session.layout;
+    const noOp = session.update(opts);
+    assertFullParity(noOp, opts);
+    expect(getterCalls).toBe(0);
+    expect(noOp.annotations[0]).toBe(previous.annotations[0]);
+    expect(noOp.annotations[7]).not.toBe(previous.annotations[7]);
+
+    const cycle: Record<string, unknown> = { label: 'cycle' };
+    cycle.self = cycle;
+    opts.annotations[7]!.metadata = cycle;
+    const withCycle = session.update(opts);
+    assertFullParity(withCycle, opts);
+    expect(withCycle.annotations[7]).not.toBe(noOp.annotations[7]);
+    expect((withCycle.annotations[7]!.annotation.metadata as Record<string, unknown>).self)
+      .toBe(withCycle.annotations[7]!.annotation.metadata);
+
+    opts.annotations[7]!.metadata = { date: new Date('2025-01-01T00:00:00Z') };
+    const opaque = session.update(opts);
+    assertFullParity(opaque, opts);
+    expect(opaque.annotations[7]).not.toBe(withCycle.annotations[7]);
+  });
+
 });

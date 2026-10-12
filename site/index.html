@@ -336,6 +336,54 @@
               the source, and bring the same patterns to your host.
             </p>
           </div>
+          <section class="editing-lab" aria-labelledby="editing-lab-heading">
+            <div class="editing-lab-intro">
+              <div>
+                <p class="eyebrow">TRY INTERACTIVE AUTHORING</p>
+                <h3 id="editing-lab-heading">Move an annotation. Watch what stays put.</h3>
+              </div>
+              <p>
+                The static examples show placement. These runnable React demos
+                show what happens while an actual host changes the geometry.
+              </p>
+            </div>
+            <div class="editing-lab-grid">
+              <article class="editing-lab-card">
+                <p class="eyebrow">REACT / INCREMENTAL EDITING</p>
+                <h4>Drag a note without moving its neighbors.</h4>
+                <p>
+                  Preview a pointer movement immediately; calculate the final,
+                  authoritative layout only when the edit is committed.
+                </p>
+                <ul aria-label="Incremental editing steps">
+                  <li>Drag preview</li><li>Commit layout</li><li>Reuse placements</li>
+                </ul>
+                <div class="editing-lab-links">
+                  <a href="./examples/react-incremental/">Try the editor ↗</a>
+                  <a href="https://github.com/Ponchia/bronto-annotations/tree/main/examples/react-incremental">Inspect source ↗</a>
+                </div>
+              </article>
+              <article class="editing-lab-card">
+                <p class="eyebrow">REACT / WEB WORKER</p>
+                <h4>Keep the interface available during heavy work.</h4>
+                <p>
+                  Resolve layouts off the main thread. Try a newer request,
+                  reject an obsolete result, or ignore a pending reply.
+                </p>
+                <ul aria-label="Web Worker demonstration capabilities">
+                  <li>Worker solve</li><li>Revision checks</li><li>UI ping</li>
+                </ul>
+                <div class="editing-lab-links">
+                  <a href="./examples/react-worker/">Try the Worker demo ↗</a>
+                  <a href="https://github.com/Ponchia/bronto-annotations/tree/main/examples/react-worker">Inspect source ↗</a>
+                </div>
+              </article>
+            </div>
+            <p class="editing-lab-note">
+              Both integrations keep annotation state, scheduling and persistence in the host.
+              Neither requires a package-owned Worker or editor framework.
+            </p>
+          </section>
           <div class="example-grid">
             <article class="example-card">
               <a class="example-image" href="./examples/svg-basic/"
@@ -435,10 +483,12 @@
             Also explore <a href="./examples/dom-basic/">DOM regions ↗</a
             ><a href="./examples/d2-basic/">D2 diagrams ↗</a
             ><a href="./examples/react-basic/">React ↗</a
+            ><a href="./examples/react-incremental/">Incremental editor ↗</a
+            ><a href="./examples/react-worker/">Web Worker ↗</a
             ><a href="./examples/bronto-report/">Reports ↗</a
             ><a href="./examples/style-gallery/">Style gallery ↗</a
             ><a class="all-link" href="./examples/index/"
-              >Browse all nine examples →</a
+              >Browse all examples →</a
             >
           </div>
         </div>

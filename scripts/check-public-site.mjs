@@ -16,6 +16,7 @@ const examples = [
   'svg-basic',
   'react-basic',
   'react-incremental',
+  'react-worker',
   'bronto-report',
   'dom-basic',
   'vega-basic',
@@ -66,7 +67,7 @@ assert(
 );
 assert(
   examples.every((x) => existing.has('examples/' + x + '/index.html')),
-  'All eleven actual Vite example fixtures must be published',
+  'All twelve actual Vite example fixtures must be published',
 );
 
 const pages = [...existing].filter((x) => extname(x) === '.html');
@@ -150,6 +151,16 @@ assert(
     .length >= 4,
   'Real example links should be part of the editorial surface',
 );
+for (const [path, action] of [
+  ['react-incremental', 'Try the editor'],
+  ['react-worker', 'Try the Worker demo'],
+]) {
+  const link = home.window.document.querySelector(
+    `.editing-lab a[href="./examples/${path}/"]`,
+  );
+  assert(link?.textContent?.includes(action),
+    `Published interactive editing feature is missing: ${path}`);
+}
 assert(
   home.window.document.querySelector('meta[property="og:image"]'),
   'Public social preview missing',
@@ -181,5 +192,5 @@ console.log(
     pages.length +
     ' HTML pages, ' +
     links +
-    ' internal links, eleven compiled examples, docs search, social assets and a live engine playground.',
+    ' internal links, twelve compiled examples, docs search, social assets and a live engine playground.',
 );

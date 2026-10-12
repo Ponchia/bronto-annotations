@@ -545,7 +545,6 @@
         {
           "file": "src/react/AnnotationLayer.tsx",
           "terms": [
-            "ResizeObserver",
             "renderNote",
             "noteTabIndex",
             "editHandleTabIndex",
@@ -556,10 +555,93 @@
             "assertTargetAlignment",
             "debug",
             "qualityDebug",
-            "svgPointFromClient",
             "createAnnotationEditEvent",
             "createAnnotationEditDelta",
             "aria-hidden"
+          ]
+        },
+        {
+          "file": "src/react/preview-scheduler.ts",
+          "terms": [
+            "useAnnotationPreviewScheduler",
+            "usePreviewLayoutInvalidation",
+            "previewGeneration",
+            "cancelAnimationFrame"
+          ]
+        },
+        {
+          "file": "test/react/drag-preview-frame.test.tsx",
+          "terms": [
+            "unrelated pointers",
+            "host geometry changes",
+            "stale frames"
+          ]
+        },
+        {
+          "file": "src/react/svg-annotation-parts.tsx",
+          "terms": [
+            "renderSubject",
+            "renderConnector",
+            "renderDebugBoxes",
+            "badgeGeometry",
+            "aria-hidden"
+          ]
+        },
+        {
+          "file": "test/react/svg-annotation-parts.test.tsx",
+          "terms": [
+            "private resolved annotation SVG geometry",
+            "data-debug-kind",
+            "directional badges"
+          ]
+        },
+        {
+          "file": "src/react/dom-measurements.ts",
+          "terms": [
+            "ResizeObserver",
+            "getBoundingClientRect",
+            "getComputedStyle",
+            "idsByNode",
+            "active = false",
+            "shallowSizesEqual"
+          ]
+        },
+        {
+          "file": "test/react/dom-resize-delta.test.tsx",
+          "terms": [
+            "ResizeObserver measures only changed DOM notes",
+            "first.emit(priorNode)"
+          ]
+        },
+        {
+          "file": "src/react/edit-geometry.ts",
+          "terms": [
+            "clientToSvgPoint",
+            "svgPointFromClient",
+            "keyboardDelta",
+            "groupEditHandles"
+          ]
+        },
+        {
+          "file": "src/react/marker-defs.tsx",
+          "terms": [
+            "MemoMarkerDefs",
+            "markerId"
+          ]
+        },
+        {
+          "file": "src/react/render-data.ts",
+          "terms": [
+            "dataAttributes",
+            "annotationStyle"
+          ]
+        },
+        {
+          "file": "test/react/private-helpers.test.ts",
+          "terms": [
+            "private React rendering and editing helpers",
+            "markerId",
+            "keyboardDelta"
           ]
         },
         {
