@@ -8,6 +8,14 @@ reasonable.
 
 ## Unreleased
 
+### Interactive authoring examples
+
+- Ensure an appended annotation stays below imported negative-priority notes
+  whenever the guarded demo priority range allows it. At the priority floor,
+  generated notes remain JSON round-trippable and exact full-layout parity is
+  preserved; the example no longer promises unchanged placements for every
+  imported priority configuration.
+
 ## 0.6.9 - 2026-10-12
 
 ### Fixed
@@ -67,11 +75,6 @@ reasonable.
 - Make the demo's Move final anchor action operate on the actual final
   imported annotation rather than a reserved `signal` ID. Point and box
   anchors retain their shape, dimensions and JSON round-trip compatibility.
-- Ensure an appended annotation stays below imported negative-priority notes
-  whenever the guarded demo priority range allows it. At the priority floor,
-  generated notes remain JSON round-trippable and exact full-layout parity is
-  preserved; the example no longer promises unchanged placements for every
-  imported priority configuration.
 - Improve SVG touch gesture ownership and increase practical hit areas while
   keeping visible controls compact and leaving diagram scrolling available.
 
