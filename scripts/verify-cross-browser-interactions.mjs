@@ -96,6 +96,18 @@ async function verifyIncremental(browser, origin, viewport, label) {
     assert.equal(await page.locator('svg.pa-annotation-layer').getAttribute('role'), 'group',
       label + ': interactive SVG must expose keyboard-focusable descendants');
     assert.equal(await page.locator('g.pa-annotation').count(), 4);
+    // CSS style values are checked in Firefox/WebKit; only Chromium can run
+    // the real touchStart/move/end/cancel CDP gesture below in its own lane.
+    const touchStyles = await page.evaluate(() => ({
+      hit: getComputedStyle(document.querySelector('.pa-annotation__edit-hit--note')).touchAction,
+      handle: getComputedStyle(document.querySelector('.pa-annotation__edit-handle--note')).touchAction,
+      scroller: getComputedStyle(document.querySelector('.stage-scroll')).touchAction
+    }));
+    assert.equal(touchStyles.hit, 'none', label + ': enlarged hit circle must own touch drags');
+    assert.equal(touchStyles.handle, 'none', label + ': editing circle must own touch drags');
+    assert.notEqual(touchStyles.scroller, 'none',
+      label + ': host stage must retain ordinary touch scrolling');
+
     const inspector = page.locator('.annotation-source');
     await inspector.locator('summary').click();
     const exportedAnnotations = async () =>

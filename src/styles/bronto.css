@@ -319,6 +319,9 @@ svg rect.pa-annotation__note-box {
   fill: transparent;
   pointer-events: auto;
   stroke: none;
+  /* Only captured editing controls suppress native pan/zoom. Keep the host
+     diagram scrollable when a touch starts anywhere outside these circles. */
+  touch-action: none;
 }
 
 .pa-annotation__edit-handle {
@@ -327,6 +330,7 @@ svg rect.pa-annotation__note-box {
   pointer-events: auto;
   stroke: var(--pa-annotation-accent, #2563eb);
   stroke-width: 2;
+  touch-action: none;
   vector-effect: non-scaling-stroke;
 }
 
