@@ -60,7 +60,14 @@ assert.equal(pkg.scripts?.['test:release'], 'node scripts/check-release.mjs');
 assert.equal(pkg.scripts?.['test:security-automation'], 'node scripts/check-security-automation.mjs');
 assert.ok(pkg.scripts?.check?.includes('npm run test:repo'), 'npm run check must include test:repo');
 assert.ok(pkg.scripts?.check?.includes('npm run test:site'), 'npm run check must verify the published Pages build');
-for (const marker of ['workflow_run:', 'workflows: [\'CI\']', 'ref: main', 'enablement: true', 'upload-pages-artifact', 'deploy-pages']) {
+for (const marker of [
+  'workflow_run:', "workflows: ['CI']", 'ref: main',
+  'enablement: true', 'upload-pages-artifact', 'deploy-pages',
+  // Mutable Pages deployments must never leave obsolete environment-gated
+  // builds blocking current protected-main publication.
+  'group: annotations-pages', 'cancel-in-progress: true',
+  'Confirm this CI run targets the exact current main commit'
+]) {
   assertIncludes(pagesWorkflow, marker, '.github/workflows/pages.yml');
 }
 assert.ok(pkg.scripts?.check?.includes('npm run test:release'), 'npm run check must include test:release');
