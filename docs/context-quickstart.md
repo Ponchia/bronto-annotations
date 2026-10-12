@@ -93,6 +93,10 @@ For ordinary React output, begin with `AnnotationLayer`. If notes should be
 edited interactively, enable `previewEdits` so pointer movements display a
 provisional note and connector without resolving the entire layout each time.
 The host still receives edit callbacks and chooses when to persist a patch.
+Use `onEditEnd` for persistence; `onEdit` also fires for transient pointer
+movement. A canceled drag (including pointer-capture loss, a host layout
+replacement, or disabling editing) does **not** produce an edit-completion
+callback, so a host should not persist an incomplete gesture.
 
 For committed edits on denser surfaces, an experimental
 `createIncrementalAnnotationLayoutSession` can reuse unchanged placements.

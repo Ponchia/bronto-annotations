@@ -18,9 +18,10 @@ reasonable.
   reply example. Split/join changes, hidden properties and affected shared
   note groups fall back to authoritative snapshots rather than mixing
   incompatible old and new object graphs.
-- Cancel active React pointer gestures after host layout replacement so
-  obsolete geometry cannot be committed by a later pointer release; retain
-  synchronous edit callbacks and the existing keyboard editing behavior.
+- Cancel active React pointer gestures after host layout replacement,
+  unexpected pointer-capture loss, or disabling editing. An interrupted drag
+  cannot commit stale coordinates through a later pointer release; completed
+  edits and keyboard behavior retain their normal semantics.
 
 ### Performance
 
