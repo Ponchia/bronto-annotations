@@ -32,6 +32,16 @@ h1 { font-size: clamp(30px, 4.3vw, 49px); font-weight: 680; letter-spacing: -0.0
 .metric + .metric { border-left: 1px solid #e4eaf0; }
 .metric > span { display: block; color: #536474; font-size: 11px; font-weight: 650; margin-bottom: 7px; }
 .metric > strong { display: block; font-size: clamp(14px, 1.5vw, 18px); font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.annotation-source { border-top: 1px solid #e4eaf0; padding: 19px 22px 22px; min-width: 0; }
+.annotation-source summary { color: #275e77; font-size: 13px; font-weight: 720; cursor: pointer; }
+.annotation-source summary:focus-visible { outline: 3px solid #58b3c0; outline-offset: 4px; }
+.annotation-source > p { color: #526574; font-size: 12px; line-height: 1.6; max-width: 710px; margin: 12px 0; }
+.annotation-source-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 10px; }
+.annotation-source-actions button { background: #fff; color: #33475a; border: 1px solid #cfdce5; border-radius: 8px; font-size: 12px; font-family: inherit; font-weight: 650; padding: 9px 12px; cursor: pointer; }
+.annotation-source-actions button:hover { background: #e8f4f6; border-color: #7fb4bd; color: #21586a; }
+.annotation-source-actions button:focus-visible, .annotation-source pre:focus-visible { outline: 3px solid #58b3c0; outline-offset: 3px; }
+.annotation-source-actions span { color: #466477; font-size: 12px; line-height: 1.4; }
+.annotation-source pre { max-height: 290px; overflow: auto; background: #f5f8fb; color: #21394c; font-size: 11px; line-height: 1.6; padding: 15px; margin: 0; border: 1px solid #dde6ed; border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
 .footnote { font-size: 13px; color: #526574; line-height: 1.65; max-width: 825px; margin: 18px 0 0; }
 @media (max-width: 750px) {
   .demo-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
@@ -41,5 +51,6 @@ h1 { font-size: clamp(30px, 4.3vw, 49px); font-weight: 680; letter-spacing: -0.0
   .toolbar { padding: 15px; }
   .scroll-hint { display: block; margin: 0; padding: 9px 15px; background: #f5f9fa; border-bottom: 1px solid #e1eaf0; color: #3a6176; font-size: 11px; font-weight: 650; }
   .metric { padding: 15px; }
+  .annotation-source { padding: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { .toolbar button { transition: none; } }

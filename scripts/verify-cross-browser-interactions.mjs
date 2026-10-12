@@ -80,6 +80,16 @@ async function verifyIncremental(browser, origin, viewport, label) {
     assert.equal(await page.locator('svg.pa-annotation-layer').getAttribute('role'), 'group',
       label + ': interactive SVG must expose keyboard-focusable descendants');
     assert.equal(await page.locator('g.pa-annotation').count(), 4);
+    const inspector = page.locator('.annotation-source');
+    await inspector.locator('summary').click();
+    const exportedAnnotations = async () =>
+      JSON.parse(await page.locator('#annotation-json').textContent());
+    const originalData = await exportedAnnotations();
+    assert.equal(originalData.length, 4, label + ': JSON must contain the original host inputs');
+    assert.equal(originalData.find((note) => note.id === 'signal')?.placement?.manual?.x, 307);
+    assert.equal(Object.hasOwn(originalData[0], 'candidates'), false,
+      label + ': computed placement candidates should not be exported');
+    assert.equal(await page.locator('#copy-annotations').isEnabled(), true);
 
     await page.locator('#move-note').click();
     await page.waitForFunction(() =>
@@ -89,9 +99,18 @@ async function verifyIncremental(browser, origin, viewport, label) {
     await page.locator('#append-note').click();
     await page.waitForFunction(() => window.__annotationsExample?.annotations.length === 5);
     assert.equal(await page.evaluate(() => window.__annotationsExample?.reused), 4);
+    assert.equal((await exportedAnnotations()).length, 5,
+      label + ': exported inputs must reflect committed additions');
     await page.locator('#remove-note').click();
     await page.waitForFunction(() => window.__annotationsExample?.annotations.length === 4);
     assert.equal(await page.evaluate(() => window.__annotationsExample?.reused), 4);
+    assert.equal((await exportedAnnotations()).length, 4,
+      label + ': exported inputs must reflect committed removals');
+
+    await page.locator('#copy-annotations').click();
+    await page.waitForFunction(() =>
+      (document.querySelector('#copy-status')?.textContent?.length ?? 0) > 0);
+    assert.match(await page.locator('#copy-status').innerText(), /copied|clipboard unavailable/i);
 
     await page.locator('#reset-note').click();
     await page.waitForFunction(() =>
@@ -127,6 +146,10 @@ async function verifyIncremental(browser, origin, viewport, label) {
     const edited = await page.evaluate(() => window.__annotationsExample);
     assert.equal(edited.reused, 3, label + ': commit should reuse unaffected winners');
     assert.equal(edited.quality.ok, true, label + ': quality must remain valid');
+    const exportedAfterDrag = await exportedAnnotations();
+    assert.equal(exportedAfterDrag.length, 4);
+    assert.notEqual(exportedAfterDrag.find((note) => note.id === 'signal')?.placement?.manual?.x, 307,
+      label + ': live JSON must reflect the completed pointer edit');
 
     // Real pointer capture can end without pointercancel. Releasing capture on
     // the actual SVG edit handle must abandon the gesture, restore the
