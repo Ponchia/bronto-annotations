@@ -2,6 +2,7 @@
 import { act, fireEvent, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AnnotationLayer } from '../../src/react/index.js';
+import { resolveAnnotationLayout } from '../../src/index.js';
 import type { Annotation } from '../../src/index.js';
 import type { AnnotationLayerEditEvent } from '../../src/react/index.js';
 
@@ -153,8 +154,11 @@ describe('high-frequency React pointer previews', () => {
 
     pointer(layer, 'pointerup', 140, 80, 23);
     expect(commits).toHaveLength(0);
-    pointer(layer, 'pointercancel', 140, 80, 5);
+    // The pointer that began the now-stale drag must not submit a placement
+    // derived from the geometry that existed before the host replacement.
+    pointer(layer, 'pointerup', 140, 80, 5);
     expect(commits).toHaveLength(0);
+    expect(edits.filter((event) => event.phase === 'end')).toHaveLength(0);
     expect(Number(note().getAttribute('x'))).toBe(originalX);
 
     // A new gesture is free to schedule a fresh frame generation.
@@ -166,6 +170,63 @@ describe('high-frequency React pointer previews', () => {
     pointer(layer, 'pointercancel', 129, 86, 5);
     expect(Number(note().getAttribute('x'))).toBe(originalX);
     expect(commits).toHaveLength(0);
+  });
+
+  it('does not commit an old controlled-layout edit after the host replaces note geometry', () => {
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(boundingRect());
+    const frames = scheduledFrames();
+    const noteSizes = {
+      selected: { width: 110, height: 52 },
+      neighbor: { width: 105, height: 48 }
+    };
+    const first = resolveAnnotationLayout({ annotations, bounds, noteSizes });
+    const replacedAnnotations: Annotation[] = annotations.map((item) => item.id === 'selected'
+      ? {
+          ...item,
+          placement: { manual: { x: 212, y: 47, side: 'right' } }
+        }
+      : item);
+    const second = resolveAnnotationLayout({
+      annotations: replacedAnnotations, bounds, noteSizes
+    });
+    const commits: AnnotationLayerEditEvent[] = [];
+    const edits: AnnotationLayerEditEvent[] = [];
+    const props = {
+      bounds, noteSizes, editable: true as const, previewEdits: true,
+      onEdit: (event: AnnotationLayerEditEvent) => edits.push(event),
+      onEditEnd: (event: AnnotationLayerEditEvent) => commits.push(event)
+    };
+    const { container, rerender } = render(
+      <AnnotationLayer {...props} annotations={annotations} resolvedLayout={first} />
+    );
+    const layer = container.querySelector('svg.pa-annotation-layer')!;
+    const note = () => container.querySelector(
+      'g.pa-annotation[data-annotation-id="selected"] foreignObject')!;
+    const handle = () => container.querySelector(
+      '.pa-annotation__edit-handle--note[data-annotation-id="selected"]')!;
+    pointer(handle(), 'pointerdown', 100, 70, 5);
+    pointer(layer, 'pointermove', 125, 82, 5);
+    const queuedFrame = [...frames.frames.values()][0]!;
+    expect(queuedFrame).toBeDefined();
+
+    rerender(<AnnotationLayer {...props} annotations={replacedAnnotations}
+      resolvedLayout={second} />);
+    expect(frames.cancel).toHaveBeenCalledTimes(1);
+    expect(Number(note().getAttribute('x')))
+      .toBe(second.annotations.find((item) => item.id === 'selected')!.noteBox.x);
+
+    // A stale release must not override the accepted authoritative placement.
+    pointer(layer, 'pointerup', 144, 87, 5);
+    expect(commits).toHaveLength(0);
+    expect(edits.filter((event) => event.phase === 'end')).toHaveLength(0);
+    act(() => queuedFrame(performance.now()));
+    expect(Number(note().getAttribute('x')))
+      .toBe(second.annotations.find((item) => item.id === 'selected')!.noteBox.x);
+
+    // A fresh gesture using the new host layout still commits normally.
+    pointer(handle(), 'pointerdown', 110, 70, 5);
+    pointer(layer, 'pointerup', 133, 80, 5);
+    expect(commits).toHaveLength(1);
   });
 
   it('cancels unpainted movement on pointerup, pointercancel and component unmount', () => {
