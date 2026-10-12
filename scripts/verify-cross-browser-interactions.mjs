@@ -121,6 +121,95 @@ async function verifyIncremental(browser, origin, viewport, label) {
     const edited = await page.evaluate(() => window.__annotationsExample);
     assert.equal(edited.reused, 3, label + ': commit should reuse unaffected winners');
     assert.equal(edited.quality.ok, true, label + ': quality must remain valid');
+
+    // Real pointer capture can end without pointercancel. Releasing capture on
+    // the actual SVG edit handle must abandon the gesture, restore the
+    // provisional note and suppress a subsequent pointerup commit.
+    await page.locator('#reset-note').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Reset to initial diagram');
+    const beforeCaptureLoss = await page.evaluate(() => {
+      const note = document.querySelector(
+        'g.pa-annotation[data-annotation-id="signal"] .pa-annotation__note-box');
+      const rect = note?.getBoundingClientRect();
+      const manual = window.__annotationsExample.annotations
+        .find((item) => item.id === 'signal')?.manual;
+      return { x: rect?.x, y: rect?.y, manual };
+    });
+    assert(Number.isFinite(beforeCaptureLoss.x) && Number.isFinite(beforeCaptureLoss.y),
+      label + ': reset signal note is not measurable');
+    await handle.scrollIntoViewIfNeeded();
+    await page.evaluate(() => {
+      const target = document.querySelector(
+        '.pa-annotation__edit-handle--note[data-annotation-id="signal"]');
+      if (!target) throw new Error('Missing pointer capture target');
+      const probe = { pointerId: null, lost: false };
+      window.__annotationsCaptureProbe = probe;
+      target.addEventListener('pointerdown', (event) => {
+        probe.pointerId = event.pointerId;
+      }, { once: true });
+      target.addEventListener('lostpointercapture', (event) => {
+        probe.lost = event.pointerId === probe.pointerId;
+      }, { once: true });
+    });
+    const captureBox = await handle.boundingBox();
+    assert(captureBox, label + ': capture target has no bounding box');
+    const captureStart = {
+      x: captureBox.x + captureBox.width / 2,
+      y: captureBox.y + captureBox.height / 2
+    };
+    await page.mouse.move(captureStart.x, captureStart.y);
+    await page.mouse.down();
+    try {
+      await page.waitForFunction(() =>
+        window.__annotationsCaptureProbe?.pointerId !== null);
+      await page.mouse.move(captureStart.x + 18, captureStart.y + 12, { steps: 5 });
+      await page.waitForFunction((previous) => {
+        const rect = document.querySelector(
+          'g.pa-annotation[data-annotation-id="signal"] .pa-annotation__note-box')
+          ?.getBoundingClientRect();
+        return Boolean(rect && (Math.abs(rect.x - previous.x) > 2
+          || Math.abs(rect.y - previous.y) > 2));
+      }, beforeCaptureLoss, { timeout: 15000 });
+
+      await page.evaluate(() => {
+        const target = document.querySelector(
+          '.pa-annotation__edit-handle--note[data-annotation-id="signal"]');
+        const pointerId = window.__annotationsCaptureProbe?.pointerId;
+        if (!target?.hasPointerCapture(pointerId)) {
+          throw new Error('The real edit handle never captured the active pointer');
+        }
+        target.releasePointerCapture(pointerId);
+      });
+      // Processing the next pointer event delivers lostpointercapture in
+      // browsers where capture release is processed asynchronously.
+      await page.mouse.move(captureStart.x + 21, captureStart.y + 13);
+      await page.waitForFunction(() => window.__annotationsCaptureProbe?.lost === true);
+      await page.waitForFunction((previous) => {
+        const rect = document.querySelector(
+          'g.pa-annotation[data-annotation-id="signal"] .pa-annotation__note-box')
+          ?.getBoundingClientRect();
+        return Boolean(rect && Math.abs(rect.x - previous.x) < 2
+          && Math.abs(rect.y - previous.y) < 2);
+      }, beforeCaptureLoss, { timeout: 15000 });
+    } finally {
+      await page.mouse.up();
+    }
+    await page.evaluate(() => new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const afterCaptureLoss = await page.evaluate(() => {
+      const sample = window.__annotationsExample;
+      return {
+        action: sample?.action,
+        manual: sample?.annotations.find((item) => item.id === 'signal')?.manual,
+        qualityOk: sample?.quality?.ok
+      };
+    });
+    assert.equal(afterCaptureLoss.action, 'Reset to initial diagram',
+      label + ': lost pointer capture must never persist the abandoned drag');
+    assert.deepEqual(afterCaptureLoss.manual, beforeCaptureLoss.manual,
+      label + ': lost capture changed the authoritative manual placement');
+    assert.equal(afterCaptureLoss.qualityOk, true);
     await verifyAccessibility(page, label);
     assert.deepEqual(errors, [], label + ': unexpected browser errors');
   } finally {
