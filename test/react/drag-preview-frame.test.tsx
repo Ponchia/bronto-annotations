@@ -172,6 +172,67 @@ describe('high-frequency React pointer previews', () => {
     expect(commits).toHaveLength(0);
   });
 
+  it('discards an incomplete drag when the capturing edit handle loses pointer capture', () => {
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(boundingRect());
+    const frames = scheduledFrames();
+    const onEditEnd = vi.fn();
+    const { container } = render(
+      <AnnotationLayer annotations={annotations} bounds={bounds}
+        editable previewEdits onEditEnd={onEditEnd} />
+    );
+    const layer = container.querySelector('svg.pa-annotation-layer')!;
+    const handle = () => container.querySelector(
+      '.pa-annotation__edit-handle--note[data-annotation-id="selected"]')!;
+    const note = () => container.querySelector(
+      'g.pa-annotation[data-annotation-id="selected"] foreignObject')!;
+    const originalX = Number(note().getAttribute('x'));
+    pointer(handle(), 'pointerdown', 100, 70, 5);
+    pointer(layer, 'pointermove', 132, 83, 5);
+    const queued = [...frames.frames.values()][0]!;
+    expect(frames.frames.size).toBe(1);
+
+    pointer(handle(), 'lostpointercapture', 132, 83, 5);
+    expect(frames.frames.size).toBe(0);
+    act(() => queued(performance.now()));
+    pointer(layer, 'pointerup', 132, 83, 5);
+    expect(onEditEnd).not.toHaveBeenCalled();
+    expect(Number(note().getAttribute('x'))).toBe(originalX);
+
+    // The next pointer can author a normal edit after capture was lost.
+    pointer(handle(), 'pointerdown', 100, 70, 9);
+    pointer(layer, 'pointermove', 116, 75, 9);
+    pointer(layer, 'pointerup', 116, 75, 9);
+    expect(onEditEnd).toHaveBeenCalledTimes(1);
+    expect(onEditEnd.mock.calls[0]?.[0].phase).toBe('end');
+  });
+
+  it('invalidates an active drag if the host disables editing without changing layout', () => {
+    vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(boundingRect());
+    const frames = scheduledFrames();
+    const onEditEnd = vi.fn();
+    const { container, rerender } = render(
+      <AnnotationLayer annotations={annotations} bounds={bounds}
+        editable previewEdits onEditEnd={onEditEnd} />
+    );
+    const layer = container.querySelector('svg.pa-annotation-layer')!;
+    const handle = container.querySelector(
+      '.pa-annotation__edit-handle--note[data-annotation-id="selected"]')!;
+    pointer(handle, 'pointerdown', 100, 70, 5);
+    pointer(layer, 'pointermove', 130, 80, 5);
+    const queued = [...frames.frames.values()][0]!;
+    expect(frames.frames.size).toBe(1);
+
+    rerender(
+      <AnnotationLayer annotations={annotations} bounds={bounds}
+        editable={false} previewEdits onEditEnd={onEditEnd} />
+    );
+    expect(frames.frames.size).toBe(0);
+    act(() => queued(performance.now()));
+    pointer(layer, 'pointerup', 135, 82, 5);
+    expect(onEditEnd).not.toHaveBeenCalled();
+    expect(container.querySelector('.pa-annotation__edit-handle--note')).toBeNull();
+  });
+
   it('does not commit an old controlled-layout edit after the host replaces note geometry', () => {
     vi.spyOn(SVGSVGElement.prototype, 'getBoundingClientRect').mockReturnValue(boundingRect());
     const frames = scheduledFrames();
