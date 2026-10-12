@@ -998,11 +998,11 @@ async function verifyIncrementalDemo(page, label) {
   // restores it through the authoritative incremental host session.
   await page.locator('#undo-edit').click();
   await page.waitForFunction(() =>
-    window.__annotationsExample?.action === 'Undid: Appended a lower-priority note');
+    window.__annotationsExample?.action === 'Undid: Appended an annotation');
   assert.equal(await page.locator('g.pa-annotation[data-annotation-id="added"]').count(), 0);
   await page.locator('#redo-edit').click();
   await page.waitForFunction(() =>
-    window.__annotationsExample?.action === 'Redid: Appended a lower-priority note');
+    window.__annotationsExample?.action === 'Redid: Appended an annotation');
   assert.equal(await page.locator('g.pa-annotation[data-annotation-id="added"]').count(), 1);
 
   await page.locator('#remove-note').click();

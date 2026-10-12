@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Annotation } from '../../src/index.js';
 import { createIncrementalAnnotationLayoutSession, resolveAnnotationLayout } from '../../src/index.js';
-import { parseEditorAnnotationJson, EDITOR_MAX_NOTES } from '../../examples/react-incremental/json-import.js';
+import { parseEditorAnnotationJson, EDITOR_MAX_NOTES, EDITOR_PRIORITY_MIN } from '../../examples/react-incremental/json-import.js';
 import { appendDemoNote, removeFinalNote } from '../../examples/react-incremental/note-actions.js';
 import {
   createEditorHistory, pushEditorHistory, undoEditorHistory, redoEditorHistory
@@ -34,6 +34,51 @@ describe('host-owned interactive demo note actions', () => {
     expect(appended.at(-1)?.id).toBe('added-3');
     expect(appended.slice(0, imported.length)).toEqual(imported);
     expect(parseEditorAnnotationJson(JSON.stringify(appended))).toEqual(appended);
+  });
+
+  it('appends below imported negative priorities without relocating unchanged winners', () => {
+    const imported = parseEditorAnnotationJson(JSON.stringify([
+      { ...seed[0]!, priority: -6 },
+      { ...seed[1]!, priority: -14 },
+      { id: 'custom', priority: -2, anchor: { type: 'point', point: { x: 490, y: 100 } },
+        note: { title: 'Custom imported note' },
+        placement: { manual: { x: 530, y: 45, side: 'right' } } }
+    ]));
+    const opts = (annotations: Annotation[]) => ({
+      annotations,
+      bounds: { x: 0, y: 0, width: 860, height: 500 },
+      refinement: false as const
+    });
+    const session = createIncrementalAnnotationLayoutSession(opts(imported));
+    const before = session.layout;
+    const withAdded = appendDemoNote(imported);
+    expect(withAdded.at(-1)?.priority).toBe(-15);
+    expect(withAdded.slice(0, imported.length).every((item, i) => item === imported[i])).toBe(true);
+    expect(parseEditorAnnotationJson(JSON.stringify(withAdded))).toEqual(withAdded);
+
+    const updated = session.update(opts(withAdded));
+    expect(updated).toEqual(resolveAnnotationLayout(opts(withAdded)));
+    for (let index = 0; index < imported.length; index += 1) {
+      expect(updated.annotations.find((item) => item.id === before.annotations[index]!.id))
+        .toBe(before.annotations[index]);
+    }
+
+    const history = pushEditorHistory(createEditorHistory(imported), withAdded, 'Add');
+    const undone = undoEditorHistory(history);
+    expect(undone.present.annotations).toEqual(imported);
+    expect(redoEditorHistory(undone).present.annotations).toEqual(withAdded);
+  });
+
+  it('keeps generated priorities within the guarded JSON import floor', () => {
+    const imported = parseEditorAnnotationJson(JSON.stringify([
+      { ...seed[0]!, priority: EDITOR_PRIORITY_MIN },
+      { ...seed[1]!, priority: EDITOR_PRIORITY_MIN + 1 }
+    ]));
+    const appended = appendDemoNote(imported);
+    expect(appended.at(-1)?.priority).toBe(EDITOR_PRIORITY_MIN);
+    expect(parseEditorAnnotationJson(JSON.stringify(appended))).toEqual(appended);
+    // Tie-breaking by ID at the import floor can invalidate placements;
+    // the UI never promises that every imported prefix will be reused.
   });
 
   it('removes only the final note, including when the imported document used "added"', () => {

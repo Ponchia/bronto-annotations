@@ -12,6 +12,10 @@ const MAX_LENGTH = 24_000;
 export const EDITOR_MAX_NOTES = 10;
 export const EDITOR_TITLE_MAX_LENGTH = 100;
 export const EDITOR_BODY_MAX_LENGTH = 400;
+// The editor's import/export guard must also bound priorities assigned by
+// host-owned toolbar actions. Keep these limits in one place.
+export const EDITOR_PRIORITY_MIN = -100;
+export const EDITOR_PRIORITY_MAX = 100;
 const SIDE = ['top', 'right', 'bottom', 'left'] as const;
 const ALIGN = ['start', 'center', 'end'] as const;
 
@@ -169,7 +173,7 @@ export function parseEditorAnnotationJson(raw: string): Annotation[] {
     if (seen.has(id)) fail(`Duplicate annotation ID "${id}".`);
     seen.add(id);
     const priority = optional(data.priority, `${label}.priority`,
-      (v, k) => number(v, k, -100, 100));
+      (v, k) => number(v, k, EDITOR_PRIORITY_MIN, EDITOR_PRIORITY_MAX));
     return {
       id,
       ...(priority === undefined ? {} : { priority }),
