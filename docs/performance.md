@@ -137,6 +137,17 @@ obstacles can keep a valid prefix; affected routed connectors fall back. This
 is a conservative dependency proof rather than a spatial-index-based solver,
 so partial updates are **not** guaranteed for arbitrary changed topology.
 
+The experimental input fingerprint also preserves metadata alias topology,
+explicit `undefined`, sparse arrays and negative zero. It invalidates a note
+when shared metadata becomes independent (or vice versa), even if the values
+look identical in JSON. Cross-annotation reference sharing is also tracked:
+unchanged sharing patterns retain stable prefixes, while new relationships
+between a changed suffix and cloned earlier notes invalidate the affected
+owners as well. Cyclic, opaque or accessor-backed metadata conservatively
+falls back to full resolution instead of reusing potentially stale objects.
+This favors reference correctness without needlessly sacrificing incremental
+updates for ordinary host sharing.
+
 Hosts should continue using the visual-only `previewAnnotationEdit` during
 pointer movement and the authoritative incremental session only when
 committing edits. Consumer-owned Web Worker resolution has been tested in real
