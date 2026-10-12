@@ -87,6 +87,27 @@ Manual coordinates are in the same coordinate system as `bounds` and the
 annotation overlay. They still get normal connector geometry, quality checks,
 SVG output, React output, Bronto classes, and edit events.
 
+## Editing Annotations In React
+
+For ordinary React output, begin with `AnnotationLayer`. If notes should be
+edited interactively, enable `previewEdits` so pointer movements display a
+provisional note and connector without resolving the entire layout each time.
+The host still receives edit callbacks and chooses when to persist a patch.
+
+For committed edits on denser surfaces, an experimental
+`createIncrementalAnnotationLayoutSession` can reuse unchanged placements.
+Pass its result to `AnnotationLayer.resolvedLayout` to avoid a second solve.
+This controlled path needs **host-owned note sizes**; it cannot use the
+component's `measure="dom"` mode. See the
+[interactive incremental React example](../examples/react-incremental/) for
+working source and browser behavior.
+
+If global geometry changes are too expensive on the main thread, try the
+[React + module Worker example](../examples/react-worker/). The host is
+responsible for request revisions, cancellation, Worker lifetime and accepted
+commits. Ignoring a stale result does not interrupt the Worker calculation.
+See [off-main-thread guidance](worker-layout.md) before copying this pattern.
+
 ## Generated Surfaces
 
 Generated chart and diagram adapters should run after the host has produced

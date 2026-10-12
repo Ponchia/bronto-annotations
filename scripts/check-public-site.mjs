@@ -151,6 +151,16 @@ assert(
     .length >= 4,
   'Real example links should be part of the editorial surface',
 );
+for (const [path, action] of [
+  ['react-incremental', 'Try the editor'],
+  ['react-worker', 'Try the Worker demo'],
+]) {
+  const link = home.window.document.querySelector(
+    `.editing-lab a[href="./examples/${path}/"]`,
+  );
+  assert(link?.textContent?.includes(action),
+    `Published interactive editing feature is missing: ${path}`);
+}
 assert(
   home.window.document.querySelector('meta[property="og:image"]'),
   'Public social preview missing',
