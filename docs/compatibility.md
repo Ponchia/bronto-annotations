@@ -17,10 +17,22 @@ peer lanes.
 | Mermaid | `>=11.0.0` | Mermaid 11 SVG extraction/browser example on Node 20 and 22; isolated Mermaid 12.1 browser consumer on Node 22 only |
 | D2 | `>=0.1.0` | D2 diagram/SVG tests and browser example |
 | React Flow | `>=12.0.0` | Public-state tests and browser example |
-| Browsers | Modern Chromium-class SVG/DOM APIs | Playwright browser verification |
+| Browsers | Modern Chromium-class SVG/DOM APIs | Mandatory Chromium Playwright verification; experimental opt-in Firefox/WebKit real editing/Worker smoke |
 
 optional peers are marked optional in `package.json`. Root imports must work
 without React, Vega, Mermaid, D2, React Flow, or `@ponchia/ui` installed.
+
+### Experimental browser-portability check
+
+`npm run test:browser:cross` exercises the published React incremental-editor
+and native module Worker demos in **Firefox and WebKit** at 1200px and 390px.
+It verifies a visible pointer-move preview before commit, stable unchanged
+placements, note editing focus, quality checks, obsolete/cancelled Worker
+responses, fresh-layout parity and mobile horizontal navigation. This is
+separate from mandatory Chromium CI until repeated runs on supported hosts
+establish a stable cross-browser support policy. Install missing browsers with
+`npx playwright install --with-deps firefox webkit`. Neither this check nor
+the existing Chromium timing metrics promise a frame rate.
 
 ## Checked Lanes
 
