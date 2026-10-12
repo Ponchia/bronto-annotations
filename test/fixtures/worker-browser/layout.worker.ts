@@ -4,8 +4,8 @@
  * replies instead of cloning the entire resolved annotation array every time.
  * It intentionally does not own persistence or application scheduling.
  */
-import { resolveAnnotationLayout } from '@ponchia/annotations';
-import type { LayoutOptions, ResolvedLayout } from '@ponchia/annotations';
+import { createIncrementalAnnotationLayoutSession } from '@ponchia/annotations';
+import type { AnnotationLayoutSession, LayoutOptions, ResolvedLayout } from '@ponchia/annotations';
 import { encodeWorkerLayout } from './layout-patch.js';
 import type { LayoutResponse, LayoutRevision } from './layout-patch.js';
 
@@ -22,6 +22,12 @@ type Reply =
   }
   | { type: 'error'; id: number; message: string };
 
+// The Worker owns the incremental session, never the host's persisted state.
+// Revisions contain complete inputs. An unacknowledged or cancelled solve may
+// update this private optimization cache, but it cannot commit host state; a
+// later request still resolves against its own authoritative inputs. A cold
+// first request, changed global topology or refinement uses full resolution.
+let incremental: AnnotationLayoutSession | undefined;
 let acknowledged: LayoutRevision | undefined;
 // The first snapshot provides an actual full-layout JSON measurement. Later
 // compact responses reuse that acknowledged baseline as an *estimate*, not an
@@ -72,7 +78,9 @@ self.addEventListener('message', (event: MessageEvent<Request>) => {
     try {
       const workerSolveStartedEpochMs = performance.timeOrigin + performance.now();
       const started = performance.now();
-      const layout = resolveAnnotationLayout(data.options);
+      const layout = incremental
+        ? incremental.update(data.options)
+        : (incremental = createIncrementalAnnotationLayoutSession(data.options)).layout;
       const resolverMs = performance.now() - started;
       const encodeStarted = performance.now();
       const response = encodeWorkerLayout(data.id, data.baseRevision, layout,
