@@ -34,6 +34,38 @@ describe('host-owned JSON import for the incremental React example', () => {
     expect(restored.some((item) => Object.hasOwn(item, 'candidates'))).toBe(false);
   });
 
+  it.each(['__proto__', 'constructor', 'toString', 'hasOwnProperty'])(
+    'imports an arbitrary host annotation ID %s without inheriting an implicit note size',
+    (id) => {
+      const imported = parseEditorAnnotationJson(JSON.stringify([{
+        id,
+        anchor: { type: 'point', point: { x: 300, y: 130 } },
+        note: { title: 'Imported host note', body: 'Text from exported JSON' },
+        placement: { manual: { x: 350, y: 170, side: 'right' } }
+      }]));
+      const hostSizes = { signal: { width: 145, height: 68 } };
+      const options = {
+        annotations: imported,
+        bounds: { x: 0, y: 0, width: 860, height: 500 },
+        noteSizes: hostSizes,
+        refinement: false as const
+      };
+      const layout = resolveAnnotationLayout(options);
+      expect(layout.annotations).toHaveLength(1);
+      expect(layout.annotations[0]!.noteBox).toEqual(resolveAnnotationLayout({
+        ...options, noteSizes: {}
+      }).annotations[0]!.noteBox);
+      expect(Object.values(layout.annotations[0]!.noteBox).every(Number.isFinite)).toBe(true);
+      const session = createIncrementalAnnotationLayoutSession(options);
+      expect(session.layout).toEqual(layout);
+      const nextAnnotations = imported.map((item) => ({
+        ...item, note: { ...item.note, title: 'Edited after import' }
+      }));
+      expect(session.update({ ...options, annotations: nextAnnotations }))
+        .toEqual(resolveAnnotationLayout({ ...options, annotations: nextAnnotations }));
+    }
+  );
+
   it('accepts a validated custom note and basic manual placement options', () => {
     const notes = parseEditorAnnotationJson(JSON.stringify([{
       id: 'Nota 1: Übersicht',

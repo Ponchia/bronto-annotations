@@ -57,6 +57,11 @@ Primary groups:
   diagram integrations prove the prepared anchor still matches the generated
   mark, node, handle, edge, or route in the same call as validation and layout
   quality.
+  Note-size overrides in `LayoutOptions.noteSizes` are keyed by opaque
+  annotation IDs: only an *own* property of the supplied dictionary counts.
+  Inherited properties are ignored even for IDs such as `constructor` or
+  `__proto__`; use `Object.fromEntries` or a null-prototype object if you
+  need to provide an explicit size for one of those IDs.
 - Geometry: `anchorPoint`, `anchorSubject`, `boxCenter`, `boxFromPoints`,
   `boxUnion`, `expandBox`, `insetBox`, `overlapArea`, `resolvePadding`.
 - Connectors: `connectorPath`, `connectorPathD`, `nearestPointOnBox`,

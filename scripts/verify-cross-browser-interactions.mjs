@@ -325,6 +325,46 @@ async function verifyIncremental(browser, origin, viewport, label) {
       window.__annotationsExample?.action === 'Redid: Moved the final anchor');
     assert.deepEqual(await exportedAnnotations(), movedHost);
 
+    // Imported IDs are unconstrained host strings, not object-map field
+    // declarations. Reading a plain noteSizes object must not accidentally
+    // find inherited Object.prototype members like constructor or __proto__.
+    // Those yielded NaN note-box coordinates before the core own-key guard.
+    const specialIds = ['__proto__', 'constructor', 'toString', 'hasOwnProperty'];
+    const hostNames = specialIds.map((id, index) => ({
+      id,
+      anchor: { type: 'point', point: { x: 90 + index * 200, y: 172 } },
+      note: { title: `Host note ${index + 1}` },
+      placement: { manual: { x: 45 + index * 200, y: 62, side: 'top' } }
+    }));
+    await importField.fill(JSON.stringify(hostNames));
+    await page.locator('#load-annotation-json').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Imported 4 annotations from JSON');
+    assert.equal(await page.locator('#annotation-import-error').count(), 0);
+    assert.deepEqual((await exportedAnnotations()).map((item) => item.id), specialIds);
+    const safeBoxes = await page.evaluate(() =>
+      window.__annotationsExample.annotations.map((item) => ({
+        id: item.id,
+        noteBox: item.noteBox
+      }))
+    );
+    assert.equal(safeBoxes.length, specialIds.length);
+    for (const { id, noteBox } of safeBoxes) {
+      assert(Object.values(noteBox).every(Number.isFinite),
+        `${label}: imported ${id} used an inherited note-size key: ${JSON.stringify(noteBox)}`);
+      assert(noteBox.width > 0 && noteBox.height > 0);
+    }
+    await page.locator('#move-note').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Moved the final anchor');
+    assert.deepEqual((await exportedAnnotations()).map((item) => item.id), specialIds,
+      label + ': toolbar action changed imported special-looking IDs');
+    await page.locator('#undo-edit').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Undid: Moved the final anchor');
+    assert.deepEqual(await exportedAnnotations(), hostNames,
+      label + ': undo could not restore imported special-ID annotations');
+
     await page.locator('#reset-note').click();
     await page.waitForFunction(() =>
       window.__annotationsExample?.action === 'Reset to initial diagram');
