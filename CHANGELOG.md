@@ -64,6 +64,9 @@ reasonable.
   generate conflict-free IDs even when user-supplied notes are named `added`,
   and preserve at least one authored note. No general-purpose serialization,
   persistence, command framework or form system is exported by the package.
+- Make the demo's Move final anchor action operate on the actual final
+  imported annotation rather than a reserved `signal` ID. Point and box
+  anchors retain their shape, dimensions and JSON round-trip compatibility.
 - Improve SVG touch gesture ownership and increase practical hit areas while
   keeping visible controls compact and leaving diagram scrolling available.
 

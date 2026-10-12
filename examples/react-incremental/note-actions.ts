@@ -28,3 +28,31 @@ export function removeFinalNote(annotations: Annotation[]): Annotation[] {
   if (annotations.length <= 1) return annotations;
   return annotations.slice(0, -1);
 }
+
+/**
+ * Move the final authored anchor, not a reserved demo ID. Imported JSON
+ * can replace every built-in note, and its last anchor may be a point *or*
+ * a box. Keep the source geometry type, box dimensions, and earlier notes
+ * unchanged; never generate coordinates outside the demo import's bounds.
+ */
+export function moveFinalNoteAnchor(annotations: Annotation[]): Annotation[] {
+  if (!annotations.length) return annotations;
+  const last = annotations[annotations.length - 1]!;
+  const nudge = (value: number, delta: number) =>
+    value + delta <= 2_000 ? value + delta : value - delta;
+  const anchor = last.anchor;
+  const updated = anchor.type === 'point'
+    ? { ...anchor, point: {
+      x: nudge(anchor.point.x, 55),
+      y: nudge(anchor.point.y, 52)
+    } }
+    : anchor.type === 'box'
+      ? { ...anchor, box: {
+        ...anchor.box,
+        x: nudge(anchor.box.x, 55),
+        y: nudge(anchor.box.y, 52)
+      } }
+      : null;
+  if (!updated) return annotations;
+  return [...annotations.slice(0, -1), { ...last, anchor: updated }];
+}
