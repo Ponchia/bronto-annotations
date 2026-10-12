@@ -28,6 +28,10 @@ reasonable.
 
 ### Interactive authoring examples
 
+- Select a rendered note directly by clicking it or focusing it with the
+  keyboard. The host-only text editor follows that selection without
+  recalculating or committing layout geometry; existing edit handles and
+  connectors are not selection targets.
 - Ensure an appended annotation stays below imported negative-priority notes
   whenever the guarded demo priority range allows it. At the priority floor,
   generated notes remain JSON round-trippable and exact full-layout parity is

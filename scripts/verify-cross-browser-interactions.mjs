@@ -121,6 +121,28 @@ async function verifyIncremental(browser, origin, viewport, label) {
       label + ': computed placement candidates should not be exported');
     assert.equal(await page.locator('#copy-annotations').isEnabled(), true);
 
+    // The text editor also follows a note selected directly from the canvas.
+    // No layout resolution, undo entry or persisted annotation edit is allowed
+    // merely because a user clicked or keyboard-focused a visible note.
+    const initialSelectionChanges = await page.evaluate(() =>
+      window.__annotationsExample.changes);
+    const intakeNote = page.locator(
+      'g.pa-annotation[data-annotation-id="intake"] .pa-annotation__note-box');
+    await intakeNote.focus();
+    await page.waitForFunction(() =>
+      document.querySelector('#text-editor-note')?.value === 'intake');
+    const triageNote = page.locator(
+      'g.pa-annotation[data-annotation-id="triage"] .pa-annotation__note-box');
+    await triageNote.click();
+    await page.waitForFunction(() =>
+      document.querySelector('#text-editor-note')?.value === 'triage');
+    assert.match(await page.locator('.selection-hint [role="status"]').innerText(), /Selected:\s*Triage/,
+      label + ': selecting a canvas note did not update the visible selection status');
+    assert.equal(await page.evaluate(() => window.__annotationsExample.changes),
+      initialSelectionChanges, label + ': selecting a canvas note committed a diagram edit');
+    assert.equal(await page.locator('#undo-edit').isDisabled(), true,
+      label + ': canvas selection added an undo step');
+
     // Basic text authoring should not require manually rewriting JSON.
     // Draft typing is not a committed layout action; Apply is one undo step.
     await page.locator('#text-editor-note').selectOption('signal');

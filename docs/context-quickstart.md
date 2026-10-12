@@ -114,6 +114,9 @@ new authoritative host layout session. Invalid JSON leaves the current layout
 untouched. Its deliberately small importer accepts point/box anchors, note
 text and basic placement options for at most ten notes. A small **Edit annotation
 text** form lets visitors modify a selected note without hand-editing JSON.
+Click or keyboard-focus a visible note in the example to select it in that
+form, or choose a note from the selector. Selecting does not enter layout
+history, change placement, or require any new package API.
 The form keeps draft text separate from the committed layout; Apply creates a
 single undoable transaction and preserves the same JSON import limits. It is
 **not** a general package serialization or form API: validate the complete
