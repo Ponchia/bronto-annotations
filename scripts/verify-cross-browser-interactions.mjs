@@ -128,6 +128,11 @@ async function verifyIncremental(browser, origin, viewport, label) {
     await page.locator('#reset-note').click();
     await page.waitForFunction(() =>
       window.__annotationsExample?.action === 'Reset to initial diagram');
+    // DOMRect uses viewport-relative coordinates. Scroll the handle into view
+    // BEFORE the initial measurement or the test can mistake scrolling for a
+    // stale note projection (especially on a horizontally scrollable mobile
+    // stage).
+    await handle.scrollIntoViewIfNeeded();
     const beforeCaptureLoss = await page.evaluate(() => {
       const note = document.querySelector(
         'g.pa-annotation[data-annotation-id="signal"] .pa-annotation__note-box');
@@ -138,7 +143,6 @@ async function verifyIncremental(browser, origin, viewport, label) {
     });
     assert(Number.isFinite(beforeCaptureLoss.x) && Number.isFinite(beforeCaptureLoss.y),
       label + ': reset signal note is not measurable');
-    await handle.scrollIntoViewIfNeeded();
     await page.evaluate(() => {
       const target = document.querySelector(
         '.pa-annotation__edit-handle--note[data-annotation-id="signal"]');
