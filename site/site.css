@@ -848,7 +848,8 @@ select:focus-visible {
 }
 .docs-layout {
   display: grid;
-  grid-template-columns: 235px minmax(0, 1fr);
+  /* DOM order is the article first, then the navigation sidebar. */
+  grid-template-columns: minmax(0, 1fr) 235px;
   gap: 58px;
   padding-block: 28px 110px;
 }

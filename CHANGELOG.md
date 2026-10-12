@@ -19,6 +19,10 @@ reasonable.
 
 ### Documentation and discovery
 
+- Give desktop guide prose the wide column and topic navigation the narrow
+  sidebar, matching document order; guard both desktop and mobile reading widths
+  in published-browser verification.
+
 - Make the first-use SVG and React snippets responsive; verify the exact snippets
   in clean packed consumers as well as the documentation fixtures. Document a
   standalone Vite application setup without cloning the repository.
