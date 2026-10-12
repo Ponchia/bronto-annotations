@@ -556,10 +556,40 @@
             "assertTargetAlignment",
             "debug",
             "qualityDebug",
-            "svgPointFromClient",
             "createAnnotationEditEvent",
             "createAnnotationEditDelta",
             "aria-hidden"
+          ]
+        },
+        {
+          "file": "src/react/edit-geometry.ts",
+          "terms": [
+            "clientToSvgPoint",
+            "svgPointFromClient",
+            "keyboardDelta",
+            "groupEditHandles"
+          ]
+        },
+        {
+          "file": "src/react/marker-defs.tsx",
+          "terms": [
+            "MemoMarkerDefs",
+            "markerId"
+          ]
+        },
+        {
+          "file": "src/react/render-data.ts",
+          "terms": [
+            "dataAttributes",
+            "annotationStyle"
+          ]
+        },
+        {
+          "file": "test/react/private-helpers.test.ts",
+          "terms": [
+            "private React rendering and editing helpers",
+            "markerId",
+            "keyboardDelta"
           ]
         },
         {

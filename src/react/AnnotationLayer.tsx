@@ -40,8 +40,16 @@ import {
   evaluateAnchorAlignment,
   formatAnchorAlignmentReport
 } from '../adapters/diagnostics.js';
-import { annotationStyleVariables } from '../core/style.js';
-import { svgPointFromClient } from '../dom/index.js';
+import { dataAttributes, annotationStyle } from './render-data.js';
+import { markerId, MemoMarkerDefs } from './marker-defs.js';
+import {
+  groupEditHandles,
+  normalizeEditOptions,
+  keyboardDelta,
+  editHandlePosition,
+  clientToSvgPoint,
+  round
+} from './edit-geometry.js';
 import type { AnnotationPartsSubject } from '../core/annotation-geometry.js';
 import type { AnnotationEditHandle } from '../core/edit.js';
 import type {
@@ -887,52 +895,6 @@ function assertControlledLayout(layout: ResolvedLayout, annotations: Annotation[
   }
 }
 
-function groupEditHandles(handles: AnnotationEditHandle[]): Map<string, AnnotationEditHandle[]> {
-  const groups = new Map<string, AnnotationEditHandle[]>();
-  for (const handle of handles) {
-    const group = groups.get(handle.annotationId);
-    if (group) group.push(handle);
-    else groups.set(handle.annotationId, [handle]);
-  }
-  return groups;
-}
-
-function normalizeEditOptions(editable: AnnotationLayerProps['editable']): AnnotationLayerEditOptions | undefined {
-  if (!editable) {
-    return undefined;
-  }
-
-  return editable === true ? {} : editable;
-}
-
-function keyboardDelta(
-  event: ReactKeyboardEvent<SVGCircleElement>,
-  options: AnnotationLayerEditOptions | undefined
-): { x: number; y: number } | undefined {
-  const step = event.shiftKey
-    ? options?.keyboardLargeStep ?? 10
-    : options?.keyboardStep ?? 1;
-
-  switch (event.key) {
-    case 'ArrowUp':
-      return { x: 0, y: -step };
-    case 'ArrowRight':
-      return { x: step, y: 0 };
-    case 'ArrowDown':
-      return { x: 0, y: step };
-    case 'ArrowLeft':
-      return { x: -step, y: 0 };
-    default:
-      return undefined;
-  }
-}
-
-function editHandlePosition(handle: AnnotationEditHandle): string | undefined {
-  return handle.data.editHandlePosition === undefined
-    ? undefined
-    : String(handle.data.editHandlePosition);
-}
-
 function DefaultNote({ annotation, classPrefix }: { annotation: Annotation; classPrefix: string }) {
   const line = normalizeNoteLine(annotation.note.line);
   const lineOrientation = line?.orientation ?? 'horizontal';
@@ -1381,56 +1343,6 @@ function badgePath(anchor: Point, first: Point, second: Point): string {
   return `M${round(anchor.x)},${round(anchor.y)}L${round(first.x)},${round(first.y)}L${round(second.x)},${round(second.y)}Z`;
 }
 
-const MemoMarkerDefs = memo(MarkerDefs);
-
-function MarkerDefs({
-  annotations,
-  markerPrefix,
-  prefix
-}: {
-  annotations: ResolvedAnnotation[];
-  markerPrefix: string;
-  prefix: string;
-}) {
-  const ends = new Set(annotations.map((item) => item.annotation.connector?.end ?? 'none'));
-
-  if (!ends.has('arrow') && !ends.has('dot')) {
-    return null;
-  }
-
-  return (
-    <defs>
-      {ends.has('arrow') ? (
-        <marker
-          id={markerId(markerPrefix, 'arrow')}
-          className={`${prefix}__marker ${prefix}__marker--arrow`}
-          viewBox="0 0 10 10"
-          refX="8"
-          refY="5"
-          markerWidth="7"
-          markerHeight="7"
-          orient="auto-start-reverse"
-        >
-          <path d="M 0 0 L 10 5 L 0 10 z" />
-        </marker>
-      ) : null}
-      {ends.has('dot') ? (
-        <marker
-          id={markerId(markerPrefix, 'dot')}
-          className={`${prefix}__marker ${prefix}__marker--dot`}
-          viewBox="0 0 10 10"
-          refX="5"
-          refY="5"
-          markerWidth="6"
-          markerHeight="6"
-        >
-          <circle cx="5" cy="5" r="3" />
-        </marker>
-      ) : null}
-    </defs>
-  );
-}
-
 function shallowSizesEqual(a: Record<string, Size>, b: Record<string, Size>): boolean {
   const aKeys = Object.keys(a);
   const bKeys = Object.keys(b);
@@ -1442,81 +1354,8 @@ function shallowSizesEqual(a: Record<string, Size>, b: Record<string, Size>): bo
   return aKeys.every((key) => a[key]?.width === b[key]?.width && a[key]?.height === b[key]?.height);
 }
 
-function dataAttributes(data: Record<string, string | number | boolean | null | undefined> | undefined) {
-  if (!data) {
-    return {};
-  }
-
-  return Object.fromEntries(
-    Object.entries(data)
-      .filter(([, value]) => value !== undefined && value !== null)
-      .map(([key, value]) => [`data-${dataKey(key)}`, String(value)])
-  );
-}
-
-function annotationStyle(style: Annotation['style']): CSSProperties | undefined {
-  const variables = annotationStyleVariables(style);
-
-  return Object.keys(variables).length > 0
-    ? variables as CSSProperties
-    : undefined;
-}
-
-function dataKey(key: string): string {
-  return key
-    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-    .replace(/[^a-zA-Z0-9_.:-]+/g, '-')
-    .toLowerCase();
-}
-
 function maxPadding(padding: AnnotationSubjectOptions['padding']): number {
   const resolved = resolvePadding(padding ?? 0);
 
   return Math.max(resolved.top, resolved.right, resolved.bottom, resolved.left);
-}
-
-function markerId(prefix: string, end: string): string {
-  return `${prefix.replace(/[^a-zA-Z0-9_-]+/g, '-')}-marker-${end}`;
-}
-
-function clientToSvgPoint(
-  event: ReactPointerEvent<SVGElement>,
-  svg: SVGSVGElement | null,
-  bounds: Box
-): { x: number; y: number } {
-  if (!svg) {
-    return { x: bounds.x, y: bounds.y };
-  }
-
-  const matrix = svg.getScreenCTM?.();
-  const createPoint = svg.createSVGPoint?.bind(svg);
-
-  if (matrix && createPoint) {
-    const point = createPoint();
-    point.x = event.clientX;
-    point.y = event.clientY;
-
-    const transformed = point.matrixTransform(matrix.inverse());
-
-    if (Number.isFinite(transformed.x) && Number.isFinite(transformed.y)) {
-      return {
-        x: round(transformed.x),
-        y: round(transformed.y)
-      };
-    }
-  }
-
-  const point = svgPointFromClient(svg, {
-    x: event.clientX,
-    y: event.clientY
-  });
-
-  return {
-    x: round(point.x),
-    y: round(point.y)
-  };
-}
-
-function round(value: number): number {
-  return Math.round(value * 1000) / 1000;
 }
