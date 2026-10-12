@@ -90,20 +90,21 @@ import '@ponchia/annotations/bronto.css';
 
 const annotations: Annotation[] = [{
   id: 'peak',
-  anchor: { type: 'point', point: { x: 180, y: 120 } },
+  anchor: { type: 'point', point: { x: 60, y: 120 } },
   note: { title: 'Peak response', body: 'An explanation attached to this point.' },
   placement: { side: 'right' }
 }];
 
 const layout = resolveAnnotationLayout({
   annotations,
-  bounds: { x: 0, y: 0, width: 640, height: 360 },
+  bounds: { x: 0, y: 0, width: 400, height: 240 },
   padding: 16
 });
 
 const container = document.createElement('div');
 container.style.maxWidth = '640px';
-container.style.aspectRatio = '640 / 360';
+container.style.fontFamily = 'system-ui, sans-serif';
+container.style.aspectRatio = '400 / 240';
 container.innerHTML = renderAnnotationsSvg(layout, {
   title: 'An annotated point',
   markerIdPrefix: 'first-annotation'
@@ -115,7 +116,7 @@ You should see one SVG annotation with the title **Peak response** and its
 connector. This deliberately small example does not render a chart; the point
 coordinates are the geometry your chart would supply. The CSS import styles the
 output but does not install or require BrontoUI. The container keeps the same
-aspect ratio as the 640 × 360 coordinate space and scales down on narrow screens.
+aspect ratio as the 400 × 240 coordinate space and scales down on narrow screens.
 In an existing application, mount it inside your own surface rather than
 appending a second overlay to the document body.
 
@@ -145,12 +146,12 @@ export function AnnotatedPoint() {
     <AnnotationLayer
       annotations={[{
         id: 'peak',
-        anchor: { type: 'point', point: { x: 180, y: 120 } },
+        anchor: { type: 'point', point: { x: 60, y: 120 } },
         note: { title: 'Peak response' },
         placement: { side: 'right' }
       }]}
-      bounds={{ x: 0, y: 0, width: 640, height: 360 }}
-      style={{ width: '100%', maxWidth: 640, height: 'auto', aspectRatio: '640 / 360' }}
+      bounds={{ x: 0, y: 0, width: 400, height: 240 }}
+      style={{ width: '100%', maxWidth: 640, height: 'auto', aspectRatio: '400 / 240' }}
       label="An annotated point"
       markerIdPrefix="react-first-annotation"
     />

@@ -1820,6 +1820,9 @@ async function smokeFirstUse(page, baseUrl, renderer) {
           overflow: document.documentElement.scrollWidth - innerWidth,
           connectorStroke: connector ? getComputedStyle(connector).stroke : '',
           textFill: title ? getComputedStyle(title).fill : '',
+          titlePixels: title && svg
+            ? Number.parseFloat(getComputedStyle(title).fontSize) * svg.getBoundingClientRect().width / svg.viewBox.baseVal.width
+            : 0,
         };
       });
       const context = `${renderer} quickstart at ${width}px: ${JSON.stringify(result)}`;
@@ -1830,6 +1833,7 @@ async function smokeFirstUse(page, baseUrl, renderer) {
       assert(result.note.left >= result.svg.left - 1 && result.note.right <= result.svg.right + 1, context);
       assert(result.note.top >= result.svg.top - 1 && result.note.bottom <= result.svg.bottom + 1, context);
       assert(result.overflow <= 0, context);
+      assert(result.titlePixels >= 12, 'First-use title should remain readable rather than only fit: ' + context);
       assert(visibleColor(result.connectorStroke) && visibleColor(result.textFill), context);
       assert.deepEqual(failures, [], context);
       await page.screenshot({ path: join(packedScreenshotsDir, `first-use-${renderer}-${width}.png`) });
