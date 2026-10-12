@@ -11,6 +11,7 @@ import '@ponchia/annotations/bronto.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { EDITOR_MAX_NOTES, parseEditorAnnotationJson } from './json-import.js';
+import { appendDemoNote, removeFinalNote } from './note-actions.js';
 import {
   createEditorHistory, pushEditorHistory, undoEditorHistory, redoEditorHistory,
   type EditorHistory
@@ -107,8 +108,8 @@ function App() {
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState('');
   const [importStatus, setImportStatus] = useState('');
-  const hasAddedNote = view.annotations.some((annotation) => annotation.id === 'added');
   const atNoteLimit = view.annotations.length >= EDITOR_MAX_NOTES;
+  const canRemoveLastNote = view.annotations.length > 1;
   const hasSignal = view.annotations.some((annotation) => annotation.id === 'signal');
 
   // Only authoritative edits enter this history: a pointer-move preview
@@ -259,20 +260,17 @@ function App() {
   }
 
   function addAnnotation() {
-    // Keep every host-authored export within this demo importer's own bounds,
-    // even after somebody loads an arbitrary ten-note JSON document.
-    if (hasAddedNote || history.current!.present.annotations.length >= EDITOR_MAX_NOTES) return;
-    commit([...history.current!.present.annotations, {
-      id: 'added', priority: 0,
-      anchor: { type: 'point', point: { x: 689, y: 250 } },
-      note: { title: 'New annotation', body: 'Earlier placements are unchanged.' },
-      placement: { manual: { x: 637, y: 354, side: 'bottom' } }
-    }], 'Appended a lower-priority note');
+    const previous = history.current!.present.annotations;
+    const next = appendDemoNote(previous);
+    if (next === previous) return;
+    commit(next, 'Appended a lower-priority note');
   }
 
   function removeAnnotation() {
-    if (!hasAddedNote) return;
-    commit(history.current!.present.annotations.filter((item) => item.id !== 'added'), 'Removed the final note');
+    const previous = history.current!.present.annotations;
+    const next = removeFinalNote(previous);
+    if (next === previous) return;
+    commit(next, 'Removed the final note');
   }
 
   useEffect(() => {
@@ -312,9 +310,10 @@ function App() {
         <div className="toolbar" role="group" aria-label="Annotation editing actions">
           <button id="move-note" type="button" onClick={moveLastAnchor} disabled={!hasSignal}>Move final anchor</button>
           <button id="append-note" type="button" onClick={addAnnotation}
-            disabled={hasAddedNote || atNoteLimit}
+            disabled={atNoteLimit}
             title={atNoteLimit ? `This demo supports at most ${EDITOR_MAX_NOTES} notes` : undefined}>Add annotation</button>
-          <button id="remove-note" type="button" onClick={removeAnnotation} disabled={!hasAddedNote}>Remove added note</button>
+          <button id="remove-note" type="button" onClick={removeAnnotation}
+            disabled={!canRemoveLastNote}>Remove final note</button>
           <button id="reset-note" type="button" onClick={() => commit(structuredClone(initialAnnotations), 'Reset to initial diagram')}>Reset</button>
           <button id="undo-edit" type="button" aria-keyshortcuts="Control+Z Meta+Z"
             disabled={view.undoCount === 0} onClick={() => stepHistory('undo')}>Undo</button>
