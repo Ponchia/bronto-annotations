@@ -53,6 +53,29 @@ results. To collect locally, set
 `node scripts/verify-cross-browser-interactions.mjs --browser chromium --scenario incremental`
 after the build. Without the variable, existing test behavior is unchanged.
 
+### Touch editing and host scrolling
+
+The editable SVG note/anchor handles and their enlarged hit circles opt out of
+native pan/zoom gestures via `touch-action: none`. This keeps pointermove events
+available for the host while a finger moves a note, rather than allowing the
+browser to interpret the gesture as scrolling and dispatch pointercancel.
+A private non-passive `touchstart` listener on the SVG root also prevents
+native scrolling when the original target is an editable
+`g[data-edit-handle]` group. This is a narrow fallback for browser paths that
+still negotiate scrolling despite an inner SVG circle reporting
+`touch-action: none`. No touchmove listener is installed; the handler never
+suppresses touch defaults on regular notes, the surrounding stage or the
+host diagram. Swipes outside the edit controls remain native and can scroll.
+
+`npm run test:browser:touch` uses real Chromium CDP touchStart/move/end/cancel
+input in a narrow mobile, touch-enabled context. It verifies authoritative
+React edits, preview-before-commit, absence of scrolling during an edit,
+cancellation without persistence, and native horizontal diagram scrolling
+away from the controls. It runs in the Node 22 CI lane. Firefox/WebKit check
+the computed touch-action boundary through their separate workflow. These
+checks are browser-emulated evidence, not physical-device or screen-reader/
+stylus usability guarantees.
+
 ## Checked Lanes
 
 - Node 20 and Node 22 run the full GitHub CI `npm run check` job.
