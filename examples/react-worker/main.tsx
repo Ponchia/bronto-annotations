@@ -7,12 +7,15 @@ import {
   type Annotation,
   type Box,
   type LayoutOptions,
-  type ResolvedAnnotation,
   type ResolvedLayout
 } from '@ponchia/annotations';
 import { AnnotationLayer } from '@ponchia/annotations/react';
 import '@ponchia/annotations/bronto.css';
 import './styles.css';
+import {
+  canReuseWorkerAnnotation,
+  shareUnchangedWorkerLayout
+} from './layout-equality.js';
 
 const count = 18;
 const bounds: Box = { x: 0, y: 0, width: 1160, height: 600 };
@@ -78,23 +81,6 @@ declare global {
   }
 }
 
-function shareUnchanged(before: ResolvedLayout, next: ResolvedLayout) {
-  const previous = new Map(before.annotations.map((item) => [item.id, item]));
-  let reused = 0;
-  const annotations = next.annotations.map((item): ResolvedAnnotation => {
-    const old = previous.get(item.id);
-    // A Worker reply always has new object identities. Reuse a previous
-    // annotation only when *all* serialized values match exactly. Unsupported
-    // cyclic/BigInt host metadata conservatively keeps the new object.
-    let equal = false;
-    try { equal = Boolean(old && JSON.stringify(old) === JSON.stringify(item)); }
-    catch { equal = false; }
-    if (old && equal) { reused += 1; return old; }
-    return item;
-  });
-  return { layout: { ...next, annotations }, reused };
-}
-
 function App() {
   const [view, setView] = useState<View>({
     options: initialOptions, layout: initialLayout, action: 'Initial annotation layout',
@@ -138,7 +124,7 @@ function App() {
         return;
       }
       const current = active.current;
-      const { layout, reused } = shareUnchanged(latestLayout.current, message.layout);
+      const { layout, reused } = shareUnchangedWorkerLayout(latestLayout.current, message.layout);
       latestLayout.current = layout;
       committed.current = current.options;
       active.current = null;
@@ -224,7 +210,7 @@ function App() {
     window.__annotationsWorkerDemo = {
       ready: workerReady, pending, commits: view.commits, discarded,
       pings, lastAction: view.action, errors,
-      freshParity: () => JSON.stringify(resolveAnnotationLayout(committed.current)) === JSON.stringify(latestLayout.current)
+      freshParity: () => canReuseWorkerAnnotation(resolveAnnotationLayout(committed.current), latestLayout.current)
     };
   }, [view, quality, workerReady, pending, discarded, pings, errors]);
 
