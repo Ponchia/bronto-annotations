@@ -24,10 +24,14 @@ without React, Vega, Mermaid, D2, React Flow, or `@ponchia/ui` installed.
 
 ### Experimental browser-portability check
 
-`npm run test:browser:cross` exercises the published React incremental-editor
-and native module Worker demos in **Firefox and WebKit** at 1200px and 390px.
+`npm run test:browser:cross` exercises the published React incremental-editor,
+transformed React Flow editor, and native module Worker demos in **Firefox and
+WebKit** at 1200px and 390px. A developer can also reproduce the scenarios
+locally with `node scripts/verify-cross-browser-interactions.mjs --browser chromium`
+after building.
 It verifies a visible pointer-move preview before commit, stable unchanged
-placements, note editing focus, quality checks, browser-specific axe WCAG A/AA
+placements, note editing focus, React Flow fitView coordinate transforms,
+pointer/keyboard commits, quality checks, browser-specific axe WCAG A/AA
 scans, obsolete/cancelled Worker responses, fresh-layout parity and mobile
 horizontal navigation. The separate workflow is path-scoped to annotation
 source, browser examples and dependency/test changes rather than running for
