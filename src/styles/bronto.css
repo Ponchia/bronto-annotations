@@ -484,6 +484,16 @@ svg rect.pa-annotation__note-box {
   width: max-content;
 }
 
+/* Every hidden note must have its *own* intrinsic border-box width.
+   Otherwise, the width:max-content parent combined with the shared
+   width:100% note rule gives all measured notes the width of the longest
+   sibling. Resizing one then spuriously invalidates every other note.
+   The painted foreignObject note intentionally keeps width:100%; only the
+   off-screen measurement copies override that behavior. */
+.pa-annotation-layer__measurer > .pa-annotation__note-box {
+  width: max-content;
+}
+
 /* Legacy Bronto report annotation aliases.
    These keep existing static SVG snippets styled while hosts migrate from
    @ponchia/ui/annotations to @ponchia/annotations renderers. */
