@@ -121,6 +121,43 @@ async function verifyIncremental(browser, origin, viewport, label) {
       label + ': computed placement candidates should not be exported');
     assert.equal(await page.locator('#copy-annotations').isEnabled(), true);
 
+    // Basic text authoring should not require manually rewriting JSON.
+    // Draft typing is not a committed layout action; Apply is one undo step.
+    await page.locator('#text-editor-note').selectOption('signal');
+    const originalChanges = await page.evaluate(() => window.__annotationsExample.changes);
+    await page.locator('#text-editor-title').fill('');
+    await page.locator('#text-editor-body').fill('');
+    assert.equal(await page.locator('#apply-note-text').isDisabled(), true,
+      label + ': empty note fields must not commit');
+    assert.equal(await page.locator('.note-text-editor-error[role="alert"]').count(), 1);
+    await page.locator('#text-editor-title').fill('Signal updated');
+    await page.locator('#text-editor-body').fill('Edited through the host form.');
+    assert.equal(await page.evaluate(() => window.__annotationsExample.changes), originalChanges,
+      label + ': typing a draft must not solve or commit');
+    await page.locator('#apply-note-text').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Edited signal text');
+    assert.equal((await exportedAnnotations()).find((note) => note.id === 'signal')?.note?.title,
+      'Signal updated');
+    assert.equal((await exportedAnnotations()).find((note) => note.id === 'signal')?.note?.body,
+      'Edited through the host form.');
+    assert.equal(await page.evaluate(() => window.__annotationsExample.changes), originalChanges + 1);
+    assert.equal(await page.evaluate(() => window.__annotationsExample.quality.ok), true);
+    await page.locator('#undo-edit').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Undid: Edited signal text');
+    assert.deepEqual((await exportedAnnotations()).find((note) => note.id === 'signal')?.note,
+      originalData.find((note) => note.id === 'signal')?.note);
+    await page.locator('#redo-edit').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Redid: Edited signal text');
+    assert.equal((await exportedAnnotations()).find((note) => note.id === 'signal')?.note?.title,
+      'Signal updated');
+    await page.locator('#reset-note').click();
+    await page.waitForFunction(() =>
+      window.__annotationsExample?.action === 'Reset to initial diagram');
+    assert.deepEqual(await exportedAnnotations(), originalData);
+
     // Round-trip host-authored inputs in the *same* editor without changing
     // the library API or persisting candidate/diagnostic layouts.
     await page.locator('#edit-current-json').click();

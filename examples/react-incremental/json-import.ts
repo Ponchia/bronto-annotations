@@ -10,6 +10,8 @@ import type { Annotation, AnnotationNote, PlacementPreference } from '@ponchia/a
 
 const MAX_LENGTH = 24_000;
 export const EDITOR_MAX_NOTES = 10;
+export const EDITOR_TITLE_MAX_LENGTH = 100;
+export const EDITOR_BODY_MAX_LENGTH = 400;
 const SIDE = ['top', 'right', 'bottom', 'left'] as const;
 const ALIGN = ['start', 'center', 'end'] as const;
 
@@ -97,8 +99,8 @@ function anchor(value: unknown, label: string): Annotation['anchor'] {
 function note(value: unknown, label: string): AnnotationNote {
   const data = object(value, label);
   allowed(data, ['title', 'body', 'ariaLabel', 'align', 'visible'], label);
-  const title = optional(data.title, `${label}.title`, (v, k) => string(v, k, 100));
-  const body = optional(data.body, `${label}.body`, string);
+  const title = optional(data.title, `${label}.title`, (v, k) => string(v, k, EDITOR_TITLE_MAX_LENGTH));
+  const body = optional(data.body, `${label}.body`, (v, k) => string(v, k, EDITOR_BODY_MAX_LENGTH));
   const ariaLabel = optional(data.ariaLabel, `${label}.ariaLabel`, (v, k) => string(v, k, 120));
   const align = optional(data.align, `${label}.align`, (v, k) => choice(v, ALIGN, k));
   if (!title?.trim() && !body?.trim()) fail(`${label} needs a title or body.`);

@@ -69,3 +69,27 @@ h1 { font-size: clamp(30px, 4.3vw, 49px); font-weight: 680; letter-spacing: -0.0
   .annotation-source { padding: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { .toolbar button { transition: none; } }
+
+.note-text-editor { border-top: 1px solid #e4eaf0; padding: 19px 22px 20px; }
+.note-text-editor-heading { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 9px 18px; margin-bottom: 14px; }
+.note-text-editor-heading h2 { margin: 0; font-size: 14px; font-weight: 750; color: #2b5266; }
+.note-text-editor-heading p { margin: 0; color: #526574; font-size: 12px; line-height: 1.5; }
+.note-text-editor-grid { display: grid; grid-template-columns: minmax(135px, .85fr) minmax(150px, 1fr) minmax(180px, 1.7fr) auto; align-items: end; gap: 10px; }
+.note-text-editor label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 650; color: #3e5768; }
+.note-text-editor :is(select, input, textarea) { width: 100%; min-width: 0; padding: 10px 11px; border: 1px solid #c9d9e4; border-radius: 8px; background: #fff; color: #243d50; font-family: inherit; font-size: 12px; line-height: 1.5; }
+.note-text-editor textarea { height: 40px; min-height: 40px; resize: vertical; }
+.note-text-editor :is(select, input, textarea, button):focus-visible { outline: 3px solid #58b3c0; outline-offset: 2px; }
+.note-text-editor button { border: 1px solid #247e8f; background: #247e8f; color: #fff; border-radius: 8px; font-family: inherit; font-size: 12px; font-weight: 650; line-height: 1.5; padding: 10px 13px; white-space: nowrap; cursor: pointer; }
+.note-text-editor button:disabled { cursor: not-allowed; opacity: .45; }
+.note-text-editor button:not(:disabled):hover { background: #176b7b; }
+.note-text-editor-error { margin: 11px 0 0; color: #943540; font-size: 12px; font-weight: 650; }
+@media (max-width: 900px) {
+  .note-text-editor-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .note-text-editor-body { grid-column: 1 / -1; }
+  .note-text-editor button { justify-self: start; }
+}
+@media (max-width: 500px) {
+  .note-text-editor { padding: 16px; }
+  .note-text-editor-grid { grid-template-columns: 1fr; }
+  .note-text-editor-body { grid-column: auto; }
+}

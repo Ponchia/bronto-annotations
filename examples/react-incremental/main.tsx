@@ -11,6 +11,8 @@ import '@ponchia/annotations/bronto.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { EDITOR_MAX_NOTES, parseEditorAnnotationJson } from './json-import.js';
+import { editAnnotationText } from './note-text-editor.js';
+import { NoteTextEditor } from './NoteTextEditor.js';
 import {
   createEditorHistory, pushEditorHistory, undoEditorHistory, redoEditorHistory,
   type EditorHistory
@@ -87,6 +89,7 @@ function App() {
   if (!session.current) session.current = createIncrementalAnnotationLayoutSession(optionsFor(initialAnnotations));
   const history = useRef<EditorHistory | null>(null);
   if (!history.current) history.current = createEditorHistory(initialAnnotations);
+  const [selectedNoteId, setSelectedNoteId] = useState('signal');
   const [view, setView] = useState<DemoView>(() => ({
     annotations: initialAnnotations,
     layout: session.current!.layout,
@@ -110,6 +113,8 @@ function App() {
   const hasAddedNote = view.annotations.some((annotation) => annotation.id === 'added');
   const atNoteLimit = view.annotations.length >= EDITOR_MAX_NOTES;
   const hasSignal = view.annotations.some((annotation) => annotation.id === 'signal');
+  const selectedTextNote = view.annotations.find((item) => item.id === selectedNoteId)
+    ?? view.annotations[0]!;
 
   // Only authoritative edits enter this history: a pointer-move preview
   // remains visual-only and does not create a user-visible undo step.
@@ -373,6 +378,16 @@ function App() {
           <div className="metric"><span>Visible annotations</span><strong id="annotation-count">{view.layout.annotations.length}</strong></div>
           <div className="metric"><span>Layout quality</span><strong id="quality-score">{quality.score} / 100</strong></div>
         </div>
+        <NoteTextEditor
+          key={`${selectedTextNote.id}/${view.changes}`}
+          annotation={selectedTextNote}
+          annotations={view.annotations}
+          onSelect={setSelectedNoteId}
+          onApply={(id, title, body) => {
+            const next = editAnnotationText(history.current!.present.annotations, id, title, body);
+            commit(next, `Edited ${id} text`);
+          }}
+        />
         <details className="annotation-source">
           <summary>Inspect current annotations (JSON)</summary>
           <p>These are the host-owned annotation inputs after committed edits.
