@@ -109,9 +109,12 @@ host-authored annotation inputs after committed edits. The example now also
 lets you paste those inputs back into the editor, with guarded parsing and a
 new authoritative host layout session. Invalid JSON leaves the current layout
 untouched. Its deliberately small importer accepts point/box anchors, note
-text and basic placement options for at most ten notes. It is **not** a general
-package serialization API: validate the complete schema your application
-supports and own any actual persistence.
+text and basic placement options for at most ten notes. A small **Edit annotation
+text** form lets visitors modify a selected note without hand-editing JSON.
+The form keeps draft text separate from the committed layout; Apply creates a
+single undoable transaction and preserves the same JSON import limits. It is
+**not** a general package serialization or form API: validate the complete
+schema your application supports and own any actual persistence.
 
 The demo also keeps a bounded, host-owned **undo/redo history of committed
 annotation inputs** from drags, button actions, resets and valid JSON imports.
