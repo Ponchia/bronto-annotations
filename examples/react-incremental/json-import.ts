@@ -9,7 +9,7 @@
 import type { Annotation, AnnotationNote, PlacementPreference } from '@ponchia/annotations';
 
 const MAX_LENGTH = 24_000;
-const MAX_NOTES = 10;
+export const EDITOR_MAX_NOTES = 10;
 const SIDE = ['top', 'right', 'bottom', 'left'] as const;
 const ALIGN = ['start', 'center', 'end'] as const;
 
@@ -149,8 +149,8 @@ export function parseEditorAnnotationJson(raw: string): Annotation[] {
   } catch {
     return fail('Invalid JSON. Paste an array of annotation objects.');
   }
-  if (!Array.isArray(value) || value.length < 1 || value.length > MAX_NOTES) {
-    return fail(`Expected an array of 1 to ${MAX_NOTES} annotation objects.`);
+  if (!Array.isArray(value) || value.length < 1 || value.length > EDITOR_MAX_NOTES) {
+    return fail(`Expected an array of 1 to ${EDITOR_MAX_NOTES} annotation objects.`);
   }
   const seen = new Set<string>();
   return value.map((entry, index) => {
