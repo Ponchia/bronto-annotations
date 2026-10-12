@@ -12,7 +12,9 @@ const publishedExamples = (await readdir(resolve(root, '_site/examples'), { with
     existsSync(resolve(root, '_site/examples', entry.name, 'index.html')))
   .map((entry) => entry.name)
   .sort();
-assert(publishedExamples.length >= 10, 'Expected all ten published examples for WCAG checks');
+assert(publishedExamples.length >= 12, 'Expected all twelve published examples for WCAG checks');
+assert(publishedExamples.includes('react-worker'), 'Published Worker demo must be built');
+assert(publishedExamples.includes('react-incremental'), 'Published incremental demo must be built');
 const server = await createServer({
   root: resolve(root, '_site'),
   logLevel: 'error',
@@ -53,6 +55,93 @@ async function visit(path, width) {
   assert.equal(errors.length, 0, errors.join('; '));
   return page;
 }
+// Unlike the headless Worker fixture, this verifies the *published* Vite
+// application and separately bundled module Worker. Loading the page (or
+// auditing it with axe) does not prove revision/cancellation controls work.
+// Each action is checked through the demo's public DOM plus its stable,
+// read-only diagnostic snapshot. No frame-timing assertions on shared CI.
+async function verifyPublicWorkerDemo(width) {
+  const page = await visit('/examples/react-worker/', width);
+  const snapshot = () => page.evaluate(() => {
+    const state = window.__annotationsWorkerDemo;
+    if (!state) return null;
+    return {
+      ready: state.ready,
+      pending: state.pending,
+      commits: state.commits,
+      discarded: state.discarded,
+      pings: state.pings,
+      lastAction: state.lastAction,
+      errors: state.errors,
+      parity: state.freshParity()
+    };
+  });
+  const waitFor = (predicate, value = null) => page.waitForFunction(predicate, value, { timeout: 25000 });
+
+  try {
+    await waitFor(() => window.__annotationsWorkerDemo?.ready === true);
+    assert.equal(await page.locator('svg.pa-annotation-layer .pa-annotation').count(), 18);
+    assert.equal(await page.locator('#worker-commits').innerText(), '0');
+    assert.equal((await snapshot()).parity, true);
+    assert.deepEqual((await snapshot()).errors, []);
+
+    // A normal commit uses the real Worker-computed authoritative geometry.
+    await page.locator('#worker-move').click();
+    await waitFor(() => window.__annotationsWorkerDemo?.commits === 1);
+    assert.equal((await snapshot()).lastAction, 'Moved final anchor');
+    assert.equal((await snapshot()).parity, true);
+    assert((await page.locator('g[data-annotation-id="point-17"]').textContent()).includes('moved'));
+
+    await page.locator('#worker-obstacle').click();
+    await waitFor(() => window.__annotationsWorkerDemo?.commits === 2);
+    assert.equal((await snapshot()).parity, true);
+    assert.equal(await page.evaluate(() => window.__annotationsExample?.obstacles?.[1]?.x), 550);
+
+    // Obsolete replies must never overwrite the later accepted revision.
+    await page.locator('#worker-burst').click();
+    await waitFor(() => window.__annotationsWorkerDemo?.commits === 3
+      && window.__annotationsWorkerDemo?.lastAction === 'Newer revision');
+    await waitFor(() => (window.__annotationsWorkerDemo?.discarded ?? 0) >= 1);
+    assert.equal((await snapshot()).parity, true);
+    assert.equal(await page.locator('#worker-commits').innerText(), '3');
+    assert((await page.locator('g[data-annotation-id="point-17"]').textContent()).includes('Latest wins'));
+
+    // Clicking the UI while a deliberately slow Worker result is queued must
+    // remain possible; cancellation drops the later reply without a commit.
+    const discardedBeforeCancel = (await snapshot()).discarded;
+    await page.locator('#worker-delay').click();
+    await waitFor(() => window.__annotationsWorkerDemo?.pending === true);
+    await page.locator('#worker-ping').click();
+    await waitFor(() => (window.__annotationsWorkerDemo?.pings ?? 0) >= 1);
+    assert.equal((await snapshot()).commits, 3);
+    await page.locator('#worker-cancel').click();
+    await waitFor(() => window.__annotationsWorkerDemo?.pending === false);
+    await waitFor((previousCount) =>
+      (window.__annotationsWorkerDemo?.discarded ?? 0) > previousCount,
+      discardedBeforeCancel
+    );
+    const final = await snapshot();
+    assert.equal(final.commits, 3, 'Cancelled Worker result must not commit');
+    assert.equal(final.parity, true, 'Displayed layout must match independent full resolution');
+    assert.deepEqual(final.errors, [], 'No Worker or adapter runtime errors');
+    assert.match(await page.locator('#worker-status').innerText(), /ignored/i);
+    assert.equal(await page.locator('svg.pa-annotation-layer .pa-annotation').count(), 18);
+
+    if (width < 500) {
+      const scroll = page.locator('.stage-scroll');
+      const range = await scroll.evaluate((node) => ({
+        visible: node.clientWidth,
+        content: node.scrollWidth
+      }));
+      assert(range.content > range.visible, 'Mobile diagram must remain horizontally navigable');
+      await scroll.evaluate((node) => { node.scrollLeft = 260; });
+      assert((await scroll.evaluate((node) => node.scrollLeft)) > 0);
+    }
+  } finally {
+    await page.context().close();
+  }
+}
+
 try {
   for (const width of [390, 1200]) {
     const home = await visit('/', width);
@@ -147,6 +236,10 @@ try {
       await example.context().close();
     }
   }
+  for (const width of [390, 1200]) {
+    await verifyPublicWorkerDemo(width);
+    variants++;
+  }
   const demo = await visit('/examples/index/', 1200);
   // Exclude the badge label drawn intentionally next to the note box.
   const leaks = await demo.evaluate(() =>
@@ -195,7 +288,7 @@ try {
   console.log(
     'Public browser verified: ' +
       variants +
-      ` viewport combinations, including ${publishedExamples.length} compiled examples at mobile and desktop sizes; WCAG audits, interactive controls, docs search and SVG containment verified.`,
+      ` viewport combinations, including ${publishedExamples.length} compiled examples at mobile and desktop sizes; WCAG audits, real Worker revisions/cancellation, interactive controls, docs search and SVG containment verified.`,
   );
 } finally {
   await browser.close();
