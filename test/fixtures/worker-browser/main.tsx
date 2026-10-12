@@ -2,8 +2,9 @@ import { Profiler, useCallback, useEffect, useLayoutEffect, useRef, useState } f
 import { createRoot } from 'react-dom/client';
 import { AnnotationLayer } from '@ponchia/annotations/react';
 import { resolveAnnotationLayout } from '@ponchia/annotations';
-import type { Annotation, Box, LayoutOptions, ResolvedAnnotation, ResolvedLayout } from '@ponchia/annotations';
+import type { Annotation, Box, LayoutOptions, ResolvedLayout } from '@ponchia/annotations';
 import { applyWorkerLayout, canReuseWorkerAnnotation, LayoutRevisionMismatchError } from './layout-patch.js';
+import { shareUnchangedWorkerLayout } from '../../../examples/react-worker/layout-equality.js';
 import type { LayoutResponse } from './layout-patch.js';
 import '@ponchia/annotations/bronto.css';
 
@@ -81,25 +82,6 @@ type Probe = {
 };
 declare global { interface Window { __workerProof?: Probe; } }
 
-function shareUnchanged(previous: ResolvedLayout, fresh: ResolvedLayout) {
-  const prior = new Map(previous.annotations.map((item) => [item.id, item]));
-  let reused = 0;
-  const annotations = fresh.annotations.map((item): ResolvedAnnotation => {
-    const last = prior.get(item.id);
-    // The optional host metadata may be structured-cloneable without being
-    // JSON-serializable (for example cyclic objects or BigInt). If value
-    // comparison is unavailable, keep the fresh worker result rather than
-    // hiding a change behind an incorrectly reused React object.
-    const equivalent = last ? canReuseWorkerAnnotation(last, item) : false;
-    if (last && equivalent) {
-      reused += 1;
-      return last;
-    }
-    return item;
-  });
-  return { layout: { ...fresh, annotations }, reused };
-}
-
 function App() {
   const [annotations, setAnnotations] = useState(initialAnnotations);
   const [obstacles, setObstacles] = useState<Box[]>([farObstacle]);
@@ -175,7 +157,7 @@ function App() {
         const result = applyWorkerLayout(
           { revision: committedRevision.current, layout: resolved.current }, message.response);
         if (message.response.kind === 'snapshot') {
-          const shared = shareUnchanged(resolved.current, result.state.layout);
+          const shared = shareUnchangedWorkerLayout(resolved.current, result.state.layout);
           assembled = shared.layout;
           reused = shared.reused;
           changed = assembled.annotations.length - reused;
