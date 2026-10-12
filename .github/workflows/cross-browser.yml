@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      ANNOTATIONS_CROSS_BROWSER_EVIDENCE_DIR: ${{ runner.temp }}/annotations-cross-browser
+      ANNOTATIONS_CROSS_BROWSER_EVIDENCE_DIR: .tmp/cross-browser-evidence
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -48,6 +48,6 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: annotations-cross-browser-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/annotations-cross-browser/
+          path: .tmp/cross-browser-evidence/
           retention-days: 7
           if-no-files-found: warn
