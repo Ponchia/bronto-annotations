@@ -114,6 +114,10 @@ function resolveAnnotationLayoutFrom(
 export function createIncrementalAnnotationLayoutSession(options: LayoutOptions): AnnotationLayoutSession {
   let current = resolveAnnotationLayout(options);
   let previousSnapshot = captureIncrementalSnapshot(options);
+  // Lazily memoize exhaustive placement footprints only for this session.
+  // The cache is bounded by annotation index and is valid solely when both
+  // the per-note fingerprint and global placement geometry stay unchanged.
+  const obstacleFootprints = new Map<number, ObstacleFootprintCacheEntry>();
 
   return {
     get layout() { return current; },
@@ -124,6 +128,16 @@ export function createIncrementalAnnotationLayoutSession(options: LayoutOptions)
         previousSnapshot.obstacles, nextSnapshot.obstacles
       );
       let reuse = 0;
+      // Candidate search depends on all global placement inputs. A changed or
+      // unsupported global fingerprint invalidates every cached footprint;
+      // removed suffix indices are pruned to keep the session cache bounded.
+      if (nextSnapshot.globals === undefined
+        || nextSnapshot.globals !== previousSnapshot.globals) {
+        obstacleFootprints.clear();
+      }
+      for (const index of obstacleFootprints.keys()) {
+        if (index >= nextCount) obstacleFootprints.delete(index);
+      }
 
       // A refinement pass may move earlier winners in response to *later*
       // notes. Never keep a prefix across that global optimization.
@@ -140,7 +154,8 @@ export function createIncrementalAnnotationLayoutSession(options: LayoutOptions)
           const after = nextSnapshot.annotations[reuse];
           if (before === undefined || after === undefined || before !== after) break;
           if (changedObstacles.length > 0 && !safeFromObstacleChanges(
-            ordered[reuse]!, next, current.placementBounds, changedObstacles
+            ordered[reuse]!, next, current.placementBounds, changedObstacles,
+            obstacleFootprints, reuse, after
           )) break;
           reuse += 1;
         }
@@ -235,18 +250,29 @@ function obstacleChanges(before: Box[], after: Box[]): Box[] {
 
 /**
  * Conservative spatial dependency proof for a changed host obstacle.
- * Routing-capable connectors can change paths even when the new obstacle is
- * far away, because orthogonal routing selects and sorts global obstacles.
- * Only explicitly unrouted (or intrinsically unrouted) connectors qualify.
- * For those, consider EVERY possible candidate note/connector footprint, not
- * only candidates retained by maxCandidates. No intersecting changed boxes
- * means the scores, order, winner and SVG paths remain exactly the same.
+ * Routing-capable connectors may select a different global visibility path,
+ * even when the changed obstacle is far away, so they always fall back.
+ *
+ * For unrouted notes, every possible placement candidate (including ones
+ * omitted by maxCandidates) contributes note/connector footprint boxes.
+ * The same exhaustive footprints can be reused across committed obstacle
+ * edits when the per-note and global geometry fingerprints have not changed.
+ * Cached boxes prove only spatial independence; they never substitute for
+ * an authoritative layout when intersection is possible.
  */
+type ObstacleFootprintCacheEntry = {
+  fingerprint: string;
+  footprints: Box[] | null;
+};
+
 function safeFromObstacleChanges(
   annotation: Annotation,
   options: LayoutOptions,
   placementBounds: Box,
-  changedObstacles: Box[]
+  changedObstacles: Box[],
+  cache: Map<number, ObstacleFootprintCacheEntry>,
+  index: number,
+  fingerprint: string
 ): boolean {
   const connector = annotation.connector;
   const type = connector?.type ?? 'elbow';
@@ -256,6 +282,34 @@ function safeFromObstacleChanges(
     return false;
   }
 
+  let cached = cache.get(index);
+  if (!cached || cached.fingerprint !== fingerprint) {
+    cached = {
+      fingerprint,
+      footprints: collectObstacleFootprints(annotation, options, placementBounds)
+    };
+    cache.set(index, cached);
+  }
+  if (!cached.footprints) return false;
+
+  for (const box of cached.footprints) {
+    for (const changed of changedObstacles) {
+      // Closed boundaries deliberately over-invalidate: collision and routing
+      // checks have different touch semantics. Recompute whenever uncertain.
+      if (box.x <= changed.x + changed.width && box.x + box.width >= changed.x
+        && box.y <= changed.y + changed.height && box.y + box.height >= changed.y) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+function collectObstacleFootprints(
+  annotation: Annotation,
+  options: LayoutOptions,
+  placementBounds: Box
+): Box[] | null {
   const completePlacement = mergePlacement(options.placement, annotation.placement);
   delete completePlacement.maxCandidates;
   const candidates = allPlacementCandidates({
@@ -266,8 +320,9 @@ function safeFromObstacleChanges(
     placedNotes: [],
     placement: completePlacement
   });
-  if (candidates.length === 0) return false;
+  if (candidates.length === 0) return null;
 
+  const footprints: Box[] = [];
   for (const candidate of candidates) {
     const bounds = [candidate.noteBox, ...candidate.connector.points.slice(1).map((point, index) => {
       const from = candidate.connector.points[index]!;
@@ -279,18 +334,12 @@ function safeFromObstacleChanges(
       };
     })];
     for (const box of bounds) {
-      if (!isFiniteBox(box)) return false;
-      for (const changed of changedObstacles) {
-        // Closed boundaries over-invalidate intentionally: collision/routing
-        // checks have different touch semantics, and recomputing is safer.
-        if (box.x <= changed.x + changed.width && box.x + box.width >= changed.x
-          && box.y <= changed.y + changed.height && box.y + box.height >= changed.y) {
-          return false;
-        }
-      }
+      if (!isFiniteBox(box)) return null;
+      // Boxes are a small, immutable proof artifact owned by this session.
+      footprints.push(box);
     }
   }
-  return true;
+  return footprints;
 }
 
 function orderAnnotations(annotations: Annotation[]): Annotation[] {

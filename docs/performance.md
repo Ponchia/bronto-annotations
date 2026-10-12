@@ -197,6 +197,40 @@ making unverified spatial independence claims. Capturing input value snapshots
 has a small cost per update; benchmark under representative host density before
 enabling the experimental optimization broadly.
 
+### Repeated distant-obstacle edits
+
+A host-managed incremental session can reuse the exhaustive candidate geometry
+needed to prove that a changed obstacle is disjoint from every placement
+alternative. On the first distant-obstacle update, the conservative proof still
+enumerates all candidates, including those excluded from the retained
+`maxCandidates` list. Later commits reuse that **session-local proof** when
+the annotation value/size fingerprint and global bounds, placement, padding,
+and refinement settings are unchanged.
+
+The cache stores geometry only for annotation indices in the current session;
+it is cleared on changed/unsafe global settings and pruned when notes disappear.
+Routing-dependent connectors still use the existing full-resolution fallback,
+and any possible obstacle intersection invalidates the affected suffix. Hosts
+must keep returned resolved layouts immutable. The public synchronous APIs,
+candidate scoring and placement quality are unchanged.
+
+Run `npm run benchmark:obstacle-cache` to compare a first exhaustive proof,
+two cached distant-obstacle updates, and an independent fresh full resolution
+for 40/200 notes. The script asserts exact geometry and quality parity but
+**does not impose timing budgets**. A cold solve and genuinely affected
+topology can still be expensive.
+
+One October 2026 shared-development-host observation, in milliseconds:
+
+| Fixture | First exhaustive proof | Cached second update | Cached third update | Fresh full solve |
+| --- | ---: | ---: | ---: | ---: |
+| 40 notes | 17.9 | 4.2 | 2.1 | 12.1 |
+| 200 notes | 46.1 | 8.2 | 8.9 | 42.3 |
+
+These are individual non-controlled timings; they illustrate why repeated
+spatial-independence proofs are worth caching and do **not** promise a similar
+speedup on other hosts, layouts, or routed connectors.
+
 ### Incremental DOM note-size measurements
 
 React hosts using `AnnotationLayer measure="dom"` still need an initial full
