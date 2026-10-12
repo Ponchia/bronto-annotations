@@ -151,6 +151,14 @@ assert(
     .length >= 4,
   'Real example links should be part of the editorial surface',
 );
+const strategyControl = home.window.document.querySelector('#placement-mode');
+assert(strategyControl?.tagName === 'SELECT'
+  && strategyControl.options.length === 2
+  && strategyControl.options[0].value === 'automatic'
+  && strategyControl.options[1].value === 'fixed',
+  'Published playground must expose a labeled automatic/fixed baseline comparison');
+assert(home.window.document.querySelector('#obstacle-overlap-count'),
+  'Published placement comparison must report real obstacle overlap');
 for (const [path, action] of [
   ['react-incremental', 'Try the editor'],
   ['react-worker', 'Try the Worker demo'],
