@@ -2,8 +2,8 @@
 
 [Documentation index](README.md) · [First annotation](getting-started.md)
 
-This maintained guide contains the detailed examples previously in the root
-README. Read only the sections relevant to your integration.
+Use the optional CSS bridge or your own styles to control how annotations
+look without adopting a design system.
 
 ## Styling
 

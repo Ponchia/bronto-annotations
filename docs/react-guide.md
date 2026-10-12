@@ -2,8 +2,8 @@
 
 [Documentation index](README.md) · [First annotation](getting-started.md)
 
-This maintained guide contains the detailed examples previously in the root
-README. Read only the sections relevant to your integration.
+Render annotation layers in React and integrate optional measurements and
+editing while your application owns state.
 
 ## React
 

@@ -69,6 +69,8 @@ const layout = resolveAnnotationLayout({
 });
 
 const container = document.createElement('div');
+container.style.maxWidth = '640px';
+container.style.aspectRatio = '640 / 360';
 container.innerHTML = renderAnnotationsSvg(layout, {
   title: 'An annotated point',
   markerIdPrefix: 'first-annotation'

@@ -13,6 +13,15 @@ has produced measurable nodes or marks, then inspect its validation report.
 Do not install every optional peer to fix a core example. Match the missing
 module to the subpath you actually import and the [compatibility matrix](compatibility.md).
 
+## The React layer is wider than the page
+
+`AnnotationLayer` defaults its wrapper to the layout bounds in pixels. Override
+its `style` with a responsive width, an automatic height, and the matching
+aspect ratio, as shown in [the React quickstart](getting-started.md#use-it-in-react).
+Do not shrink only the wrapper width while leaving its height fixed. For a dense
+editor, a host-owned scroll container may be more readable than scaling every
+note down. Changing CSS size alone does not change the underlying coordinate space.
+
 ## Notes do not line up with the host
 
 Check coordinate systems before adjusting offsets. `getBoundingClientRect()`
@@ -23,7 +32,7 @@ For React Flow, provide the current public viewport and geometry rather than
 mixing pre-zoom node coordinates with post-zoom screen rectangles.
 
 See [adapter examples](adapter-guide.md) and the
-[target-alignment diagnostics](core-guide.md#layout-diagnostics).
+[layout diagnostics](core-guide.md#layout-diagnostics).
 
 ## Text is clipped or wrapping is unexpected
 

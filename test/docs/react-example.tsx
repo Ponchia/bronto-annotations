@@ -11,6 +11,7 @@ export function AnnotatedPoint() {
         placement: { side: 'right' }
       }]}
       bounds={{ x: 0, y: 0, width: 640, height: 360 }}
+      style={{ width: '100%', maxWidth: 640, height: 'auto', aspectRatio: '640 / 360' }}
       label="An annotated point"
       markerIdPrefix="react-first-annotation"
     />

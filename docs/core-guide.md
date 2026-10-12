@@ -2,8 +2,8 @@
 
 [Documentation index](README.md) · [First annotation](getting-started.md)
 
-This maintained guide contains the detailed examples previously in the root
-README. Read only the sections relevant to your integration.
+Resolve note placement from host geometry, preserve editorial positions,
+and inspect collision and bounds diagnostics.
 
 ## Core Usage
 
@@ -202,8 +202,10 @@ hatch for custom subject shapes.
 
 ## Layout Diagnostics
 
-Use `evaluateAnnotationLayout` in tests, report generation, or CI to prove a
-layout is not just rendered but usable. Use `assertAnnotationLayoutQuality` for a
+Use `evaluateAnnotationLayout` in tests, report generation, or CI to measure
+geometric problems such as overlap and bounds overflow. A good score is not
+proof of readability, accessibility, or usability; inspect representative output
+as well. Use `assertAnnotationLayoutQuality` for a
 fail-fast guard and `formatLayoutQualityReport` when you want a readable summary
 for logs or host-app diagnostics.
 
