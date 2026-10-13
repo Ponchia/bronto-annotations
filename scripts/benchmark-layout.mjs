@@ -46,7 +46,7 @@ for (const testCase of cases) {
     resolved: layout.annotations.length,
     boundsOverflowArea: quality.metrics.boundsOverflowArea,
     noteOverlapArea: quality.metrics.noteOverlapArea,
-    candidateCount: layout.annotations.reduce((count, annotation) => count + annotation.placement.candidates.length, 0)
+    candidateCount: (layout.diagnostics?.annotations ?? []).reduce((count, entry) => count + entry.candidates.length, 0)
   };
 
   results.push(result);
@@ -75,8 +75,7 @@ function layoutOptions({ annotations, obstacles, noteSizes }) {
       align: 'center',
       allowedAligns: ['center'],
       offset: 14,
-      crossOffset: 0,
-      maxCandidates: 8
+      crossOffset: 0
     },
     refinement: false
   };
@@ -153,7 +152,7 @@ function assertBenchmarkResult(result) {
     throw new Error(`${result.name} benchmark overflowed bounds by ${result.boundsOverflowArea}`);
   }
 
-  if (result.candidateCount < result.annotations) {
-    throw new Error(`${result.name} benchmark did not retain placement candidates`);
+  if (result.candidateCount !== 0) {
+    throw new Error(`${result.name} benchmark retained unexpected default diagnostics`);
   }
 }

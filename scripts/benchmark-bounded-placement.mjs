@@ -33,42 +33,52 @@ for (const count of [5, 12, 20]) {
     noteSizes: Object.fromEntries(annotations.map((a, i) => [a.id, { width: 90 + i % 3 * 12, height: 38 + i % 2 * 8 }])),
     refinement: false
   };
-  const boundedOptions = { ...options, placement: { maxCandidates: 8 } };
-  const referenceOptions = baseline ? boundedOptions : options;
-  const measurements = { reference: [], bounded: [] };
-  let expected, actual;
-  reference.resolveAnnotationLayout(referenceOptions);
-  current.resolveAnnotationLayout(boundedOptions);
-  // Alternate order to reduce warmup/order bias. Timings deliberately exclude
-  // assertion and JSON encoding; no shared-machine timing threshold is asserted.
+  options.refinement = { passes: 2, maxCandidatesPerAnnotation: 8 };
+  const configurations = {
+    normal: options,
+    diagnostics8: { ...options, diagnostics: { candidates: 8 } },
+    diagnosticsAll: { ...options, diagnostics: { candidates: 'all' } },
+    ...(baseline ? { historical: options } : {})
+  };
+  const measurements = Object.fromEntries(Object.keys(configurations).map(name => [name, []]));
+  const layouts = {};
+  for (const [name, input] of Object.entries(configurations)) {
+    (name === 'historical' ? reference : current).resolveAnnotationLayout(input);
+  }
+  // Alternate order to reduce warmup/order bias. Timings exclude assertions and JSON encoding.
   for (let i = 0; i < 6; i++) {
-    for (const name of i % 2 ? ['bounded', 'reference'] : ['reference', 'bounded']) {
+    const names = Object.keys(configurations);
+    if (i % 2) names.reverse();
+    for (const name of names) {
       const start = performance.now();
-      const layout = name === 'reference'
-        ? reference.resolveAnnotationLayout(referenceOptions)
-        : current.resolveAnnotationLayout(boundedOptions);
+      layouts[name] = (name === 'historical' ? reference : current).resolveAnnotationLayout(configurations[name]);
       measurements[name].push(performance.now() - start);
-      if (name === 'reference') expected = layout;
-      else actual = layout;
     }
-    assert.deepEqual(actual, baseline ? expected : {
-      ...expected,
-      annotations: expected.annotations.map(a => ({ ...a, placement: { ...a.placement, candidates: a.placement.candidates.slice(0, 8) } }))
-    }, `${count}-note exact candidate/geometry parity`);
-    assert.deepEqual(current.evaluateAnnotationLayout(actual), reference.evaluateAnnotationLayout(expected));
+    const selected = layout => ({ ...layout, diagnostics: undefined,
+      annotations: layout.annotations.map(a => {
+        const { candidates, ...placement } = a.placement;
+        return { ...a, placement };
+      }) });
+    for (const name of names) {
+      assert.deepEqual(selected(layouts[name]), selected(layouts.normal), `${count}-note ${name} winner/score parity`);
+      assert.deepEqual(current.evaluateAnnotationLayout(layouts[name]), current.evaluateAnnotationLayout(layouts.normal));
+    }
+    assert.equal(Object.hasOwn(layouts.normal, 'diagnostics'), false);
+    assert.deepEqual(layouts.diagnostics8.diagnostics.annotations,
+      layouts.diagnosticsAll.diagnostics.annotations.map(entry => ({ ...entry, candidates: entry.candidates.slice(0, 8) })));
   }
   const summary = samples => {
     const sorted = [...samples].sort((a, b) => a - b);
     return { medianMs: (sorted[2] + sorted[3]) / 2, samplesMs: samples };
   };
-  const bytes = layout => Buffer.byteLength(JSON.stringify(layout));
   cases.push({ annotations: count, bounds: options.bounds, obstacles: options.obstacles.length,
-    reference: { ...summary(measurements.reference), layoutJsonBytes: bytes(expected) },
-    bounded: { ...summary(measurements.bounded), layoutJsonBytes: bytes(actual) },
-    quality: current.evaluateAnnotationLayout(actual).metrics, exactParity: true });
+    configurations: Object.fromEntries(Object.keys(configurations).map(name => [name, {
+      ...summary(measurements[name]), layoutJsonBytes: Buffer.byteLength(JSON.stringify(layouts[name]))
+    }])),
+    quality: current.evaluateAnnotationLayout(layouts.normal).metrics, exactWinnerParity: true });
 }
 const report = {
-  benchmark: 'bounded-placement', comparison: baseline ? 'same-input historical module versus current module' : 'current exhaustive reference versus exact top-eight retention',
+  benchmark: 'bounded-placement', comparison: 'normal default versus opt-in diagnostics with equal refinement; historical payloads are intentionally different',
   referenceVersion: baseline ? JSON.parse(await readFile(resolve(dirname(baseline), '../package.json'), 'utf8')).version : 'current',
   sourceCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
   sourceDirty: execFileSync('git', ['status', '--porcelain', '--', 'src', 'scripts/benchmark-bounded-placement.mjs'], { cwd: root, encoding: 'utf8' }).trim().length > 0,

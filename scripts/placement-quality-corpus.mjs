@@ -7,7 +7,7 @@ import { performance } from 'node:perf_hooks';
 import { evaluateAnnotationLayout, resolveAnnotationLayout, renderAnnotationsSvg } from '../dist/index.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-export const configurations = ['exhaustive', 'maxCandidates:8'];
+export const configurations = ['normal', 'diagnostics:8', 'diagnostics:all'];
 
 export async function loadFixtures() {
   const corpus = JSON.parse(await readFile(new URL('../test/fixtures/placement-quality/corpus.json', import.meta.url), 'utf8'));
@@ -44,8 +44,9 @@ export async function loadFixtures() {
 export function optionsFor(fixture, configuration) {
   assert.ok(configurations.includes(configuration));
   const options = structuredClone(fixture.options);
-  // No implicit cap on the reference. Both runs refine over the same top-eight frontier.
-  if (configuration === 'maxCandidates:8') options.placement.maxCandidates = 8;
+  // Every run refines over the same top-eight frontier, independently of diagnostics.
+  if (configuration === 'diagnostics:8') options.diagnostics = { candidates: 8 };
+  if (configuration === 'diagnostics:all') options.diagnostics = { candidates: 'all' };
   return options;
 }
 
@@ -146,8 +147,11 @@ export function runFixture(fixture, { samples = 3 } = {}) {
       layout = next; selected = geometry;
     }
     const sorted = [...sampleMs].sort((a, b) => a - b);
-    const candidates = layout.annotations.map(a => ({ id: a.id, count: a.placement.candidates.length,
-      bytes: Buffer.byteLength(JSON.stringify(a.placement.candidates), 'utf8') }));
+    const candidates = layout.annotations.map(a => {
+      const retained = layout.diagnostics?.annotations.find(entry => entry.id === a.id)?.candidates;
+      return { id: a.id, count: retained?.length ?? 0,
+        bytes: retained ? Buffer.byteLength(JSON.stringify(retained), 'utf8') : 0 };
+    });
     const resizedOptions = structuredClone(options);
     resizedOptions.bounds.width -= 8;
     const resized = selectedLayout(resolveAnnotationLayout(resizedOptions));
@@ -174,8 +178,14 @@ export function verifyResult(result, fixture = result.fixture) {
     const retained = run.retainedCandidates;
     assert.deepEqual(retained.notes.map(n => n.id).sort(), fixture.options.annotations.map(a => a.id).sort());
     for (const note of retained.notes) {
-      assert.ok(Number.isInteger(note.count) && note.count > 0 && Number.isInteger(note.bytes) && note.bytes > 0);
-      assert.ok(run.configuration === 'exhaustive' ? note.count > 8 : note.count === 8);
+      assert.ok(Number.isInteger(note.count) && note.count >= 0 && Number.isInteger(note.bytes) && note.bytes >= 0);
+      if (run.configuration === 'normal') {
+        assert.equal(note.count, 0);
+        assert.equal(note.bytes, 0);
+      } else {
+        assert.ok(run.configuration === 'diagnostics:all' ? note.count > 8 : note.count === 8);
+        assert.ok(note.bytes > 0);
+      }
     }
     assert.equal(retained.count, retained.notes.reduce((s, n) => s + n.count, 0));
     assert.equal(retained.bytes, retained.notes.reduce((s, n) => s + n.bytes, 0));
@@ -183,10 +193,13 @@ export function verifyResult(result, fixture = result.fixture) {
     assert.ok(run.timing.sampleMs.length >= 3);
     assert.ok([run.timing.warmupMs, run.timing.medianMs, ...run.timing.sampleMs].every(n => Number.isFinite(n) && n >= 0));
   }
-  assert.deepEqual(result.runs[0].selected, result.runs[1].selected, `${fixture.id}: selected geometry/score parity`);
-  assert.deepEqual(result.runs[0].quality, result.runs[1].quality, `${fixture.id}: quality parity`);
-  assert.deepEqual(result.runs[0].resize, result.runs[1].resize, `${fixture.id}: resize parity`);
-  assert.ok(result.runs[0].retainedCandidates.bytes > result.runs[1].retainedCandidates.bytes);
+  for (const run of result.runs.slice(1)) {
+    assert.deepEqual(result.runs[0].selected, run.selected, `${fixture.id}: selected geometry/score parity`);
+    assert.deepEqual(result.runs[0].quality, run.quality, `${fixture.id}: quality parity`);
+    assert.deepEqual(result.runs[0].resize, run.resize, `${fixture.id}: resize parity`);
+  }
+  assert.ok(result.runs[0].retainedCandidates.bytes < result.runs[1].retainedCandidates.bytes);
+  assert.ok(result.runs[1].retainedCandidates.bytes < result.runs[2].retainedCandidates.bytes);
 }
 
 export async function verifyCorpus(report) {
@@ -209,7 +222,7 @@ const svgStyle = `.pa-annotation__note-box{fill:#fff;stroke:#334155;stroke-width
 
 export function renderHostSvg(fixture, selected, configuration) {
   const annotations = selected.annotations.map(item => ({ ...item,
-    annotation: fixture.options.annotations.find(a => a.id === item.id), placement: { ...item.placement, candidates: [] } }));
+    annotation: fixture.options.annotations.find(a => a.id === item.id) }));
   const host = fixture.host.map(shape => {
     if (shape.type === 'rect') return `<g><rect x="${shape.x}" y="${shape.y}" width="${shape.width}" height="${shape.height}" fill="${escape(shape.fill)}" stroke="#94a3b8"/><text x="${shape.x + 5}" y="${shape.y + 18}" font-size="12">${escape(shape.label)}</text></g>`;
     if (shape.type === 'line') return `<line x1="${shape.x1}" y1="${shape.y1}" x2="${shape.x2}" y2="${shape.y2}" stroke="#64748b"/>`;
@@ -239,7 +252,7 @@ export async function writeGallery(report, outputDir) {
 }
 
 export async function main(argv = process.argv.slice(2)) {
-  let outputDir = resolve(root, '.tmp/placement-quality');
+  let outputDir = resolve(process.env.TMPDIR ?? '/tmp', 'annotations-placement-quality');
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--output-dir' && argv[i + 1]) outputDir = resolve(argv[++i]);
     else throw new Error(`Unknown or incomplete argument: ${argv[i]}`);

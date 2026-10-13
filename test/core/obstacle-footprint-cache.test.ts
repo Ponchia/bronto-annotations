@@ -26,8 +26,7 @@ function scenario(count = 16): LayoutOptions {
       allowedSides: ['right', 'top'],
       align: 'center',
       allowedAligns: ['center'],
-      offset: [12, 22],
-      maxCandidates: 1
+      offset: [12, 22]
     },
     connector: { type: 'straight', routing: 'none' }
   }));
@@ -58,7 +57,7 @@ describe('session-local exhaustive obstacle footprint cache', () => {
     const beforeFirstProof = candidateSearch.mock.calls.length;
     const firstLayout = session.update(first);
     // The first obstacle update must still enumerate EVERY placement candidate
-    // for each note. Retained maxCandidates=1 is not a safe spatial proof.
+    // for each note. Retained diagnostics.candidates=1 is not a safe spatial proof.
     expect(candidateSearch.mock.calls.length - beforeFirstProof).toBe(16);
     expect(firstLayout.annotations.every((note, index) => note === original.annotations[index])).toBe(true);
 
@@ -124,7 +123,7 @@ describe('session-local exhaustive obstacle footprint cache', () => {
   it('revalidates every unretained candidate after a warm cache sees a nearby obstacle', () => {
     const initial = scenario(8);
     // The best visible placement is retained; the proof deliberately includes
-    // other candidates despite maxCandidates=1.
+    // other candidates despite diagnostics.candidates=1.
     const session = createIncrementalAnnotationLayoutSession(initial);
     const before = session.layout;
     const warmed = structuredClone(initial);
@@ -206,8 +205,8 @@ describe('session-local exhaustive obstacle footprint cache', () => {
     const original = await vi.importActual<typeof import('../../src/core/placement.js')>(
       '../../src/core/placement.js'
     );
-    candidateSearch.mockImplementation((input) => {
-      const candidates = original.allPlacementCandidates(input);
+    candidateSearch.mockImplementation((input, search) => {
+      const candidates = original.allPlacementCandidates(input, search);
       if (input.annotation.id !== 'note-000'
         || input.obstacles.length !== 0
         || input.placedNotes.length !== 0) return candidates;

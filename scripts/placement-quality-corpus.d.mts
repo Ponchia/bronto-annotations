@@ -6,8 +6,8 @@ export type Fixture = {
   host: Array<Record<string, string | number>>;
   expectation: { kind: 'feasible' | 'impossible'; budgets?: Record<string, number>; requiredProblems?: string[]; rationale: string };
 };
-export type SelectedLayout = Omit<ResolvedLayout, 'annotations'> & {
-  annotations: Array<Omit<ResolvedAnnotation, 'annotation' | 'placement'> & { placement: Omit<ResolvedPlacement, 'candidates'> }>;
+export type SelectedLayout = Omit<ResolvedLayout, 'annotations' | 'diagnostics'> & {
+  annotations: Array<Omit<ResolvedAnnotation, 'annotation' | 'placement'> & { placement: ResolvedPlacement }>;
 };
 export type Quality = { metrics: LayoutQualityReport['metrics']; packageReport: LayoutQualityReport };
 export type Jitter = {

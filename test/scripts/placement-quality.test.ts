@@ -19,7 +19,7 @@ describe('authored placement quality evaluation', () => {
   it('checks geometric budgets and exact selected geometry, score and quality parity', () => {
     verifyResult(result);
     expect(result.runs[0]!.quality.metrics.noteOverlapArea).toBe(0);
-    expect(result.runs[0]!.retainedCandidates.count).toBeGreaterThan(result.runs[1]!.retainedCandidates.count);
+    expect(result.runs[0]!.retainedCandidates.count).toBeLessThan(result.runs[1]!.retainedCandidates.count);
     expect(result.runs[0]!.timing.sampleMs).toHaveLength(3);
   });
 
@@ -71,7 +71,7 @@ describe('authored placement quality evaluation', () => {
   });
 
   it('keeps impossible problems visible and rejects presenting them as feasible', () => {
-    const layout = resolveAnnotationLayout(optionsFor(impossible, 'maxCandidates:8'));
+    const layout = resolveAnnotationLayout(optionsFor(impossible, 'diagnostics:8'));
     const quality = verifyLayout(impossible, layout);
     expect(layout.annotations).toHaveLength(5);
     expect(quality.packageReport.ok).toBe(false);
@@ -79,7 +79,7 @@ describe('authored placement quality evaluation', () => {
     const goodLabel = structuredClone(impossible);
     goodLabel.expectation = { kind: 'feasible', budgets: { noteOverlapArea: 0 }, rationale: 'negative control' };
     expect(() => verifyLayout(goodLabel, layout)).toThrow(/noteOverlapArea/);
-    const svg = renderHostSvg(impossible, selectedLayout(layout), 'maxCandidates:8');
+    const svg = renderHostSvg(impossible, selectedLayout(layout), 'diagnostics:8');
     expect(svg).toContain('impossible');
     expect(svg).toContain('Required content');
   });
@@ -110,7 +110,7 @@ describe('authored placement quality evaluation', () => {
   });
 
   it('renders complete host content and every note with standalone SVG styles', () => {
-    const svg = renderHostSvg(feasible, result.runs[0]!.selected, 'exhaustive');
+    const svg = renderHostSvg(feasible, result.runs[0]!.selected, 'normal');
     expect(svg).toContain('data-host="report-wide"');
     expect(svg).toContain('Quarterly operating report');
     expect(svg).toContain('<style>');

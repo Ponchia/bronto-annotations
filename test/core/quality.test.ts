@@ -130,8 +130,7 @@ function resolved(id: string, noteBox: { x: number; y: number; width: number; he
       side: 'right',
       align: 'center',
       offset: 16,
-      score: 0,
-      candidates: []
+      score: 0
     }
   };
 }

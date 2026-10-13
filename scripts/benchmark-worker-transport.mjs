@@ -74,8 +74,7 @@ function makeOptions(count) {
       allowedSides: ['right', 'top'],
       align: 'center',
       allowedAligns: ['center'],
-      offset: [12, 22],
-      maxCandidates: 2
+      offset: [12, 22]
     }
   }));
   return {

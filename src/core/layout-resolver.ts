@@ -1,20 +1,33 @@
 import { orderAnnotations } from './layout-order.js';
 import { anchorSubject, insetBox, isFiniteBox, normalizeBox, resolvePadding } from './anchors.js';
-import { allPlacementCandidates } from './placement.js';
+import { allPlacementCandidates, assertPlacementPreference } from './placement.js';
 import { DEFAULT_NOTE_SIZE, DEFAULT_NOTE_PADDING } from './model.js';
 import { evaluateAnnotationLayout } from './quality.js';
 import { wrapNoteText } from './text.js';
-import type { Annotation, LayoutOptions, LayoutRefinementOptions, PlacementCandidate, PlacementPreference, ResolvedAnnotation, ResolvedLayout, Size } from './model.js';
+import type { Annotation, Box, LayoutDiagnostics, LayoutOptions, LayoutRefinementOptions, PlacementCandidate, PlacementPreference, ResolvedAnnotation, ResolvedLayout, Size } from './model.js';
 
 export function resolveAnnotationLayout(options: LayoutOptions): ResolvedLayout {
   return resolveAnnotationLayoutFrom(options);
 }
 
-/** @internal Compute a suffix after an unchanged priority-ordered prefix. */
+/** @internal Compute a suffix after an unchanged greedy prefix. Reused
+ * diagnostics must already cover the requested retention. Refinement always
+ * starts with a complete search, since it can move earlier winners.
+ */
 export function resolveAnnotationLayoutFrom(
   options: LayoutOptions,
-  reused: ResolvedAnnotation[] = []
+  reused: ResolvedAnnotation[] = [],
+  reusedDiagnostics?: LayoutDiagnostics
 ): ResolvedLayout {
+  validateLayoutOptions(options);
+  const diagnosticLimit = options.diagnostics?.candidates;
+  const refinement = normalizeRefinement(options.refinement ?? false);
+  const frontierLimit = refinement.enabled
+    ? boundedInteger(refinement.maxCandidatesPerAnnotation, 32, 1, 256) : 1;
+  const limit = diagnosticLimit === 'all' ? undefined : Math.max(frontierLimit, diagnosticLimit ?? 1);
+  const workspace: PlacementCandidate[][] = [];
+  const diagnostics: LayoutDiagnostics | undefined = diagnosticLimit === undefined
+    ? undefined : { annotations: [] };
   const bounds = normalizeBox(options.bounds);
   const padding = resolvePadding(options.padding);
   const placementBounds = insetBox(bounds, padding);
@@ -24,8 +37,25 @@ export function resolveAnnotationLayoutFrom(
   const placedNotes: ResolvedAnnotation[] = [...reused];
   // Reuse the existing prefix's original winners and avoid recomputing their
   // connector routing / placement scores when later annotations change.
-  const placedNoteBoxes = reused.map((item) => item.noteBox);
+  const placedNoteBoxes: Box[] = [];
   const ordered = orderAnnotations(options.annotations);
+
+  for (const [index, item] of reused.entries()) {
+    if (diagnostics && diagnosticLimit !== undefined) {
+      const retained = reusedDiagnostics?.annotations[index];
+      const candidates = retained?.id === item.id
+        ? diagnosticLimit === 'all' || retained.candidates.length <= diagnosticLimit
+          ? retained.candidates : retained.candidates.slice(0, diagnosticLimit)
+        : allPlacementCandidates({
+          annotation: ordered[index]!, bounds: placementBounds,
+          noteSize: noteSizeFor(ordered[index]!, options), obstacles,
+          placedNotes: placedNoteBoxes,
+          placement: mergePlacement(options.placement, ordered[index]!.placement)
+        }, diagnosticLimit === 'all' ? {} : { limit: diagnosticLimit });
+      diagnostics.annotations.push({ id: item.id, candidates });
+    }
+    placedNoteBoxes.push(item.noteBox);
+  }
 
   for (const annotation of ordered.slice(reused.length)) {
     const placement = mergePlacement(options.placement, annotation.placement);
@@ -37,7 +67,7 @@ export function resolveAnnotationLayoutFrom(
       obstacles,
       placedNotes: placedNoteBoxes,
       placement
-    });
+    }, { limit });
     const winner = candidates[0];
     const subject = anchorSubject(annotation.anchor, winner?.side);
 
@@ -46,6 +76,13 @@ export function resolveAnnotationLayoutFrom(
     }
 
     placedNoteBoxes.push(winner.noteBox);
+    if (refinement.enabled) workspace.push(candidates.slice(0, frontierLimit));
+    if (diagnostics) {
+      diagnostics.annotations.push({
+        id: annotation.id,
+        candidates: diagnosticLimit === 'all' ? candidates : candidates.slice(0, diagnosticLimit)
+      });
+    }
     placedNotes.push({
       id: annotation.id,
       annotation,
@@ -58,8 +95,7 @@ export function resolveAnnotationLayoutFrom(
         offset: winner.offset,
         align: winner.align,
         score: winner.score,
-        ...(placement.manual ? { manual: true } : {}),
-        candidates
+        ...(placement.manual ? { manual: true } : {})
       }
     });
   }
@@ -69,16 +105,19 @@ export function resolveAnnotationLayoutFrom(
     placementBounds,
     padding,
     annotations: placedNotes,
-    obstacles
+    obstacles,
+    ...(diagnostics ? { diagnostics } : {})
   };
 
-  return options.refinement
-    ? refineAnnotationLayout(layout, options.refinement)
+  return refinement.enabled
+    ? refineAnnotationLayout(layout, workspace, refinement)
     : layout;
 }
 
+/** @internal Refine using the solver's private, ranked greedy search frontier. */
 export function refineAnnotationLayout(
   layout: ResolvedLayout,
+  workspace: PlacementCandidate[][],
   refinement: boolean | LayoutRefinementOptions = true
 ): ResolvedLayout {
   const options = normalizeRefinement(refinement);
@@ -98,14 +137,15 @@ export function refineAnnotationLayout(
     for (const index of refinementOrder(current.annotations)) {
       const item = current.annotations[index];
 
-      if (!item || item.placement.candidates.length < 2 || item.placement.manual) {
+      const candidates = workspace[index];
+      if (!item || !candidates || candidates.length < 2 || item.placement.manual) {
         continue;
       }
 
       let bestLayout = current;
       let bestScore = currentScore;
 
-      for (const candidate of item.placement.candidates.slice(0, maxCandidates)) {
+      for (const candidate of candidates.slice(0, maxCandidates)) {
         if (sameBox(candidate.noteBox, item.noteBox)) {
           continue;
         }
@@ -197,10 +237,25 @@ export function mergePlacement(
   base: PlacementPreference | undefined,
   override: PlacementPreference | undefined
 ): PlacementPreference {
+  assertPlacementPreference(base);
+  assertPlacementPreference(override);
   return {
     ...(base ?? {}),
     ...(override ?? {})
   };
+}
+
+/** @internal Validate even no-op incremental updates and empty layouts. */
+export function validateLayoutOptions(options: LayoutOptions): void {
+  assertPlacementPreference(options.placement);
+  for (const annotation of options.annotations) assertPlacementPreference(annotation.placement);
+  const diagnostics = options.diagnostics;
+  if (diagnostics !== undefined && (!diagnostics || typeof diagnostics !== 'object'
+    || Array.isArray(diagnostics)
+    || (diagnostics.candidates !== 'all'
+      && (!Number.isSafeInteger(diagnostics.candidates) || diagnostics.candidates <= 0)))) {
+    throw new TypeError("diagnostics.candidates must be a positive safe integer or 'all'; omit diagnostics to disable collection");
+  }
 }
 
 function normalizeRefinement(refinement: boolean | LayoutRefinementOptions): Required<LayoutRefinementOptions> {

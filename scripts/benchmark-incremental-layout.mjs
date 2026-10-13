@@ -90,8 +90,7 @@ function scenario(count) {
       align: 'center',
       allowedAligns: ['center'],
       offset: 14,
-      crossOffset: 0,
-      maxCandidates: 8
+      crossOffset: 0
     },
     refinement: false
   };

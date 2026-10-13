@@ -91,6 +91,8 @@ export function candidateNoteBox(
 }
 
 export function scorePlacementCandidate(input: CandidateInput): PlacementCandidate {
+  assertPlacementPreference(input.placement);
+  assertPlacementPreference(input.annotation.placement);
   const subject = anchorSubject(input.annotation.anchor, input.side);
   return routePlacementCandidate(input, candidateGeometry(input, subject), subject.point,
     [...input.obstacles, ...input.placedNotes]);
@@ -166,20 +168,33 @@ function routePlacementCandidate(
   };
 }
 
-export function resolvePlacementCandidate(input: Omit<CandidateInput, 'side' | 'sideIndex'>): PlacementCandidate {
-  const candidates = allPlacementCandidates(input);
+export type PlacementSearchOptions = { limit?: number | undefined };
+
+export function resolvePlacementCandidate(
+  input: Omit<CandidateInput, 'side' | 'sideIndex'>,
+  options?: PlacementSearchOptions
+): PlacementCandidate {
+  const candidates = allPlacementCandidates(input, options);
 
   return candidates[0] ?? scorePlacementCandidate({ ...input, side: 'top', sideIndex: 0 });
 }
 
-export function allPlacementCandidates(input: Omit<CandidateInput, 'side' | 'sideIndex'>): PlacementCandidate[] {
+export function allPlacementCandidates(
+  input: Omit<CandidateInput, 'side' | 'sideIndex'>,
+  options: PlacementSearchOptions = {}
+): PlacementCandidate[] {
+  assertPlacementPreference(input.placement);
+  assertPlacementPreference(input.annotation.placement);
+  const limit = options.limit;
+  if (limit !== undefined && (!Number.isSafeInteger(limit) || limit <= 0)) {
+    throw new TypeError('PlacementSearchOptions.limit must be a positive safe integer');
+  }
   if (input.placement?.manual) {
     return [manualPlacementCandidate(input, input.placement.manual)];
   }
 
   const searchSpace = placementSearchSpace(input.placement);
-  const limit = input.placement?.maxCandidates;
-  if (typeof limit === 'number' && Number.isInteger(limit) && limit > 0 && limit < searchSpace.length) {
+  if (limit !== undefined && limit < searchSpace.length) {
     const bounded = boundedPlacementCandidates(input, searchSpace, limit);
     if (bounded) return bounded;
   }
@@ -188,9 +203,16 @@ export function allPlacementCandidates(input: Omit<CandidateInput, 'side' | 'sid
     .map((candidate) => scorePlacementCandidate({ ...input, ...candidate }))
     .sort((a, b) => a.score - b.score || sideSort(a.side) - sideSort(b.side));
 
-  return input.placement?.maxCandidates
-    ? candidates.slice(0, input.placement.maxCandidates)
+  return limit !== undefined
+    ? candidates.slice(0, limit)
     : candidates;
+}
+
+/** @internal Reject stale JS configuration before it can be silently ignored. */
+export function assertPlacementPreference(preference?: PlacementPreference): void {
+  if (preference && 'maxCandidates' in preference) {
+    throw new TypeError('placement.maxCandidates was removed; use layout diagnostics: { candidates: n } or the placement search second argument { limit: n }. Refinement quality uses refinement.maxCandidatesPerAnnotation.');
+  }
 }
 
 function boundedPlacementCandidates(

@@ -2,7 +2,7 @@ import { normalizeBox, isFiniteBox } from './anchors.js';
 import { allPlacementCandidates } from './placement.js';
 
 import { orderAnnotations } from './layout-order.js';
-import { resolveAnnotationLayout, resolveAnnotationLayoutFrom, noteSizeFor, mergePlacement } from './layout-resolver.js';
+import { resolveAnnotationLayout, resolveAnnotationLayoutFrom, noteSizeFor, mergePlacement, validateLayoutOptions } from './layout-resolver.js';
 import type { Annotation, Box, LayoutOptions, ResolvedLayout } from './model.js';
 
 /** @experimental A host-owned incremental resolver for stable input geometry.
@@ -29,6 +29,7 @@ export function createIncrementalAnnotationLayoutSession(options: LayoutOptions)
   return {
     get layout() { return current; },
     update(next: LayoutOptions) {
+      validateLayoutOptions(next);
       const nextSnapshot = captureIncrementalSnapshot(next);
       const nextCount = nextSnapshot.annotations.length;
       const changedObstacles = obstacleChanges(
@@ -91,10 +92,12 @@ export function createIncrementalAnnotationLayoutSession(options: LayoutOptions)
         && reuse === current.annotations.length
         && previousSnapshot.globals !== undefined
         && previousSnapshot.globals === nextSnapshot.globals
+        && previousSnapshot.diagnostics === nextSnapshot.diagnostics
         && changedObstacles.length === 0;
       const nextLayout = identicalLayout
         ? current
-        : resolveAnnotationLayoutFrom(next, reuse ? current.annotations.slice(0, reuse) : []);
+        : resolveAnnotationLayoutFrom(next, reuse ? current.annotations.slice(0, reuse) : [],
+          canReuseDiagnostics(previousSnapshot, nextSnapshot) ? current.diagnostics : undefined);
       current = nextLayout;
       previousSnapshot = nextSnapshot;
       return nextLayout;
@@ -109,11 +112,18 @@ export type AnnotationLayoutSession = {
 };
 
 type IncrementalSnapshot = {
+  diagnostics: number | 'all' | undefined;
   globals: string | undefined;
   obstacles: Box[];
   annotations: Array<string | undefined>;
   crossAliasOwners: number[][];
 };
+
+function canReuseDiagnostics(before: IncrementalSnapshot, after: IncrementalSnapshot): boolean {
+  return before.diagnostics === 'all' || before.diagnostics === after.diagnostics
+    || typeof before.diagnostics === 'number' && typeof after.diagnostics === 'number'
+      && before.diagnostics >= after.diagnostics;
+}
 
 function captureIncrementalSnapshot(options: LayoutOptions): IncrementalSnapshot {
   const ordered = orderAnnotations(options.annotations);
@@ -126,6 +136,7 @@ function captureIncrementalSnapshot(options: LayoutOptions): IncrementalSnapshot
     refinement: options.refinement
   });
   return {
+    diagnostics: options.diagnostics?.candidates,
     globals,
     // Snapshot normalized obstacles by value: hosts can mutate a node/box in
     // place after the prior update, so retaining the original references is
@@ -161,7 +172,7 @@ function obstacleChanges(before: Box[], after: Box[]): Box[] {
  * even when the changed obstacle is far away, so they always fall back.
  *
  * For unrouted notes, every possible placement candidate (including ones
- * omitted by maxCandidates) contributes note/connector footprint boxes.
+ * omitted from diagnostics) contributes note/connector footprint boxes.
  * The same exhaustive footprints can be reused across committed obstacle
  * edits when the per-note and global geometry fingerprints have not changed.
  * Cached boxes prove only spatial independence; they never substitute for
@@ -232,7 +243,6 @@ function collectObstacleFootprints(
   placementBounds: Box
 ): Float64Array | null {
   const completePlacement = mergePlacement(options.placement, annotation.placement);
-  delete completePlacement.maxCandidates;
   const candidates = allPlacementCandidates({
     annotation,
     bounds: placementBounds,

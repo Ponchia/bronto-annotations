@@ -23,8 +23,7 @@ const aligns: PlacementAlign[] = ['center', 'start', 'end'];
 // EVERY entry, then use the original stable sort and JS slice semantics.
 function eagerCandidates(input: SearchInput): PlacementCandidate[] {
   if (input.placement?.manual) {
-    const { maxCandidates: _limit, ...placement } = input.placement;
-    return allPlacementCandidates({ ...input, placement });
+    return allPlacementCandidates(input);
   }
   const preference = input.placement;
   const allowedSides = [...new Set(preference?.allowedSides?.length ? preference.allowedSides : sides)];
@@ -50,7 +49,7 @@ function eagerCandidates(input: SearchInput): PlacementCandidate[] {
     });
   });
   candidates.sort((a, b) => a.score - b.score || sides.indexOf(a.side) - sides.indexOf(b.side));
-  return preference?.maxCandidates ? candidates.slice(0, preference.maxCandidates) : candidates;
+  return candidates;
 }
 
 function list<T>(value: T | T[] | undefined): T[] {
@@ -110,9 +109,8 @@ describe('exact bounded placement search', () => {
     const eager = eagerCandidates(input);
     expect(allPlacementCandidates(input)).toStrictEqual(eager);
     for (const limit of [1, 3, 8, 20, eager.length - 1, eager.length, eager.length + 1]) {
-      const bounded = { ...input, placement: { ...input.placement, maxCandidates: limit } };
-      expect(allPlacementCandidates(bounded)).toStrictEqual(eager.slice(0, limit));
-      expect(resolvePlacementCandidate(bounded)).toStrictEqual(eager[0]);
+      expect(allPlacementCandidates(input, { limit })).toStrictEqual(eager.slice(0, limit));
+      expect(resolvePlacementCandidate(input, { limit })).toStrictEqual(eager[0]);
     }
   });
 
@@ -133,7 +131,7 @@ describe('exact bounded placement search', () => {
     expect(cheapestGeometry.scoreBreakdown.connectors).toBeGreaterThan(0);
     expect(eager[0]!.scoreBreakdown.connectors).toBe(0);
     expect(eager[0]!.crossOffset).not.toBe(cheapestGeometry.crossOffset);
-    expect(allPlacementCandidates({ ...input, placement: { ...input.placement, maxCandidates: 1 } })).toStrictEqual(eager.slice(0, 1));
+    expect(allPlacementCandidates(input, { limit: 1 })).toStrictEqual(eager.slice(0, 1));
   });
 
   it('preserves side and original insertion order when rounding erases tie penalties', () => {
@@ -147,7 +145,7 @@ describe('exact bounded placement search', () => {
     const eager = eagerCandidates(input);
     expect(new Set(eager.map((candidate) => candidate.score)).size).toBeLessThan(eager.length / 2);
     expect(eager[0]!.side).toBe('top');
-    const bounded = allPlacementCandidates({ ...input, placement: { ...input.placement, maxCandidates: 19 } });
+    const bounded = allPlacementCandidates(input, { limit: 19 });
     expect(bounded).toStrictEqual(eager.slice(0, 19));
     expect(bounded[0]!.align).toBe('center');
     expect(bounded[0]!.crossOffset).toBe(0);
@@ -161,7 +159,7 @@ describe('exact bounded placement search', () => {
     const eager = eagerCandidates(input);
     expect(eager.some((candidate) => Object.is(candidate.offset, -0))).toBe(true);
     expect(eager.some((candidate) => Object.is(candidate.crossOffset, -0))).toBe(true);
-    expect(allPlacementCandidates({ ...input, placement: { ...input.placement, maxCandidates: 20 } })).toStrictEqual(eager.slice(0, 20));
+    expect(allPlacementCandidates(input, { limit: 20 })).toStrictEqual(eager.slice(0, 20));
   });
 
   it.each([
@@ -172,18 +170,12 @@ describe('exact bounded placement search', () => {
     const input = { ...searchFixture(2), bounds, noteSize: { width: 125, height: 75 } };
     input.annotation.anchor = { type: 'path', points: [] };
     const eager = eagerCandidates(input);
-    expect(allPlacementCandidates({ ...input, placement: { maxCandidates: 7 } })).toStrictEqual(eager.slice(0, 7));
+    expect(allPlacementCandidates(input, { limit: 7 })).toStrictEqual(eager.slice(0, 7));
   });
 
-  it.each([0, -0, -1, -2.75, -Infinity, 0.75, 2.75, Infinity, NaN, undefined])('retains eager slice behavior for limit %s', (limit) => {
-    const input = searchFixture(1);
-    if (limit !== undefined) input.placement = { ...input.placement, maxCandidates: limit };
-    const spy = vi.spyOn(connectors, 'connectorPath');
-    const expected = eagerCandidates(input);
-    const eagerCalls = spy.mock.calls.length;
-    spy.mockClear();
-    expect(allPlacementCandidates(input)).toStrictEqual(expected);
-    expect(spy).toHaveBeenCalledTimes(eagerCalls);
+  it.each([0, -0, -1, -2.75, -Infinity, 0.75, 2.75, Infinity, NaN, Number.MAX_SAFE_INTEGER + 1])('rejects invalid search limit %s', (limit) => {
+    expect(() => allPlacementCandidates(searchFixture(1), { limit })).toThrow(/positive safe integer/);
+    expect(() => resolvePlacementCandidate(searchFixture(1), { limit })).toThrow(/positive safe integer/);
   });
 
   it.each(['nan', 'infinite', 'overflow', 'cancellation', 'large-finite'] as const)('falls back to exhaustive search for unsafe %s scores', (kind) => {
@@ -201,7 +193,7 @@ describe('exact bounded placement search', () => {
     const eager = eagerCandidates(input);
     const calls = spy.mock.calls.length;
     spy.mockClear();
-    expect(allPlacementCandidates({ ...input, placement: { ...input.placement, maxCandidates: 5 } })).toStrictEqual(eager.slice(0, 5));
+    expect(allPlacementCandidates(input, { limit: 5 })).toStrictEqual(eager.slice(0, 5));
     expect(spy).toHaveBeenCalledTimes(calls);
   });
 
@@ -210,9 +202,9 @@ describe('exact bounded placement search', () => {
     input.placement = { manual: { x: -50.25, y: 90.5, side: 'left', align: 'end', clamp } };
     const expected = eagerCandidates(input);
     const spy = vi.spyOn(connectors, 'connectorPath');
-    for (const limit of [0, 1, -1, 0.5, NaN, Infinity]) {
+    for (const limit of [1, 8, undefined]) {
       spy.mockClear();
-      expect(allPlacementCandidates({ ...input, placement: { ...input.placement, maxCandidates: limit } })).toStrictEqual(expected);
+      expect(allPlacementCandidates(input, { limit: limit })).toStrictEqual(expected);
       expect(spy).toHaveBeenCalledTimes(1);
     }
   });
@@ -222,7 +214,7 @@ describe('exact bounded placement search', () => {
     const waypoint = { x: 240, y: 120 };
     input.annotation.connector = { type: 'straight', routing: 'none', points: [waypoint] };
     const expected = eagerCandidates(input).slice(0, 6);
-    const actual = allPlacementCandidates({ ...input, placement: { ...input.placement, maxCandidates: 6 } });
+    const actual = allPlacementCandidates(input, { limit: 6 });
     expect(actual).toStrictEqual(expected);
     expect(actual.every((candidate) => candidate.connector.points[1] === waypoint)).toBe(true);
     expect(actual[0]!.connector.points[0] === actual[1]!.connector.points[0]).toBe(
@@ -247,16 +239,16 @@ describe('exact bounded placement search', () => {
       noteSizes: Object.fromEntries(annotations.map((annotation, i) => [annotation.id, { width: 90 + i % 3 * 12, height: 38 + i % 2 * 8 }]))
     };
     const spy = vi.spyOn(connectors, 'connectorPath');
-    const eager = resolveAnnotationLayout(options);
+    const eager = resolveAnnotationLayout({ ...options, diagnostics: { candidates: 'all' } });
     const eagerCalls = spy.mock.calls.length;
     expect(eagerCalls).toBe(count * 240);
     spy.mockClear();
-    const actual = resolveAnnotationLayout({ ...options, placement: { maxCandidates: 6 } });
+    const actual = resolveAnnotationLayout({ ...options, diagnostics: { candidates: 6 } });
     expect(actual).toStrictEqual({
       ...eager,
-      annotations: eager.annotations.map((annotation) => ({
-        ...annotation, placement: { ...annotation.placement, candidates: annotation.placement.candidates.slice(0, 6) }
-      }))
+      diagnostics: { annotations: eager.diagnostics!.annotations.map((entry) => ({
+        ...entry, candidates: entry.candidates.slice(0, 6)
+      })) }
     });
     expect(spy.mock.calls.length).toBeLessThan(eagerCalls / 2);
   });

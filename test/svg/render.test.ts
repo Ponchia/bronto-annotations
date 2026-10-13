@@ -39,7 +39,8 @@ describe('SVG renderer', () => {
           data: { anchorSource: 'unit-test' }
         }
       ],
-      bounds: { x: 0, y: 0, width: 320, height: 220 }
+      bounds: { x: 0, y: 0, width: 320, height: 220 },
+      diagnostics: { candidates: 8 }
     });
     const svg = renderAnnotationsSvg(layout, {
       includeDebugBoxes: true,
