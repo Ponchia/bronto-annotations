@@ -46,7 +46,8 @@ function proof() {
     manualPlacements: 0, finiteConnectorPoints: true,
     anchorBoxes: structuredClone(targetBoxes), targetBoxes, noteBoxes, layoutNoteBoxes: structuredClone(noteBoxes),
     paintedNoteBoxes: structuredClone(noteBoxes), browserNoteBoxes: structuredClone(noteBoxes),
-    obstacleBoxes: Array.from({ length: 6 }, () => ({ x: 100, y: 200, width: 200, height: 100 })),
+    obstacleBoxes: Array.from({ length: 6 }, () => ({ x: 96, y: 196, width: 208, height: 108 })),
+    protectedHostBoxes: Array.from({ length: 6 }, () => ({ x: 100, y: 200, width: 200, height: 100 })),
     candidateCounts: [8, 8, 8], quality: { invalidBoxCount: 0, boundsOverflowArea: 0, noteOverlapArea: 0, obstacleOverlapArea: 0 },
     hostTextCount: 6, minHostTextPixels: 14, minNoteTextPixels: 14,
     text: noteBoxes.flatMap(noteBox => [0, 20].map(offset => ({ text: 'Visible text', noteBox, box: { x: noteBox.x + 10, y: 20 + offset, width: 90, height: 16 }, pixels: 14 })))
@@ -62,7 +63,7 @@ describe('strict rendered consumer evidence', () => {
     const { source } = proof();
     expect(() => assertObservations([], { hosts: [source] })).toThrow('All upstream hosts');
   });
-  it.each(['alignment', 'collision', 'overflow', 'clipped', 'tiny', 'nonfinite', 'retention', 'obstacles', 'stroke', 'browser-box'])('rejects %s regressions', kind => {
+  it.each(['alignment', 'collision', 'overflow', 'clipped', 'tiny', 'nonfinite', 'retention', 'obstacles', 'stroke', 'browser-box', 'protected-content'])('rejects %s regressions', kind => {
     const { source, observation: o } = proof();
     if (kind === 'alignment') o.anchorBoxes[0]!.x += 1;
     if (kind === 'collision') o.noteBoxes[1] = { ...o.noteBoxes[0]! };
@@ -72,6 +73,7 @@ describe('strict rendered consumer evidence', () => {
     if (kind === 'nonfinite') o.targetBoxes[0]!.x = Number.NaN;
     if (kind === 'retention') o.candidateCounts[0] = 9;
     if (kind === 'obstacles') o.obstacleBoxes = [];
+    if (kind === 'protected-content') o.protectedHostBoxes = [];
     if (kind === 'stroke') o.paintedNoteBoxes[0]!.height += 220;
     if (kind === 'browser-box') o.browserNoteBoxes[0]!.x += 5;
     expect(() => assertObservations([o], { hosts: [source] })).toThrow();

@@ -90,8 +90,9 @@ export function assertObservations(observations, manifest) {
     assert.equal(o.browserNoteBoxes.length, source.expectedNotes);
     assert.ok(o.obstacleBoxes.length >= source.expectedMarks, `${label}: missing protected host obstacles`);
     assert.equal(o.candidateCounts.length, source.expectedNotes);
+    assert.ok(o.protectedHostBoxes.length >= source.expectedMarks, `${label}: missing independently protected host content`);
     assert.ok(o.candidateCounts.every(n => Number.isInteger(n) && n > 0 && n <= 8), `${label}: candidate retention exceeded maxCandidates:8`);
-    for (const list of [o.anchorBoxes, o.targetBoxes, o.noteBoxes, o.layoutNoteBoxes, o.paintedNoteBoxes, o.browserNoteBoxes, o.obstacleBoxes]) assert.ok(list.every(finiteBox), `${label}: non-finite or empty geometry`);
+    for (const list of [o.anchorBoxes, o.targetBoxes, o.noteBoxes, o.layoutNoteBoxes, o.paintedNoteBoxes, o.browserNoteBoxes, o.obstacleBoxes, o.protectedHostBoxes]) assert.ok(list.every(finiteBox), `${label}: non-finite or empty geometry`);
     o.anchorBoxes.forEach((a, i) => {
       for (const key of ['x', 'y', 'width', 'height']) assert.ok(Math.abs(a[key] - o.targetBoxes[i][key]) <= 0.25, `${label}: independently measured target ${i} ${key} differs`);
     });
@@ -102,7 +103,7 @@ export function assertObservations(observations, manifest) {
       assert.ok([note, painted].some(b => ['x', 'y', 'width', 'height'].every(k => Math.abs(b[k] - client[k]) <= 0.25)), `${label}: browser note rectangle disagrees with measured fill/stroke geometry`);
       assert.ok(contains(o.bounds, painted), `${label}: painted note overflows canvas`);
       assert.ok(o.layoutNoteBoxes.some(b => ['x', 'y', 'width', 'height'].every(k => Math.abs(b[k] - note[k]) <= 0.25)), `${label}: painted note differs from layout`);
-      for (const obstacle of o.obstacleBoxes) assert.ok(area(painted, obstacle) <= 0.01, `${label}: painted note covers protected host content`);
+      for (const obstacle of o.protectedHostBoxes) assert.ok(area(painted, obstacle) <= 0.01, `${label}: painted note covers protected host content`);
     }
     for (let i = 0; i < o.noteBoxes.length; i++) for (let j = i + 1; j < o.noteBoxes.length; j++) assert.ok(area(o.paintedNoteBoxes[i], o.paintedNoteBoxes[j]) <= 0.01, `${label}: painted notes collide`);
     for (const key of ['invalidBoxCount', 'boundsOverflowArea', 'noteOverlapArea', 'obstacleOverlapArea']) assert.equal(o.quality[key], 0, `${label}: ${key}`);

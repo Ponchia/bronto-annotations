@@ -372,10 +372,18 @@ for (const file of docsFiles) {
 }
 // The reference JSON resources remain linkable from Markdown pages without
 // silently changing source documents or rewriting their technical examples.
-for (const file of await readdir(docsRoot)) {
-  if (file.endsWith('.json'))
-    await copyFile(join(docsRoot, file), join(out, 'docs', file));
+async function copyReferenceJson(directory) {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const source = join(directory, entry.name);
+    if (entry.isDirectory()) await copyReferenceJson(source);
+    else if (entry.isFile() && entry.name.endsWith('.json')) {
+      const destination = join(out, 'docs', relative(docsRoot, source));
+      await mkdir(dirname(destination), { recursive: true });
+      await copyFile(source, destination);
+    }
+  }
 }
+await copyReferenceJson(docsRoot);
 // Put the current guides before historical audits and archived evidence.
 const orderedDocsFiles = [...docsFiles].sort((a, b) => {
   const key = (file) => web(relative(docsRoot, file)).slice(0, -3);

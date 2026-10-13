@@ -100,12 +100,18 @@ async function renderHost(source, input, index) {
     ? '.mark-rect path, .mark-text text, .mark-rule line, .mark-rule path'
     : 'g.node, g.cluster, .edgeLabel, path.flowchart-link';
   const prepare = source.host === 'vega' ? prepareVegaSvgAnnotations : prepareMermaidAnnotations;
-  const prepared = prepare(svg, specs, { assert: true, obstacles: { selector: protectedSelector, coordinateSpace: stage, padding: 2 } });
+  const prepared = prepare(svg, specs, { assert: true, obstacles: { selector: protectedSelector, coordinateSpace: stage } });
   // The untouched Vega tooltip has no text until hovered; zero-area invisible
   // elements cannot occlude a note and are excluded from obstacle geometry.
   prepared.obstacles = prepared.obstacles.filter(b => b.width > 0 && b.height > 0);
   const targetBoxes = targets.map(target => measuredBox(target, stage));
   const hostBox = measuredBox(svg, stage);
+  const protectedHostBoxes = [...prepared.obstacles, hostBox];
+  // Keep actual protected content distinct from solver clearance. A note's
+  // one-pixel stroke can cover content even when its fill merely touches it.
+  const inflate = box => ({ x: box.x - 4, y: box.y - 4,
+    width: box.width + 8, height: box.height + 8 });
+  prepared.obstacles = prepared.obstacles.map(inflate);
   // Generate exact clearance alternatives from measured host geometry, rather
   // than hoping coarse hard-coded offsets happen to clear a chart/diagram edge.
   prepared.annotations = prepared.annotations.map(annotation => {
@@ -119,13 +125,13 @@ async function renderHost(source, input, index) {
     bounds, padding: 12, defaultNoteSize: { width: 180, height: 100 },
     placement: { maxCandidates: 8, align: ['center', 'start', 'end'], offset: [20, 80, 160, 240], crossOffset: [0, -120, 120] },
     refinement: { passes: 2, maxCandidatesPerAnnotation: 8 },
-    additionalObstacles: [hostBox],
+    additionalObstacles: [inflate(hostBox)],
     targetAlignmentTargets: specs.map((spec, n) => ({ id: spec.id, box: targetBoxes[n] })),
     targetAlignmentOptions: { tolerance: 0.25, nearTolerance: 0.5 },
     assertTargetAlignment: { failOnWarnings: true }
   });
   article.querySelector('.overlay').innerHTML = renderAnnotationsSvg(resolved.layout, { title: `${source.id} callouts`, noteTabIndex: 0, markerIdPrefix: source.id });
-  const record = { id: source.id, source, bounds, prepared, resolved, targets, stage, svg, view };
+  const record = { id: source.id, source, bounds, prepared, resolved, targets, stage, svg, view, protectedHostBoxes };
   records.push(record);
 }
 
@@ -154,6 +160,7 @@ window.measureUpstreamConsumers = () => records.map(record => {
     browserNoteBoxes: noteMeasurements.map(m => m.client),
     layoutNoteBoxes: resolved.layout.annotations.map(a => a.noteBox),
     obstacleBoxes: resolved.layout.obstacles,
+    protectedHostBoxes: record.protectedHostBoxes,
     candidateCounts: resolved.layout.annotations.map(a => a.placement.candidates.length),
     finiteConnectorPoints: resolved.layout.annotations.every(a => a.connector.points.every(p => Number.isFinite(p.x) && Number.isFinite(p.y))),
     text: textElements.map(e => ({ text: e.textContent, box: measuredBox(e, stage), noteBox: noteGeometry(e.closest('.pa-annotation__note').querySelector('rect'), stage).box, pixels: pixels(e) })),

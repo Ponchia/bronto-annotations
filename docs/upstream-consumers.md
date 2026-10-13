@@ -22,9 +22,11 @@ isolated browser contexts and closes them after each viewport check. Install
 `firefox` or `webkit` through the same Playwright command to test those engines.
 
 `--browser` accepts `chromium` (default), `firefox`, or `webkit`. Both desktop
-(1360 × 1000) and mobile (390 × 844, touch enabled) run sequentially. Firefox
-uses a narrow touch context because Playwright does not support Firefox's
-`isMobile` option. Browser calls have deadlines; fixture readiness has a
+(1360 × 1000) and narrow (390 × 844) run sequentially. Chromium and WebKit
+use touch-emulated mobile contexts and verify real touch pointer delivery.
+Firefox uses a narrow desktop context: the installed engine does not expose
+touch emulation, and its result is labeled `narrow-desktop`, not mobile-touch
+coverage. Browser calls have deadlines; fixture readiness has a
 45-second limit. The source gate alone is inexpensive and needs no browser:
 
 ```sh
@@ -91,7 +93,10 @@ the bar chart's starting/highest/lowest amounts, the grouped chart's position-2
 values across A/B/C, and the flowchart's Web app/API gateway/Orders DB nodes.
 `prepareVegaSvgAnnotations` and `prepareMermaidAnnotations` extract rendered
 targets and graphic/text obstacles. An additional obstacle protects the entire
-host graphic from note boxes. Placement is automatic with explicit
+host graphic from note boxes. Solver obstacles include 4px clearance for note
+strokes. Independently retained, unexpanded protected-content rectangles are
+used for painted collision checks, while the package quality report checks the
+expanded solver obstacles. No actual painted overlap is permitted. Placement is automatic with explicit
 `maxCandidates: 8`, two refinement passes and eight retained candidates per
 annotation. Candidate offsets include exact clearance distances derived from each target
 and the measured host boundary with a 12px gap. Coarse offsets alone initially
@@ -124,7 +129,8 @@ source attribution, adaptation lists and all overlays. Serve that directory
 with any local static HTTP server to inspect it; do not open it as a `file:` URL.
 Each host has a complete native-size PNG for each viewport. Mobile also has a
 viewport PNG showing the centered, horizontally scrolled host. The mobile lane
-verifies real keyboard scrolling and touch capability. It keeps document
+verifies keyboard scrolling in all engines and emulated touch pointer delivery
+in Chromium/WebKit. It keeps document
 overflow contained in focusable graphic scrollers rather than shrinking
 desktop text. A complete graphic can require horizontal navigation on a phone;
 these screenshots do not claim a reflowed diagram or physical-device testing.

@@ -64,9 +64,11 @@ try {
   results.browserVersion = browser.version();
   for (const viewport of [{ name: 'desktop', width: 1360, height: 1000 }, { name: 'mobile', width: 390, height: 844 }]) {
     const mobile = viewport.name === 'mobile';
+    const touch = mobile && options.browser !== 'firefox';
     const context = await browser.newContext({
       viewport: { width: viewport.width, height: viewport.height },
-      ...(mobile ? { hasTouch: true, ...(options.browser === 'firefox' ? {} : { isMobile: true }), deviceScaleFactor: 1 } : {})
+      hasTouch: touch,
+      ...(touch ? { isMobile: true, deviceScaleFactor: 1 } : {})
     });
     try {
       const page = await context.newPage();
@@ -104,11 +106,22 @@ try {
         await page.locator('#' + id + ' .stage').screenshot({ path: join(options.output, filename), animations: 'disabled', timeout: 15000 });
         screenshots.push(filename);
         if (mobile) {
+          let touchPointer = null;
+          if (touch) {
+            await scroller.evaluate(e => {
+              e.dataset.touchPointers = '0';
+              e.addEventListener('pointerdown', event => {
+                if (event.pointerType === 'touch') e.dataset.touchPointers = String(Number(e.dataset.touchPointers) + 1);
+              }, { once: true });
+            });
+            await scroller.tap({ position: { x: 16, y: 16 } });
+            touchPointer = await scroller.evaluate(e => Number(e.dataset.touchPointers));
+          }
           const before = await scroller.evaluate(e => e.scrollLeft);
           await scroller.focus();
           await page.keyboard.press('ArrowRight');
           await page.waitForFunction(id => document.querySelector('#' + id + ' .scroller').scrollLeft > 0, id, { timeout: 3000 });
-          interaction[id] = { keyboardScroll: await scroller.evaluate(e => e.scrollLeft) > before };
+          interaction[id] = { keyboardScroll: await scroller.evaluate(e => e.scrollLeft) > before, touchPointer };
           await scroller.evaluate(e => { e.scrollLeft = (e.scrollWidth - e.clientWidth) / 2; });
           const viewportFile = `${options.browser}-mobile-${id}-viewport.png`;
           await page.screenshot({ path: join(options.output, viewportFile), animations: 'disabled' });
@@ -116,7 +129,7 @@ try {
         }
       }
       const profile = await page.evaluate(() => ({ width: innerWidth, height: innerHeight, touch: navigator.maxTouchPoints, horizontalDocumentOverflow: document.documentElement.scrollWidth > innerWidth + 1 }));
-      const evidence = { viewport, errors, failedRequests, observations, screenshots, profile, interaction, passed: false };
+      const evidence = { viewport, interactionModel: touch ? 'touch-emulated' : mobile ? 'narrow-desktop' : 'desktop', errors, failedRequests, observations, screenshots, profile, interaction, passed: false };
       results.cases.push(evidence);
       assert.deepEqual(errors, [], 'Unexpected browser errors');
       assert.deepEqual(failedRequests, [], 'Offline fixture made failed/external requests');
@@ -124,8 +137,12 @@ try {
       assert.equal(profile.height, viewport.height);
       assert.equal(profile.horizontalDocumentOverflow, false, 'Horizontal overflow must be contained in graphic scrollers');
       if (mobile) {
-        assert.ok(profile.touch > 0, 'Mobile context must enable touch');
-        for (const host of manifest.hosts) assert.equal(interaction[host.id]?.keyboardScroll, true, 'Mobile host must remain navigable');
+        if (touch) assert.ok(profile.touch > 0, 'Touch-emulated context must expose touch');
+        else assert.equal(profile.touch, 0, 'Firefox narrow-desktop lane must not claim touch emulation');
+        for (const host of manifest.hosts) {
+          assert.equal(interaction[host.id]?.keyboardScroll, true, 'Narrow host must remain navigable');
+          if (touch) assert.ok(interaction[host.id].touchPointer > 0, 'Host must receive a real emulated touch pointer');
+        }
       }
       assert.equal(interaction.vegaHoverAmount, 28);
       assert.equal(interaction.vegaHoverFill, 'red');
