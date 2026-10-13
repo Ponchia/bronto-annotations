@@ -9,6 +9,11 @@ measurement props. Source inputs remain host-owned and are submitted to the
 solver on committed changes. Candidate diagnostics, when explicitly requested,
 are separate from winners and do not alter refinement quality.
 
+The private browser fixture gates a genuinely computed reply until the host
+cancels its revision, then releases the actual response and verifies that it
+is discarded. This avoids assuming a slow solver or an arbitrary delay. It
+proves cancellation of response admission, not preemption of Worker CPU.
+
 The transport studies below are historical 0.6 observations, including older
 full candidate graphs and the former `resolvedLayout`/`maxCandidates` API.
 They are not measurements of the current default. The current runnable sources
