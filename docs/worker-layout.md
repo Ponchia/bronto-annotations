@@ -20,13 +20,11 @@ They are not measurements of the current default. The current runnable sources
 and [0.7 migration guide](migration-0.7.md) are authoritative.
 
 
-Before adding Worker machinery, bound retained diagnostic candidates where the
-host does not inspect the whole search graph. The public React Worker example
-uses `placement: { maxCandidates: 8 }` with refinement disabled. It preserves
-the initial winners while reducing the graph that must cross the Worker
-boundary. All accepted revisions still use the authoritative layout and the
-existing stale-response checks. Historical large-payload measurements in this
-guide describe their recorded fixtures, not a universal or current-demo size.
+Before adding Worker machinery, use the normal lean solver output. The public
+React Worker example does not request candidate diagnostics; its accepted
+layouts contain only the data needed to render. All accepted revisions still
+use the authoritative layout and existing stale-response checks. Opt-in
+candidate diagnostics are intended for inspection, not routine transport.
 See [common-workload guidance](performance.md#start-with-the-common-workload).
 
 This guide describes a **tested integration recipe**, not a public Worker

@@ -3,6 +3,8 @@
 Annotation layout should stay deterministic and fast enough for report
 generation and interactive authoring surfaces.
 
+<a id="start-with-the-common-workload"></a>
+
 ## Current 0.7 default
 
 `resolveAnnotationLayout({ annotations, bounds, noteSizes })` returns a lean
