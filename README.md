@@ -194,3 +194,15 @@ vendor copy, or drop-in replacement for either library.
 
 BrontoUI is an optional visual companion, not a runtime dependency.
 [MIT licensed](LICENSE).
+
+
+### Public website analytics
+
+The [GitHub Pages documentation and playground](https://ponchia.github.io/bronto-annotations/)
+use Cloudflare Web Analytics for anonymous, aggregate pageview and performance
+measurement. Only generated editorial pages at `ponchia.github.io/bronto-annotations/`
+load the consent-free, cookie-free beacon; no script is added to the npm package,
+its runtime, standalone examples, local development, or other GitHub Pages
+projects. This is manual installation: do not enable zone-wide injection.
+Cloudflare's [privacy policy](https://www.cloudflare.com/privacypolicy/)
+provides further information about its data processing.
