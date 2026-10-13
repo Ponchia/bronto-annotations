@@ -8,6 +8,8 @@ reasonable.
 
 ## Unreleased
 
+## 0.6.10 - 2026-10-13
+
 ### Fixed
 
 - Only use an explicitly owned `LayoutOptions.noteSizes` entry for an
