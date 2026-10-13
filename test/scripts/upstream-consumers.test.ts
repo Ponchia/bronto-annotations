@@ -2,7 +2,7 @@ import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { assertObservations, verifyProvenance } from '../../scripts/upstream-consumers-proof.mjs';
+import { assertNarrowInteractions, assertObservations, verifyProvenance } from '../../scripts/upstream-consumers-proof.mjs';
 
 const fixtures = resolve('test/fixtures/upstream-consumers');
 const temporary: string[] = [];
@@ -77,5 +77,32 @@ describe('strict rendered consumer evidence', () => {
     if (kind === 'stroke') o.paintedNoteBoxes[0]!.height += 220;
     if (kind === 'browser-box') o.browserNoteBoxes[0]!.x += 5;
     expect(() => assertObservations([o], { hosts: [source] })).toThrow();
+  });
+});
+
+describe('native narrow-viewport input evidence', () => {
+  const manifest = { hosts: [{ id: 'first' }, { id: 'second' }] };
+  const delivered = () => ({
+    first: { keyboardScroll: true, touchPointer: 1 },
+    second: { keyboardScroll: true, touchPointer: 1 }
+  });
+  it('accepts real touch delivery even when WebKit reports zero maxTouchPoints', () => {
+    expect(() => assertNarrowInteractions({ touch: 0 }, delivered(), manifest, true)).not.toThrow();
+  });
+  it('rejects advertised touch capability without an actual delivered pointer', () => {
+    const input = delivered(); input.second.touchPointer = 0;
+    expect(() => assertNarrowInteractions({ touch: 5 }, input, manifest, true)).toThrow('real emulated touch pointer');
+  });
+  it('requires input evidence for every host', () => {
+    expect(() => assertNarrowInteractions({ touch: 1 }, { first: delivered().first }, manifest, true)).toThrow('second');
+  });
+  it('rejects a host that cannot be scrolled by the keyboard', () => {
+    const input = delivered(); input.first.keyboardScroll = false;
+    expect(() => assertNarrowInteractions({ touch: 0 }, input, manifest, true)).toThrow('keyboard navigable');
+  });
+  it('labels narrow-desktop coverage without inventing touch evidence', () => {
+    const input = { first: { keyboardScroll: true, touchPointer: null }, second: { keyboardScroll: true, touchPointer: null } };
+    expect(() => assertNarrowInteractions({ touch: 0 }, input, manifest, false)).not.toThrow();
+    expect(() => assertNarrowInteractions({ touch: 0 }, delivered(), manifest, false)).toThrow('must not claim');
   });
 });

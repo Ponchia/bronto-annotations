@@ -26,7 +26,11 @@ isolated browser contexts and closes them after each viewport check. Install
 use touch-emulated mobile contexts and verify real touch pointer delivery.
 Firefox uses a narrow desktop context: the installed engine does not expose
 touch emulation, and its result is labeled `narrow-desktop`, not mobile-touch
-coverage. Browser calls have deadlines; fixture readiness has a
+coverage. The recorded `navigator.maxTouchPoints` is observational: WebKit 27.2
+on the CI host reported zero while delivering a native touch pointer to each
+fixture. Touch lanes therefore require real per-host `pointerType="touch"`
+events, not an advertised capability alone. Missing touch events fail even when
+the browser advertises a positive count. Browser calls have deadlines; fixture readiness has a
 45-second limit. The source gate alone is inexpensive and needs no browser:
 
 ```sh

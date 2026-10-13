@@ -117,3 +117,20 @@ export function assertObservations(observations, manifest) {
     }
   }
 }
+
+// Capability metadata can disagree with automation's input delivery (WebKit
+// reports zero maxTouchPoints while delivering native pointerType="touch").
+// Keep it as recorded telemetry; require the actual per-host interaction.
+export function assertNarrowInteractions(profile, interaction, manifest, touchEmulated) {
+  assert.ok(Number.isInteger(profile.touch) && profile.touch >= 0, 'Invalid reported touch capability');
+  for (const host of manifest.hosts) {
+    const input = interaction[host.id];
+    assert.equal(input?.keyboardScroll, true, `${host.id}: narrow host must remain keyboard navigable`);
+    if (touchEmulated) {
+      assert.ok(Number.isInteger(input.touchPointer) && input.touchPointer > 0,
+        `${host.id}: host must receive a real emulated touch pointer`);
+    } else {
+      assert.equal(input.touchPointer, null, `${host.id}: narrow-desktop lane must not claim emulated touch coverage`);
+    }
+  }
+}

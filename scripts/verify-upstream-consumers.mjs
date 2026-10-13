@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { chromium, firefox, webkit } from 'playwright';
 import { build, preview } from 'vite';
-import { assertObservations, verifyProvenance } from './upstream-consumers-proof.mjs';
+import { assertNarrowInteractions, assertObservations, verifyProvenance } from './upstream-consumers-proof.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const run = promisify(execFile);
@@ -136,14 +136,7 @@ try {
       assert.equal(profile.width, viewport.width);
       assert.equal(profile.height, viewport.height);
       assert.equal(profile.horizontalDocumentOverflow, false, 'Horizontal overflow must be contained in graphic scrollers');
-      if (mobile) {
-        if (touch) assert.ok(profile.touch > 0, 'Touch-emulated context must expose touch');
-        else assert.equal(profile.touch, 0, 'Firefox narrow-desktop lane must not claim touch emulation');
-        for (const host of manifest.hosts) {
-          assert.equal(interaction[host.id]?.keyboardScroll, true, 'Narrow host must remain navigable');
-          if (touch) assert.ok(interaction[host.id].touchPointer > 0, 'Host must receive a real emulated touch pointer');
-        }
-      }
+      if (mobile) assertNarrowInteractions(profile, interaction, manifest, touch);
       assert.equal(interaction.vegaHoverAmount, 28);
       assert.equal(interaction.vegaHoverFill, 'red');
       assert.ok(interaction.vegaHoverLabel.includes('28'), 'Upstream hover label did not render');
