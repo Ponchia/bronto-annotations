@@ -110,6 +110,13 @@ try {
       assert.ok(event.changed >= 0 && event.changed <= config.count);
       const parity = await page.evaluate(() => window.__workerProof?.checkParity());
       assert.equal(parity, true, `${config.name}/${action}: worker layout must match full main-thread solver`);
+      const lean = await page.evaluate(() => {
+        const layout = window.__workerProof?.lastLayout;
+        return layout && !Object.hasOwn(layout, 'diagnostics')
+          && layout.annotations.every((item) => !Object.hasOwn(item.placement, 'candidates'))
+          && !document.querySelector('.pa-annotation-layer__measurer');
+      });
+      assert.equal(lean, true, `${config.name}/${action}: default Worker result must stay lean and render only`);
       return event;
     }
 

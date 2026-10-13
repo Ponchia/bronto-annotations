@@ -35,7 +35,7 @@ describe('React edit-handle identity across incremental commits', () => {
     const nextCallback = vi.fn<(event: AnnotationLayerEditEvent) => void>();
     const nextEndCallback = vi.fn<(event: AnnotationLayerEditEvent) => void>();
     const { container, rerender } = render(
-      <AnnotationLayer {...base} resolvedLayout={session.layout}
+      <AnnotationLayer layout={session.layout}
         editable={{ includeAnchor: true, keyboardStep: 2 }}
         onEditStart={firstCallback} />
     );
@@ -51,7 +51,7 @@ describe('React edit-handle identity across incremental commits', () => {
     const equivalent = structuredClone(annotations);
     expect(session.update({ ...base, annotations: equivalent })).toBe(session.layout);
     rerender(
-      <AnnotationLayer {...base} annotations={equivalent} resolvedLayout={session.layout}
+      <AnnotationLayer layout={session.layout}
         editable={{ includeAnchor: true, keyboardStep: 2 }}
         onEditStart={nextCallback} onEditEnd={nextEndCallback} />
     );
@@ -67,7 +67,7 @@ describe('React edit-handle identity across incremental commits', () => {
     changed.at(-1)!.note.title = 'Edited final annotation';
     const updated = session.update({ ...base, annotations: changed });
     rerender(
-      <AnnotationLayer {...base} annotations={changed} resolvedLayout={updated}
+      <AnnotationLayer layout={updated}
         editable={{ includeAnchor: true, keyboardStep: 2 }}
         onEditStart={nextCallback} onEditEnd={nextEndCallback} />
     );
@@ -93,7 +93,7 @@ describe('React edit-handle identity across incremental commits', () => {
     } as DOMRect);
     const pointerCallback = vi.fn<(event: AnnotationLayerEditEvent) => void>();
     rerender(
-      <AnnotationLayer {...base} annotations={changed} resolvedLayout={updated}
+      <AnnotationLayer layout={updated}
         editable={{ includeAnchor: true, keyboardStep: 2 }}
         onEditStart={pointerCallback} />
     );
@@ -112,7 +112,7 @@ describe('React edit-handle identity across incremental commits', () => {
     const onEditEnd = vi.fn<(event: AnnotationLayerEditEvent) => void>();
     const editable: AnnotationLayerEditOptions = { includeAnchor: true, keyboardStep: 2, noteHandlePosition: 'top-right' };
     const { container, rerender } = render(
-      <AnnotationLayer {...base} resolvedLayout={session.layout} editable={editable} onEditEnd={onEditEnd} />
+      <AnnotationLayer layout={session.layout} editable={editable} onEditEnd={onEditEnd} />
     );
     const before = noteHandle(container, 'stable-0');
     fireEvent.keyDown(before, { key: 'ArrowDown' });
@@ -120,12 +120,13 @@ describe('React edit-handle identity across incremental commits', () => {
     const originalHandle = onEditEnd.mock.calls[0]![0].handle;
     expect(container.querySelector('.pa-annotation__edit-handle--anchor')).toBeTruthy();
 
-    // Even mutating an object in place must update the supported scalar
-    // dependencies, not rely on the old wrapper's object identity.
-    editable.keyboardStep = 7;
-    editable.noteHandlePosition = 'bottom-left';
+    // Replace React props when options change; stable geometry still uses
+    // the new keyboard step and handle position.
+    const updatedEditable: AnnotationLayerEditOptions = {
+      ...editable, keyboardStep: 7, noteHandlePosition: 'bottom-left'
+    };
     rerender(
-      <AnnotationLayer {...base} resolvedLayout={session.layout} editable={editable} onEditEnd={onEditEnd} />
+      <AnnotationLayer layout={session.layout} editable={updatedEditable} onEditEnd={onEditEnd} />
     );
     const after = noteHandle(container, 'stable-0');
     expect(after.getAttribute('data-edit-handle-position')).toBe('bottom-left');
@@ -134,7 +135,7 @@ describe('React edit-handle identity across incremental commits', () => {
     expect(onEditEnd.mock.calls[1]![0].handle).not.toBe(originalHandle);
 
     rerender(
-      <AnnotationLayer {...base} resolvedLayout={session.layout}
+      <AnnotationLayer layout={session.layout}
         editable={{ includeAnchor: false, keyboardStep: 7, noteHandlePosition: 'bottom-left' }}
         onEditEnd={onEditEnd} />
     );

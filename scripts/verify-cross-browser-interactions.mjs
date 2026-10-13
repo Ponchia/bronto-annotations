@@ -819,10 +819,14 @@ async function verifyWorker(browser, origin, viewport, label) {
     const state = await page.evaluate(() => ({
       commits: window.__annotationsWorkerDemo.commits,
       parity: window.__annotationsWorkerDemo.freshParity(),
+      leanLayout: window.__annotationsWorkerDemo.leanLayout,
+      measuring: Boolean(document.querySelector('.pa-annotation-layer__measurer')),
       workerErrors: window.__annotationsWorkerDemo.errors
     }));
     assert.equal(state.commits, 2, label + ': cancelled result must not commit');
     assert.equal(state.parity, true, label + ': committed state must remain authoritative');
+    assert.equal(state.leanLayout, true, label + ': default Worker payload must omit candidate diagnostics');
+    assert.equal(state.measuring, false, label + ': Worker layout rendering must never self-measure');
     assert.deepEqual(state.workerErrors, [], label + ': Worker runtime errors');
     await verifyAccessibility(page, label);
     assert.deepEqual(errors, [], label + ': browser console or runtime errors');

@@ -26,7 +26,7 @@ function makeAnnotation(index: number): Annotation {
 const initialAnnotations = Array.from({ length: count }, (_, i) => makeAnnotation(i));
 const noteSizes = Object.fromEntries(initialAnnotations.map((item) => [item.id, { width: 84, height: 38 }]));
 const baseOptions: Omit<LayoutOptions, 'annotations' | 'obstacles'> = {
-  bounds, noteSizes, placement: { maxCandidates: 8 }, refinement: false
+  bounds, noteSizes, refinement: false
 };
 const initialOptions: LayoutOptions = {
   ...baseOptions, annotations: initialAnnotations, obstacles: [farObstacle]
@@ -327,11 +327,7 @@ function App() {
           if (pending) pending.observation.reactRenderMs = actualDuration;
         }}>
           <AnnotationLayer
-            annotations={annotations}
-            bounds={bounds}
-            obstacles={obstacles}
-            noteSizes={noteSizes}
-            resolvedLayout={layout}
+            layout={layout}
             label="Worker-hosted annotation SVG layer"
           />
         </Profiler>

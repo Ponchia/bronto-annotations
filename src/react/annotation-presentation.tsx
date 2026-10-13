@@ -8,7 +8,7 @@ import { dataAttributes, annotationStyle } from './render-data.js';
 import { renderSubject, renderConnector, renderDebugBoxes } from './svg-annotation-parts.js';
 import { editHandlePosition } from './edit-geometry.js';
 import type { AnnotationEditHandle } from '../core/edit.js';
-import type { Annotation, AnnotationNoteLineOptions, ResolvedAnnotation } from '../core/model.js';
+import type { Annotation, AnnotationNoteLineOptions, PlacementCandidate, ResolvedAnnotation } from '../core/model.js';
 import type { AnnotationLayerProps } from './types.js';
 
 // Drag previews update one resolved annotation. Memoized paint boundaries keep
@@ -19,6 +19,7 @@ export const PaintedAnnotation = memo(function PaintedAnnotation({
   prefix,
   markerPrefix,
   debug,
+  candidates,
   noteTabIndex,
   renderNote
 }: {
@@ -26,6 +27,7 @@ export const PaintedAnnotation = memo(function PaintedAnnotation({
   prefix: string;
   markerPrefix: string;
   debug: boolean;
+  candidates: PlacementCandidate[] | undefined;
   noteTabIndex: AnnotationLayerProps['noteTabIndex'];
   renderNote: AnnotationLayerProps['renderNote'];
 }) {
@@ -71,7 +73,7 @@ export const PaintedAnnotation = memo(function PaintedAnnotation({
           </div>
         </foreignObject>
       )}
-      {debug ? renderDebugBoxes(item, prefix) : null}
+      {debug ? renderDebugBoxes(item, prefix, candidates) : null}
     </g>
   );
 });

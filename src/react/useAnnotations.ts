@@ -10,6 +10,7 @@ export function useAnnotations(options: UseAnnotationsOptions): ResolvedLayout {
       options.annotations,
       options.bounds,
       options.defaultNoteSize,
+      options.diagnostics,
       options.noteSizes,
       options.obstacles,
       options.padding,

@@ -42,7 +42,6 @@ const initialOptions: LayoutOptions = {
   obstacles,
   noteSizes,
   // Keep the exact winning placement without transporting every diagnostic candidate.
-  placement: { maxCandidates: 8 },
   refinement: false
 };
 const initialLayout = resolveAnnotationLayout(initialOptions);
@@ -78,6 +77,7 @@ declare global {
       pings: number;
       lastAction: string;
       errors: string[];
+      leanLayout: boolean;
       freshParity: () => boolean;
     };
   }
@@ -212,6 +212,8 @@ function App() {
     window.__annotationsWorkerDemo = {
       ready: workerReady, pending, commits: view.commits, discarded,
       pings, lastAction: view.action, errors,
+      leanLayout: !Object.hasOwn(view.layout, 'diagnostics')
+        && view.layout.annotations.every((item) => !Object.hasOwn(item.placement, 'candidates')),
       freshParity: () => canReuseWorkerAnnotation(resolveAnnotationLayout(committed.current), latestLayout.current)
     };
   }, [view, quality, workerReady, pending, discarded, pings, errors]);
@@ -255,11 +257,7 @@ function App() {
               </g>
             </svg>
             <AnnotationLayer
-              annotations={view.options.annotations}
-              bounds={bounds}
-              obstacles={view.options.obstacles ?? []}
-              noteSizes={noteSizes}
-              resolvedLayout={view.layout}
+              layout={view.layout}
               noteTabIndex={0}
               label="Worker-resolved annotation SVG layer"
               style={{ width: '100%', height: '100%' }}

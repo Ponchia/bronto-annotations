@@ -14,9 +14,6 @@ import type {
   PointerEvent as ReactPointerEvent
 } from 'react';
 import {
-  normalizeBox
-} from '../core/anchors.js';
-import {
   annotationEditHandles,
   createAnnotationEditDelta,
   createAnnotationEditEvent,
@@ -49,8 +46,6 @@ import {
 } from './edit-geometry.js';
 import type { AnnotationEditHandle } from '../core/edit.js';
 import type {
-  Annotation,
-  Box,
   ResolvedAnnotation,
   ResolvedLayout,
   Size
@@ -79,102 +74,78 @@ type ActiveEdit = {
  * not alter this component's callable type or the existing default renderer.
  */
 export function AnnotationLayer(props: AnnotationLayerProps) {
-  // Read *values* on controlled parent renders. A host may mutate a supported
-  // edit option or style object in place; React's memo comparator otherwise
-  // sees the same old/new reference and incorrectly skips the update. Avoid
-  // snapshot overhead entirely for normal internally resolved React layers.
-  const controlled = props.resolvedLayout !== undefined;
-  return <MemoizedAnnotationLayer
-    {...props}
-    __editableSnapshot={controlled ? inlinePropsSnapshot(props.editable) : ''}
-    __styleSnapshot={controlled ? inlinePropsSnapshot(props.style) : ''}
-    __boundsSnapshot={controlled ? JSON.stringify([
-      props.bounds.x, props.bounds.y, props.bounds.width, props.bounds.height
-    ]) : ''}
-    __idsSnapshot={controlled ? JSON.stringify(props.annotations.map((item) => item.id)) : ''}
-  />;
+  assertLayerMode(props);
+  return <MemoizedAnnotationLayer {...props} />;
 }
 
-type InternalRendererProps = AnnotationLayerProps & {
-  readonly __editableSnapshot: string;
-  readonly __styleSnapshot: string;
-  readonly __boundsSnapshot: string;
-  readonly __idsSnapshot: string;
-};
+// Geometry and presentation come from one source, so normal React identity
+// comparison is sufficient. Per-note and edit-handle memoization below retains
+// unchanged winners across incremental commits and inline presentation props.
+const MemoizedAnnotationLayer = memo(AnnotationLayerRenderer);
 
-const MemoizedAnnotationLayer = memo(AnnotationLayerRenderer, equalControlledLayerProps);
-
-// A controlled host may rebuild its raw annotation array and inline edit
-// options while its authoritative resolvedLayout object remains *identical*.
-// Do not reconcile hundreds of SVG notes and edit controls for this no-op.
-// Compare every other presentation/interaction prop by identity so callbacks,
-// accessibility and debug settings are never hidden by this optimization.
-const CONTROLLED_GEOMETRY_INPUTS = new Set<string>([
-  'annotations', 'bounds', 'padding', 'obstacles', 'placement',
-  'defaultNoteSize', 'noteSizes', 'refinement', 'editable', 'style'
-]);
-
-function equalControlledLayerProps(previous: InternalRendererProps, next: InternalRendererProps): boolean {
-  if (!previous.resolvedLayout || previous.resolvedLayout !== next.resolvedLayout) return false;
-  // Raw source diagnostics consume annotations directly rather than just the
-  // authoritative resolved geometry. Conservatively keep them reactive.
-  if (previous.targetAlignmentTargets || next.targetAlignmentTargets
-    || previous.onTargetAlignment || next.onTargetAlignment
-    || previous.assertTargetAlignment || next.assertTargetAlignment) return false;
-
-  const keys = new Set([...Object.keys(previous), ...Object.keys(next)]);
-  for (const key of keys) {
-    if (CONTROLLED_GEOMETRY_INPUTS.has(key)) continue;
-    if (previous[key as keyof InternalRendererProps] !== next[key as keyof InternalRendererProps]) return false;
+function assertLayerMode(props: AnnotationLayerProps): void {
+  if ('resolvedLayout' in props) {
+    throw new Error('AnnotationLayer.resolvedLayout was removed; use layout without annotations, bounds or other solver inputs.');
   }
-  return true;
+  if ('layout' in props) {
+    if (!props.layout) throw new Error('AnnotationLayer.layout must be a resolved layout.');
+    for (const key of [
+      'annotations', 'bounds', 'padding', 'obstacles', 'placement',
+      'defaultNoteSize', 'noteSizes', 'refinement', 'diagnostics', 'measure'
+    ]) {
+      if (key in props) {
+        throw new Error(`AnnotationLayer.layout cannot be combined with ${key}; pass solver inputs to resolveAnnotationLayout instead.`);
+      }
+    }
+  } else if (!props.annotations || !props.bounds) {
+    throw new Error('AnnotationLayer requires either layout, or annotations and bounds.');
+  }
 }
 
-function inlinePropsSnapshot(value: AnnotationLayerProps['editable'] | AnnotationLayerProps['style']): string {
-  if (!value || typeof value !== 'object') return String(value);
-  const record: Record<string, unknown> = value as Record<string, unknown>;
-  return JSON.stringify(Object.keys(record).sort().map((key) => [key, record[key]]));
-}
-
-function AnnotationLayerRenderer({
-  annotations,
-  assertQuality,
-  assertTargetAlignment,
-  bounds,
-  padding,
-  obstacles,
-  placement,
-  defaultNoteSize,
-  noteSizes,
-  className,
-  classPrefix = PREFIX,
-  debug = false,
-  editable,
-  previewEdits = false,
-  resolvedLayout,
-  label = 'Annotation layer',
-  measure = 'estimate',
-  markerIdPrefix,
-  editHandleTabIndex = 0,
-  noteTabIndex,
-  preserveAspectRatio,
-  qualityDebug = false,
-  refinement,
-  renderNote,
-  onEdit,
-  onEditEnd,
-  onEditStart,
-  onLayout,
-  onQuality,
-  onTargetAlignment,
-  qualityFormat,
-  targetAlignmentFormat,
-  targetAlignmentOptions,
-  targetAlignmentTargets,
-  style,
-  __boundsSnapshot,
-  __idsSnapshot
-}: InternalRendererProps) {
+function AnnotationLayerRenderer(props: AnnotationLayerProps) {
+  const {
+    annotations: inputAnnotations,
+    assertQuality,
+    assertTargetAlignment,
+    bounds: inputBounds,
+    padding,
+    obstacles,
+    placement,
+    defaultNoteSize,
+    noteSizes,
+    className,
+    classPrefix = PREFIX,
+    debug = false,
+    editable,
+    previewEdits = false,
+    layout: hostLayout,
+    label = 'Annotation layer',
+    measure = 'estimate',
+    markerIdPrefix,
+    editHandleTabIndex = 0,
+    noteTabIndex,
+    preserveAspectRatio,
+    qualityDebug = false,
+    refinement,
+    diagnostics,
+    renderNote,
+    onEdit,
+    onEditEnd,
+    onEditStart,
+    onLayout,
+    onQuality,
+    onTargetAlignment,
+    qualityFormat,
+    targetAlignmentFormat,
+    targetAlignmentOptions,
+    targetAlignmentTargets,
+    style
+  } = props;
+  const annotations = useMemo(
+    () => hostLayout ? hostLayout.annotations.map((item) => item.annotation) : inputAnnotations!,
+    [hostLayout, inputAnnotations]
+  );
+  const bounds = hostLayout ? hostLayout.bounds : inputBounds!;
   const prefix = classPrefix;
   const markerPrefix = markerIdPrefix ?? prefix;
   const svgRef = useRef<SVGSVGElement>(null);
@@ -193,7 +164,7 @@ function AnnotationLayerRenderer({
   // commit, and merging an unused size map can invalidate other memoization.
   // Keep both hooks unconditional so switching back to local layout resolution
   // still computes the correct sizes without changing React hook order.
-  const hasHostLayout = resolvedLayout !== undefined;
+  const hasHostLayout = hostLayout !== undefined;
   const estimatedSizes = useMemo(
     () => hasHostLayout ? EMPTY_NOTE_SIZES : Object.fromEntries(annotations.map((annotation) => [
       annotation.id,
@@ -213,13 +184,7 @@ function AnnotationLayerRenderer({
     // A host with an incremental session can supply its committed result.
     // Computing it again here would undo the optimization. All subsequent
     // quality, editing and SVG rendering use this same authoritative object.
-    if (resolvedLayout !== undefined) {
-      if (measure === 'dom') {
-        throw new Error('AnnotationLayer.resolvedLayout requires measure="estimate"; pass measured noteSizes through the host layout options instead.');
-      }
-      assertControlledLayout(resolvedLayout, annotations, bounds);
-      return resolvedLayout;
-    }
+    if (hostLayout !== undefined) return hostLayout;
 
     return resolveAnnotationLayout({
       annotations,
@@ -229,15 +194,12 @@ function AnnotationLayerRenderer({
       ...(obstacles ? { obstacles } : {}),
       ...(placement ? { placement } : {}),
       ...(defaultNoteSize ? { defaultNoteSize } : {}),
-      ...(refinement !== undefined ? { refinement } : {})
+      ...(refinement !== undefined ? { refinement } : {}),
+      ...(diagnostics !== undefined ? { diagnostics } : debug ? { diagnostics: { candidates: 8 } } : {})
     });
   }, [
     annotations, bounds, padding, obstacles, placement, defaultNoteSize,
-    refinement, resolvedNoteSizes, resolvedLayout, measure,
-    // These primitive snapshots change even when a host mutates the same
-    // bounds object or annotation IDs array in place. Revalidate controlled
-    // layouts rather than trusting stale useMemo source references.
-    __boundsSnapshot, __idsSnapshot
+    refinement, diagnostics, debug, resolvedNoteSizes, hostLayout
   ]);
   // Full quality diagnostics compare every note with every other note. Most
   // passive and host-controlled renderers do not request them. Avoid quadratic
@@ -364,6 +326,10 @@ function AnnotationLayerRenderer({
   const paintAnnotations = useMemo(
     () => annotationsForPaint(layout.annotations),
     [layout.annotations]
+  );
+  const debugCandidates = useMemo(
+    () => debug ? new Map(layout.diagnostics?.annotations.map((item) => [item.id, item.candidates])) : undefined,
+    [debug, layout.diagnostics]
   );
   const qualityIssues = useMemo(
     () => qualityDebug && quality ? renderQualityIssues(layout, quality, prefix) : null,
@@ -620,6 +586,7 @@ function AnnotationLayerRenderer({
             prefix={prefix}
             markerPrefix={markerPrefix}
             debug={debug}
+            candidates={debugCandidates?.get(item.id)}
             noteTabIndex={noteTabIndex}
             renderNote={renderNote}
           />
@@ -658,20 +625,4 @@ function AnnotationLayerRenderer({
       ) : null}
     </div>
   );
-}
-
-function assertControlledLayout(layout: ResolvedLayout, annotations: Annotation[], bounds: Box): void {
-  const normalizedBounds = normalizeBox(bounds);
-  if (layout.bounds.x !== normalizedBounds.x
-    || layout.bounds.y !== normalizedBounds.y
-    || layout.bounds.width !== normalizedBounds.width
-    || layout.bounds.height !== normalizedBounds.height) {
-    throw new Error('AnnotationLayer.resolvedLayout bounds do not match the current host bounds.');
-  }
-
-  const ids = new Set(annotations.map((annotation) => annotation.id));
-  if (ids.size !== annotations.length || layout.annotations.length !== ids.size
-    || layout.annotations.some((item) => !ids.delete(item.id)) || ids.size !== 0) {
-    throw new Error('AnnotationLayer.resolvedLayout must contain exactly the current host annotation IDs.');
-  }
 }
