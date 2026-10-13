@@ -1,7 +1,8 @@
 # Placement quality evaluation
 
 This evaluation checks authored host geometry against semantic quality budgets and
-compares exhaustive candidate retention with explicit `maxCandidates: 8`. It
+compares normal lean output, `diagnostics: { candidates: 8 }`, and
+`diagnostics: { candidates: 'all' }` at the same solver settings. It
 complements the performance stress benchmark: known-feasible fixtures must fail
 when notes overlap, overflow bounds, disappear, shrink, or occlude host content.
 
@@ -83,17 +84,18 @@ or semantic reason; do not increase budgets to hide a real quality regression.
 
 ## Comparison and measurements
 
-Both supported configurations use the same notes, obstacles, bounds, and enabled
-refinement: two passes over at most eight candidates per annotation. The reference
-omits `placement.maxCandidates`; the bounded run sets it to eight. This compares
-exhaustive search/retention with bounded retention while keeping the refinement
-frontier identical. It does not claim that eight-candidate refinement equals
+All three configurations use the same notes, obstacles, bounds, and enabled
+refinement: two passes over at most eight candidates per annotation. The normal run omits diagnostics; the other runs collect eight or all
+ranked alternatives. This compares
+diagnostic output while keeping the refinement frontier identical. The
+normal output contains no diagnostic candidate arrays. It does not claim that eight-candidate refinement equals
 unrestricted refinement over every candidate.
 
 Selected IDs, subjects, anchor points, note boxes, connector points and paths,
 placement sides, alignments, offsets, and scores must match **exactly**, as must
 quality metrics and issue lists. Retained candidate lists intentionally differ:
-the reference retains more than eight per note and the bounded run retains eight.
+normal output retains none, bounded diagnostics retain eight, and full
+diagnostics retain all alternatives.
 No internal optimization API is required.
 
 The JSON contains source commit, a dirty flag for evaluated source/fixture/script
