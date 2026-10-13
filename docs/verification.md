@@ -73,7 +73,7 @@ context from a small annotated overview.
 late-note anchor change, append/remove a low-priority annotation, reset, or
 drag a note handle. It shows how many previously resolved winners survive each
 change, uses `previewEdits` for pointer feedback and passes the authoritative
-incremental `resolvedLayout` to React instead of invoking a second full solve.
+incremental result as `layout` to React instead of invoking a second full solve.
 
 `examples/style-gallery` renders every public annotation variant, all tones,
 all motion hints, package-prefixed classes, and Bronto-compatible CSS styling in

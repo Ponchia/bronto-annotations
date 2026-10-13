@@ -132,12 +132,17 @@ The benchmark resolves deterministic layouts for:
 - 50 annotations with obstacles
 - 200 annotations with obstacles
 
-The gate uses bounded candidate counts and no refinement so it stays suitable
+The gate uses the normal lean result and no refinement so it stays suitable
 for normal CI. It checks that layouts finish within generous CI-safe thresholds,
-produce all expected annotations, have no bounds overflow, and expose placement
-candidates for debugging.
+produce all expected annotations, have no bounds overflow, and do not retain
+unrequested candidate diagnostics. Quality and diagnostic parity have separate
+tests; this stress fixture can legitimately have overlaps.
 
-## Interpretation
+## Historical performance guidance (0.6 API)
+
+The remainder preserves observations made before the 0.7 migration, including
+retired controlled-renderer optimizations and configuration fields. Use the
+current migration/core/React guides rather than copying those retired fields.
 
 This is not a micro-benchmark suite. It is a regression guard for accidental
 algorithmic slowdowns in candidate generation, obstacle scoring, and layout
