@@ -42,6 +42,8 @@ const titles = {
   'api-stability': 'API stability and versioning',
   'migration-guide': 'Migrating existing annotations',
   performance: 'Performance and stress testing',
+  'placement-quality': 'Placement quality and evidence',
+  'upstream-consumers': 'Upstream consumer validation',
   'security-automation': 'Security and development',
   release: 'Releases and publishing',
 };
@@ -64,6 +66,8 @@ const guideSummaries = {
   'api-stability': 'Understand stable and experimental exports before choosing an integration path.',
   'migration-guide': 'Move existing d3-style and BrontoUI annotation usage onto the standalone package.',
   performance: 'Read workload-specific measurements and the limits of full and incremental layouts.',
+  'placement-quality': 'Reproduce geometric quality budgets and inspect complete annotated host fixtures.',
+  'upstream-consumers': 'Render pinned upstream inputs and verify real browser geometry and interactions.',
   'security-automation': 'Maintainer reference for security checks and public runner safeguards.',
   release: 'Maintainer reference for tags, verification, publication, and recovery.',
 };

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { resolveAnnotationLayout } from '../core/layout.js';
+import { resolveAnnotationLayout } from '../core/layout-resolver.js';
 import type { ResolvedLayout } from '../core/model.js';
 import type { UseAnnotationsOptions } from './types.js';
 

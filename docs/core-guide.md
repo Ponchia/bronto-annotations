@@ -230,3 +230,21 @@ formatLayoutQualityReport(report, { includeInfo: true });
 The report covers invalid note boxes, bounds overflow, note overlap, obstacle
 overlap, connector-obstacle crossings, connector-note crossings, aggregate
 metrics, and a simple quality score.
+
+## Keep ordinary integrations small
+
+Start with a few explanatory notes, measured text sizes, and the default
+synchronous resolver. When the host does not need every debugging candidate,
+set `placement: { maxCandidates: 8 }`. The resolver can avoid expensive routing
+for candidates provably outside that exact retained ranking. It does not turn
+this setting into an approximate search or a guaranteed time budget.
+
+Full diagnostic retention remains the default. Iterative refinement works with
+the retained candidate frontier, so changing that frontier can change a refined
+layout. See [performance](performance.md) and the reproducible
+[quality corpus](placement-quality.md) before tuning a dense authoring surface.
+
+Measure note text and verify `evaluateAnnotationLayout` before introducing a
+Worker. When content cannot fit, let the host choose fewer simultaneously
+visible explanations, a separate note list, or a larger surface; do not mistake
+a completed solve for a readable layout.

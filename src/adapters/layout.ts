@@ -6,7 +6,7 @@ import type {
   PlacementPreference,
   ResolvedLayout
 } from '../core/model.js';
-import { resolveAnnotationLayout } from '../core/layout.js';
+import { resolveAnnotationLayout } from '../core/layout-resolver.js';
 import {
   assertAnnotationLayoutQuality,
   evaluateAnnotationLayout,

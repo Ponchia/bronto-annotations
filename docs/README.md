@@ -24,7 +24,7 @@ incremental sessions are advanced, optional paths.
 | Why are notes missing, shifted, or overlapping? | [Troubleshooting](troubleshooting.md) |
 | Where is a complete host integration? | [Examples](../examples/README.md) and [integration recipes](integration-recipes.md) |
 | What is the API contract? | [API reference](api-reference.md), [stability](api-stability.md), and [compatibility](compatibility.md) |
-| What should I know before shipping? | [Accessibility](accessibility.md) and [performance](performance.md) |
+| What should I know before shipping? | [Accessibility](accessibility.md), [performance](performance.md), and [placement quality](placement-quality.md), and [upstream consumer proof](upstream-consumers.md) |
 | How can a host run layouts off the main thread? | [Experimental Worker recipe](worker-layout.md) |
 
 The site and these guides track `main`. Consult the installed package's
@@ -41,6 +41,8 @@ cover publishing and repository safeguards. For help or optional funding, read
 [SUPPORT.md](../SUPPORT.md) and [FUNDING.md](../FUNDING.md).
 
 Accepted [architecture decisions](adr/) explain the standalone package boundary.
+The current [quality-first decision](adr/0002-quality-before-api-expansion.md)
+prioritizes common consumer workloads and exact output before API expansion.
 The API, parity, readiness, and completion JSON manifests are generated/reference
 material: their owning verification commands live in `package.json` and
 `scripts/`. They are not a substitute for a consumer guide or usability evidence.

@@ -3,6 +3,55 @@
 Annotation layout should stay deterministic and fast enough for report
 generation and interactive authoring surfaces.
 
+## Start with the common workload
+
+For an unrefined chart or diagram with approximately 5–20 notes, supply measured
+`noteSizes` and retain only the diagnostics the host uses:
+
+```ts
+const layout = resolveAnnotationLayout({
+  annotations,
+  bounds,
+  noteSizes,
+  placement: { maxCandidates: 8 }
+});
+```
+
+For the same inputs, the bounded search returns the exact first eight candidates
+of the exhaustive ranking, including scores and routed connector geometry. It
+is not an approximate shortlist and does not narrow permitted sides or offsets.
+The search remains exhaustive when no retention limit is specified. A retention
+limit can affect **iterative refinement**, which chooses among retained
+candidates; use matching refinement frontiers when comparing configurations.
+
+Do not serialize every candidate into application history or send an unbounded
+diagnostic graph through a Worker merely to paint the winning placements. The
+public React Worker example now explicitly retains eight candidates per note;
+the historical transport measurements below and in `worker-layout.md` include
+larger diagnostic graphs and must not be treated as the current demo payload.
+
+## Reproduce bounded-search measurements
+
+`npm run benchmark:placement` alternates exhaustive and exact top-eight solves
+on the same 5, 12 and 20-note inputs. Six measured samples follow a warmup for
+each configuration. It checks exact retained candidate, geometry and quality
+parity and reports serialized layout size alongside solver duration.
+
+To compare a historical build with identical bounded inputs, pass
+`-- --baseline-module /path/to/other-checkout/dist/index.js`. Build that checkout
+separately first. The module path is developer-supplied local code; do not point
+it at untrusted code. `--output <file>` retains the JSON report. Timings and JSON
+byte counts are observations, not frame deadlines or browser clone-cost claims.
+
+## Placement quality is a separate gate
+
+`npm run test:quality` renders and measures the
+[placement-quality corpus](placement-quality.md). Feasible fixtures must meet
+explicit overlap/occlusion budgets; deliberately impossible fixtures must expose
+their problems without losing notes. It compares exact geometry and quality,
+retained JSON bytes, and fixed-host resize movement. Timings are observations,
+not a substitute for those correctness checks or a frame-rate promise.
+
 ## Benchmark Gate
 
 Run:
@@ -33,8 +82,11 @@ For performance-sensitive consumers, prefer:
 - host-provided `noteSizes` when available
 - `placement.allowedSides` and `placement.allowedAligns` when the host truly
   needs fewer placement alternatives; these constrain evaluated search space
-- `placement.maxCandidates` only to limit **retained** ranked/debug candidates:
-  it does not limit how many candidates are evaluated or speed up the search
+- A positive integer `placement.maxCandidates` to limit **retained** ranked/debug
+  candidates. Bounded searches now skip connector routing only when a cheap
+  geometric lower bound proves a candidate cannot enter the exact retained set.
+  This is not a hard evaluation or latency budget: worst-case searches still
+  examine every candidate, and the unrestricted default remains exhaustive.
 - `connector: { routing: 'none' }` only where connector avoidance is unnecessary
 - generated obstacles that represent real collision risks, not every invisible
   host primitive

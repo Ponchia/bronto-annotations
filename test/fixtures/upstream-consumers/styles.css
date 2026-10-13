@@ -1,0 +1,20 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #f4f6fa; color: #152237; font: 16px/1.5 system-ui, sans-serif; }
+main { max-width: 1400px; padding: 24px; margin: auto; }
+h1 { font-size: 28px; } h2 { font-size: 21px; }
+a { color: #174f99; }
+article { margin: 32px 0; background: white; padding: 20px; border: 1px solid #cbd5e1; border-radius: 8px; }
+.scroller { overflow-x: auto; overscroll-behavior-x: contain; border: 1px solid #cbd5e1; }
+.scroller:focus-visible { outline: 3px solid #2563eb; }
+.stage { position: relative; background: #fff; }
+.host, .overlay { position: absolute; }
+.host > svg { display: block; max-width: none !important; }
+.overlay { inset: 0; pointer-events: none; }
+.overlay > svg { width: 100%; height: 100%; display: block; }
+.pa-annotation__note { pointer-events: auto; }
+.pa-annotation__title, .pa-annotation__body { font-family: system-ui, sans-serif; font-size: 14px; }
+.pa-annotation__body { fill: #334155; }
+.pa-annotation__note-box { fill: #fff; stroke: #94a3b8; }
+summary { cursor: pointer; padding: 8px 0; }
+pre { overflow: auto; font-size: 14px; }
+@media (max-width: 600px) { main { padding: 12px; } article { padding: 12px; } }

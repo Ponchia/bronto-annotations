@@ -1,5 +1,14 @@
 # Off-main-thread annotation layouts
 
+Before adding Worker machinery, bound retained diagnostic candidates where the
+host does not inspect the whole search graph. The public React Worker example
+uses `placement: { maxCandidates: 8 }` with refinement disabled. It preserves
+the initial winners while reducing the graph that must cross the Worker
+boundary. All accepted revisions still use the authoritative layout and the
+existing stale-response checks. Historical large-payload measurements in this
+guide describe their recorded fixtures, not a universal or current-demo size.
+See [common-workload guidance](performance.md#start-with-the-common-workload).
+
 This guide describes a **tested integration recipe**, not a public Worker
 constructor or a new package export. Hosts can move expensive full annotation
 layout calculations off the main thread using native module Web Workers while

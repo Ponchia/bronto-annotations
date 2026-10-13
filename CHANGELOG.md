@@ -8,6 +8,31 @@ reasonable.
 
 ## Unreleased
 
+### Performance and internal boundaries
+
+- Preserve the exact retained placement ranking while avoiding connector routing
+  for candidates whose geometric lower bound cannot enter a positive integer
+  `maxCandidates` frontier. Exhaustive/default, manual and unusual limit behavior
+  remains unchanged; regression tests compare geometry, scores and reference
+  topology against an independent eager oracle.
+- Separate basic presets from D3-style migration, ordinary resolution from
+  incremental-session bookkeeping, and React presentation from interaction
+  orchestration. No public exports, runtime dependencies, or version change.
+- Bound diagnostic retention in the Worker examples instead of transporting the
+  full search graph for each note; keep authoritative revision checks intact.
+
+### Verification and guidance
+
+- Add wide/narrow chart, report, graph and long-text quality fixtures, expected
+  impossible layouts, and negative-control tests. Compare exact placement,
+  measured collision budgets, retained JSON bytes and fixed-host resize motion.
+- Add checksum-pinned, licensed upstream Vega/Mermaid inputs and real packed
+  browser consumers. Verify rendered alignment, readable text, note collisions,
+  host hover interaction and mobile scrolling without external browser requests.
+- Route quality and upstream proof guides, add a fast contributor check, and
+  distinguish current guidance from historical release/readiness records.
+
+
 ## 0.6.10 - 2026-10-13
 
 ### Fixed

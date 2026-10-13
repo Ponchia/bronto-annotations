@@ -41,6 +41,8 @@ const initialOptions: LayoutOptions = {
   bounds,
   obstacles,
   noteSizes,
+  // Keep the exact winning placement without transporting every diagnostic candidate.
+  placement: { maxCandidates: 8 },
   refinement: false
 };
 const initialLayout = resolveAnnotationLayout(initialOptions);
