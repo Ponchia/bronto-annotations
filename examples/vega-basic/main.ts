@@ -191,7 +191,8 @@ async function render() {
       generatedObstacles: prepared.obstacles.length + renderedMarkObstacles.length,
       renderedSvgObstacles: renderedMarkObstacles.length,
       validation: prepared.validation,
-      minCandidates: Math.min(...resolvedLayout.diagnostics!.annotations.map((annotation) => annotation.candidates.length)),
+      diagnosticCandidates: resolvedLayout.diagnostics!.annotations.map((entry) => entry.candidates.length),
+      leanPlacements: resolvedLayout.annotations.every((item) => !Object.hasOwn(item.placement, 'candidates')),
       anchorEvidence: prepared.annotations.map((annotation) => annotation.data),
       anchorIds: prepared.annotations.map((annotation) => annotation.id),
       obstacles: resolved.obstacles

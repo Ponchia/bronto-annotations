@@ -30,7 +30,7 @@ const examples = [
     source: 'vega-scenegraph',
     minRendered: 'renderedMarks',
     minObstacles: 1,
-    minCandidates: 10,
+    diagnosticCandidates: 8,
     validateAnchors: true,
     validateTargetAlignment: true,
     hostLayerSelector: '#chart > svg',
@@ -608,8 +608,17 @@ try {
         throw new Error(`${label} did not report generated obstacles: ${JSON.stringify(evidence.exampleData)}`);
       }
 
-      if (example.minCandidates && Number(evidence.exampleData?.minCandidates ?? 0) < example.minCandidates) {
-        throw new Error(`${label} did not report enough placement candidates: ${JSON.stringify(evidence.exampleData)}`);
+      if (example.diagnosticCandidates) {
+        // Candidate retention is now explicit inspection data, not a proxy for
+        // solver quality. Keep every existing geometry/alignment assertion and
+        // require exactly the requested diagnostics outside the lean winners.
+        const counts = evidence.exampleData?.diagnosticCandidates;
+        assert.ok(Array.isArray(counts) && counts.length === evidence.exampleData?.quality?.metrics?.annotationCount,
+          `${label}: missing per-annotation diagnostics`);
+        assert.ok(counts.every((count) => count === example.diagnosticCandidates),
+          `${label}: diagnostics do not match the requested candidate limit`);
+        assert.equal(evidence.exampleData?.leanPlacements, true,
+          `${label}: chosen placements must not contain diagnostic arrays`);
       }
 
       if (example.requiredEvidence) {
