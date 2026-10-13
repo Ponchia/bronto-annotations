@@ -92,7 +92,7 @@ async function renderHost(source, input, index) {
     return {
       id: `${source.id}-${n}`, selector: `[data-fixture-target="${n}"]`, coordinateSpace: stage,
       note: { title: descriptions[index][n][0], body: descriptions[index][n][1], wrap: 22, maxLines: 3 },
-      placement: { side: ['left', 'right', 'top', 'bottom'], maxCandidates: 8 },
+      placement: { side: ['left', 'right', 'top', 'bottom'] },
       subject: { shape: 'none' }, connector: { type: 'straight', end: 'dot' }
     };
   });
@@ -123,7 +123,8 @@ async function renderHost(source, input, index) {
   });
   const resolved = resolvePreparedAnnotationLayout(prepared, {
     bounds, padding: 12, defaultNoteSize: { width: 180, height: 100 },
-    placement: { maxCandidates: 8, align: ['center', 'start', 'end'], offset: [20, 80, 160, 240], crossOffset: [0, -120, 120] },
+    diagnostics: { candidates: 8 },
+    placement: { align: ['center', 'start', 'end'], offset: [20, 80, 160, 240], crossOffset: [0, -120, 120] },
     refinement: { passes: 2, maxCandidatesPerAnnotation: 8 },
     additionalObstacles: [inflate(hostBox)],
     targetAlignmentTargets: specs.map((spec, n) => ({ id: spec.id, box: targetBoxes[n] })),
@@ -161,7 +162,7 @@ window.measureUpstreamConsumers = () => records.map(record => {
     layoutNoteBoxes: resolved.layout.annotations.map(a => a.noteBox),
     obstacleBoxes: resolved.layout.obstacles,
     protectedHostBoxes: record.protectedHostBoxes,
-    candidateCounts: resolved.layout.annotations.map(a => a.placement.candidates.length),
+    candidateCounts: resolved.layout.diagnostics.annotations.map(a => a.candidates.length),
     finiteConnectorPoints: resolved.layout.annotations.every(a => a.connector.points.every(p => Number.isFinite(p.x) && Number.isFinite(p.y))),
     text: textElements.map(e => ({ text: e.textContent, box: measuredBox(e, stage), noteBox: noteGeometry(e.closest('.pa-annotation__note').querySelector('rect'), stage).box, pixels: pixels(e) })),
     minHostTextPixels: Math.min(...hostTexts.map(pixels)),

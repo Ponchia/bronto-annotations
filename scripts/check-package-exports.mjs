@@ -4,6 +4,7 @@ import { access, readFile } from 'node:fs/promises';
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 
 const core = await import('@ponchia/annotations');
+const d3 = await import('@ponchia/annotations/d3');
 const react = await import('@ponchia/annotations/react');
 const dom = await import('@ponchia/annotations/dom');
 const vega = await import('@ponchia/annotations/vega');
@@ -17,7 +18,8 @@ assert.deepEqual(pkg.exports?.['./bronto.css'], {
 });
 
 assert.equal(typeof core.resolveAnnotationLayout, 'function');
-assert.equal(typeof core.refineAnnotationLayout, 'function');
+assert.equal(Object.hasOwn(core, 'refineAnnotationLayout'), false, 'Render snapshots are not solver workspaces');
+assert.equal(Object.keys(core).some((name) => /d3/i.test(name)), false, 'D3 migration helpers must not leak through root');
 assert.equal(typeof core.renderAnnotationsSvg, 'function');
 assert.equal(typeof core.evaluateAnnotationLayout, 'function');
 assert.equal(typeof core.assertAnnotationLayoutQuality, 'function');
@@ -57,17 +59,17 @@ assert.equal(typeof core.pathCallout, 'function');
 assert.equal(typeof core.encircleCallout, 'function');
 assert.equal(typeof core.thresholdAnnotation, 'function');
 assert.equal(typeof core.badgeAnnotation, 'function');
-assert.equal(typeof core.annotationFromD3Style, 'function');
-assert.equal(typeof core.annotationsFromD3Style, 'function');
-assert.equal(typeof core.prepareD3StyleAnnotationCollection, 'function');
-assert.equal(typeof core.annotationsFromD3StyleCollection, 'function');
-assert.equal(typeof core.createD3StyleAnnotationBuilder, 'function');
-assert.equal(typeof core.defineD3StyleAnnotationType, 'function');
-assert.equal(typeof core.annotationsFromD3StyleType, 'function');
-assert.equal(typeof core.d3StyleAnnotationCollectionEditPatch, 'function');
-assert.equal(typeof core.applyD3StyleAnnotationCollectionEdit, 'function');
-assert.equal(typeof core.d3StyleAnnotationEditPatch, 'function');
-assert.equal(typeof core.applyD3StyleAnnotationEdit, 'function');
+assert.equal(typeof d3.annotationFromD3Style, 'function');
+assert.equal(typeof d3.annotationsFromD3Style, 'function');
+assert.equal(typeof d3.prepareD3StyleAnnotationCollection, 'function');
+assert.equal(typeof d3.annotationsFromD3StyleCollection, 'function');
+assert.equal(typeof d3.createD3StyleAnnotationBuilder, 'function');
+assert.equal(typeof d3.defineD3StyleAnnotationType, 'function');
+assert.equal(typeof d3.annotationsFromD3StyleType, 'function');
+assert.equal(typeof d3.d3StyleAnnotationCollectionEditPatch, 'function');
+assert.equal(typeof d3.applyD3StyleAnnotationCollectionEdit, 'function');
+assert.equal(typeof d3.d3StyleAnnotationEditPatch, 'function');
+assert.equal(typeof d3.applyD3StyleAnnotationEdit, 'function');
 assert.equal(typeof react.AnnotationLayer, 'function');
 assert.equal(typeof react.useAnnotations, 'function');
 assert.equal(typeof dom.anchorFromDOMRect, 'function');
@@ -259,15 +261,15 @@ assert.deepEqual(core.declutterLabels([
   { pos: 10, size: 10 },
   { pos: 12, size: 10 }
 ], { gap: 4 }), [10, 24]);
-assert.equal(core.annotationsFromD3Style([
+assert.equal(d3.annotationsFromD3Style([
   { id: 'd3-style', type: 'annotationCalloutCircle', x: 24, y: 32, dx: 40, dy: -16, note: { label: 'D3-style' }, subject: { radius: 6 } }
 ])[0].connector.startOffset, 6);
-const exportD3DataHooks = core.annotationsFromD3Style([
+const exportD3DataHooks = d3.annotationsFromD3Style([
   { data: { period: 2, score: 9 }, annotationData: { hook: 'd3-style' }, note: { label: 'D3 data hooks' } }
 ], { x: 'period', y: 'score' })[0];
 assert.deepEqual(exportD3DataHooks.data, { hook: 'd3-style' });
 assert.deepEqual(exportD3DataHooks.metadata.datum, { period: 2, score: 9 });
-assert.equal(core.prepareD3StyleAnnotationCollection({
+assert.equal(d3.prepareD3StyleAnnotationCollection({
   annotations: [{
     data: { period: 2, score: 9 },
     dx: 24,
@@ -281,11 +283,11 @@ assert.equal(core.prepareD3StyleAnnotationCollection({
   editMode: true,
   notePadding: 5
 }).annotations[0].id, 'd3-collection');
-assert.equal(core.annotationsFromD3StyleCollection({
+assert.equal(d3.annotationsFromD3StyleCollection({
   annotations: [{ data: { period: 2, score: 9 }, note: { label: 'D3 collection' } }],
   accessors: { x: 'period', y: 'score' }
 })[0].anchor.point.y, 9);
-const exportD3Builder = core.createD3StyleAnnotationBuilder()
+const exportD3Builder = d3.createD3StyleAnnotationBuilder()
   .type('annotationCalloutCircle')
   .accessors({ x: 'period', y: 'score' })
   .ids(['d3-builder'])
@@ -299,7 +301,7 @@ const exportD3Builder = core.createD3StyleAnnotationBuilder()
 assert.equal(exportD3Builder.editMode(), true);
 assert.equal(exportD3Builder.toAnnotations()[0].id, 'd3-builder');
 assert.equal(exportD3Builder.prepare().annotations[0].note.padding, 5);
-const exportCustomType = core.defineD3StyleAnnotationType({
+const exportCustomType = d3.defineD3StyleAnnotationType({
   baseType: 'annotationCalloutRect',
   defaults: {
     dx: 12,
@@ -309,10 +311,10 @@ const exportCustomType = core.defineD3StyleAnnotationType({
   },
   transform: (annotation) => ({ ...annotation, variant: 'band' })
 });
-assert.equal(core.annotationsFromD3StyleType(exportCustomType, [
+assert.equal(d3.annotationsFromD3StyleType(exportCustomType, [
   { id: 'd3-custom', x: 50, y: 60, note: { label: 'Custom' } }
 ])[0].variant, 'band');
-assert.deepEqual(core.d3StyleAnnotationEditPatch({
+assert.deepEqual(d3.d3StyleAnnotationEditPatch({
   id: 'd3-edit',
   x: 24,
   y: 32,
@@ -327,7 +329,7 @@ assert.deepEqual(core.d3StyleAnnotationEditPatch({
   dy: 12,
   placement: { manual: { x: 80, y: 44 } }
 });
-assert.deepEqual(core.d3StyleAnnotationCollectionEditPatch({
+assert.deepEqual(d3.d3StyleAnnotationCollectionEditPatch({
   idPrefix: 'd3-collection-edit',
   accessors: { x: 'x', y: 'y' },
   annotations: [{ data: { x: 2, y: 3 }, note: { label: 'Collection edit' } }]
@@ -335,7 +337,7 @@ assert.deepEqual(core.d3StyleAnnotationCollectionEditPatch({
   annotationId: 'd3-collection-edit-1',
   suggestedAnchor: { type: 'point', point: { x: 8, y: 9 } }
 }).annotation.data, { x: 8, y: 9 });
-assert.deepEqual(core.applyD3StyleAnnotationCollectionEdit({
+assert.deepEqual(d3.applyD3StyleAnnotationCollectionEdit({
   idPrefix: 'd3-collection-edit',
   accessors: { x: 'x', y: 'y' },
   annotations: [{ data: { x: 2, y: 3 }, note: { label: 'Collection edit' } }]
@@ -343,7 +345,7 @@ assert.deepEqual(core.applyD3StyleAnnotationCollectionEdit({
   annotationId: 'd3-collection-edit-1',
   suggestedAnchor: { type: 'point', point: { x: 8, y: 9 } }
 }).annotations[0].data, { x: 8, y: 9 });
-assert.deepEqual(core.applyD3StyleAnnotationEdit({
+assert.deepEqual(d3.applyD3StyleAnnotationEdit({
   id: 'd3-edit-data',
   data: { x: 2, y: 4 },
   note: { label: 'D3 edit data' }

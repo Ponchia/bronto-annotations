@@ -21,7 +21,8 @@
         "examples/*/main.ts",
         "examples/*/main.tsx",
         "scripts/**/*.mjs",
-        "site/main.ts"
+        "site/main.ts",
+        "src/d3/index.ts"
       ],
       "project": [
         "src/**/*.{ts,tsx}",

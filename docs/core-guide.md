@@ -5,6 +5,14 @@
 Resolve note placement from host geometry, preserve editorial positions,
 and inspect collision and bounds diagnostics.
 
+## Lean results and optional diagnostics
+
+Normal layouts contain only chosen placements. Request alternatives with
+`diagnostics: { candidates: 8 }` or `{ candidates: 'all' }` in the layout options.
+They are returned separately in `layout.diagnostics.annotations`, not under each
+placement. Diagnostic retention never changes winners or refinement quality.
+See [0.7 migration](migration-0.7.md) for removed fields and complete examples.
+
 ## Core Usage
 
 ```ts
@@ -233,18 +241,14 @@ metrics, and a simple quality score.
 
 ## Keep ordinary integrations small
 
-Start with a few explanatory notes, measured text sizes, and the default
-synchronous resolver. When the host does not need every debugging candidate,
-set `placement: { maxCandidates: 8 }`. The resolver can avoid expensive routing
-for candidates provably outside that exact retained ranking. It does not turn
-this setting into an approximate search or a guaranteed time budget.
-
-Full diagnostic retention remains the default. Iterative refinement works with
-the retained candidate frontier, so changing that frontier can change a refined
-layout. See [performance](performance.md) and the reproducible
-[quality corpus](placement-quality.md) before tuning a dense authoring surface.
+Start with a few explanatory notes and measured text sizes. The default solve
+returns only winners and uses exact bounded search for the result it needs.
+Optional `diagnostics: { candidates: 8 }` retains ranked alternatives separately;
+omit it for ordinary rendering and transport. The refinement frontier belongs
+to `refinement.maxCandidatesPerAnnotation` and never depends on diagnostic output.
 
 Measure note text and verify `evaluateAnnotationLayout` before introducing a
 Worker. When content cannot fit, let the host choose fewer simultaneously
 visible explanations, a separate note list, or a larger surface; do not mistake
-a completed solve for a readable layout.
+a completed solve for a readable layout. See the
+[quality corpus](placement-quality.md) and [migration guide](migration-0.7.md).

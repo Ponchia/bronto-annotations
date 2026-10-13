@@ -10,6 +10,7 @@
   "include": [
     "./docs-public-snippets.ts",
     "./export-consumer.ts",
-    "./global.d.ts"
+    "./global.d.ts",
+    "./api-contract-consumer.tsx"
   ]
 }

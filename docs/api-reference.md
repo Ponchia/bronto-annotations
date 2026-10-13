@@ -13,7 +13,6 @@ React Flow, or `@ponchia/ui` dependency.
 ```ts
 import {
   annotationClassName,
-  annotationFromD3Style,
   applyAnnotationEdits,
   assertAnchorAlignmentReport,
   assertAnchorAlignmentReportIfRequested,
@@ -37,6 +36,14 @@ import {
 } from '@ponchia/annotations';
 ```
 
+Normal `ResolvedLayout` objects contain chosen placements, with no
+`ResolvedPlacement.candidates`. Use `LayoutOptions.diagnostics: { candidates: 8 }`
+or `{ candidates: 'all' }` to request `LayoutDiagnostics`. Its
+`annotations: AnnotationPlacementDiagnostics[]` entries contain IDs and ranked
+candidates. This does not change the configured refinement search or winners.
+Low-level `allPlacementCandidates(input, { limit: 8 })` has a separate result
+limit. The old `placement.maxCandidates` option is rejected.
+
 Primary groups:
 
 - Models: `Point`, `Box`, `Anchor`, `Annotation`, `AnnotationNote`,
@@ -45,7 +52,7 @@ Primary groups:
   `ResolvedLayout`, `ResolvedAnnotation`, `PlacementCandidate`,
   `AnnotationSubjectGeometry`, `AnnotationConnectorOptions`,
   `GeneratedSurfaceLayoutDefaults`, `GeneratedSurfaceLayoutDefaultsOptions`.
-- Layout: `resolveAnnotationLayout`, `refineAnnotationLayout`,
+- Layout: `resolveAnnotationLayout`,
   `estimateNoteSize`, `allPlacementCandidates`, `scorePlacementCandidate`,
   `evaluateAnnotationLayout`, `assertAnnotationLayoutQuality`,
   `formatLayoutQualityReport`, `formatLayoutQualityIssue`,
@@ -97,6 +104,21 @@ Primary groups:
   `annotationStyleVariables`.
 - Presets: `pointCallout`, `regionCallout`, `pathCallout`,
   `encircleCallout`, `thresholdAnnotation`, `badgeAnnotation`.
+
+
+Boundary: the root package does not render charts, parse diagram languages,
+mutate D3 selections, own app state, persist annotations, or provide a design
+system.
+
+## `@ponchia/annotations/d3`
+
+Migration-only helpers are separate from normal layout and presets.
+
+```ts
+import { annotationFromD3Style, createD3StyleAnnotationBuilder }
+  from '@ponchia/annotations/d3';
+```
+
 - d3-style bridge: `annotationFromD3Style`, `annotationsFromD3Style`,
   `prepareD3StyleAnnotationCollection`, `annotationsFromD3StyleCollection`,
   `createD3StyleAnnotationBuilder`, `defineD3StyleAnnotationType`,
@@ -109,10 +131,6 @@ Primary groups:
   `D3StyleAnnotationInput.data` is the accessor datum; use
   `annotationData` when migrated d3-style annotations need rendered
   annotation-layer `data-*` attributes.
-
-Boundary: the root package does not render charts, parse diagram languages,
-mutate D3 selections, own app state, persist annotations, or provide a design
-system.
 
 ## `@ponchia/annotations/react`
 
@@ -202,16 +220,13 @@ notifications measure only their changed elements, using computed local CSS
 sizes under zoom and the client rect as fallback. Duplicate observer entries
 for one note are batched, and unchanged values preserve React state identity.
 
-`AnnotationLayerProps.resolvedLayout` is an experimental option for hosts that
-compute the authoritative layout externally, including with the experimental
-`createIncrementalAnnotationLayoutSession`. When provided, the React layer
-uses that exact layout for SVG geometry, edit handles and quality callbacks,
-without invoking its own full solver. The host must supply matching annotation
-IDs and bounds; mismatches throw with a clear error. This mode requires
-`measure="estimate"` (the default), because internal DOM note measurement would
-otherwise become inconsistent with the host-owned layout. Pass measured note
-sizes to the host session explicitly and commit an updated layout alongside
-the annotation changes. Existing consumers without the prop are unaffected.
+`AnnotationLayerProps` has two mutually exclusive modes. Input mode requires
+`annotations` and `bounds` and can use `measure="dom"`. Render-only mode requires
+`layout` and rejects duplicate solver inputs or any `measure` prop. The latter
+derives sources and geometry from the host result without another solve or
+measurement pass. Edit callbacks let the host commit updated inputs and layouts.
+The obsolete `resolvedLayout` prop fails explicitly. A render-only debug overlay
+uses only diagnostics already present in the layout.
 `targetAlignmentTargets`, `targetAlignmentOptions`, `targetAlignmentFormat`,
 `assertTargetAlignment`, and `onTargetAlignment` use the same generated-target
 alignment diagnostics as prepared layouts, which is useful when React renders an

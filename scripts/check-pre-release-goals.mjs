@@ -126,7 +126,7 @@ for (const term of [
 }
 
 for (const term of [
-  'Stable for `0.1.x`',
+  'Stable for `0.7.x`',
   'Experimental',
   'Root imports must remain DOM-free',
   'docs/api-stability.manifest.json',
@@ -141,8 +141,8 @@ for (const term of [
 }
 
 assert.equal(apiStabilityManifest.schemaVersion, 1, 'API stability manifest schemaVersion must be 1');
-assert.equal(apiStabilityManifest.policy, '0.1.x', 'API stability manifest policy must be 0.1.x');
-assert.equal(Object.keys(apiStabilityManifest.subpaths).length, 8, 'API stability manifest must cover all public subpaths');
+assert.equal(apiStabilityManifest.policy, '0.7.x', 'API stability manifest policy must be 0.7.x');
+assert.equal(Object.keys(apiStabilityManifest.subpaths).length, Object.keys(pkg.exports).filter(key => key !== './package.json').length, 'API stability manifest must cover all public subpaths');
 
 for (const term of [
   'API stability verified',

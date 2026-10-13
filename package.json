@@ -1,6 +1,6 @@
 {
   "name": "@ponchia/annotations",
-  "version": "0.6.10",
+  "version": "0.7.0-dev.0",
   "description": "Headless annotation placement and rendering helpers for charts, diagrams, reports, and UI surfaces.",
   "keywords": [
     "annotations",
@@ -82,7 +82,11 @@
       "types": "./dist/bronto.css.d.ts",
       "default": "./dist/bronto.css"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./d3": {
+      "types": "./dist/d3/index.d.ts",
+      "import": "./dist/d3/index.js"
+    }
   },
   "types": "./dist/index.d.ts",
   "scripts": {

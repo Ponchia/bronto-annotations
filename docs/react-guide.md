@@ -83,50 +83,40 @@ immediately. Pointer release, cancellation, or unmount drops any pending
 visual frame so a stale preview cannot reappear after the gesture ends.
 The host remains responsible for persisting the final `onEditEnd` suggestion.
 
-**Experimental host-resolved React layouts.** If the host uses
-`createIncrementalAnnotationLayoutSession` for committed edits, pass the
-resulting authoritative `session.layout` to the React adapter through its
-`resolvedLayout` prop. This bypasses the component's redundant full layout
-calculation while preserving its existing note rendering, pointer editing,
-quality reports and target-alignment callbacks. The host still supplies the
-matching `annotations` and `bounds` and updates both the source annotations and
-`resolvedLayout` on edit commit. For example, inside a host-controlled React
-component:
+## Render a host-owned layout
+
+When the host resolves its own layout, pass exactly that result:
 
 ```tsx
 <AnnotationLayer
-  annotations={annotations}
-  bounds={bounds}
-  noteSizes={noteSizes}
-  resolvedLayout={resolvedLayout}
+  layout={layout}
   previewEdits
   editable={{ includeAnchor: true }}
   onEditEnd={(edit) => {
     const next = applyAnnotationEdits(annotations, edit);
     setAnnotations(next);
-    setResolvedLayout(layoutSession.update({
-      annotations: next,
-      bounds,
-      noteSizes,
-      refinement: false
-    }));
+    setLayout(layoutSession.update({ annotations: next, bounds, noteSizes }));
   }}
 />
 ```
 
-In this snippet, `layoutSession` is created once and the initial
-`resolvedLayout` state comes from `layoutSession.layout`; the host owns that
-state and maintains stable callback identities.
-When `resolvedLayout` is provided, the React layer also skips its internal
-note-size estimates and size-map merging: the host's session already owns
-that geometry. This avoids repeating size work on large committed updates.
-Switching back to the normal uncontrolled mode restores the component's
-standard note-size estimation automatically. The supplied layout must
-correspond to the current annotations and bounds. `measure="dom"` cannot be
-combined with `resolvedLayout` because component-owned note measurements
-would bypass the host's layout session; pass explicit `noteSizes` and use the
-default `measure="estimate"` instead. Without `resolvedLayout`, the React layer
-continues to perform its usual full layout.
+`layoutSession` is a host-owned incremental session; `layout` state starts from
+its layout and updates on accepted commits. The host owns persistence and undo.
+The renderer derives annotations, note sizes and bounds from this result. It
+never solves or self-measures in this mode. Do not also pass `annotations`,
+`bounds`, `placement`, `noteSizes`, `refinement`, `diagnostics`, or `measure`.
+TypeScript and runtime validation reject such mixed modes, and the removed
+`resolvedLayout` prop reports a migration error.
+
+Treat resolved layouts and React presentation props as immutable; replace
+objects when changing them. This removes the old dual-source snapshot and
+comparison machinery rather than promising detection of mutated React props.
+
+The other mode accepts `annotations` and `bounds`, including optional
+`measure="dom"`, and owns its own resolution. See the
+[0.7 migration guide](migration-0.7.md) for both forms. Externally resolved debug
+rendering uses only diagnostics already requested by the host; it never triggers
+an extra solve. Layout winners do not contain alternative candidate graphs.
 
 Custom SVG or canvas-overlay authoring tools can use the same DOM-free edit
 math without React:
@@ -200,7 +190,7 @@ deletions and changed anchors, preserving the prior prefix. Changed obstacles
 also allow conservative prefix reuse **only** where an annotation has an
 explicitly unrouted connector (or an intrinsic `curve`/`none` connector) and
 the changed boxes cannot touch any of its possible placement or connector
-candidates. It examines candidates beyond those retained by `maxCandidates`.
+candidates. It examines candidates beyond those retained by diagnostic collection.
 Routing-aware connectors, changed bounds/global placement, and iterative
 refinement continue to trigger full recalculation when the change could affect
 previous winners. Iterative refinement uses the full resolver because later

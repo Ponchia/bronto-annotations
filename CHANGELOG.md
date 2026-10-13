@@ -6,7 +6,20 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
-## Unreleased
+## Unreleased - 0.7.0
+
+### Breaking API changes
+
+- Return lean layouts by default; move candidate lists out of each placement
+  into optional `layout.diagnostics.annotations`, requested with
+  `diagnostics: { candidates: number | "all" }`. Diagnostic retention no longer
+  changes refinement quality. Remove `placement.maxCandidates`.
+- Use `<AnnotationLayer layout={layout} />` for externally resolved geometry.
+  Remove the old `resolvedLayout` prop and reject mixed input/render-only modes.
+- Move D3-specific helpers and types to `@ponchia/annotations/d3`.
+  Remove post-hoc `refineAnnotationLayout` from the root; refine during resolution.
+- Prepare `0.7.0-dev.0` as an unpublished development artifact. See
+  `docs/migration-0.7.md` for the complete migration.
 
 ### Performance and internal boundaries
 

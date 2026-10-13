@@ -101,7 +101,7 @@ host graphic from note boxes. Solver obstacles include 4px clearance for note
 strokes. Independently retained, unexpanded protected-content rectangles are
 used for painted collision checks, while the package quality report checks the
 expanded solver obstacles. No actual painted overlap is permitted. Placement is automatic with explicit
-`maxCandidates: 8`, two refinement passes and eight retained candidates per
+`diagnostics: { candidates: 8 }`, two refinement passes and a separate eight-candidate solver frontier per
 annotation. Candidate offsets include exact clearance distances derived from each target
 and the measured host boundary with a 12px gap. Coarse offsets alone initially
 left a 1px overlap with the protected chart frame; the proof rejected it.

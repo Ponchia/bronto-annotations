@@ -139,6 +139,7 @@ async function render() {
   });
 
   const resolved = resolvePreparedAnnotationLayout(prepared, {
+    diagnostics: { candidates: 8 },
     ...layoutDefaults,
     bounds: frame.bounds,
     additionalObstacles: renderedMarkObstacles,
@@ -190,7 +191,7 @@ async function render() {
       generatedObstacles: prepared.obstacles.length + renderedMarkObstacles.length,
       renderedSvgObstacles: renderedMarkObstacles.length,
       validation: prepared.validation,
-      minCandidates: Math.min(...resolvedLayout.annotations.map((annotation) => annotation.placement.candidates.length)),
+      minCandidates: Math.min(...resolvedLayout.diagnostics!.annotations.map((annotation) => annotation.candidates.length)),
       anchorEvidence: prepared.annotations.map((annotation) => annotation.data),
       anchorIds: prepared.annotations.map((annotation) => annotation.id),
       obstacles: resolved.obstacles

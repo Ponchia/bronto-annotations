@@ -7,6 +7,12 @@ const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url
 
 const required = [
   {
+    subpath: './d3',
+    heading: '## `@ponchia/annotations/d3`',
+    source: 'src/d3/index.ts',
+    terms: ["annotationFromD3Style", "prepareD3StyleAnnotationCollection", "createD3StyleAnnotationBuilder", "defineD3StyleAnnotationType", "applyD3StyleAnnotationCollectionEdit", "applyD3StyleAnnotationEdit"]
+  },
+  {
     subpath: '.',
     heading: '## `@ponchia/annotations`',
     source: 'src/index.ts',
@@ -15,10 +21,6 @@ const required = [
       'renderAnnotationsSvg',
       'Annotation',
       'AnnotationVariant',
-      'annotationFromD3Style',
-      'prepareD3StyleAnnotationCollection',
-      'createD3StyleAnnotationBuilder',
-      'defineD3StyleAnnotationType',
       'assertAnchorAlignmentReport',
       'assertAnchorAlignmentReportIfRequested',
       'evaluateAnchorAlignment',
@@ -28,8 +30,6 @@ const required = [
       'formatAnchorValidationReport',
       'AnchorAlignmentTarget',
       'AnchorValidationAssertInput',
-      'applyD3StyleAnnotationCollectionEdit',
-      'applyD3StyleAnnotationEdit',
       'pointCallout',
       'evaluateAnnotationLayout',
       'assertAnnotationLayoutQuality',

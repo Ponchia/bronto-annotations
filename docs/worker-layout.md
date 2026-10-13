@@ -1,5 +1,20 @@
 # Off-main-thread annotation layouts
 
+## Current 0.7 integration
+
+The normal solver result is lean; do not request candidate diagnostics unless a
+Worker-backed inspector actually needs them. Render accepted results with
+`<AnnotationLayer layout={layout} />`, without duplicate annotations/bounds or
+measurement props. Source inputs remain host-owned and are submitted to the
+solver on committed changes. Candidate diagnostics, when explicitly requested,
+are separate from winners and do not alter refinement quality.
+
+The transport studies below are historical 0.6 observations, including older
+full candidate graphs and the former `resolvedLayout`/`maxCandidates` API.
+They are not measurements of the current default. The current runnable sources
+and [0.7 migration guide](migration-0.7.md) are authoritative.
+
+
 Before adding Worker machinery, bound retained diagnostic candidates where the
 host does not inspect the whole search graph. The public React Worker example
 uses `placement: { maxCandidates: 8 }` with refinement disabled. It preserves

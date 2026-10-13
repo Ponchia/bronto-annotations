@@ -1,27 +1,17 @@
 # API Stability
 
-**Current package:** `0.6.x` (pre-1.0). The stable/experimental export manifest was first frozen for the `0.1.x` compatibility policy; this document records that historical floor, while minor-version changes must still be reviewed through the release notes before upgrading consumers.
+**Current source contract: 0.7.x development preview.** This branch is preparing
+an unpublished breaking minor release. Published 0.6.x packages retain their
+old contract; follow [the 0.7 migration guide](migration-0.7.md) before upgrading.
 
-`@ponchia/annotations` is currently pre-1.0. The package is usable, but its
-experimental authoring API can still evolve before `1.0.0`.
-
-## Choosing an API today
-
-Prefer the stable rendering and layout APIs for a first integration. Consult the
-[release notes](https://github.com/Ponchia/bronto-annotations/releases) for the
-exact version installed in your application, especially across minor updates.
-The `0.1.x` label below is the historical policy identifier in the verification
-manifest, **not an instruction to install version 0.1**. The manifest still
-classifies the current exported names; this guide does not broaden their
-compatibility guarantees beyond the recorded policy.
-
-For experimental editing or incremental layout, pin the version in your
-application and test upgrades against your own interactions and geometry.
-Example-only history, JSON forms, and Worker protocols are not public package APIs.
+The export manifest classifies the current contract, not an immutable promise
+that every pre-1.0 minor release preserves earlier shapes. A reviewed breaking
+minor change updates code, consumers, declarations and migration guidance
+together. Experimental APIs remain explicitly identified.
 
 ## Stability Labels
 
-- Stable for `0.1.x`: expected to remain source-compatible across patch
+- Stable for `0.7.x`: expected to remain source-compatible across patch
   releases.
 - Experimental: available for dogfood and feedback, but may change during
   `0.x` without a deprecation window.
@@ -34,11 +24,11 @@ comments with `@public` and, where applicable, `@experimental` notes.
 `npm run test:api-stability` verifies that every exported name in every public
 subpath is listed exactly once as stable or experimental.
 
-## Stable For `0.1.x`
+## Stable for `0.7.x`
 
 - Core models: `Point`, `Box`, `Anchor`, `Annotation`, note metadata,
   placement preferences, resolved layout types, and style/data fields.
-- Core layout: `resolveAnnotationLayout`, `refineAnnotationLayout`,
+- Core layout: `resolveAnnotationLayout`,
   `evaluateAnnotationLayout`, `assertAnnotationLayoutQuality`, and
   `formatLayoutQualityReport`.
 - SVG rendering: `renderAnnotationsSvg`, subject/connectors/note rendering,
@@ -55,7 +45,8 @@ subpath is listed exactly once as stable or experimental.
 
 ## Experimental During `0.x`
 
-- d3-style builder mutation helpers and custom annotation type definitions.
+- D3 migration helpers in `@ponchia/annotations/d3`, including builders and
+  custom annotation type definitions. The root does not re-export these.
 - Edit-patch authoring ergonomics, including `createAnnotationEditEvent`,
   `createAnnotationEditDelta`, `createAnnotationEditSession`, and
   `previewAnnotationEdit` (visual only).
@@ -64,7 +55,7 @@ subpath is listed exactly once as stable or experimental.
   suffix notes and conservatively independent obstacle changes; safe fallback
   for affected routing, global geometry, or refinement.
 - React edit-handle authoring options, edit events, and the opt-in
-  `AnnotationLayer.resolvedLayout` controlled-layout property until the
+  `AnnotationLayer.layout` render-only property until the
   authoring UX layer is hardened.
 - Dense-layout tuning constants and scoring weights.
 - Low-level adapter finder/traversal helpers such as rendered SVG finders, D2
@@ -78,7 +69,10 @@ turn these formats into a compatibility promise for consumers.
 
 ## API Change Rules
 
-- Patch releases must not break the stable `0.1.x` list above.
+- Once 0.7 is published, patch releases must not break the stable `0.7.x` list above.
+- Normal layouts have no candidate diagnostics. Diagnostic collection never
+  changes winners or the configured refinement frontier.
+- React accepts either source inputs or a complete layout, not both.
 - Experimental APIs can change, but README, API reference, migration docs, and
   examples must change in the same commit.
 - New public subpaths require declaration checks, packed-consumer smoke tests,

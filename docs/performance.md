@@ -3,7 +3,25 @@
 Annotation layout should stay deterministic and fast enough for report
 generation and interactive authoring surfaces.
 
-## Start with the common workload
+## Current 0.7 default
+
+`resolveAnnotationLayout({ annotations, bounds, noteSizes })` returns a lean
+layout and uses exact bounded search for the winners. It does not construct and
+retain a complete diagnostic candidate graph. Refinement keeps its search
+frontier private and independent of `diagnostics: { candidates: 8 }` or
+`{ candidates: 'all' }`. Request those only when inspecting the solver.
+
+Normal Worker examples send the lean result. Current measurements must compare
+chosen geometry and quality at equal refinement settings. See
+[0.7 migration](migration-0.7.md) and [quality evaluation](placement-quality.md).
+
+## Historical 0.6 measurements and configuration
+
+The following pre-0.7 measurements retain their original API context. The
+current `benchmark:placement` command compares lean, bounded-diagnostic and
+all-diagnostic modes; it does not reintroduce the removed placement option.
+
+### Start with the common workload (0.6 only)
 
 For an unrefined chart or diagram with approximately 5–20 notes, supply measured
 `noteSizes` and retain only the diagnostics the host uses:

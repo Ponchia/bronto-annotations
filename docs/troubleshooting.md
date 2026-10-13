@@ -42,7 +42,7 @@ mode after fonts and styles are ready. Keep note size units in the layout's
 coordinate space. Use the note wrapping and padding options in the
 [styling guide](styling-guide.md).
 
-The controlled `resolvedLayout` React path requires host-owned note sizes and
+The render-only `layout` React path derives note sizes from its result and
 cannot be combined with component-owned `measure="dom"` resolution. Follow
 [the React guide](react-guide.md) rather than computing two competing layouts.
 

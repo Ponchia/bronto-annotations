@@ -91,7 +91,7 @@ export function assertObservations(observations, manifest) {
     assert.ok(o.obstacleBoxes.length >= source.expectedMarks, `${label}: missing protected host obstacles`);
     assert.equal(o.candidateCounts.length, source.expectedNotes);
     assert.ok(o.protectedHostBoxes.length >= source.expectedMarks, `${label}: missing independently protected host content`);
-    assert.ok(o.candidateCounts.every(n => Number.isInteger(n) && n > 0 && n <= 8), `${label}: candidate retention exceeded maxCandidates:8`);
+    assert.ok(o.candidateCounts.every(n => Number.isInteger(n) && n > 0 && n <= 8), `${label}: candidate diagnostics exceeded requested limit:8`);
     for (const list of [o.anchorBoxes, o.targetBoxes, o.noteBoxes, o.layoutNoteBoxes, o.paintedNoteBoxes, o.browserNoteBoxes, o.obstacleBoxes, o.protectedHostBoxes]) assert.ok(list.every(finiteBox), `${label}: non-finite or empty geometry`);
     o.anchorBoxes.forEach((a, i) => {
       for (const key of ['x', 'y', 'width', 'height']) assert.ok(Math.abs(a[key] - o.targetBoxes[i][key]) <= 0.25, `${label}: independently measured target ${i} ${key} differs`);

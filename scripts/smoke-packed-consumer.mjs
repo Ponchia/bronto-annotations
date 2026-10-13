@@ -39,56 +39,57 @@ async function smokeRootAndAdapters(tarball) {
   const smoke = `
     import { access, readFile } from 'node:fs/promises';
     import {
-      annotationEditHandles,
-      annotationParts,
-      circleSubjectPath,
-      connectorPathD,
-      declutterLabels,
-      directLabels,
-      encircleCallout,
-      encircleSubjectPath,
-      enclosingCircle,
-      notePlacement,
-      resolveAnnotationLayout,
-      refineAnnotationLayout,
-      renderAnnotationsSvg,
-      subjectPath,
-      evaluateAnnotationLayout,
-      assertAnnotationLayoutQuality,
-      formatLayoutQualityIssue,
-      formatLayoutQualityReport,
-      generatedSurfaceLayoutDefaults,
-      resolvePreparedAnnotationLayout,
-      pointCallout,
-      allPlacementCandidates,
-      translateAnchor,
-      annotationFromD3Style,
-      annotationsFromD3Style,
-      annotationsFromD3StyleCollection,
-      prepareD3StyleAnnotationCollection,
-      createD3StyleAnnotationBuilder,
-      defineD3StyleAnnotationType,
-      annotationsFromD3StyleType,
-      applyD3StyleAnnotationCollectionEdit,
-      d3StyleAnnotationCollectionEditPatch,
-      applyD3StyleAnnotationEdit,
-      d3StyleAnnotationEditPatch,
-      assertAnchorAlignmentReport,
-      assertAnchorAlignmentReportIfRequested,
-      assertAnchorValidationReport,
-      assertAnchorValidationReportIfRequested,
-      evaluateAnchorAlignment,
-      formatAnchorAlignmentReport,
-      formatAnchorValidationReport,
-      annotationClassName,
-      annotationStyleVariables,
-      brontoAnnotationClassName,
-      annotationEditPatch,
-      applyAnnotationEdit,
-      applyAnnotationEdits,
-      createAnnotationEditDelta,
-      createAnnotationEditEvent
-    } from '@ponchia/annotations';
+  annotationEditHandles,
+  annotationParts,
+  circleSubjectPath,
+  connectorPathD,
+  declutterLabels,
+  directLabels,
+  encircleCallout,
+  encircleSubjectPath,
+  enclosingCircle,
+  notePlacement,
+  resolveAnnotationLayout,
+  renderAnnotationsSvg,
+  subjectPath,
+  evaluateAnnotationLayout,
+  assertAnnotationLayoutQuality,
+  formatLayoutQualityIssue,
+  formatLayoutQualityReport,
+  generatedSurfaceLayoutDefaults,
+  resolvePreparedAnnotationLayout,
+  pointCallout,
+  allPlacementCandidates,
+  translateAnchor,
+  assertAnchorAlignmentReport,
+  assertAnchorAlignmentReportIfRequested,
+  assertAnchorValidationReport,
+  assertAnchorValidationReportIfRequested,
+  evaluateAnchorAlignment,
+  formatAnchorAlignmentReport,
+  formatAnchorValidationReport,
+  annotationClassName,
+  annotationStyleVariables,
+  brontoAnnotationClassName,
+  annotationEditPatch,
+  applyAnnotationEdit,
+  applyAnnotationEdits,
+  createAnnotationEditDelta,
+  createAnnotationEditEvent
+} from '@ponchia/annotations';
+import {
+  annotationFromD3Style,
+  annotationsFromD3Style,
+  annotationsFromD3StyleCollection,
+  prepareD3StyleAnnotationCollection,
+  createD3StyleAnnotationBuilder,
+  defineD3StyleAnnotationType,
+  annotationsFromD3StyleType,
+  applyD3StyleAnnotationCollectionEdit,
+  d3StyleAnnotationCollectionEditPatch,
+  applyD3StyleAnnotationEdit,
+  d3StyleAnnotationEditPatch
+} from '@ponchia/annotations/d3';
     import { anchorFromDOMRect, anchorFromSelector, annotationFrameFromSvg, annotationsFromDomSelectors, boxFromDOMRect, obstaclesFromSelector, prepareDomAnnotations, validateDomAnchors } from '@ponchia/annotations/dom';
     import { anchorsFromVegaView, anchorsFromVegaScales, anchorsFromVegaScenegraph, annotationsFromVegaScenegraph, obstaclesFromVegaView, obstaclesFromVegaScales, obstaclesFromVegaScenegraph, anchorsFromVegaSvg, annotationsFromVegaSvg, obstaclesFromVegaSvg, findVegaSvgElement, prepareVegaViewAnnotations, prepareVegaScaleAnnotations, prepareVegaScenegraphAnnotations, prepareVegaSvgAnnotations, validateVegaViewAnchors, validateVegaSvgAnchors } from '@ponchia/annotations/vega';
     import { anchorsFromD2Diagram, anchorsFromD2Svg, annotationsFromD2Diagram, annotationsFromD2Svg, obstaclesFromD2Diagram, obstaclesFromD2Svg, findD2SvgElement, prepareD2DiagramAnnotations, prepareD2SvgAnnotations, validateD2DiagramAnchors, validateD2SvgAnchors } from '@ponchia/annotations/d2';
@@ -110,7 +111,7 @@ async function smokeRootAndAdapters(tarball) {
     });
     if (layout.annotations.length !== 1) throw new Error('layout failed');
     if (layout.annotations[0].noteBox.x !== 48 || layout.annotations[0].placement.manual !== true) throw new Error('manual placement failed');
-    if (refineAnnotationLayout(layout, { passes: 1 }).annotations.length !== 1) throw new Error('layout refinement export failed');
+    if (resolveAnnotationLayout({ annotations: layout.annotations.map(item => item.annotation), bounds: layout.bounds, refinement: { passes: 1 } }).annotations.length !== 1) throw new Error('layout refinement export failed');
     const svg = renderAnnotationsSvg(layout, { markerIdPrefix: 'smoke-layer', noteTabIndex: 0, preserveAspectRatio: 'xMinYMin meet' });
     if (!svg.includes('pa-annotation__connector')) throw new Error('svg failed');
     if (!svg.includes('preserveAspectRatio="xMinYMin meet"')) throw new Error('svg preserveAspectRatio failed');
@@ -430,9 +431,8 @@ async function smokeRootAndAdapters(tarball) {
       bounds: { x: 0, y: 0, width: 240, height: 180 },
       noteSize: { width: 80, height: 40 },
       obstacles: [],
-      placedNotes: [],
-      placement: { maxCandidates: 3 }
-    }).length !== 3) throw new Error('candidate search failed');
+      placedNotes: []
+    }, { limit: 3 }).length !== 3) throw new Error('candidate search failed');
     if (boxFromDOMRect({ x: 1, y: 2, width: 3, height: 4, left: 1, top: 2, right: 4, bottom: 6 }).width !== 3) throw new Error('dom box failed');
     if (anchorFromDOMRect({ x: 1, y: 2, width: 3, height: 4, left: 1, top: 2, right: 4, bottom: 6 }).type !== 'box') throw new Error('dom anchor failed');
     if (typeof annotationFrameFromSvg !== 'function') throw new Error('dom svg annotation frame export failed');
@@ -826,10 +826,12 @@ async function smokeBrowserBundle(tarball) {
   `);
   await writeFile(join(workdir, 'src/main.js'), `
     import {
-      annotationFromD3Style,
-      renderAnnotationsSvg,
-      resolveAnnotationLayout
-    } from '@ponchia/annotations';
+  renderAnnotationsSvg,
+  resolveAnnotationLayout
+} from '@ponchia/annotations';
+import {
+  annotationFromD3Style
+} from '@ponchia/annotations/d3';
     import '@ponchia/annotations/bronto.css';
 
     const annotation = annotationFromD3Style({

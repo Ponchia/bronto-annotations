@@ -1,10 +1,10 @@
 /**
  * Root API stability for `@ponchia/annotations`.
  *
- * @public Stable for `0.1.x`: DOM-free models, layout, geometry helpers,
+ * @public Stable for `0.7.x`: DOM-free models, layout, geometry helpers,
  * renderer helpers, prepared-layout diagnostics, presets, and Bronto class/CSS
  * helpers.
- * @experimental During `0.x`: d3-style migration helpers, edit/authoring
+ * @experimental During `0.x`: edit/authoring
  * helpers, and low-level placement candidate scoring exports.
  */
 export type {
@@ -32,6 +32,8 @@ export type {
   ConnectorType,
   DataAttributes,
   LayoutOptions,
+  LayoutDiagnostics,
+  AnnotationPlacementDiagnostics,
   LayoutRefinementOptions,
   ManualPlacement,
   Padding,
@@ -156,7 +158,6 @@ export {
 } from './core/annotation-geometry.js';
 export {
   estimateNoteSize,
-  refineAnnotationLayout,
   resolveAnnotationLayout,
   createIncrementalAnnotationLayoutSession
 } from './core/layout.js';
@@ -249,59 +250,21 @@ export {
   scorePlacementCandidate
 } from './core/placement.js';
 export type {
-  AnnotationPresetBase,
   BadgeAnnotationOptions,
-  D3AnnotationAccessor,
-  D3AnnotationAlign,
-  D3AnnotationBadgeX,
-  D3AnnotationBadgeY,
-  D3AnnotationConnector,
-  D3AnnotationConnectorType,
-  D3AnnotationDisablePart,
-  D3AnnotationInverseAccessor,
-  D3AnnotationLineType,
-  D3AnnotationNote,
-  D3AnnotationOrientation,
-  D3AnnotationSubjectPoint,
-  D3AnnotationSubject,
-  D3AnnotationType,
-  D3StyleAnnotationBuilder,
-  D3StyleAnnotationBuilderInput,
-  D3StyleAnnotationCollectionEditPatch,
-  D3StyleAnnotationCollectionId,
-  D3StyleAnnotationCollectionInput,
-  D3StyleCustomAnnotationContext,
-  D3StyleCustomAnnotationDefinition,
-  D3StyleCustomAnnotationType,
-  D3StyleAnnotationEditOptions,
-  D3StyleAnnotationEditPatch,
-  D3StyleAnnotationInput,
-  D3StyleAnnotationOptions,
   EncircleCalloutOptions,
   PathCalloutOptions,
   PointCalloutOptions,
-  PreparedD3StyleAnnotationCollection,
   RegionCalloutOptions,
   ThresholdAnnotationOptions
-} from './presets/index.js';
+} from './presets/basic.js';
+export type { AnnotationPresetBase } from './presets/model.js';
 export {
-  applyD3StyleAnnotationEdit,
-  applyD3StyleAnnotationCollectionEdit,
-  annotationFromD3Style,
-  annotationsFromD3Style,
-  annotationsFromD3StyleCollection,
-  annotationsFromD3StyleType,
   badgeAnnotation,
-  createD3StyleAnnotationBuilder,
-  d3StyleAnnotationCollectionEditPatch,
-  d3StyleAnnotationEditPatch,
-  defineD3StyleAnnotationType,
   encircleCallout,
   pathCallout,
   pointCallout,
-  prepareD3StyleAnnotationCollection,
   regionCallout,
   thresholdAnnotation
-} from './presets/index.js';
+} from './presets/basic.js';
 export type { SvgRenderOptions } from './svg/render.js';
 export { renderAnnotationsSvg, renderAnnotationSubjectsSvg } from './svg/render.js';

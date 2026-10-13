@@ -5,6 +5,10 @@
 
 ## Start here
 
+This branch targets the unpublished 0.7 API. Existing users should read the
+[0.7 migration guide](migration-0.7.md) first.
+
+
 Read [Your first annotation](getting-started.md) for a complete browser or React
 example. Then use the [adapter chooser](context-quickstart.md) to connect the
 engine to the surface you already render. Start with a few notes; Workers and

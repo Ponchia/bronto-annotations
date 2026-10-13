@@ -103,9 +103,9 @@ callback, so a host should not persist an incomplete gesture.
 
 For committed edits on denser surfaces, an experimental
 `createIncrementalAnnotationLayoutSession` can reuse unchanged placements.
-Pass its result to `AnnotationLayer.resolvedLayout` to avoid a second solve.
-This controlled path needs **host-owned note sizes**; it cannot use the
-component's `measure="dom"` mode. See the
+Pass its result to `AnnotationLayer.layout` to avoid a second solve.
+This render-only path takes no duplicate solver or measurement props. The
+host resolves note sizes before passing its layout. See the
 [interactive incremental React example](../examples/react-incremental/) for
 working source and browser behavior. Its live JSON inspector shows the exact
 host-authored annotation inputs after committed edits. The example now also
