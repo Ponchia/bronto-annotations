@@ -83,7 +83,7 @@
           ]
         },
         {
-          "file": "src/core/layout.ts",
+          "file": "src/core/layout-resolver.ts",
           "terms": [
             "resolveAnnotationLayout",
             "estimateNoteSize",
@@ -722,7 +722,7 @@
           ]
         },
         {
-          "file": "src/presets/index.ts",
+          "file": "src/d3/index.ts",
           "terms": [
             "annotationFromD3Style",
             "annotationsFromD3Style",
@@ -974,7 +974,7 @@
         {
           "file": "docs/api-stability.manifest.json",
           "terms": [
-            "\"policy\": \"0.1.x\"",
+            "\"policy\": \"0.7.x\"",
             "\"./react\"",
             "\"./vega\"",
             "\"stable\"",
@@ -1227,7 +1227,7 @@
         {
           "file": "docs/api-stability.md",
           "terms": [
-            "Stable for `0.1.x`",
+            "Stable for `0.7.x`",
             "Experimental",
             "Root imports must remain DOM-free",
             "docs/api-stability.manifest.json",
@@ -1240,7 +1240,7 @@
           "file": "docs/api-stability.manifest.json",
           "terms": [
             "\"schemaVersion\": 1",
-            "\"policy\": \"0.1.x\"",
+            "\"policy\": \"0.7.x\"",
             "\"./bronto.css\"",
             "\"stable\"",
             "\"experimental\""

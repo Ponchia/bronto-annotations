@@ -111,6 +111,7 @@
         "PlacementAlign",
         "PlacementCandidate",
         "PlacementPreference",
+        "PlacementSearchOptions",
         "PlacementSide",
         "Point",
         "PointCalloutOptions",

@@ -2,7 +2,6 @@
 // incremental metadata fingerprinting and obstacle-invalidation machinery.
 export {
   estimateNoteSize,
-  refineAnnotationLayout,
   resolveAnnotationLayout
 } from './layout-resolver.js';
 export { createIncrementalAnnotationLayoutSession } from './incremental-layout.js';

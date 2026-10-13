@@ -115,6 +115,11 @@ measure; the host updates its session when it accepts an edit.
 SVG and externally resolved React debug rendering can display only diagnostics
 already present. It never secretly resolves another layout to obtain them.
 
+The example-only Worker protocols use full snapshots when diagnostic graphs
+are present, preserving aliases between candidates and winning geometry. Lean
+responses still use the existing safe structural-sharing/patch path. This is a
+consumer recipe, not a new public Worker API.
+
 ## D3 migration has its own import
 
 Change migration-specific imports:

@@ -249,6 +249,7 @@ export {
   resolvePlacementCandidate,
   scorePlacementCandidate
 } from './core/placement.js';
+export type { PlacementSearchOptions } from './core/placement.js';
 export type {
   BadgeAnnotationOptions,
   EncircleCalloutOptions,

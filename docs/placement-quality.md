@@ -37,7 +37,7 @@ Open `index.html` in the output directory. Each reference/bounded pair includes 
 host shapes, host labels, SVG annotation notes, and connectors. The dashed boundary
 shows the padded placement bounds. Images retain their native dimensions instead
 of shrinking chart labels into unreadable side-by-side thumbnails. Wide displays
-show a pair side by side; smaller displays stack them in focusable scroll regions.
+show comparisons side by side; smaller displays stack them in focusable scroll regions.
 Standalone `.svg` files contain their own
 annotation styles and can be inspected separately. `results.json` records every
 case, including failures; generation writes artifacts **before** asserting quality

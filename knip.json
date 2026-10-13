@@ -22,7 +22,9 @@
         "examples/*/main.tsx",
         "scripts/**/*.mjs",
         "site/main.ts",
-        "src/d3/index.ts"
+        "src/d3/index.ts",
+        "test/api-contract-consumer.tsx",
+        "test/react/api.types.tsx"
       ],
       "project": [
         "src/**/*.{ts,tsx}",

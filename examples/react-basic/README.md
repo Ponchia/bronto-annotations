@@ -23,6 +23,8 @@ Inspect the workflow and notes together, then change a note in main.tsx and obse
 
 React state, the underlying workflow SVG, and overlay mounting belong to this host.
 
+This example uses input mode: `annotations` and `bounds` let the layer solve locally. In input mode, `debug` requests eight candidate diagnostics unless `diagnostics` supplies a different count. For a host-resolved result, pass only `layout` plus presentation props; alternatives come from its existing diagnostics.
+
 The source lives in [main.tsx](main.tsx), with its host styles in
 [styles.css](styles.css). Read the [integration guide](../../docs/react-guide.md)
 before copying an advanced pattern into an application.

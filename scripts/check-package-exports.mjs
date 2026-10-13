@@ -358,6 +358,7 @@ assert.deepEqual(d3.applyD3StyleAnnotationEdit({
 }).data, { x: 30, y: 50 });
 await Promise.all([
   access(new URL('../dist/index.d.ts', import.meta.url)),
+  access(new URL('../dist/d3/index.d.ts', import.meta.url)),
   access(new URL('../dist/react/index.d.ts', import.meta.url)),
   access(new URL('../dist/dom/index.d.ts', import.meta.url)),
   access(new URL('../dist/adapters/vega.d.ts', import.meta.url)),
