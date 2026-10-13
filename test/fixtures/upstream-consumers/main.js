@@ -26,6 +26,25 @@ function measuredBox(element, stage) {
   return { x: r.x - p.x, y: r.y - p.y, width: r.width, height: r.height };
 }
 
+// Browser client rectangles differ on SVG stroke inclusion. Measure SVG fill
+// geometry through its native transform, retain the browser rectangle as a
+// separate observation, and check a conservative stroked envelope for occlusion.
+function noteGeometry(rect, stage) {
+  const b = rect.getBBox(), m = rect.getScreenCTM(), origin = stage.getBoundingClientRect();
+  if (!m) throw new Error('Unmeasurable note SVG transform');
+  const points = [[b.x, b.y], [b.x + b.width, b.y], [b.x, b.y + b.height], [b.x + b.width, b.y + b.height]]
+    .map(([x, y]) => new DOMPoint(x, y).matrixTransform(m));
+  const xs = points.map(p => p.x), ys = points.map(p => p.y);
+  const box = { x: Math.min(...xs) - origin.x, y: Math.min(...ys) - origin.y,
+    width: Math.max(...xs) - Math.min(...xs), height: Math.max(...ys) - Math.min(...ys) };
+  const style = getComputedStyle(rect);
+  const stroke = style.stroke === 'none' ? 0 : parseFloat(style.strokeWidth);
+  const dx = stroke * (Math.abs(m.a) + Math.abs(m.c)) / 2;
+  const dy = stroke * (Math.abs(m.b) + Math.abs(m.d)) / 2;
+  return { box, painted: { x: box.x - dx, y: box.y - dy, width: box.width + 2 * dx, height: box.height + 2 * dy },
+    client: measuredBox(rect, stage) };
+}
+
 async function renderHost(source, input, index) {
   const article = document.createElement('article');
   article.id = source.id;
@@ -57,8 +76,8 @@ async function renderHost(source, input, index) {
   svg.setAttribute('width', String(native.width)); svg.setAttribute('height', String(native.height));
   svg.style.width = `${native.width}px`; svg.style.height = `${native.height}px`;
   svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', `${source.id}, original upstream graphic`);
-  host.style.left = '200px'; host.style.top = '150px';
-  const bounds = { x: 0, y: 0, width: native.width + 400, height: native.height + 300 };
+  host.style.left = '220px'; host.style.top = '150px';
+  const bounds = { x: 0, y: 0, width: native.width + 440, height: native.height + 300 };
   stage.style.width = `${bounds.width}px`; stage.style.height = `${bounds.height}px`;
   await document.fonts.ready;
   await new Promise(requestAnimationFrame);
@@ -86,11 +105,21 @@ async function renderHost(source, input, index) {
   // elements cannot occlude a note and are excluded from obstacle geometry.
   prepared.obstacles = prepared.obstacles.filter(b => b.width > 0 && b.height > 0);
   const targetBoxes = targets.map(target => measuredBox(target, stage));
+  const hostBox = measuredBox(svg, stage);
+  // Generate exact clearance alternatives from measured host geometry, rather
+  // than hoping coarse hard-coded offsets happen to clear a chart/diagram edge.
+  prepared.annotations = prepared.annotations.map(annotation => {
+    const box = annotation.anchor.box;
+    if (!box) throw new Error('Expected rendered box anchor');
+    const clearance = [box.x - hostBox.x, hostBox.x + hostBox.width - box.x - box.width,
+      box.y - hostBox.y, hostBox.y + hostBox.height - box.y - box.height].map(n => n + 12);
+    return { ...annotation, placement: { ...annotation.placement, offset: [20, 80, 160, 240, ...clearance] } };
+  });
   const resolved = resolvePreparedAnnotationLayout(prepared, {
     bounds, padding: 12, defaultNoteSize: { width: 180, height: 100 },
     placement: { maxCandidates: 8, align: ['center', 'start', 'end'], offset: [20, 80, 160, 240], crossOffset: [0, -120, 120] },
     refinement: { passes: 2, maxCandidatesPerAnnotation: 8 },
-    additionalObstacles: [measuredBox(svg, stage)],
+    additionalObstacles: [hostBox],
     targetAlignmentTargets: specs.map((spec, n) => ({ id: spec.id, box: targetBoxes[n] })),
     targetAlignmentOptions: { tolerance: 0.25, nearTolerance: 0.5 },
     assertTargetAlignment: { failOnWarnings: true }
@@ -105,6 +134,7 @@ window.measureUpstreamConsumers = () => records.map(record => {
   const { stage, svg, resolved, targets } = record;
   const noteElements = [...stage.querySelectorAll('.pa-annotation__note')];
   const textElements = [...stage.querySelectorAll('.pa-annotation__note text')];
+  const noteMeasurements = noteElements.map(e => noteGeometry(e.querySelector('rect'), stage));
   const hostTexts = [...svg.querySelectorAll('text, .nodeLabel')].filter(e => e.textContent.trim());
   const pixels = element => {
     const matrix = element.getScreenCTM?.() ?? element.closest('svg')?.getScreenCTM();
@@ -119,12 +149,14 @@ window.measureUpstreamConsumers = () => records.map(record => {
     quality: resolved.quality.metrics,
     anchorBoxes: record.prepared.annotations.map(a => a.anchor.box),
     targetBoxes: targets.map(t => measuredBox(t, stage)),
-    noteBoxes: noteElements.map(e => measuredBox(e.querySelector('rect'), stage)),
+    noteBoxes: noteMeasurements.map(m => m.box),
+    paintedNoteBoxes: noteMeasurements.map(m => m.painted),
+    browserNoteBoxes: noteMeasurements.map(m => m.client),
     layoutNoteBoxes: resolved.layout.annotations.map(a => a.noteBox),
     obstacleBoxes: resolved.layout.obstacles,
     candidateCounts: resolved.layout.annotations.map(a => a.placement.candidates.length),
     finiteConnectorPoints: resolved.layout.annotations.every(a => a.connector.points.every(p => Number.isFinite(p.x) && Number.isFinite(p.y))),
-    text: textElements.map(e => ({ text: e.textContent, box: measuredBox(e, stage), noteBox: measuredBox(e.closest('.pa-annotation__note').querySelector('rect'), stage), pixels: pixels(e) })),
+    text: textElements.map(e => ({ text: e.textContent, box: measuredBox(e, stage), noteBox: noteGeometry(e.closest('.pa-annotation__note').querySelector('rect'), stage).box, pixels: pixels(e) })),
     minHostTextPixels: Math.min(...hostTexts.map(pixels)),
     minNoteTextPixels: Math.min(...textElements.map(pixels)),
     hostTextCount: hostTexts.length,

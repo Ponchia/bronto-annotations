@@ -93,13 +93,20 @@ values across A/B/C, and the flowchart's Web app/API gateway/Orders DB nodes.
 targets and graphic/text obstacles. An additional obstacle protects the entire
 host graphic from note boxes. Placement is automatic with explicit
 `maxCandidates: 8`, two refinement passes and eight retained candidates per
-annotation. No manual note positions or approximate placement behavior are
-required.
+annotation. Candidate offsets include exact clearance distances derived from each target
+and the measured host boundary with a 12px gap. Coarse offsets alone initially
+left a 1px overlap with the protected chart frame; the proof rejected it.
+No manual note positions or approximate placement behavior are required.
 
 Each viewport checks the complete host mark count, exactly three notes and
 connectors, successful anchor validation/alignment, and finite geometry.
-Independent client rectangles must agree with adapter targets and painted
-note boxes within 0.25 CSS pixels. Painted notes must remain inside their frame,
+Independent client rectangles must agree with adapter targets within 0.25 CSS
+pixels. Note fill geometry is independently transformed from SVG `getBBox` and
+compared with resolved layout within the same tolerance. The browser client
+rectangle must match either the fill or its measured stroke envelope: Firefox
+includes stroke where Chromium excludes it. Collision and bounds checks use
+the conservative stroke envelope in every engine, rather than loosening the
+geometry tolerance or allowing painted overlap. Painted notes remain inside their frame,
 avoid each other, and avoid every protected host obstacle. Actual SVG text
 rectangles must fit inside note boxes, and effective host/note text must remain
 at least 13.5 CSS pixels. The verifier also checks zero package-reported invalid

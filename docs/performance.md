@@ -43,6 +43,33 @@ separately first. The module path is developer-supplied local code; do not point
 it at untrusted code. `--output <file>` retains the JSON report. Timings and JSON
 byte counts are observations, not frame deadlines or browser clone-cost claims.
 
+### Paired pre-change comparison, October 13, 2026
+
+A clean build of commit `693f4f9` (0.6.10) was compared with `ae25d90` using
+**identical** inputs and `maxCandidates: 8` in both implementations. On one
+ARM64 Linux host with Node 24.17.0, alternating six measured solves after a
+warmup produced these medians:
+
+| Annotations | Previous eager implementation | Exact bounded implementation | Ratio |
+| --- | ---: | ---: | ---: |
+| 5 | 12.04 ms | 5.08 ms | 2.37× |
+| 12 | 15.50 ms | 5.88 ms | 2.64× |
+| 20 | 19.53 ms | 7.34 ms | 2.66× |
+
+Every candidate retained in these comparisons matched, including scores and
+connector geometry. Both versions produced zero quality issues on these
+fixtures. This is an observed single-host comparison, not a cross-device
+latency guarantee. The source fixture and alternating protocol are in
+`benchmark-bounded-placement.mjs`.
+
+Separately, changing the current implementation from exhaustive diagnostic
+retention to eight candidates reduced the 20-note full-layout JSON from
+2,331,763 to 86,512 UTF-8 bytes (about 96%). That is a **configuration comparison**,
+not a claim that the optimizer itself changes the same-input payload or that
+JSON bytes equal browser structured-clone cost. Default full retention remains
+unchanged. The raw [paired measurements](measurements/2026-10-13-bounded-placement.json)
+record all samples and runtime metadata.
+
 ## Placement quality is a separate gate
 
 `npm run test:quality` renders and measures the

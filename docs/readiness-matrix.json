@@ -723,17 +723,27 @@
           ]
         },
         {
-          "file": "src/presets/index.ts",
+          "file": "src/presets/d3-types.ts",
           "terms": [
             "annotationCalloutCircle",
             "annotationXYThreshold",
             "annotationBadge",
+            "wrapSplitter",
+            "accessorsInverse"
+          ]
+        },
+        {
+          "file": "src/presets/index.ts",
+          "terms": [
             "prepareD3StyleAnnotationCollection",
             "d3StyleAnnotationCollectionEditPatch",
             "createD3StyleAnnotationBuilder",
-            "defineD3StyleAnnotationType",
-            "wrapSplitter",
-            "accessorsInverse",
+            "defineD3StyleAnnotationType"
+          ]
+        },
+        {
+          "file": "src/presets/d3-style.ts",
+          "terms": [
             "style: mergeObjects"
           ]
         },

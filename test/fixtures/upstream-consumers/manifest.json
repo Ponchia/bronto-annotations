@@ -38,7 +38,8 @@
       "adaptations": [
         "SVG renderer; external accessible title/description",
         "Axis and mark text at least 14px; fonts only, no data or encodings changed",
-        "Native-size host and overlay in keyboard-focusable horizontal scroller on narrow viewports"
+        "Native-size host and overlay in keyboard-focusable horizontal scroller on narrow viewports",
+        "External annotation frame; automatic clearance offsets derived from the measured host boundary with a 12px gap"
       ]
     },
     {
@@ -61,7 +62,8 @@
       "adaptations": [
         "SVG renderer; external accessible title/description",
         "Axis and mark text at least 14px; fonts only, no data or encodings changed",
-        "Native-size host and overlay in keyboard-focusable horizontal scroller on narrow viewports"
+        "Native-size host and overlay in keyboard-focusable horizontal scroller on narrow viewports",
+        "External annotation frame; automatic clearance offsets derived from the measured host boundary with a 12px gap"
       ]
     },
     {
@@ -88,7 +90,8 @@
       "adaptations": [
         "Mermaid 11 supported renderer defaults (Dagre/classic/default theme), rather than Mermaid develop v12 defaults; original graph unchanged",
         "External accessible title/description; strict securityLevel, startOnLoad false, fontSize 16",
-        "SVG displayed at native viewBox size; horizontal scrolling preserves mobile text size"
+        "SVG displayed at native viewBox size; horizontal scrolling preserves mobile text size",
+        "External annotation frame; automatic clearance offsets derived from the measured host boundary with a 12px gap"
       ]
     }
   ]

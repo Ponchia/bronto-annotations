@@ -730,8 +730,18 @@
             "d3StyleAnnotationCollectionEditPatch",
             "createD3StyleAnnotationBuilder",
             "defineD3StyleAnnotationType",
-            "applyD3StyleAnnotationEdit",
-            "accessorsInverse",
+            "applyD3StyleAnnotationEdit"
+          ]
+        },
+        {
+          "file": "src/presets/d3-types.ts",
+          "terms": [
+            "accessorsInverse"
+          ]
+        },
+        {
+          "file": "src/presets/d3-style.ts",
+          "terms": [
             "style: mergeObjects"
           ]
         },
