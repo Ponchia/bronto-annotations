@@ -15,6 +15,26 @@ Normal Worker examples send the lean result. Current measurements must compare
 chosen geometry and quality at equal refinement settings. See
 [0.7 migration](migration-0.7.md) and [quality evaluation](placement-quality.md).
 
+### Measured 0.7 output size
+
+One clean run of commit `7691698`, Node 24.17.0 on ARM64 Linux, used identical
+inputs and two refinement passes over eight candidates in every mode:
+
+| Notes | Normal result | Eight diagnostic candidates per note | All diagnostic candidates |
+| --- | ---: | ---: | ---: |
+| 5 | 3,261 bytes | 21,922 bytes | 587,810 bytes |
+| 12 | 7,416 bytes | 52,130 bytes | 1,397,462 bytes |
+| 20 | 12,225 bytes | 86,974 bytes | 2,332,225 bytes |
+
+These are serialized UTF-8 JSON sizes, not heap use or structured-clone costs.
+Every chosen placement, connector, score and quality report matched across
+modes. The normal 20-note result is about 99.5% smaller than collecting all
+alternatives. This is a diagnostic-configuration comparison, not a claim about
+all applications. Six alternating measured solves after warmup recorded normal
+medians of 3.61, 6.87 and 11.29 ms; timings on a shared host are observational,
+and noise can make a bounded-diagnostic sample faster than a normal one.
+[Raw samples and provenance](measurements/2026-10-13-lean-api.json) are retained.
+
 ## Historical 0.6 measurements and configuration
 
 The following pre-0.7 measurements retain their original API context. The
@@ -44,18 +64,19 @@ candidates; use matching refinement frontiers when comparing configurations.
 
 Do not serialize every candidate into application history or send an unbounded
 diagnostic graph through a Worker merely to paint the winning placements. The
-public React Worker example now explicitly retains eight candidates per note;
+0.6 React Worker example explicitly retained eight candidates per note;
 the historical transport measurements below and in `worker-layout.md` include
 larger diagnostic graphs and must not be treated as the current demo payload.
 
-## Reproduce bounded-search measurements
+## Reproduce current placement measurements
 
-`npm run benchmark:placement` alternates exhaustive and exact top-eight solves
-on the same 5, 12 and 20-note inputs. Six measured samples follow a warmup for
-each configuration. It checks exact retained candidate, geometry and quality
-parity and reports serialized layout size alongside solver duration.
+`npm run benchmark:placement` alternates normal, eight-candidate diagnostics
+and all-candidate diagnostics on the same 5, 12 and 20-note inputs. All modes
+use the same refinement frontier. Six measured samples follow a warmup for each
+configuration. It checks chosen geometry, score and quality parity, then reports
+serialized layout size independently from solver duration.
 
-To compare a historical build with identical bounded inputs, pass
+To compare a historical build with the same authored inputs, pass
 `-- --baseline-module /path/to/other-checkout/dist/index.js`. Build that checkout
 separately first. The module path is developer-supplied local code; do not point
 it at untrusted code. `--output <file>` retains the JSON report. Timings and JSON
