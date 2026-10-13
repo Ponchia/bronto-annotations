@@ -74,6 +74,19 @@ const guideSummaries = {
   release: 'Maintainer reference for tags, verification, publication, and recovery.',
 };
 const baseUrl = 'https://ponchia.github.io/bronto-annotations/';
+// Host-and-path-limited analytics for public GitHub Pages only. The npm
+// package, Vite example fixtures, local builds and other Ponchia sites remain
+// uninstrumented. Cloudflare Web Analytics uses no visitor tracking cookies.
+const publicAnalyticsBeacon = `<script>
+  if (window.location.hostname === 'ponchia.github.io' && window.location.pathname.startsWith('/bronto-annotations/')) {
+    const beacon = document.createElement('script');
+    beacon.type = 'module';
+    beacon.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+    beacon.setAttribute('data-cf-beacon', '{\"token\":\"a112ce8d5a06497fba89e7c9067f9b6d\",\"spa\":false}');
+    document.body.appendChild(beacon);
+  }
+</script>`;
+
 // Site content comes from tracked Markdown. Sanitize inline HTML as well as
 // Markdown output so authored guides cannot inject active markup into Pages.
 const sanitizer = createDOMPurify(new JSDOM('').window);
@@ -240,6 +253,7 @@ function shell({
     body +
     '</main>' +
     footer(prefix) +
+    publicAnalyticsBeacon +
     (searchScript
       ? '<script src="' + prefix + 'docs.js" defer></script>'
       : '') +
@@ -257,6 +271,14 @@ await run('npx', [
   '--outDir=../_site',
   '--emptyOutDir',
 ]);
+// The landing page is compiled from site/index.html by Vite. Inject the same
+// inert-until-public beacon into that finished HTML, not into the app source.
+const landingPath = join(out, 'index.html');
+const landingHtml = await readFile(landingPath, 'utf8');
+if (!landingHtml.includes('</body>'))
+  throw new Error('Vite landing page is missing closing body tag');
+await writeFile(landingPath, landingHtml.replace('</body>', publicAnalyticsBeacon + '</body>'));
+
 await copyFile(join(root, 'site/site.css'), join(out, 'site.css'));
 await copyFile(join(root, 'site/favicon.svg'), join(out, 'favicon.svg'));
 await cp(join(root, 'site/media'), join(out, 'media'), { recursive: true });

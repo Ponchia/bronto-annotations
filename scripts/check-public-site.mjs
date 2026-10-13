@@ -88,6 +88,19 @@ for (const rel of pages) {
     'Missing document language: ' + rel,
   );
   assert(html.querySelector('title')?.textContent, 'Missing title: ' + rel);
+  // Only the public editorial site is instrumented; package and independent
+  // interactive example fixtures must not inherit website analytics.
+  const editorial = rel === 'index.html' || rel.startsWith('docs/') || rel === 'examples/index.html';
+  const beacons = [...html.querySelectorAll('script')].filter((node) =>
+    node.textContent.includes('static.cloudflareinsights.com/beacon.min.js'),
+  );
+  assert.equal(beacons.length, Number(editorial), 'Unexpected analytics script in ' + rel);
+  if (editorial) {
+    assert.match(beacons[0].textContent, /window\.location\.hostname === 'ponchia\.github\.io'/);
+    assert.match(beacons[0].textContent, /window\.location\.pathname\.startsWith\('\/bronto-annotations\/\'\)/);
+    assert.match(beacons[0].textContent, /beacon\.setAttribute\('data-cf-beacon'/);
+  }
+
   // Actual example fixtures have their own layout contract, and source links
   // are on the editorial pages rather than the test fixture itself.
   // Authored Markdown may contain HTML snippets. The static docs renderer
@@ -95,7 +108,11 @@ for (const rel of pages) {
   // is independently authored and allowed only on the docs index.
   if (rel.startsWith('docs/') && rel !== 'docs/index.html') {
     assert.equal(
-      html.querySelectorAll('script,iframe,object,embed,form').length,
+      html.querySelectorAll('script').length, 1,
+      'Generated Markdown must not add scripts beyond the approved analytics loader: ' + rel,
+    );
+    assert.equal(
+      html.querySelectorAll('iframe,object,embed,form').length,
       0,
       'Unsafe active HTML in generated documentation: ' + rel,
     );
