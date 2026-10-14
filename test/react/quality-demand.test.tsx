@@ -113,7 +113,9 @@ describe('React quality diagnostics are demand-driven', () => {
         ...annotations[1]!, placement: { manual: { x: 325, y: 205 } }
       }],
       bounds, noteSizes,
-      obstacles: [{ x: 170, y: 163, width: 30, height: 25 }]
+      // This obstacle crosses a connector but leaves both note cards clear:
+      // informational crossings should not fail the default assertion.
+      obstacles: [{ x: 105, y: 110, width: 20, height: 20 }]
     };
     const session = createIncrementalAnnotationLayoutSession(opts);
     const { container, rerender } = render(
