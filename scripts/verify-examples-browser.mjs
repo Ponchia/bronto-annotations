@@ -1390,6 +1390,8 @@ function annotationMotionState() {
 
 async function verifyEditDrag(page, label) {
   const handle = page.locator('.pa-annotation__edit-handle--note[data-annotation-id="queue"]').first();
+  await handle.scrollIntoViewIfNeeded();
+  await handle.focus();
   const handleBox = await handle.boundingBox();
   const before = await page.evaluate(() => {
     const note = document.querySelector('g[data-annotation-id="queue"] .pa-annotation__note-box');
@@ -1418,18 +1420,38 @@ async function verifyEditDrag(page, label) {
     x: handleBox.x + handleBox.width / 2,
     y: handleBox.y + handleBox.height / 2
   };
-  const delta = { x: 24, y: 14 };
+  // The Collect note starts above its host node. Drag out into clear space:
+  // the editing smoke must not deliberately obscure protected graph content.
+  const delta = { x: -24, y: -14 };
 
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
-  await page.mouse.move(start.x + delta.x, start.y + delta.y, { steps: 4 });
-  // Preview should be visible before the host commits its annotation patch.
-  await page.waitForFunction((input) => {
-    const note = document.querySelector('g[data-annotation-id="queue"] .pa-annotation__note-box');
-    const rect = note?.getBoundingClientRect();
-    return Boolean(rect && (Math.abs(rect.x - input.x) > 2 || Math.abs(rect.y - input.y) > 2));
-  }, { x: before.noteBox.x, y: before.noteBox.y }, { timeout: 5000 });
-  await page.mouse.up();
+  try {
+    await page.mouse.move(start.x + delta.x, start.y + delta.y, { steps: 4 });
+    // Preview should be visible before the host commits its annotation patch.
+    try {
+      await page.waitForFunction((input) => {
+        const note = document.querySelector('g[data-annotation-id="queue"] .pa-annotation__note-box');
+        const rect = note?.getBoundingClientRect();
+        return Boolean(rect && (Math.abs(rect.x - input.x) > 2 || Math.abs(rect.y - input.y) > 2));
+      }, { x: before.noteBox.x, y: before.noteBox.y }, { timeout: 5000 });
+    } catch (error) {
+      const diagnostic = await page.evaluate(({ x, y }) => ({
+        currentNote: (() => {
+          const r = document.querySelector('g[data-annotation-id="queue"] .pa-annotation__note-box')?.getBoundingClientRect();
+          return r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null;
+        })(),
+        topElement: document.elementFromPoint(x, y)?.outerHTML.slice(0, 500),
+        activeElement: document.activeElement?.outerHTML.slice(0, 500),
+        lastEdit: window.__annotationsLastEdit,
+        quality: window.__annotationsExample?.quality
+      }), start);
+      throw new Error(label + ': basic edit preview did not move: ' + JSON.stringify({ before, diagnostic })
+        + ': ' + String(error));
+    }
+  } finally {
+    await page.mouse.up();
+  }
 
   await page.waitForFunction(() => {
     const lastEdit = window.__annotationsLastEdit;
