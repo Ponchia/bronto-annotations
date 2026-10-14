@@ -549,7 +549,9 @@ function renderChartAnnotations() {
   const svg = requiredElement('#readiness-chart');
   const layer = requiredElement('#chart-annotations');
   const frame = annotationFrameFromSvg(svg, {
-    padding: { top: 46, right: 230, bottom: 38, left: 26 }
+    // Two editorial notes occupy their own right-hand lane; leaving them
+    // among the source bars would obscure report data despite valid anchors.
+    padding: { top: 46, right: 260, bottom: 38, left: 26 }
   });
   const prepared = prepareDomAnnotations(surface, [
     {
@@ -560,7 +562,11 @@ function renderChartAnnotations() {
         title: 'Audit requirement count',
         body: 'Generated from completion-audit.json.'
       },
-      placement: { side: ['right', 'top'], offset: [20, 32], crossOffset: [0, -42, 42] },
+      placement: { manual: {
+        x: frame.bounds.x + frame.bounds.width - 194 - 12,
+        y: frame.bounds.y + 16,
+        side: 'right'
+      } },
       subject: { shape: 'rect', padding: 4 },
       connector: { type: 'curve', end: 'arrow' },
       tone: 'success',
@@ -574,7 +580,11 @@ function renderChartAnnotations() {
         title: 'Check coverage',
         body: 'Every required script is part of npm run check.'
       },
-      placement: { side: ['right', 'bottom'], offset: [20, 32], crossOffset: [0, -42, 42] },
+      placement: { manual: {
+        x: frame.bounds.x + frame.bounds.width - 190 - 12,
+        y: frame.bounds.y + 110,
+        side: 'right'
+      } },
       subject: { shape: 'rect', padding: 4 },
       connector: { type: 'curve', end: 'arrow' },
       tone: 'accent'

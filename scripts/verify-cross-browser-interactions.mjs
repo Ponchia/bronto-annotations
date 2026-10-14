@@ -735,7 +735,10 @@ async function verifyReactFlow(browser, origin, viewport, label) {
     await page.mouse.move(start.x, start.y);
     await page.mouse.down();
     try {
-      await page.mouse.move(start.x + 14, start.y + 10, { steps: 5 });
+      // The note starts just above a padded review-node obstacle. Move
+      // outward, not downward into protected content: this test validates
+      // the edit gesture rather than deliberately forcing an invalid note.
+      await page.mouse.move(start.x - 14, start.y - 10, { steps: 5 });
       try {
         await page.waitForFunction((before) => {
           const rect = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box')
@@ -806,7 +809,7 @@ async function verifyReactFlow(browser, origin, viewport, label) {
     // on pointer capture or the transient pointer preview.
     const updatedHandle = page.locator('.pa-annotation__edit-handle--note[data-annotation-id="flow-review"]').first();
     await updatedHandle.focus();
-    await updatedHandle.press('ArrowRight');
+    await updatedHandle.press('ArrowLeft');
     await page.waitForFunction((previousX) => {
       const sample = window.__annotationsExample;
       const manual = sample?.annotations?.find((note) => note.id === 'flow-review')?.manual;
