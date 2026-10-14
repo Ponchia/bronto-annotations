@@ -49,3 +49,18 @@ body {
   stroke: #64748b;
   stroke-width: 2;
 }
+
+/* Host-owned edit admission. The annotation library does not mutate state. */
+.flow-edit-status:not(:empty) {
+  position: absolute;
+  inset-inline: 16px;
+  bottom: 10px;
+  z-index: 12;
+  color: #7e2525;
+  background: #fff5f5;
+  border: 1px solid #dc9e9e;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font: 600 12px/1.4 ui-sans-serif, system-ui, sans-serif;
+  pointer-events: none;
+}
