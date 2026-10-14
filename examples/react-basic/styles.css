@@ -57,3 +57,18 @@ body {
   fill: #334155;
   font: 600 14px Inter, ui-sans-serif, system-ui, sans-serif;
 }
+
+/* Invalid suggestions are rejected before the host changes its source notes. */
+.flow-edit-status:not(:empty) {
+  position: absolute;
+  bottom: 10px;
+  inset-inline: 16px;
+  z-index: 12;
+  padding: 8px 12px;
+  border: 1px solid #dc9e9e;
+  border-radius: 6px;
+  background: #fff5f5;
+  color: #7e2525;
+  font: 600 12px/1.4 ui-sans-serif, system-ui, sans-serif;
+  pointer-events: none;
+}

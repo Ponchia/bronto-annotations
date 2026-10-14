@@ -66,6 +66,13 @@ provisional feedback and commit through `onEditEnd`. A cancelled gesture does
 not produce a completed edit. Keep IDs stable and ensure the host applies the
 patch to its own annotation inputs.
 
+When using strict `assertQuality` in an interactive editor, validate each
+proposed committed edit before updating authored state. A suggested drag is
+not guaranteed to be acceptable: it can cover a protected diagram node even
+when the prior layout was clear. Keep the original annotation and announce a
+rejected drop rather than allowing an assertion to throw during the next
+render. See the [React guide](react-guide.md#validate-edits-before-committing).
+
 Incremental sessions can reuse an unchanged priority prefix; edits earlier in
 the order and global geometry changes may need a full solve. A Worker moves
 solver work off the UI thread, but cloning and rendering can still be costly.

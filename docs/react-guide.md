@@ -83,6 +83,50 @@ immediately. Pointer release, cancellation, or unmount drops any pending
 visual frame so a stale preview cannot reappear after the gesture ends.
 The host remains responsible for persisting the final `onEditEnd` suggestion.
 
+## Validate edits before committing
+
+The first example above shows the minimal *single-note* edit path. When a host
+has protected chart/diagram content, an edit can be visually previewed over
+that content. `previewEdits` does not certify layout quality, and
+`assertQuality` is a throwing development assertion, **not** an interactive
+edit admission policy. Applying every patch blindly can therefore crash a
+host's next render.
+
+Before changing authored state, resolve the *proposed* annotations with the
+same geometry inputs as the renderer, check `evaluateAnnotationLayout`, and
+either accept the patch or keep the previous state. For example, inside a
+host-owned edit handler:
+
+```tsx
+const proposed = applyAnnotationEdits(annotations, event, { missing: 'throw' });
+const candidate = resolveAnnotationLayout({
+  annotations: proposed,
+  bounds,
+  obstacles,
+  noteSizes: effectiveNoteSizes
+});
+const quality = evaluateAnnotationLayout(candidate);
+if (!quality.ok) {
+  setEditNotice('Move rejected: the note would obscure protected content.');
+  return;
+}
+setEditNotice(null);
+setAnnotations(proposed);
+```
+
+The host determines `effectiveNoteSizes`. In `measure="dom"` mode, use the
+latest `onLayout` result's note-box dimensions instead of relying on estimated
+character widths. In render-only mode, validate from the same source options
+used by the host-owned solver. Expose rejection feedback in a live region
+(e.g. `role="status"`), so keyboard and touch users know the drop was not
+committed. A rejected edit is not an application error and should not corrupt
+undo/redo history.
+
+Both runnable [React](../examples/react-basic/README.md) and
+[React Flow](../examples/react-flow-basic/README.md) examples demonstrate this
+host boundary through a private shared edit validator, without expanding the
+published package API.
+
 ## Render a host-owned layout
 
 When the host resolves its own layout, pass exactly that result:

@@ -115,6 +115,12 @@ measure; the host updates its session when it accepts an edit.
 SVG and externally resolved React debug rendering can display only diagnostics
 already present. It never secretly resolves another layout to obtain them.
 
+Interactive hosts enabling strict `assertQuality` should check a proposed
+`onEditEnd` patch with `evaluateAnnotationLayout` **before** committing it.
+The renderer's preview is intentionally provisional; an invalid drop should
+leave the last valid source state intact and receive accessible feedback. See
+the [React edit-admission guide](react-guide.md#validate-edits-before-committing).
+
 The example-only Worker protocols use full snapshots when diagnostic graphs
 are present, preserving aliases between candidates and winning geometry. Lean
 responses still use the existing safe structural-sharing/patch path. This is a

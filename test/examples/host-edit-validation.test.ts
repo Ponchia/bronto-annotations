@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validateHostAnnotationEdit } from '../../examples/react-flow-basic/validate-edit.js';
+import { validateHostAnnotationEdit } from '../../examples/shared/validate-edit.js';
 import type { Annotation, LayoutOptions } from '../../src/index.js';
 
 const bounds = { x: 0, y: 0, width: 560, height: 320 };

@@ -1,11 +1,15 @@
 import { AnnotationLayer } from '@ponchia/annotations/react';
 import {
+  annotationEditPatch,
+  applyAnnotationEdits,
   generatedSurfaceLayoutDefaults,
-  type Annotation
+  type Annotation,
+  type ResolvedLayout
 } from '@ponchia/annotations';
 import '@ponchia/annotations/bronto.css';
 import { createRoot } from 'react-dom/client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { validateHostAnnotationEdit } from '../shared/validate-edit.js';
 import './styles.css';
 
 const bounds = { x: 0, y: 0, width: 760, height: 420 };
@@ -46,6 +50,8 @@ const initialAnnotations: Annotation[] = [
 
 function App() {
   const [annotations, setAnnotations] = useState(initialAnnotations);
+  const [rejectedEdit, setRejectedEdit] = useState<string | null>(null);
+  const lastLayout = useRef<ResolvedLayout | null>(null);
 
   return (
     <main className="example-shell">
@@ -78,13 +84,30 @@ function App() {
             });
           }}
           onEditEnd={(event) => {
-            if (!event.suggestedAnnotation) {
+            const patch = annotationEditPatch(event);
+            const noteSizes = Object.fromEntries((lastLayout.current?.annotations ?? []).map(
+              (item) => [item.id, { width: item.noteBox.width, height: item.noteBox.height }]
+            ));
+            const quality = validateHostAnnotationEdit({
+              annotations,
+              bounds,
+              obstacles,
+              padding: 18,
+              noteSizes
+            }, patch);
+
+            if (!quality.ok) {
+              // DOM measurement belongs to this host. Reject a drop using the
+              // current measured card sizes, before corrupting committed state.
+              setRejectedEdit('Move rejected: the note would cover protected workflow content or another note.');
               return;
             }
 
-            setAnnotations((current) => current.map((annotation) => (
-              annotation.id === event.annotationId ? event.suggestedAnnotation! : annotation
-            )));
+            setRejectedEdit(null);
+            setAnnotations(applyAnnotationEdits(annotations, patch, { missing: 'throw' }));
+          }}
+          onLayout={(layout) => {
+            lastLayout.current = layout;
           }}
           assertQuality={layoutDefaults.assertQuality}
           qualityFormat={layoutDefaults.qualityFormat}
@@ -94,6 +117,7 @@ function App() {
                 name: 'react-basic',
                 quality,
                 qualitySummary: summary,
+                rejectedEdit,
                 annotations: layout.annotations.map((item) => ({
                   id: item.id,
                   anchor: item.annotation.anchor,
@@ -115,6 +139,7 @@ function App() {
             </>
           )}
         />
+        <div className="flow-edit-status" role="status" aria-live="polite">{rejectedEdit}</div>
       </section>
     </main>
   );

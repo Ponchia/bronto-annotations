@@ -25,7 +25,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { createRoot } from 'react-dom/client';
-import { validateHostAnnotationEdit } from './validate-edit.js';
+import { validateHostAnnotationEdit } from '../shared/validate-edit.js';
 import './styles.css';
 
 type LayerBounds = {

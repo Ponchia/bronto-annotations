@@ -858,12 +858,86 @@ try {
           : `${example.name}-${viewport.name}.png`),
         fullPage: true
       });
+      // Exercise rejected edits after capturing the normal visual baseline:
+      // the host must keep its last valid source rather than crashing.
+      if (example.verifyEditDrag && viewport.name === 'desktop') {
+        await verifyRejectedEditDrag(page, label);
+      }
       await page.close();
     }
   }
 } finally {
   await browser.close();
   await server.close();
+}
+
+async function verifyRejectedEditDrag(page, label) {
+  const handle = page.locator('.pa-annotation__edit-handle--note[data-annotation-id="queue"]').first();
+  await handle.scrollIntoViewIfNeeded();
+  const handleBox = await handle.boundingBox();
+  const before = await page.evaluate(() => {
+    const note = document.querySelector('g[data-annotation-id="queue"] .pa-annotation__note-box')
+      ?.getBoundingClientRect();
+    const node = document.querySelector('.flow-surface__node')?.getBoundingClientRect();
+    const queue = window.__annotationsExample?.annotations?.find((item) => item.id === 'queue');
+    return {
+      note: note ? { x: note.x, y: note.y, width: note.width, height: note.height } : null,
+      node: node ? { x: node.x, y: node.y, width: node.width, height: node.height } : null,
+      manual: queue?.manual,
+      qualityOk: window.__annotationsExample?.quality?.ok
+    };
+  });
+
+  assert(handleBox && before.note && before.node && before.qualityOk && before.manual,
+    label + ': cannot exercise invalid edit without a valid committed note and host target');
+
+  // Move the note's screen-space center directly into the Collect node. The
+  // source should remain unchanged because the proposed note obscures a mark.
+  const delta = {
+    x: before.node.x + before.node.width / 2 - before.note.x - before.note.width / 2,
+    y: before.node.y + before.node.height / 2 - before.note.y - before.note.height / 2
+  };
+  const start = { x: handleBox.x + handleBox.width / 2, y: handleBox.y + handleBox.height / 2 };
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  try {
+    await page.mouse.move(start.x + delta.x, start.y + delta.y, { steps: 6 });
+  } finally {
+    await page.mouse.up();
+  }
+
+  try {
+    await page.waitForFunction(() =>
+      document.querySelector('.flow-edit-status[role="status"]')?.textContent?.includes('Move rejected'),
+    null, { timeout: 8000 });
+  } catch (error) {
+    const diagnostics = await page.evaluate(() => ({
+      lastEdit: window.__annotationsLastEdit,
+      quality: window.__annotationsExample?.quality,
+      note: window.__annotationsExample?.annotations?.find((a) => a.id === 'queue'),
+      status: document.querySelector('.flow-edit-status')?.textContent
+    }));
+    throw new Error(label + ': invalid note drop was not rejected: '
+      + JSON.stringify({ diagnostics, delta }) + ': ' + String(error));
+  }
+
+  const after = await page.evaluate(() => {
+    const note = document.querySelector('g[data-annotation-id="queue"] .pa-annotation__note-box')
+      ?.getBoundingClientRect();
+    return {
+      rect: note ? { x: note.x, y: note.y } : null,
+      manual: window.__annotationsExample?.annotations?.find((a) => a.id === 'queue')?.manual,
+      qualityOk: window.__annotationsExample?.quality?.ok,
+      status: document.querySelector('.flow-edit-status')?.textContent,
+      lastEdit: window.__annotationsLastEdit
+    };
+  });
+  assert.equal(after.qualityOk, true, label + ': a rejected drop must preserve valid layout geometry');
+  assert.deepEqual(after.manual, before.manual, label + ': invalid drop must not replace host source state');
+  assert(Math.abs(after.rect.x - before.note.x) < 2 && Math.abs(after.rect.y - before.note.y) < 2,
+    label + ': rejected preview must restore the last committed note geometry');
+  assert.equal(after.lastEdit?.phase, 'end', label + ': host received an edit suggestion for rejection');
+  assert(after.status?.includes('Move rejected'), label + ': rejection must be announced accessibly');
 }
 
 async function verifyPublicWorkerDemo(page, label) {
