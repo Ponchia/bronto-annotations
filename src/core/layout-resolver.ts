@@ -1,9 +1,9 @@
-import { orderAnnotations } from './layout-order.js';
+import { orderAnnotations, assertUniqueAnnotationIds, compareAnnotationIds } from './layout-order.js';
 import { anchorSubject, insetBox, isFiniteBox, normalizeBox, resolvePadding } from './anchors.js';
 import { allPlacementCandidates, assertPlacementPreference } from './placement.js';
 import { DEFAULT_NOTE_SIZE, DEFAULT_NOTE_PADDING } from './model.js';
 import { evaluateAnnotationLayout } from './quality.js';
-import { wrapNoteText } from './text.js';
+import { wrapNoteText, countTextGraphemes } from './text.js';
 import type { Annotation, Box, LayoutDiagnostics, LayoutOptions, LayoutRefinementOptions, PlacementCandidate, PlacementPreference, ResolvedAnnotation, ResolvedLayout, Size } from './model.js';
 
 export function resolveAnnotationLayout(options: LayoutOptions): ResolvedLayout {
@@ -193,8 +193,8 @@ export function estimateNoteSize(annotation: Annotation, base: Size = DEFAULT_NO
   const lineHeight = noteLineVisible(annotation.note.line) ? 10 : 0;
   const longestLine = Math.max(
     0,
-    ...titleLines.map((line) => line.length),
-    ...bodyLines.map((line) => line.length)
+    ...titleLines.map(countTextGraphemes),
+    ...bodyLines.map(countTextGraphemes)
   );
   const estimatedTextWidth = longestLine * 7.2 + padding.left + padding.right;
   const width = Math.min(Math.max(base.width, estimatedTextWidth), 320);
@@ -247,6 +247,7 @@ export function mergePlacement(
 
 /** @internal Validate even no-op incremental updates and empty layouts. */
 export function validateLayoutOptions(options: LayoutOptions): void {
+  assertUniqueAnnotationIds(options.annotations);
   assertPlacementPreference(options.placement);
   for (const annotation of options.annotations) assertPlacementPreference(annotation.placement);
   const diagnostics = options.diagnostics;
@@ -294,7 +295,7 @@ function refinementOrder(annotations: ResolvedAnnotation[]): number[] {
     .map((annotation, index) => ({ annotation, index }))
     .sort((a, b) => {
       const priority = (a.annotation.annotation.priority ?? 0) - (b.annotation.annotation.priority ?? 0);
-      return priority || a.annotation.id.localeCompare(b.annotation.id);
+      return priority || compareAnnotationIds(a.annotation.id, b.annotation.id);
     })
     .map((entry) => entry.index);
 }

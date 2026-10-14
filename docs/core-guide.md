@@ -239,6 +239,21 @@ The report covers invalid note boxes, bounds overflow, note overlap, obstacle
 overlap, connector-obstacle crossings, connector-note crossings, aggregate
 metrics, and a simple quality score.
 
+### Interpreting the quality result
+
+The report separates basic geometry from host-content protection:
+
+- `geometryValid`: finite note boxes within bounds, with no note-to-note overlap.
+- `hostContentClear`: note rectangles do not cover *declared* host obstacles.
+- `ok`: both checks pass. An obstacle-overlap warning now makes `ok` false
+  and causes the default `assertAnnotationLayoutQuality` call to fail.
+  Informational connector crossings may include a legitimate target contact.
+
+This is a limited geometric guarantee, not proof of readable typography,
+semantic anchor correctness or accessibility. If host obstacles are missing,
+a passing `hostContentClear` cannot establish that content was protected.
+The score remains advisory and should not replace these explicit checks.
+
 ## Keep ordinary integrations small
 
 Start with a few explanatory notes and measured text sizes. The default solve

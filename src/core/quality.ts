@@ -44,6 +44,13 @@ export type LayoutQualityMetrics = {
 };
 
 export type LayoutQualityReport = {
+  /** Structural placement validity: finite boxes, in-bounds notes, no note overlaps. */
+  geometryValid: boolean;
+  /** Annotation note rectangles do not cover protected host obstacles.
+   * Connectors may legitimately contact their own subjects.
+   */
+  hostContentClear: boolean;
+  /** Basic geometry usability; not a typography or accessibility guarantee. */
   ok: boolean;
   score: number;
   metrics: LayoutQualityMetrics;
@@ -183,8 +190,12 @@ export function evaluateAnnotationLayout(
 
   metrics.issueCount = issues.length;
 
+  const geometryValid = !issues.some((issue) => issue.severity === 'error');
+  const hostContentClear = metrics.obstacleOverlapArea === 0;
   return {
-    ok: !issues.some((issue) => issue.severity === 'error'),
+    geometryValid,
+    hostContentClear,
+    ok: geometryValid && hostContentClear,
     score: qualityScore(metrics),
     metrics,
     issues
@@ -249,7 +260,8 @@ export function assertAnnotationLayoutQuality(
   }
 
   const reasons = [
-    !report.ok ? 'blocking layout quality errors' : undefined,
+    !report.geometryValid ? 'blocking layout quality errors' : undefined,
+    !report.hostContentClear ? 'annotation notes obscure protected host content' : undefined,
     belowMinimumScore ? `score ${roundMetric(report.score)} is below required minimum ${roundMetric(options.minScore!)}` : undefined,
     options.failOnWarnings && counts.warning > 0 ? `${counts.warning} warning${counts.warning === 1 ? '' : 's'}` : undefined,
     options.failOnInfo && counts.info > 0 ? `${counts.info} info issue${counts.info === 1 ? '' : 's'}` : undefined

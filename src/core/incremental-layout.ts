@@ -49,7 +49,7 @@ export function createIncrementalAnnotationLayoutSession(options: LayoutOptions)
 
       // A refinement pass may move earlier winners in response to *later*
       // notes. Never keep a prefix across that global optimization.
-      if (!next.refinement && previousSnapshot.globals !== undefined
+      if (!refinementEnabled(next.refinement) && previousSnapshot.globals !== undefined
         && previousSnapshot.globals === nextSnapshot.globals
         && previousSnapshot.annotations.length === current.annotations.length) {
         // Insertion/removal at the end of priority order cannot change
@@ -111,6 +111,11 @@ export type AnnotationLayoutSession = {
   update(options: LayoutOptions): ResolvedLayout;
 };
 
+function refinementEnabled(refinement: LayoutOptions['refinement']): boolean {
+  return refinement === true || (typeof refinement === 'object'
+    && refinement !== null && refinement.enabled !== false);
+}
+
 type IncrementalSnapshot = {
   diagnostics: number | 'all' | undefined;
   globals: string | undefined;
@@ -133,7 +138,8 @@ function captureIncrementalSnapshot(options: LayoutOptions): IncrementalSnapshot
     padding: options.padding,
     placement: options.placement,
     defaultNoteSize: options.defaultNoteSize,
-    refinement: options.refinement
+    // These three public spellings mean the same disabled solver.
+    refinement: refinementEnabled(options.refinement) ? options.refinement : false
   });
   return {
     diagnostics: options.diagnostics?.candidates,

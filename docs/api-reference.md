@@ -44,6 +44,15 @@ candidates. This does not change the configured refinement search or winners.
 Low-level `allPlacementCandidates(input, { limit: 8 })` has a separate result
 limit. The old `placement.maxCandidates` option is rejected.
 
+Annotation IDs must be unique, and equal-priority ID ordering is
+locale-independent. `LayoutQualityReport` distinguishes `geometryValid`,
+`hostContentClear`, and `ok`; a note obscuring a declared obstacle causes
+`ok` to fail even when note geometry itself is valid.
+
+Resolved layouts retain arbitrary source metadata and therefore are not
+guaranteed JSON-serializable or structured-cloneable. See the
+[0.7 migration guide](migration-0.7.md#metadata-and-worker-transport).
+
 Primary groups:
 
 - Models: `Point`, `Box`, `Anchor`, `Annotation`, `AnnotationNote`,

@@ -120,6 +120,36 @@ are present, preserving aliases between candidates and winning geometry. Lean
 responses still use the existing safe structural-sharing/patch path. This is a
 consumer recipe, not a new public Worker API.
 
+## Identity, typography and quality
+
+- Annotation IDs must now be **unique** during every layout resolution and
+  incremental session update. Duplicate IDs are rejected before state changes.
+  IDs may still contain arbitrary Unicode and property names like
+  `__proto__`. Equal-priority IDs are compared by fixed UTF-16 code units,
+  not an OS-dependent locale.
+- Text wraps whole Unicode grapheme clusters, keeping accented characters,
+  joined emoji and modifiers together. `estimateNoteSize` still approximates
+  glyph widths; prefer provided `noteSizes` or React `measure="dom"` for
+  font-accurate layout.
+- `evaluateAnnotationLayout` now returns `geometryValid` (finite, bounded,
+  disjoint note boxes), `hostContentClear` (notes do not cover declared host
+  obstacles), and `ok` (both). Obstacle overlap remains a diagnostic warning
+  but fails `ok` and default assertions. Connector intersections remain
+  informational. A passing report does not certify accessibility.
+
+## Metadata and Worker transport
+
+A *lean* layout is **not automatically serializable**. Resolved annotations
+retain their source annotation objects, including arbitrary application
+`metadata` and note metadata. Cyclic data can make `JSON.stringify` fail;
+functions can make `structuredClone` and `Worker.postMessage` fail.
+
+Worker consumers must keep their authored inputs and metadata structured-clone
+safe or explicitly project their own transport-safe representation. Do not
+expect the engine to silently strip callbacks, invoke `toJSON`, or delete
+application data. Persist only the authored input you actually own; if a Worker
+needs a projection, validate the projection at the host boundary.
+
 ## D3 migration has its own import
 
 Change migration-specific imports:

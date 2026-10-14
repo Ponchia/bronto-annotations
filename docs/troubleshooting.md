@@ -37,7 +37,9 @@ See [adapter examples](adapter-guide.md) and the
 ## Text is clipped or wrapping is unexpected
 
 The DOM-free core estimates text size; it cannot measure a loaded browser font.
-Provide accurate `noteSizes` or use the React layer's documented DOM measurement
+Wrapping preserves whole grapheme clusters, including accented text and emoji,
+but the pixel-width estimate remains approximate for proportional/custom
+fonts and scripts with wide glyphs. Provide accurate `noteSizes` or use the React layer's documented DOM measurement
 mode after fonts and styles are ready. Keep note size units in the layout's
 coordinate space. Use the note wrapping and padding options in the
 [styling guide](styling-guide.md).

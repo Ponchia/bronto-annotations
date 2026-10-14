@@ -21,6 +21,18 @@ reasonable.
 - Prepare `0.7.0-dev.0` as an unpublished development artifact. See
   `docs/migration-0.7.md` for the complete migration.
 
+### Correctness hardening
+
+- Make ID tie ordering independent of runtime locale and reject duplicate
+  annotation IDs before resolution or session updates.
+- Preserve incremental reuse when refinement is disabled in any supported
+  equivalent form.
+- Wrap whole Unicode grapheme clusters instead of splitting surrogate pairs.
+- Expose `geometryValid`, `hostContentClear` and a stricter `ok` quality
+  verdict; protected host-content overlap now fails the default assertion.
+- Clarify that raw host metadata can prevent JSON serialization and
+  Worker structured cloning; lean layout outputs do not sanitize it.
+
 ### Performance and internal boundaries
 
 - Preserve the exact retained placement ranking while avoiding connector routing

@@ -9,6 +9,13 @@ measurement props. Source inputs remain host-owned and are submitted to the
 solver on committed changes. Candidate diagnostics, when explicitly requested,
 are separate from winners and do not alter refinement quality.
 
+**Transport boundary:** the returned layout still contains each source
+`Annotation`, including application metadata. Cyclic objects, callbacks or
+other non-cloneable values can break JSON serialization and Worker
+`postMessage` even though the diagnostic candidate graph is no longer
+retained by default. Validate the Worker-bound input or explicitly project a
+host-owned serializable model. The library does not strip metadata implicitly.
+
 The private browser fixture gates a genuinely computed reply until the host
 cancels its revision, then releases the actual response and verifies that it
 is discarded. This avoids assuming a slow solver or an arbitrary delay. It
@@ -95,7 +102,7 @@ self.addEventListener('message', (event: MessageEvent<{
 ```
 
 The host controls the request revision and updates React only if the reply is
-still current. `AnnotationLayer.resolvedLayout` accepts the authoritative
+still current. `<AnnotationLayer layout={resolvedLayout} />` accepts the authoritative
 result, so it does **not** invoke another full solver:
 
 ```ts
@@ -110,9 +117,8 @@ worker.addEventListener('message', (event) => {
 });
 ```
 
-When using `resolvedLayout`, pass matching source annotations, bounds and
-explicit note sizes. The React component cannot run its own DOM measurement
-in this mode. Keep UI state, host graph changes, persistence and quality-report
+When rendering with the externally resolved layout, omit the duplicate
+annotations/bounds and measurement props: the host layout is authoritative. Keep UI state, host graph changes, persistence and quality-report
 preferences in the host app.
 
 ## Stale results, cancellation and identity
