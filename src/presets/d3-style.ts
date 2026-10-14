@@ -3,7 +3,6 @@ import { enclosingCircle } from '../core/annotation-geometry.js';
 import type { AnnotationEditPatch, AnnotationEditSuggestion } from '../core/edit.js';
 import type { Anchor, Annotation, AnnotationBadgeOptions, AnnotationConnectorOptions, AnnotationMetadata, AnnotationNote, AnnotationSubjectOptions, AnnotationVariant, PlacementPreference, PlacementSide, Point } from '../core/model.js';
 
-import { annotation } from './model.js';
 import type { D3AnnotationDisablePart, D3AnnotationType, D3AnnotationConnectorType, D3AnnotationOrientation, D3AnnotationAlign, D3AnnotationLineType, D3AnnotationConnector, D3AnnotationSubjectPoint, D3AnnotationNote, D3AnnotationSubject, D3StyleAnnotationInput, D3AnnotationAccessor, D3StyleAnnotationOptions, D3StyleAnnotationCollectionId, D3StyleAnnotationCollectionInput, PreparedD3StyleAnnotationCollection, D3StyleCustomAnnotationDefinition, D3StyleCustomAnnotationType, D3StyleAnnotationEditOptions, D3StyleAnnotationEditPatch, D3StyleAnnotationCollectionEditPatch, D3StyleAnnotationBuilderInput, D3StyleAnnotationBuilder } from './d3-types.js';
 
 export function defineD3StyleAnnotationType<TDatum = unknown>(
