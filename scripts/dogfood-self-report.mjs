@@ -662,7 +662,13 @@ function renderFlowAnnotations() {
         title: 'Checked transition',
         body: 'The generated path links checks to release.'
       },
-      placement: { manual: { x: 382, y: 194, side: 'top' } },
+      // Keep the edge explanation in the reserved right-hand margin instead
+      // of partially covering the generated Known limits node.
+      placement: { manual: {
+        x: frame.bounds.x + frame.bounds.width - 182 - 12,
+        y: 194,
+        side: 'top'
+      } },
       subject: { shape: 'path' },
       connector: { type: 'elbow', end: 'arrow' },
       tone: 'accent'
