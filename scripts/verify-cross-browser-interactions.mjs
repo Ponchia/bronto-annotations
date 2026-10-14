@@ -768,14 +768,32 @@ async function verifyReactFlow(browser, origin, viewport, label) {
       await page.mouse.up();
     }
 
-    await page.waitForFunction(() => {
-      const sample = window.__annotationsExample;
-      const edit = window.__annotationsLastEdit;
-      return edit?.annotationId === 'flow-review'
-        && edit.phase === 'end'
-        && sample?.editPatchIds?.includes('flow-review')
-        && sample.annotations?.find((note) => note.id === 'flow-review')?.manual;
-    }, null, { timeout: 15000 });
+    try {
+      await page.waitForFunction(() => {
+        const sample = window.__annotationsExample;
+        const edit = window.__annotationsLastEdit;
+        return edit?.annotationId === 'flow-review'
+          && edit.phase === 'end'
+          && sample?.editPatchIds?.includes('flow-review')
+          && sample.annotations?.find((note) => note.id === 'flow-review')?.manual;
+      }, null, { timeout: 15000 });
+    } catch (error) {
+      const diagnostic = await page.evaluate(() => {
+        const sample = window.__annotationsExample;
+        const rect = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box')
+          ?.getBoundingClientRect();
+        return {
+          lastEdit: window.__annotationsLastEdit,
+          patchIds: sample?.editPatchIds,
+          annotations: sample?.annotations,
+          quality: sample?.quality,
+          noteRect: rect ? { x: rect.x, y: rect.y } : null
+        };
+      });
+      throw new Error(label + ': transformed edit did not commit: ' + JSON.stringify({
+        diagnostic, browserErrors: errors
+      }) + ': ' + String(error));
+    }
     const committed = await page.evaluate(() => {
       const sample = window.__annotationsExample;
       const manual = sample.annotations.find((note) => note.id === 'flow-review')?.manual;
