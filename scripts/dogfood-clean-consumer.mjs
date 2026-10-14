@@ -468,8 +468,10 @@ async function renderVegaLiteAnnotations() {
   host.innerHTML = await view.toSVG();
 
   const svg = requiredElement('#chart-host svg');
+  // The release bar is surrounded by other measured marks. Reserve an
+  // explicit right-side note lane rather than accepting a note over chart data.
   const frame = annotationFrameFromSvg(svg, {
-    padding: { top: 38, right: 230, bottom: 44, left: 54 }
+    padding: { top: 38, right: 360, bottom: 44, left: 54 }
   });
   const prepared = prepareVegaScenegraphAnnotations(view, [{
     id: 'vega-release-note',
@@ -480,7 +482,9 @@ async function renderVegaLiteAnnotations() {
       title: 'Vega-Lite bar',
       body: 'Anchor comes from the compiled Vega scenegraph.'
     },
-    placement: { side: ['right', 'top'], offset: [20, 32], crossOffset: [0, -42, 42] },
+    // Chart-aware clearance: candidate offsets must reach past the actual
+    // bars into the reserved note lane; mere finite boxes were insufficient.
+    placement: { side: ['right', 'top'], offset: [180, 220, 260], crossOffset: [0, -42, 42] },
     subject: { shape: 'rect', padding: 4 },
     connector: { type: 'curve', end: 'arrow' },
     tone: 'success',

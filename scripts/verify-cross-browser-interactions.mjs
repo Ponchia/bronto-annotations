@@ -736,11 +736,31 @@ async function verifyReactFlow(browser, origin, viewport, label) {
     await page.mouse.down();
     try {
       await page.mouse.move(start.x + 14, start.y + 10, { steps: 5 });
-      await page.waitForFunction((before) => {
-        const rect = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box')
-          ?.getBoundingClientRect();
-        return Boolean(rect && (Math.abs(rect.x - before.x) > 2 || Math.abs(rect.y - before.y) > 2));
-      }, original.box, { timeout: 15000 });
+      try {
+        await page.waitForFunction((before) => {
+          const rect = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box')
+            ?.getBoundingClientRect();
+          return Boolean(rect && (Math.abs(rect.x - before.x) > 2 || Math.abs(rect.y - before.y) > 2));
+        }, original.box, { timeout: 15000 });
+      } catch (error) {
+        // If Firefox/WebKit never paint the preview, retain actionable input
+        // and geometry evidence rather than reporting only a generic timeout.
+        const diagnostic = await page.evaluate(({ x, y }) => {
+          const rect = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box')
+            ?.getBoundingClientRect();
+          return {
+            rect: rect ? { x: rect.x, y: rect.y } : null,
+            topElement: document.elementFromPoint(x, y)?.outerHTML.slice(0, 600),
+            activeElement: document.activeElement?.outerHTML.slice(0, 600),
+            lastEdit: window.__annotationsLastEdit,
+            quality: window.__annotationsExample?.quality,
+            editPatchIds: window.__annotationsExample?.editPatchIds
+          };
+        }, start);
+        throw new Error(label + ': preview did not move: ' + JSON.stringify({
+          before: original.box, diagnostic, browserErrors: errors
+        }) + ': ' + String(error));
+      }
       assert.equal(await page.evaluate(() =>
         window.__annotationsExample?.editPatchIds?.includes('flow-review') ?? false),
       false, label + ': preview must not persist before pointer release');
