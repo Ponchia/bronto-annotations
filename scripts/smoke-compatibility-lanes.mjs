@@ -248,13 +248,17 @@ async function smokeVega5(packageTarball) {
       markType: 'rect',
       datum: (datum) => datum?.id === 'peak',
       note: { title: 'Vega 5 scenegraph lane' },
-      placement: { manual: { x: 130, y: 32 } }
+      // The chart itself spans x=0..220. Reserve a right-side note lane so
+      // Vega 5 compatibility checks actual protected-mark clearance rather
+      // than passing a callout that covers the peak and base marks.
+      placement: { manual: { x: 270, y: 40, side: 'right' } }
     }], {
       assert: true,
       obstacles: { markName: 'bars', markType: 'rect' }
     });
     const layout = resolvePreparedAnnotationLayout(scenegraphPrepared, {
-      bounds: { x: 0, y: 0, width: 260, height: 180 },
+      bounds: { x: 0, y: 0, width: 480, height: 200 },
+      noteSizes: { 'peak-scenegraph': { width: 188, height: 70 } },
       assertQuality: true,
       targetAlignmentTargets: [{
         id: 'peak-scenegraph',
@@ -266,6 +270,10 @@ async function smokeVega5(packageTarball) {
     });
 
     if (!layout.validation.ok || !layout.targetAlignment?.ok || !layout.quality.ok) throw new Error('Vega 5 prepared layout failed');
+    if (!layout.quality.geometryValid || !layout.quality.hostContentClear
+      || layout.quality.metrics.obstacleOverlapArea !== 0) {
+      throw new Error('Vega 5 note must not obscure protected chart bars');
+    }
     const svg = renderAnnotationsSvg(layout.layout, { includeQualityIssues: layout.quality });
     if (!svg.includes('Vega 5 scenegraph lane')) throw new Error('Vega 5 SVG note failed');
     if (!svg.includes('pa-annotation__connector')) throw new Error('Vega 5 SVG connector failed');
