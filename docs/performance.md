@@ -3,6 +3,123 @@
 Annotation layout should stay deterministic and fast enough for report
 generation and interactive authoring surfaces.
 
+<a id="start-with-the-common-workload"></a>
+
+## Current 0.7 default
+
+`resolveAnnotationLayout({ annotations, bounds, noteSizes })` returns a lean
+layout and uses exact bounded search for the winners. It does not construct and
+retain a complete diagnostic candidate graph. Refinement keeps its search
+frontier private and independent of `diagnostics: { candidates: 8 }` or
+`{ candidates: 'all' }`. Request those only when inspecting the solver.
+
+Normal Worker examples send the lean result. Current measurements must compare
+chosen geometry and quality at equal refinement settings. See
+[0.7 migration](migration-0.7.md) and [quality evaluation](placement-quality.md).
+
+### Measured 0.7 output size
+
+One clean run of commit `7691698`, Node 24.17.0 on ARM64 Linux, used identical
+inputs and two refinement passes over eight candidates in every mode:
+
+| Notes | Normal result | Eight diagnostic candidates per note | All diagnostic candidates |
+| --- | ---: | ---: | ---: |
+| 5 | 3,261 bytes | 21,922 bytes | 587,810 bytes |
+| 12 | 7,416 bytes | 52,130 bytes | 1,397,462 bytes |
+| 20 | 12,225 bytes | 86,974 bytes | 2,332,225 bytes |
+
+These are serialized UTF-8 JSON sizes, not heap use or structured-clone costs.
+Every chosen placement, connector, score and quality report matched across
+modes. The normal 20-note result is about 99.5% smaller than collecting all
+alternatives. This is a diagnostic-configuration comparison, not a claim about
+all applications. Six alternating measured solves after warmup recorded normal
+medians of 3.61, 6.87 and 11.29 ms; timings on a shared host are observational,
+and noise can make a bounded-diagnostic sample faster than a normal one.
+[Raw samples and provenance](measurements/2026-10-13-lean-api.json) are retained.
+
+## Historical 0.6 measurements and configuration
+
+The following pre-0.7 measurements retain their original API context. The
+current `benchmark:placement` command compares lean, bounded-diagnostic and
+all-diagnostic modes; it does not reintroduce the removed placement option.
+
+### Start with the common workload (0.6 only)
+
+For an unrefined chart or diagram with approximately 5–20 notes, supply measured
+`noteSizes` and retain only the diagnostics the host uses:
+
+```ts
+const layout = resolveAnnotationLayout({
+  annotations,
+  bounds,
+  noteSizes,
+  placement: { maxCandidates: 8 }
+});
+```
+
+For the same inputs, the bounded search returns the exact first eight candidates
+of the exhaustive ranking, including scores and routed connector geometry. It
+is not an approximate shortlist and does not narrow permitted sides or offsets.
+The search remains exhaustive when no retention limit is specified. A retention
+limit can affect **iterative refinement**, which chooses among retained
+candidates; use matching refinement frontiers when comparing configurations.
+
+Do not serialize every candidate into application history or send an unbounded
+diagnostic graph through a Worker merely to paint the winning placements. The
+0.6 React Worker example explicitly retained eight candidates per note;
+the historical transport measurements below and in `worker-layout.md` include
+larger diagnostic graphs and must not be treated as the current demo payload.
+
+## Reproduce current placement measurements
+
+`npm run benchmark:placement` alternates normal, eight-candidate diagnostics
+and all-candidate diagnostics on the same 5, 12 and 20-note inputs. All modes
+use the same refinement frontier. Six measured samples follow a warmup for each
+configuration. It checks chosen geometry, score and quality parity, then reports
+serialized layout size independently from solver duration.
+
+To compare a historical build with the same authored inputs, pass
+`-- --baseline-module /path/to/other-checkout/dist/index.js`. Build that checkout
+separately first. The module path is developer-supplied local code; do not point
+it at untrusted code. `--output <file>` retains the JSON report. Timings and JSON
+byte counts are observations, not frame deadlines or browser clone-cost claims.
+
+### Paired pre-change comparison, October 13, 2026
+
+A clean build of commit `693f4f9` (0.6.10) was compared with `ae25d90` using
+**identical** inputs and `maxCandidates: 8` in both implementations. On one
+ARM64 Linux host with Node 24.17.0, alternating six measured solves after a
+warmup produced these medians:
+
+| Annotations | Previous eager implementation | Exact bounded implementation | Ratio |
+| --- | ---: | ---: | ---: |
+| 5 | 12.04 ms | 5.08 ms | 2.37× |
+| 12 | 15.50 ms | 5.88 ms | 2.64× |
+| 20 | 19.53 ms | 7.34 ms | 2.66× |
+
+Every candidate retained in these comparisons matched, including scores and
+connector geometry. Both versions produced zero quality issues on these
+fixtures. This is an observed single-host comparison, not a cross-device
+latency guarantee. The source fixture and alternating protocol are in
+`benchmark-bounded-placement.mjs`.
+
+Separately, changing the current implementation from exhaustive diagnostic
+retention to eight candidates reduced the 20-note full-layout JSON from
+2,331,763 to 86,512 UTF-8 bytes (about 96%). That is a **configuration comparison**,
+not a claim that the optimizer itself changes the same-input payload or that
+JSON bytes equal browser structured-clone cost. Default full retention remains
+unchanged. The raw [paired measurements](measurements/2026-10-13-bounded-placement.json)
+record all samples and runtime metadata.
+
+## Placement quality is a separate gate
+
+`npm run test:quality` renders and measures the
+[placement-quality corpus](placement-quality.md). Feasible fixtures must meet
+explicit overlap/occlusion budgets; deliberately impossible fixtures must expose
+their problems without losing notes. It compares exact geometry and quality,
+retained JSON bytes, and fixed-host resize movement. Timings are observations,
+not a substitute for those correctness checks or a frame-rate promise.
+
 ## Benchmark Gate
 
 Run:
@@ -17,12 +134,17 @@ The benchmark resolves deterministic layouts for:
 - 50 annotations with obstacles
 - 200 annotations with obstacles
 
-The gate uses bounded candidate counts and no refinement so it stays suitable
+The gate uses the normal lean result and no refinement so it stays suitable
 for normal CI. It checks that layouts finish within generous CI-safe thresholds,
-produce all expected annotations, have no bounds overflow, and expose placement
-candidates for debugging.
+produce all expected annotations, have no bounds overflow, and do not retain
+unrequested candidate diagnostics. Quality and diagnostic parity have separate
+tests; this stress fixture can legitimately have overlaps.
 
-## Interpretation
+## Historical performance guidance (0.6 API)
+
+The remainder preserves observations made before the 0.7 migration, including
+retired controlled-renderer optimizations and configuration fields. Use the
+current migration/core/React guides rather than copying those retired fields.
 
 This is not a micro-benchmark suite. It is a regression guard for accidental
 algorithmic slowdowns in candidate generation, obstacle scoring, and layout
@@ -33,8 +155,11 @@ For performance-sensitive consumers, prefer:
 - host-provided `noteSizes` when available
 - `placement.allowedSides` and `placement.allowedAligns` when the host truly
   needs fewer placement alternatives; these constrain evaluated search space
-- `placement.maxCandidates` only to limit **retained** ranked/debug candidates:
-  it does not limit how many candidates are evaluated or speed up the search
+- A positive integer `placement.maxCandidates` to limit **retained** ranked/debug
+  candidates. Bounded searches now skip connector routing only when a cheap
+  geometric lower bound proves a candidate cannot enter the exact retained set.
+  This is not a hard evaluation or latency budget: worst-case searches still
+  examine every candidate, and the unrestricted default remains exhaustive.
 - `connector: { routing: 'none' }` only where connector avoidance is unnecessary
 - generated obstacles that represent real collision risks, not every invisible
   host primitive

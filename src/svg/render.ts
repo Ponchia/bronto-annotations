@@ -80,7 +80,8 @@ export function renderAnnotationsSvg(layout: ResolvedLayout, options: SvgRenderO
   const markerDefs = renderMarkerDefs(layout, prefix, markerPrefix);
   const paintAnnotations = annotationsForPaint(layout.annotations);
   const debugBoxes = options.includeDebugBoxes
-    ? paintAnnotations.flatMap((item) => renderDebugBoxes(item, prefix)).join('')
+    ? paintAnnotations.flatMap((item) => renderDebugBoxes(item, prefix,
+      layout.diagnostics?.annotations.find((entry) => entry.id === item.id)?.candidates ?? [])).join('')
     : '';
   const qualityIssues = options.includeQualityIssues
     ? renderQualityIssues(layout, qualityReportForLayout(layout, options.includeQualityIssues), prefix, options.qualityIssuePadding)
@@ -213,9 +214,9 @@ function renderNoteLineSvg(item: ResolvedAnnotation, prefix: string, padding: Pa
   return `<path class="${escapeAttribute(className)}" d="M${x1},${y}H${x2}" aria-hidden="true"${data} />`;
 }
 
-function renderDebugBoxes(item: ResolvedAnnotation, prefix: string): string[] {
+function renderDebugBoxes(item: ResolvedAnnotation, prefix: string, alternatives: PlacementCandidate[]): string[] {
   const winner = `<rect class="${escapeAttribute(`${prefix}__debug-box ${prefix}__debug-box--winner`)}" x="${item.noteBox.x}" y="${item.noteBox.y}" width="${item.noteBox.width}" height="${item.noteBox.height}" aria-hidden="true" data-annotation-id="${escapeAttribute(item.id)}" data-debug-kind="winner" />`;
-  const candidates = item.placement.candidates.map((candidate, index) => renderCandidateDebugBox(item, candidate, index, prefix));
+  const candidates = alternatives.map((candidate, index) => renderCandidateDebugBox(item, candidate, index, prefix));
 
   return [winner, ...candidates];
 }

@@ -30,7 +30,7 @@ const examples = [
     source: 'vega-scenegraph',
     minRendered: 'renderedMarks',
     minObstacles: 1,
-    minCandidates: 10,
+    diagnosticCandidates: 8,
     validateAnchors: true,
     validateTargetAlignment: true,
     hostLayerSelector: '#chart > svg',
@@ -608,8 +608,17 @@ try {
         throw new Error(`${label} did not report generated obstacles: ${JSON.stringify(evidence.exampleData)}`);
       }
 
-      if (example.minCandidates && Number(evidence.exampleData?.minCandidates ?? 0) < example.minCandidates) {
-        throw new Error(`${label} did not report enough placement candidates: ${JSON.stringify(evidence.exampleData)}`);
+      if (example.diagnosticCandidates) {
+        // Candidate retention is now explicit inspection data, not a proxy for
+        // solver quality. Keep every existing geometry/alignment assertion and
+        // require exactly the requested diagnostics outside the lean winners.
+        const counts = evidence.exampleData?.diagnosticCandidates;
+        assert.ok(Array.isArray(counts) && counts.length === evidence.exampleData?.quality?.metrics?.annotationCount,
+          `${label}: missing per-annotation diagnostics`);
+        assert.ok(counts.every((count) => count === example.diagnosticCandidates),
+          `${label}: diagnostics do not match the requested candidate limit`);
+        assert.equal(evidence.exampleData?.leanPlacements, true,
+          `${label}: chosen placements must not contain diagnostic arrays`);
       }
 
       if (example.requiredEvidence) {
@@ -849,12 +858,86 @@ try {
           : `${example.name}-${viewport.name}.png`),
         fullPage: true
       });
+      // Exercise rejected edits after capturing the normal visual baseline:
+      // the host must keep its last valid source rather than crashing.
+      if (example.verifyEditDrag && viewport.name === 'desktop') {
+        await verifyRejectedEditDrag(page, label);
+      }
       await page.close();
     }
   }
 } finally {
   await browser.close();
   await server.close();
+}
+
+async function verifyRejectedEditDrag(page, label) {
+  const handle = page.locator('.pa-annotation__edit-handle--note[data-annotation-id="queue"]').first();
+  await handle.scrollIntoViewIfNeeded();
+  const handleBox = await handle.boundingBox();
+  const before = await page.evaluate(() => {
+    const note = document.querySelector('g[data-annotation-id="queue"] .pa-annotation__note-box')
+      ?.getBoundingClientRect();
+    const node = document.querySelector('.flow-surface__node')?.getBoundingClientRect();
+    const queue = window.__annotationsExample?.annotations?.find((item) => item.id === 'queue');
+    return {
+      note: note ? { x: note.x, y: note.y, width: note.width, height: note.height } : null,
+      node: node ? { x: node.x, y: node.y, width: node.width, height: node.height } : null,
+      manual: queue?.manual,
+      qualityOk: window.__annotationsExample?.quality?.ok
+    };
+  });
+
+  assert(handleBox && before.note && before.node && before.qualityOk && before.manual,
+    label + ': cannot exercise invalid edit without a valid committed note and host target');
+
+  // Move the note's screen-space center directly into the Collect node. The
+  // source should remain unchanged because the proposed note obscures a mark.
+  const delta = {
+    x: before.node.x + before.node.width / 2 - before.note.x - before.note.width / 2,
+    y: before.node.y + before.node.height / 2 - before.note.y - before.note.height / 2
+  };
+  const start = { x: handleBox.x + handleBox.width / 2, y: handleBox.y + handleBox.height / 2 };
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  try {
+    await page.mouse.move(start.x + delta.x, start.y + delta.y, { steps: 6 });
+  } finally {
+    await page.mouse.up();
+  }
+
+  try {
+    await page.waitForFunction(() =>
+      document.querySelector('.flow-edit-status[role="status"]')?.textContent?.includes('Move rejected'),
+    null, { timeout: 8000 });
+  } catch (error) {
+    const diagnostics = await page.evaluate(() => ({
+      lastEdit: window.__annotationsLastEdit,
+      quality: window.__annotationsExample?.quality,
+      note: window.__annotationsExample?.annotations?.find((a) => a.id === 'queue'),
+      status: document.querySelector('.flow-edit-status')?.textContent
+    }));
+    throw new Error(label + ': invalid note drop was not rejected: '
+      + JSON.stringify({ diagnostics, delta }) + ': ' + String(error));
+  }
+
+  const after = await page.evaluate(() => {
+    const note = document.querySelector('g[data-annotation-id="queue"] .pa-annotation__note-box')
+      ?.getBoundingClientRect();
+    return {
+      rect: note ? { x: note.x, y: note.y } : null,
+      manual: window.__annotationsExample?.annotations?.find((a) => a.id === 'queue')?.manual,
+      qualityOk: window.__annotationsExample?.quality?.ok,
+      status: document.querySelector('.flow-edit-status')?.textContent,
+      lastEdit: window.__annotationsLastEdit
+    };
+  });
+  assert.equal(after.qualityOk, true, label + ': a rejected drop must preserve valid layout geometry');
+  assert.deepEqual(after.manual, before.manual, label + ': invalid drop must not replace host source state');
+  assert(Math.abs(after.rect.x - before.note.x) < 2 && Math.abs(after.rect.y - before.note.y) < 2,
+    label + ': rejected preview must restore the last committed note geometry');
+  assert.equal(after.lastEdit?.phase, 'end', label + ': host received an edit suggestion for rejection');
+  assert(after.status?.includes('Move rejected'), label + ': rejection must be announced accessibly');
 }
 
 async function verifyPublicWorkerDemo(page, label) {
@@ -1062,6 +1145,8 @@ async function verifyIncrementalDemo(page, label) {
 
 async function verifyReactFlowEditDrag(page, label) {
   const handle = page.locator('.pa-annotation__edit-handle--note[data-annotation-id="flow-review"]').first();
+  await handle.scrollIntoViewIfNeeded();
+  await handle.focus();
   const handleBox = await handle.boundingBox();
   const before = await page.evaluate(() => {
     const note = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box');
@@ -1092,33 +1177,65 @@ async function verifyReactFlowEditDrag(page, label) {
     x: handleBox.x + handleBox.width / 2,
     y: handleBox.y + handleBox.height / 2
   };
-  const delta = { x: 14, y: 10 };
+  // Review callout is immediately above its protected graph node. Moving it
+  // down/right used to pass even when the note covered that node; edit outward
+  // to prove a valid host-owned commit under the stricter quality contract.
+  const delta = { x: -14, y: -10 };
 
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
-  await page.mouse.move(start.x + delta.x, start.y + delta.y, { steps: 4 });
-  // Preview should be visible before the host commits its annotation patch.
-  await page.waitForFunction((input) => {
-    const note = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box');
-    const rect = note?.getBoundingClientRect();
-    return Boolean(rect && (Math.abs(rect.x - input.x) > 2 || Math.abs(rect.y - input.y) > 2));
-  }, { x: before.noteBox.x, y: before.noteBox.y }, { timeout: 5000 });
-  await page.mouse.up();
+  try {
+    await page.mouse.move(start.x + delta.x, start.y + delta.y, { steps: 4 });
+    try {
+      // Preview should be visible before the host commits its annotation patch.
+      await page.waitForFunction((input) => {
+        const note = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box');
+        const rect = note?.getBoundingClientRect();
+        return Boolean(rect && (Math.abs(rect.x - input.x) > 2 || Math.abs(rect.y - input.y) > 2));
+      }, { x: before.noteBox.x, y: before.noteBox.y }, { timeout: 5000 });
+    } catch (error) {
+      const diagnostic = await page.evaluate(({ x, y }) => {
+        const box = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box')
+          ?.getBoundingClientRect();
+        return {
+          noteRect: box ? { x: box.x, y: box.y } : null,
+          hit: document.elementFromPoint(x, y)?.outerHTML.slice(0, 400),
+          edit: window.__annotationsLastEdit,
+          quality: window.__annotationsExample?.quality
+        };
+      }, start);
+      throw new Error(label + ': React Flow preview did not move: ' + JSON.stringify({ before, diagnostic })
+        + ': ' + String(error));
+    }
+  } finally {
+    await page.mouse.up();
+  }
 
-  await page.waitForFunction(() => {
-    const lastEdit = window.__annotationsLastEdit;
-    const exampleData = window.__annotationsExample;
-    const review = Array.isArray(exampleData?.annotations)
-      ? exampleData.annotations.find((annotation) => annotation.id === 'flow-review')
-      : undefined;
+  try {
+    await page.waitForFunction(() => {
+      const lastEdit = window.__annotationsLastEdit;
+      const exampleData = window.__annotationsExample;
+      const review = Array.isArray(exampleData?.annotations)
+        ? exampleData.annotations.find((annotation) => annotation.id === 'flow-review')
+        : undefined;
 
-    return lastEdit?.annotationId === 'flow-review'
-      && lastEdit.phase === 'end'
-      && lastEdit.manual
-      && review?.manual
-      && Array.isArray(exampleData?.editPatchIds)
-      && exampleData.editPatchIds.includes('flow-review');
-  }, null, { timeout: 5000 });
+      return lastEdit?.annotationId === 'flow-review'
+        && lastEdit.phase === 'end'
+        && lastEdit.manual
+        && review?.manual
+        && Array.isArray(exampleData?.editPatchIds)
+        && exampleData.editPatchIds.includes('flow-review');
+    }, null, { timeout: 5000 });
+  } catch (error) {
+    const diagnostic = await page.evaluate(() => ({
+      lastEdit: window.__annotationsLastEdit,
+      quality: window.__annotationsExample?.quality,
+      editPatchIds: window.__annotationsExample?.editPatchIds,
+      annotations: window.__annotationsExample?.annotations
+    }));
+    throw new Error(label + ': React Flow edit not committed: ' + JSON.stringify(diagnostic)
+      + ': ' + String(error));
+  }
 
   const after = await page.evaluate(() => {
     const note = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box');
@@ -1381,6 +1498,8 @@ function annotationMotionState() {
 
 async function verifyEditDrag(page, label) {
   const handle = page.locator('.pa-annotation__edit-handle--note[data-annotation-id="queue"]').first();
+  await handle.scrollIntoViewIfNeeded();
+  await handle.focus();
   const handleBox = await handle.boundingBox();
   const before = await page.evaluate(() => {
     const note = document.querySelector('g[data-annotation-id="queue"] .pa-annotation__note-box');
@@ -1409,18 +1528,38 @@ async function verifyEditDrag(page, label) {
     x: handleBox.x + handleBox.width / 2,
     y: handleBox.y + handleBox.height / 2
   };
-  const delta = { x: 24, y: 14 };
+  // The Collect note starts above its host node. Drag out into clear space:
+  // the editing smoke must not deliberately obscure protected graph content.
+  const delta = { x: -24, y: -14 };
 
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
-  await page.mouse.move(start.x + delta.x, start.y + delta.y, { steps: 4 });
-  // Preview should be visible before the host commits its annotation patch.
-  await page.waitForFunction((input) => {
-    const note = document.querySelector('g[data-annotation-id="queue"] .pa-annotation__note-box');
-    const rect = note?.getBoundingClientRect();
-    return Boolean(rect && (Math.abs(rect.x - input.x) > 2 || Math.abs(rect.y - input.y) > 2));
-  }, { x: before.noteBox.x, y: before.noteBox.y }, { timeout: 5000 });
-  await page.mouse.up();
+  try {
+    await page.mouse.move(start.x + delta.x, start.y + delta.y, { steps: 4 });
+    // Preview should be visible before the host commits its annotation patch.
+    try {
+      await page.waitForFunction((input) => {
+        const note = document.querySelector('g[data-annotation-id="queue"] .pa-annotation__note-box');
+        const rect = note?.getBoundingClientRect();
+        return Boolean(rect && (Math.abs(rect.x - input.x) > 2 || Math.abs(rect.y - input.y) > 2));
+      }, { x: before.noteBox.x, y: before.noteBox.y }, { timeout: 5000 });
+    } catch (error) {
+      const diagnostic = await page.evaluate(({ x, y }) => ({
+        currentNote: (() => {
+          const r = document.querySelector('g[data-annotation-id="queue"] .pa-annotation__note-box')?.getBoundingClientRect();
+          return r ? { x: r.x, y: r.y, width: r.width, height: r.height } : null;
+        })(),
+        topElement: document.elementFromPoint(x, y)?.outerHTML.slice(0, 500),
+        activeElement: document.activeElement?.outerHTML.slice(0, 500),
+        lastEdit: window.__annotationsLastEdit,
+        quality: window.__annotationsExample?.quality
+      }), start);
+      throw new Error(label + ': basic edit preview did not move: ' + JSON.stringify({ before, diagnostic })
+        + ': ' + String(error));
+    }
+  } finally {
+    await page.mouse.up();
+  }
 
   await page.waitForFunction(() => {
     const lastEdit = window.__annotationsLastEdit;

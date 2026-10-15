@@ -3,10 +3,10 @@ import {
   allPlacementCandidates,
   evaluateAnnotationLayout,
   getCandidateSides,
-  refineAnnotationLayout,
   resolveAnnotationLayout,
   scorePlacementCandidate
 } from '../../src/index.js';
+import { refineAnnotationLayout } from '../../src/core/layout-resolver.js';
 import type {
   Annotation,
   Box,
@@ -53,6 +53,7 @@ describe('placement', () => {
 
   it('moves away from an obstacle when overlap is more expensive than side preference', () => {
     const layout = resolveAnnotationLayout({
+      diagnostics: { candidates: 'all' },
       annotations: [
         {
           ...baseAnnotation,
@@ -69,8 +70,8 @@ describe('placement', () => {
     });
 
     expect(layout.annotations[0]?.placement.side).not.toBe('top');
-    expect(layout.annotations[0]?.placement.candidates[0]?.score).toBeLessThan(
-      layout.annotations[0]?.placement.candidates.find((candidate) => candidate.side === 'top')?.score ?? 0
+    expect(layout.diagnostics?.annotations[0]?.candidates[0]?.score).toBeLessThan(
+      layout.diagnostics?.annotations[0]?.candidates.find((candidate) => candidate.side === 'top')?.score ?? 0
     );
   });
 
@@ -208,6 +209,7 @@ describe('placement', () => {
 
   it('honors explicit manual note placement and records it on the resolved placement', () => {
     const layout = resolveAnnotationLayout({
+      diagnostics: { candidates: 'all' },
       annotations: [
         {
           id: 'manual',
@@ -229,7 +231,7 @@ describe('placement', () => {
     expect(resolved?.placement.manual).toBe(true);
     expect(resolved?.placement.side).toBe('right');
     expect(resolved?.placement.align).toBe('start');
-    expect(resolved?.placement.candidates).toHaveLength(1);
+    expect(layout.diagnostics?.annotations[0]?.candidates).toHaveLength(1);
   });
 
   it('clamps manual note placement to placement bounds by default', () => {
@@ -264,6 +266,7 @@ describe('placement', () => {
     };
     const layout = resolveAnnotationLayout({
       annotations: [annotation],
+      diagnostics: { candidates: 'all' },
       bounds: { x: 0, y: 0, width: 360, height: 260 },
       obstacles: [
         { x: 124, y: 75, width: 120, height: 70 }
@@ -273,14 +276,15 @@ describe('placement', () => {
       }
     });
     const resolved = layout.annotations[0];
+    const candidates = layout.diagnostics?.annotations[0]?.candidates;
 
     expect(resolved?.placement.side).toBe('right');
-    expect(resolved?.placement.candidates.length).toBeGreaterThan(4);
-    expect(resolved?.placement.candidates.some((candidate) => candidate.crossOffset !== 0)).toBe(true);
-    expect(resolved?.placement.candidates[0]?.score).toBeLessThan(
-      resolved?.placement.candidates.find((candidate) => candidate.crossOffset === 0)?.score ?? Number.POSITIVE_INFINITY
+    expect(candidates?.length).toBeGreaterThan(4);
+    expect(candidates?.some((candidate) => candidate.crossOffset !== 0)).toBe(true);
+    expect(candidates?.[0]?.score).toBeLessThan(
+      candidates?.find((candidate) => candidate.crossOffset === 0)?.score ?? Number.POSITIVE_INFINITY
     );
-    expect(resolved?.placement.candidates[0]?.crossOffset).not.toBe(0);
+    expect(candidates?.[0]?.crossOffset).not.toBe(0);
   });
 
   it('can limit retained debug candidates after sorting', () => {
@@ -289,9 +293,8 @@ describe('placement', () => {
       bounds: { x: 0, y: 0, width: 420, height: 280 },
       noteSize: { width: 160, height: 72 },
       obstacles: [],
-      placedNotes: [],
-      placement: { maxCandidates: 5 }
-    });
+      placedNotes: []
+    }, { limit: 5 });
 
     expect(candidates).toHaveLength(5);
     expect(candidates[0]?.score).toBeLessThanOrEqual(candidates.at(-1)?.score ?? Number.POSITIVE_INFINITY);
@@ -312,7 +315,10 @@ describe('placement', () => {
       ]
     };
     const before = evaluateAnnotationLayout(layout);
-    const refined = refineAnnotationLayout(layout);
+    const refined = refineAnnotationLayout(layout, [
+      [candidate(highPriorityBox, 0)],
+      [candidate(lowPriorityBox, 0), candidate(lowPriorityAlternative, 1)]
+    ]);
     const after = evaluateAnnotationLayout(refined);
 
     expect(before.metrics.noteOverlapArea).toBeGreaterThan(0);
@@ -352,8 +358,7 @@ function resolvedCandidateAnnotation(
       side: 'right',
       align: 'center',
       offset: 16,
-      score: candidates[0]!.score,
-      candidates
+      score: candidates[0]!.score
     }
   };
 }

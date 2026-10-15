@@ -28,7 +28,7 @@ for (const count of [40, 200]) {
     placement: {
       side: ['right', 'top'], allowedSides: ['right', 'top'],
       align: 'center', allowedAligns: ['center'],
-      offset: [12, 22], maxCandidates: 2
+      offset: [12, 22]
     }
   }));
   const options = {

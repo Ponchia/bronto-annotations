@@ -30,6 +30,8 @@ describe('layout quality evaluation', () => {
     const report = evaluateAnnotationLayout(layout);
 
     expect(report.ok).toBe(true);
+    expect(report.geometryValid).toBe(true);
+    expect(report.hostContentClear).toBe(true);
     expect(report.metrics.noteOverlapArea).toBe(0);
     expect(report.metrics.boundsOverflowArea).toBe(0);
   });
@@ -43,13 +45,15 @@ describe('layout quality evaluation', () => {
       maxIssues: 2
     });
 
-    expect(report.ok).toBe(true);
-    expect(summary).toContain('Report annotations: ok');
+    expect(report.geometryValid).toBe(true);
+    expect(report.hostContentClear).toBe(false);
+    expect(report.ok).toBe(false);
+    expect(summary).toContain('Report annotations: failed');
     expect(summary).toContain('warning obstacle-overlap target=warning obstacle=0 area=800');
     expect(formatLayoutQualityIssue(report.issues[0]!)).toContain('overlaps obstacle 0');
-    expect(() => assertAnnotationLayoutQuality(report)).not.toThrow();
+    expect(() => assertAnnotationLayoutQuality(report)).toThrow(/obscure protected host content/);
     expect(() => assertAnnotationLayoutQuality(report, { failOnWarnings: true, label: 'Report annotations' }))
-      .toThrow(/Report annotations assertion failed: 1 warning/);
+      .toThrow(/Report annotations assertion failed: annotation notes obscure protected host content; 1 warning/);
     expect(() => assertAnnotationLayoutQuality(report, { minScore: 100 }))
       .toThrow(/below required minimum 100/);
   });
@@ -130,8 +134,7 @@ function resolved(id: string, noteBox: { x: number; y: number; width: number; he
       side: 'right',
       align: 'center',
       offset: 16,
-      score: 0,
-      candidates: []
+      score: 0
     }
   };
 }

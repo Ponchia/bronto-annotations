@@ -1,3 +1,4 @@
+import { annotationFromD3Style } from '../../src/d3/index.js';
 // @vitest-environment jsdom
 
 import {
@@ -16,7 +17,6 @@ import {
 } from 'vitest';
 import { AnnotationLayer, useAnnotations } from '../../src/react/index.js';
 import {
-  annotationFromD3Style,
   evaluateAnnotationLayout,
   generatedSurfaceLayoutDefaults
 } from '../../src/index.js';

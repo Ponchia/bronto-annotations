@@ -24,7 +24,7 @@ function note(i: number, routing: 'none' | 'orthogonal' = 'none'): Annotation {
     placement: {
       side: 'right', allowedSides: ['right'],
       align: 'center', allowedAligns: ['center'],
-      offset: 12, crossOffset: 0, maxCandidates: 2
+      offset: 12, crossOffset: 0
     }
   };
 }
@@ -173,11 +173,7 @@ function App() {
         </svg>
         <Profiler id="annotation-layer" onRender={onAnnotationRender}>
           <AnnotationLayer
-            annotations={annotations}
-            bounds={bounds}
-            defaultNoteSize={{ width: 92, height: 32 }}
-            obstacles={obstacles}
-            resolvedLayout={layout}
+            layout={layout}
             label="Incremental performance annotation layer"
             previewEdits
             editable={{ includeAnchor:true }}

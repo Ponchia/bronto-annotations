@@ -5,6 +5,27 @@
 This guide is for maintainers. To use the package, start with the consumer
 guides instead. Repository-relative paths in commands are run from the root.
 
+## Choose the check for the work
+
+`npm run check:fast` covers compilation, unit tests, dead-code checks, declarations,
+package exports and the existing API contract. Use it while iterating; it is not
+a replacement for the full CI suite.
+
+`npm run test:quality` checks authored wide/narrow host geometry, exact retained
+placement parity, measured collision budgets, and expected impossible layouts.
+Its JSON and SVG gallery default to `.tmp/placement-quality`; pass
+`-- --output-dir <directory>` to preserve evidence outside build scratch.
+Run `node scripts/verify-placement-quality.mjs --output-dir <directory>` to
+independently re-check a saved report against the checked-in fixtures.
+
+`npm run test:upstream` packs the library and verifies pinned, licensed upstream
+Vega/Mermaid inputs in a real browser without network requests. See the
+[upstream proof](upstream-consumers.md) for browser selection and evidence.
+
+`npm run check` remains the complete existing regression/release check. The
+historical readiness and release manifests remain available; passing them does
+not establish independent adoption or visual quality.
+
 ## Examples And Checks
 
 ```bash
@@ -52,7 +73,7 @@ context from a small annotated overview.
 late-note anchor change, append/remove a low-priority annotation, reset, or
 drag a note handle. It shows how many previously resolved winners survive each
 change, uses `previewEdits` for pointer feedback and passes the authoritative
-incremental `resolvedLayout` to React instead of invoking a second full solve.
+incremental result as `layout` to React instead of invoking a second full solve.
 
 `examples/style-gallery` renders every public annotation variant, all tones,
 all motion hints, package-prefixed classes, and Bronto-compatible CSS styling in

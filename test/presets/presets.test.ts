@@ -1,25 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import {
-  annotationFromD3Style,
-  annotationsFromD3Style,
-  annotationsFromD3StyleCollection,
-  applyD3StyleAnnotationCollectionEdit,
-  applyD3StyleAnnotationEdit,
   badgeAnnotation,
-  createD3StyleAnnotationBuilder,
-  d3StyleAnnotationCollectionEditPatch,
-  d3StyleAnnotationEditPatch,
-  defineD3StyleAnnotationType,
-  annotationsFromD3StyleType,
   encircleCallout,
   pathCallout,
   pointCallout,
-  prepareD3StyleAnnotationCollection,
   regionCallout,
   renderAnnotationsSvg,
   resolveAnnotationLayout,
   thresholdAnnotation
 } from '../../src/index.js';
+import {
+  annotationFromD3Style,
+  annotationsFromD3Style,
+  annotationsFromD3StyleCollection,
+  applyD3StyleAnnotationCollectionEdit,
+  applyD3StyleAnnotationEdit,
+  createD3StyleAnnotationBuilder,
+  d3StyleAnnotationCollectionEditPatch,
+  d3StyleAnnotationEditPatch,
+  defineD3StyleAnnotationType,
+  annotationsFromD3StyleType,
+  prepareD3StyleAnnotationCollection
+} from '../../src/d3/index.js';
 
 describe('annotation presets', () => {
   it('creates plain-data callout presets that render through the normal engine', () => {

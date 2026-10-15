@@ -31,7 +31,7 @@ function fixture(count = 30): LayoutOptions {
       width: 100 + index % 3 * 16,
       height: 42 + index % 2 * 6
     }])),
-    placement: { maxCandidates: 6 },
+    diagnostics: { candidates: 6 },
     refinement: false
   };
 }

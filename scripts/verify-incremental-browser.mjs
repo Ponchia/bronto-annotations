@@ -132,6 +132,13 @@ try {
         await page.locator('#validate').click();
         const parity = await page.evaluate(() => window.__incrementalBrowser?.events.at(-1)?.exactParity);
         assert.equal(parity, true, `${config.name}/${buttonId} browser full-layout parity`);
+        const lean = await page.evaluate(() => {
+          const layout = window.__incrementalBrowser?.lastLayout;
+          return layout && !Object.hasOwn(layout, 'diagnostics')
+            && layout.annotations.every((item) => !Object.hasOwn(item.placement, 'candidates'))
+            && !document.querySelector('.pa-annotation-layer__measurer');
+        });
+        assert.equal(lean, true, `${config.name}/${buttonId}: incremental rendering must stay lean`);
       }
 
       assert.deepEqual(errors, [], `${config.name} browser errors`);

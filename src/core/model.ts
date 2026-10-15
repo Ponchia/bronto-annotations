@@ -177,7 +177,6 @@ export type PlacementPreference = {
   allowedAligns?: PlacementAlign[];
   offset?: number | number[];
   crossOffset?: number | number[];
-  maxCandidates?: number;
   manual?: ManualPlacement;
 };
 
@@ -243,7 +242,16 @@ export type ResolvedPlacement = {
   align: PlacementAlign;
   score: number;
   manual?: boolean;
+};
+
+/** Ranked greedy alternatives; refinement can select a different final winner. */
+export type AnnotationPlacementDiagnostics = {
+  id: string;
   candidates: PlacementCandidate[];
+};
+
+export type LayoutDiagnostics = {
+  annotations: AnnotationPlacementDiagnostics[];
 };
 
 export type ResolvedAnnotation = {
@@ -265,6 +273,7 @@ export type LayoutOptions = {
   defaultNoteSize?: Size;
   placement?: PlacementPreference;
   refinement?: boolean | LayoutRefinementOptions;
+  diagnostics?: { candidates: number | 'all' };
 };
 
 export type ResolvedLayout = {
@@ -273,6 +282,7 @@ export type ResolvedLayout = {
   padding: Padding;
   annotations: ResolvedAnnotation[];
   obstacles: Box[];
+  diagnostics?: LayoutDiagnostics;
 };
 
 export const DEFAULT_SIDES: PlacementSide[] = ['top', 'right', 'bottom', 'left'];

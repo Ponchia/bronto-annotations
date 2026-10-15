@@ -25,6 +25,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { createRoot } from 'react-dom/client';
+import { validateHostAnnotationEdit } from '../shared/validate-edit.js';
 import './styles.css';
 
 type LayerBounds = {
@@ -53,6 +54,7 @@ function FlowAnnotations({ bounds }: { bounds: LayerBounds }) {
   const flowEdges = useEdges<Edge>();
   const viewport = useViewport();
   const [editPatches, setEditPatches] = useState<Record<string, AnnotationEditPatch>>({});
+  const [rejectedEdit, setRejectedEdit] = useState<string | null>(null);
   const hasMeasuredNodes = flowNodes.some((node) => node.id === 'review'
     && ((node.measured?.width ?? node.width ?? 0) > 0)
     && ((node.measured?.height ?? node.height ?? 0) > 0));
@@ -82,6 +84,17 @@ function FlowAnnotations({ bounds }: { bounds: LayerBounds }) {
     };
   }), [flowNodes]);
   const compact = bounds.box.width < 520;
+  const noteSizes = useMemo(() => compact
+    ? {
+      'flow-review': { width: 148, height: 88 },
+      'flow-edge': { width: 180, height: 86 },
+      'flow-handle': { width: 148, height: 88 }
+    }
+    : {
+      'flow-review': { width: 230, height: 72 },
+      'flow-edge': { width: 230, height: 72 },
+      'flow-handle': { width: 220, height: 72 }
+    }, [compact]);
   const targetAlignmentRef = useRef<{
     targetAlignment?: AnchorAlignmentReport;
     targetAlignmentSummary: string;
@@ -202,105 +215,115 @@ function FlowAnnotations({ bounds }: { bounds: LayerBounds }) {
   }
 
   return (
-    <AnnotationLayer
-      annotations={annotations}
-      bounds={bounds.box}
-      measure="estimate"
-      padding={12}
-      noteTabIndex={0}
-      editable={{ noteHandlePosition: 'bottom-right' }}
-      previewEdits
-      editHandleTabIndex={0}
-      obstacles={obstacles}
-      refinement={{ passes: 2, maxCandidatesPerAnnotation: 64 }}
-      assertQuality={flowLayoutDefaults.assertQuality}
-      {...(targetAlignmentTargets.length > 0
-        ? { assertTargetAlignment: { label: 'React Flow target alignment', failOnWarnings: true } }
-        : {})}
-      qualityFormat={flowLayoutDefaults.qualityFormat}
-      targetAlignmentTargets={targetAlignmentTargets}
-      targetAlignmentOptions={{
-        tolerance: 8,
-        nearTolerance: 12,
-        minOverlapRatio: 0.5
-      }}
-      targetAlignmentFormat={{
-        label: 'React Flow target alignment',
-        includeAligned: true
-      }}
-      noteSizes={compact
-        ? {
-          'flow-review': { width: 148, height: 88 },
-          'flow-edge': { width: 180, height: 86 },
-          'flow-handle': { width: 148, height: 88 }
-        }
-        : {
-          'flow-review': { width: 230, height: 72 },
-          'flow-edge': { width: 230, height: 72 },
-          'flow-handle': { width: 220, height: 72 }
+    <>
+      <AnnotationLayer
+        annotations={annotations}
+        bounds={bounds.box}
+        measure="estimate"
+        padding={12}
+        noteTabIndex={0}
+        editable={{ noteHandlePosition: 'bottom-right' }}
+        previewEdits
+        editHandleTabIndex={0}
+        obstacles={obstacles}
+        refinement={{ passes: 2, maxCandidatesPerAnnotation: 64 }}
+        assertQuality={flowLayoutDefaults.assertQuality}
+        {...(targetAlignmentTargets.length > 0
+          ? { assertTargetAlignment: { label: 'React Flow target alignment', failOnWarnings: true } }
+          : {})}
+        qualityFormat={flowLayoutDefaults.qualityFormat}
+        targetAlignmentTargets={targetAlignmentTargets}
+        targetAlignmentOptions={{
+          tolerance: 8,
+          nearTolerance: 12,
+          minOverlapRatio: 0.5
         }}
-      onTargetAlignment={({ targetAlignment, summary }) => {
-        targetAlignmentRef.current = {
-          targetAlignment,
-          targetAlignmentSummary: summary
-        };
-      }}
-      onEdit={(event) => {
-        Object.assign(window, {
-          __annotationsLastEdit: {
-            annotationId: event.annotationId,
-            phase: event.phase,
-            manual: event.suggestedPlacement?.manual,
-            anchor: event.suggestedAnchor
-          }
-        });
-      }}
-      onEditEnd={(event) => {
-        if (!event.suggestedPlacement) {
-          return;
-        }
-
-        setEditPatches((current) => ({
-          ...current,
-          [event.annotationId]: annotationEditPatch(event)
-        }));
-      }}
-      onQuality={({ layout, quality, summary }) => {
-        window.requestAnimationFrame(() => {
-          const targetAlignmentEvidence = targetAlignmentRef.current;
-
+        targetAlignmentFormat={{
+          label: 'React Flow target alignment',
+          includeAligned: true
+        }}
+        noteSizes={noteSizes}
+        onTargetAlignment={({ targetAlignment, summary }) => {
+          targetAlignmentRef.current = {
+            targetAlignment,
+            targetAlignmentSummary: summary
+          };
+        }}
+        onEdit={(event) => {
           Object.assign(window, {
-            __annotationsExample: {
-              name: 'react-flow-basic',
-              quality,
-              qualitySummary: summary,
-              targetAlignment: targetAlignmentEvidence.targetAlignment,
-              targetAlignmentSummary: targetAlignmentEvidence.targetAlignmentSummary,
-              anchorSource: 'react-flow-state',
-              renderedNodes: document.querySelectorAll('.react-flow__node').length,
-              renderedEdges: document.querySelectorAll('.react-flow__edge').length,
-              generatedObstacles: obstacles.length,
-              validation: prepared?.validation,
-              anchorEvidence: annotations.map((annotation) => annotation.data),
-              anchorIds: annotations.map((annotation) => annotation.id),
-              annotations: layout.annotations.map((annotation) => ({
-                id: annotation.id,
-                manual: annotation.annotation.placement?.manual,
-                anchor: annotation.annotation.anchor
-              })),
-              editPatchIds: Object.keys(editPatches),
-              viewport,
-              viewportTransformActive: Math.abs(viewport.zoom - 1) > 0.01
-                || Math.abs(viewport.x) > 0.5
-                || Math.abs(viewport.y) > 0.5,
-              bounds,
-              obstacles
+            __annotationsLastEdit: {
+              annotationId: event.annotationId,
+              phase: event.phase,
+              manual: event.suggestedPlacement?.manual,
+              anchor: event.suggestedAnchor
             }
           });
-        });
-      }}
-      style={{ inset: 0, position: 'absolute', width: '100%', height: '100%', pointerEvents: 'none', zIndex: 8 }}
-    />
+        }}
+        onEditEnd={(event) => {
+          if (!event.suggestedPlacement) return;
+
+          const patch = annotationEditPatch(event);
+          const quality = validateHostAnnotationEdit({
+            annotations,
+            bounds: bounds.box,
+            obstacles,
+            noteSizes,
+            padding: 12,
+            refinement: { passes: 2, maxCandidatesPerAnnotation: 64 }
+          }, patch);
+
+          if (!quality.ok) {
+            // A user's drag can temporarily cover a protected graph node. Keep
+            // the committed source unchanged and announce why it was rejected.
+            setRejectedEdit('Move rejected: the note would overlap protected graph content or another note.');
+            return;
+          }
+
+          setRejectedEdit(null);
+          setEditPatches((current) => ({
+            ...current,
+            [event.annotationId]: patch
+          }));
+        }}
+        onQuality={({ layout, quality, summary }) => {
+          window.requestAnimationFrame(() => {
+            const targetAlignmentEvidence = targetAlignmentRef.current;
+
+            Object.assign(window, {
+              __annotationsExample: {
+                name: 'react-flow-basic',
+                quality,
+                qualitySummary: summary,
+                targetAlignment: targetAlignmentEvidence.targetAlignment,
+                targetAlignmentSummary: targetAlignmentEvidence.targetAlignmentSummary,
+                anchorSource: 'react-flow-state',
+                renderedNodes: document.querySelectorAll('.react-flow__node').length,
+                renderedEdges: document.querySelectorAll('.react-flow__edge').length,
+                generatedObstacles: obstacles.length,
+                validation: prepared?.validation,
+                anchorEvidence: annotations.map((annotation) => annotation.data),
+                anchorIds: annotations.map((annotation) => annotation.id),
+                annotations: layout.annotations.map((annotation) => ({
+                  id: annotation.id,
+                  manual: annotation.annotation.placement?.manual,
+                  anchor: annotation.annotation.anchor
+                })),
+                editPatchIds: Object.keys(editPatches),
+                rejectedEdit,
+                viewport,
+                viewportTransformActive: Math.abs(viewport.zoom - 1) > 0.01
+                  || Math.abs(viewport.x) > 0.5
+                  || Math.abs(viewport.y) > 0.5,
+                bounds,
+                obstacles
+              }
+            });
+          });
+        }}
+        style={{ inset: 0, position: 'absolute', width: '100%', height: '100%', pointerEvents: 'none', zIndex: 8 }}
+      />
+      <div className="flow-edit-status" role="status" aria-live="polite">{rejectedEdit}</div>
+    </>
   );
 }
 

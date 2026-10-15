@@ -19,7 +19,7 @@ function resolved(changes: Partial<Annotation> = {}): ResolvedAnnotation {
     connector: { type: 'straight', routing: 'none', end: 'arrow' },
     placement: {
       side: ['right', 'bottom'], offset: [12, 22],
-      crossOffset: [0, 8], maxCandidates: 2
+      crossOffset: [0, 8]
     },
     ...changes
   };
@@ -54,9 +54,9 @@ describe('private resolved annotation SVG geometry', () => {
     expect(markup).toContain('data-connector-type="straight"');
     expect(markup).toContain(`marker-end="url(#${markerId('notes a', 'arrow')})"`);
     expect(markup).toContain('data-debug-kind="winner"');
-    expect(markup).toContain('data-debug-kind="candidate"');
+    expect(markup).not.toContain('data-debug-kind="candidate"');
     const rectCount = (markup.match(/data-debug-kind="/g) ?? []).length;
-    expect(rectCount).toBe(item.placement.candidates.length + 1);
+    expect(rectCount).toBe(1);
     expect(markup.indexOf('pa-annotation__subject'))
       .toBeLessThan(markup.indexOf('pa-annotation__connector'));
   });

@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "retrieved": "2026-10-13",
+  "licenses": [
+    {
+      "host": "vega",
+      "file": "licenses/vega-LICENSE",
+      "sha256": "63727832aaf62004a2b249c933e327f3c90caf49e41a72f4bf436edf632cbda8",
+      "spdx": "BSD-3-Clause",
+      "url": "https://github.com/vega/vega/blob/fdd9ab9d4faf48553c8dfdbcaf7284f485504aaf/LICENSE"
+    },
+    {
+      "host": "mermaid",
+      "file": "licenses/mermaid-LICENSE",
+      "sha256": "ec9fb67dcb25eccc416ed56e1aab819222c805a2a4bfe4cb19e7556bf2ffde80",
+      "spdx": "MIT",
+      "url": "https://github.com/mermaid-js/mermaid/blob/4e3a85e6d46a0326379e04db3463bb3b53a3ca94/LICENSE"
+    }
+  ],
+  "hosts": [
+    {
+      "id": "vega-bar-chart",
+      "host": "vega",
+      "repository": "vega/vega",
+      "commit": "fdd9ab9d4faf48553c8dfdbcaf7284f485504aaf",
+      "sourceFile": "docs/examples/bar-chart.vg.json",
+      "sourceUrl": "https://github.com/vega/vega/blob/fdd9ab9d4faf48553c8dfdbcaf7284f485504aaf/docs/examples/bar-chart.vg.json",
+      "sourceSha256": "cfab16b8baaf1ed371ee9dcaa47aa4d17c3e8b5ccd151b3b3e9a9b667d10b439",
+      "lines": {
+        "start": 1,
+        "end": 96
+      },
+      "extraction": "complete file; byte-for-byte",
+      "file": "inputs/bar-chart.vg.json",
+      "sha256": "cfab16b8baaf1ed371ee9dcaa47aa4d17c3e8b5ccd151b3b3e9a9b667d10b439",
+      "expectedMarks": 8,
+      "expectedNotes": 3,
+      "adaptations": [
+        "SVG renderer; external accessible title/description",
+        "Axis and mark text at least 14px; fonts only, no data or encodings changed",
+        "Native-size host and overlay in keyboard-focusable horizontal scroller on narrow viewports",
+        "External annotation frame; automatic clearance offsets derived from the measured host boundary with a 12px gap"
+      ]
+    },
+    {
+      "id": "vega-grouped-bar-chart",
+      "host": "vega",
+      "repository": "vega/vega",
+      "commit": "fdd9ab9d4faf48553c8dfdbcaf7284f485504aaf",
+      "sourceFile": "docs/examples/grouped-bar-chart.vg.json",
+      "sourceUrl": "https://github.com/vega/vega/blob/fdd9ab9d4faf48553c8dfdbcaf7284f485504aaf/docs/examples/grouped-bar-chart.vg.json",
+      "sourceSha256": "b56c2c4f22a815e18c83df596412698db7f2da2fd34ba543c770186653457a60",
+      "lines": {
+        "start": 1,
+        "end": 124
+      },
+      "extraction": "complete file; byte-for-byte",
+      "file": "inputs/grouped-bar-chart.vg.json",
+      "sha256": "b56c2c4f22a815e18c83df596412698db7f2da2fd34ba543c770186653457a60",
+      "expectedMarks": 12,
+      "expectedNotes": 3,
+      "adaptations": [
+        "SVG renderer; external accessible title/description",
+        "Axis and mark text at least 14px; fonts only, no data or encodings changed",
+        "Native-size host and overlay in keyboard-focusable horizontal scroller on narrow viewports",
+        "External annotation frame; automatic clearance offsets derived from the measured host boundary with a 12px gap"
+      ]
+    },
+    {
+      "id": "mermaid-client-services-storage",
+      "host": "mermaid",
+      "repository": "mermaid-js/mermaid",
+      "commit": "4e3a85e6d46a0326379e04db3463bb3b53a3ca94",
+      "sourceFile": "packages/mermaid/src/docs/syntax/flowchart.md",
+      "sourceUrl": "https://github.com/mermaid-js/mermaid/blob/4e3a85e6d46a0326379e04db3463bb3b53a3ca94/packages/mermaid/src/docs/syntax/flowchart.md#L116-L134",
+      "sourceSha256": "3af71671eded9283eb70777bdcbfb83722bf7c2ae4863263cc3699939e5a0447",
+      "lines": {
+        "start": 116,
+        "end": 134
+      },
+      "fence": {
+        "language": "mermaid-example",
+        "heading": "With the defaults"
+      },
+      "extraction": "first Client/Services/Storage fenced example; content only; byte-for-byte",
+      "file": "inputs/client-services-storage.mmd",
+      "sha256": "db4aa3083cae19b2161f65a3286ca21bd0af2272991be4d9b363418ce69e51ed",
+      "expectedMarks": 6,
+      "expectedNotes": 3,
+      "adaptations": [
+        "Mermaid 11 supported renderer defaults (Dagre/classic/default theme), rather than Mermaid develop v12 defaults; original graph unchanged",
+        "External accessible title/description; strict securityLevel, startOnLoad false, fontSize 16",
+        "SVG displayed at native viewBox size; horizontal scrolling preserves mobile text size",
+        "External annotation frame; automatic clearance offsets derived from the measured host boundary with a 12px gap"
+      ]
+    }
+  ]
+}

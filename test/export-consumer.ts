@@ -9,12 +9,6 @@ import {
   encircleCallout,
   encircleSubjectPath,
   enclosingCircle,
-  annotationFromD3Style,
-  annotationsFromD3Style,
-  annotationsFromD3StyleCollection,
-  annotationsFromD3StyleType,
-  applyD3StyleAnnotationCollectionEdit,
-  applyD3StyleAnnotationEdit,
   assertAnchorAlignmentReport,
   assertAnchorAlignmentReportIfRequested,
   assertAnchorValidationReport,
@@ -31,9 +25,6 @@ import {
   createAnnotationEditSession,
   createIncrementalAnnotationLayoutSession,
   previewAnnotationEdit,
-  createD3StyleAnnotationBuilder,
-  d3StyleAnnotationCollectionEditPatch,
-  defineD3StyleAnnotationType,
   evaluateAnnotationLayout,
   evaluateAnchorAlignment,
   formatAnchorAlignmentDiagnostic,
@@ -43,10 +34,8 @@ import {
   formatAnchorDiagnostic,
   formatAnchorValidationReport,
   generatedSurfaceLayoutDefaults,
-  refineAnnotationLayout,
   notePlacement,
   pointCallout,
-  prepareD3StyleAnnotationCollection,
   resolvePreparedAnnotationLayout,
   allPlacementCandidates,
   DEFAULT_NOTE_PADDING,
@@ -101,6 +90,30 @@ import {
   type AnnotationTone,
   type AnnotationVariant,
   type DataAttributes,
+  type DirectLabel,
+  type EncircleCalloutOptions,
+  type EncircleSubjectPathOptions,
+  type EnclosingCircle,
+  type ManualPlacement,
+  type LayoutRefinementOptions,
+  type LayoutQualityAssertOptions,
+  type LayoutQualityFormatOptions,
+  type Padding,
+  type PaddingInput,
+  type PreparedAnnotationLayoutOptions,
+  type PreparedAnnotationLayoutResult
+} from '@ponchia/annotations';
+import {
+  annotationFromD3Style,
+  annotationsFromD3Style,
+  annotationsFromD3StyleCollection,
+  annotationsFromD3StyleType,
+  applyD3StyleAnnotationCollectionEdit,
+  applyD3StyleAnnotationEdit,
+  createD3StyleAnnotationBuilder,
+  d3StyleAnnotationCollectionEditPatch,
+  defineD3StyleAnnotationType,
+  prepareD3StyleAnnotationCollection,
   type D3AnnotationConnector,
   type D3AnnotationDisablePart,
   type D3AnnotationAlign,
@@ -125,20 +138,8 @@ import {
   type D3StyleAnnotationEditPatch,
   type D3StyleAnnotationInput,
   type D3StyleAnnotationOptions,
-  type DirectLabel,
-  type EncircleCalloutOptions,
-  type EncircleSubjectPathOptions,
-  type EnclosingCircle,
-  type ManualPlacement,
-  type LayoutRefinementOptions,
-  type LayoutQualityAssertOptions,
-  type LayoutQualityFormatOptions,
-  type Padding,
-  type PaddingInput,
-  type PreparedAnnotationLayoutOptions,
-  type PreparedAnnotationLayoutResult,
   type PreparedD3StyleAnnotationCollection
-} from '@ponchia/annotations';
+} from '@ponchia/annotations/d3';
 import {
   AnnotationLayer,
   useAnnotations,
@@ -707,7 +708,7 @@ const layout = resolveAnnotationLayout({
   bounds: { x: 0, y: 0, width: 100, height: 100 },
   refinement: refinementOptions
 });
-refineAnnotationLayout(layout, true);
+resolveAnnotationLayout({ annotations, bounds: layout.bounds, refinement: true });
 const editHandles: AnnotationEditHandle[] = annotationEditHandles(layout);
 const editPhase: AnnotationEditPhase = 'move';
 const editEventOptions: CreateAnnotationEditEventOptions = {
@@ -863,17 +864,15 @@ allPlacementCandidates({
   bounds: { x: 0, y: 0, width: 100, height: 100 },
   noteSize: { width: 40, height: 20 },
   obstacles: [],
-  placedNotes: [],
-  placement: { maxCandidates: 2 }
-});
+  placedNotes: []
+}, { limit: 2 });
 allPlacementCandidates({
   annotation: encirclePreset,
   bounds: { x: 0, y: 0, width: 100, height: 100 },
   noteSize: { width: 40, height: 20 },
   obstacles: [],
-  placedNotes: [],
-  placement: { maxCandidates: 2 }
-});
+  placedNotes: []
+}, { limit: 2 });
 
 const props: AnnotationLayerProps = {
   annotations,

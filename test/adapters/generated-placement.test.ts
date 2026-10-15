@@ -250,6 +250,7 @@ function expectGeneratedSurfaceLayout(label: string, prepared: PreparedGenerated
     label: `${label} generated layout`
   });
   const resolved = resolvePreparedAnnotationLayout(prepared, {
+    diagnostics: { candidates: 8 },
     ...defaults,
     bounds,
     padding: 12,
@@ -297,5 +298,5 @@ function expectGeneratedSurfaceLayout(label: string, prepared: PreparedGenerated
     height: noteSizes.manual.height
   });
   expect(overlapArea(auto!.noteBox, auto!.subject.box), `${label} automatic note over target`).toBe(0);
-  expect(auto!.placement.candidates.length, `${label} placement candidates`).toBeGreaterThan(1);
+  expect(layout.diagnostics!.annotations.find(item => item.id === 'auto')!.candidates.length, `${label} placement candidates`).toBeGreaterThan(1);
 }

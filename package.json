@@ -1,6 +1,6 @@
 {
   "name": "@ponchia/annotations",
-  "version": "0.6.10",
+  "version": "0.7.0-dev.0",
   "description": "Headless annotation placement and rendering helpers for charts, diagrams, reports, and UI surfaces.",
   "keywords": [
     "annotations",
@@ -82,7 +82,11 @@
       "types": "./dist/bronto.css.d.ts",
       "default": "./dist/bronto.css"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./d3": {
+      "types": "./dist/d3/index.d.ts",
+      "import": "./dist/d3/index.js"
+    }
   },
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -141,7 +145,11 @@
     "check": "npm run typecheck && node scripts/check-build-reuse.mjs && export PONCHIA_ANNOTATIONS_REUSE_BUILD=1 && npm test && npm run check:dead && npm run test:docs-snippets && npm run test:types && npm run test:exports && npm run test:api-reference && npm run test:api-stability && npm run test:canary && npm run test:d3-parity && npm run test:bronto-parity && npm run test:bronto-upstream && npm run test:examples && npm run test:pack && npm run test:dogfood && npm run test:dogfood:bronto-report && npm run test:dogfood:self-report && npm run test:dogfood:external && npm run test:browser && npm run test:browser:incremental && npm run test:browser:worker && npm run test:worker:transport && npm run test:screenshots && npm run test:readiness && npm run test:completion-audit && npm run test:repo && npm run test:release && npm run test:security-automation && npm run test:pre-release && npm run test:compatibility && npm run test:compatibility:lanes && npm run test:performance && npm run test:hygiene && npm run test:site",
     "site:build": "npm run build && node scripts/build-public-site.mjs",
     "test:site": "npm run site:build && node scripts/check-public-site.mjs && node scripts/verify-public-site-browser.mjs",
-    "example": "npm run build && vite"
+    "example": "npm run build && vite",
+    "check:fast": "npm run typecheck && npm test && npm run check:dead && npm run test:types && npm run test:exports && npm run test:api-stability",
+    "test:quality": "npm run build && node scripts/placement-quality-corpus.mjs",
+    "test:upstream": "npm run build && node scripts/verify-upstream-consumers.mjs",
+    "benchmark:placement": "npm run build && node scripts/benchmark-bounded-placement.mjs"
   },
   "peerDependencies": {
     "@terrastruct/d2": ">=0.1.0",

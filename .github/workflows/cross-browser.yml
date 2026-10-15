@@ -14,6 +14,9 @@ on:
       # Edits to core/React/SVG geometry can be browser-specific even when
       # the example fixtures remain unchanged.
       - 'src/**'
+      - 'scripts/*upstream-consumers*'
+      - 'test/fixtures/upstream-consumers/**'
+      - 'test/scripts/upstream-consumers.test.ts'
       - 'package.json'
       - 'package-lock.json'
   workflow_dispatch:
@@ -43,6 +46,10 @@ jobs:
         run: npx playwright install --with-deps firefox webkit
       - name: Verify real interactive editing and Worker revisions
         run: npm run test:browser:cross
+      - name: Verify packed upstream consumers in Firefox
+        run: npm run test:upstream -- --browser firefox --output-dir browser-evidence/upstream-firefox
+      - name: Verify packed upstream consumers in WebKit
+        run: npm run test:upstream -- --browser webkit --output-dir browser-evidence/upstream-webkit
       - name: Retain browser screenshots and structured regression results
         if: always()
         uses: actions/upload-artifact@v7

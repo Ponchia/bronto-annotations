@@ -42,7 +42,7 @@ describe('React quality diagnostics are demand-driven', () => {
     const session = createIncrementalAnnotationLayoutSession(opts);
     const onLayout = vi.fn();
     const { container, rerender } = render(
-      <AnnotationLayer {...opts} resolvedLayout={session.layout} onLayout={onLayout} />
+      <AnnotationLayer layout={session.layout} onLayout={onLayout} />
     );
     expect(evaluateAnnotationLayout).not.toHaveBeenCalled();
     expect(onLayout).toHaveBeenCalledTimes(1);
@@ -51,7 +51,7 @@ describe('React quality diagnostics are demand-driven', () => {
     next[1]!.anchor = { type: 'point', point: { x: 305, y: 171 } };
     const updated = session.update({ ...opts, annotations: next });
     rerender(
-      <AnnotationLayer {...opts} annotations={next} resolvedLayout={updated} onLayout={onLayout} />
+      <AnnotationLayer layout={updated} onLayout={onLayout} />
     );
     expect(evaluateAnnotationLayout).not.toHaveBeenCalled();
     expect(onLayout).toHaveBeenCalledTimes(2);
@@ -64,21 +64,21 @@ describe('React quality diagnostics are demand-driven', () => {
     const onLayout = vi.fn();
     const onQuality = vi.fn();
     const { rerender } = render(
-      <AnnotationLayer {...opts} resolvedLayout={session.layout} onLayout={onLayout} />
+      <AnnotationLayer layout={session.layout} onLayout={onLayout} />
     );
     expect(onLayout).toHaveBeenCalledTimes(1);
-    rerender(<AnnotationLayer {...opts} resolvedLayout={session.layout} onLayout={onLayout} qualityDebug />);
+    rerender(<AnnotationLayer layout={session.layout} onLayout={onLayout} qualityDebug />);
     expect(onLayout).toHaveBeenCalledTimes(1);
-    rerender(<AnnotationLayer {...opts} resolvedLayout={session.layout} onLayout={onLayout}
+    rerender(<AnnotationLayer layout={session.layout} onLayout={onLayout}
       qualityDebug onQuality={onQuality} />);
     expect(onLayout).toHaveBeenCalledTimes(1);
     expect(onQuality).toHaveBeenCalledTimes(1);
-    rerender(<AnnotationLayer {...opts} resolvedLayout={session.layout} onLayout={onLayout}
+    rerender(<AnnotationLayer layout={session.layout} onLayout={onLayout}
       onQuality={onQuality} qualityFormat={{ label: 'Custom quality heading' }} />);
     expect(onLayout).toHaveBeenCalledTimes(1);
     expect(onQuality).toHaveBeenCalledTimes(2);
     expect(onQuality.mock.calls[1]![0].summary).toContain('Custom quality heading');
-    rerender(<AnnotationLayer {...opts} resolvedLayout={session.layout} onLayout={onLayout} />);
+    rerender(<AnnotationLayer layout={session.layout} onLayout={onLayout} />);
     expect(onLayout).toHaveBeenCalledTimes(1);
     expect(onQuality).toHaveBeenCalledTimes(2);
   });
@@ -88,7 +88,7 @@ describe('React quality diagnostics are demand-driven', () => {
     const session = createIncrementalAnnotationLayoutSession(opts);
     const onQuality = vi.fn();
     const { rerender } = render(
-      <AnnotationLayer {...opts} resolvedLayout={session.layout} onQuality={onQuality} />
+      <AnnotationLayer layout={session.layout} onQuality={onQuality} />
     );
     expect(evaluateAnnotationLayout).toHaveBeenCalledTimes(1);
     expect(onQuality).toHaveBeenCalledTimes(1);
@@ -99,7 +99,7 @@ describe('React quality diagnostics are demand-driven', () => {
 
     // Changing output formatting must not recalculate the same geometry.
     rerender(
-      <AnnotationLayer {...opts} resolvedLayout={session.layout} onQuality={onQuality}
+      <AnnotationLayer layout={session.layout} onQuality={onQuality}
         qualityFormat={{ label: 'Changed label', maxIssues: 3 }} />
     );
     expect(evaluateAnnotationLayout).toHaveBeenCalledTimes(1);
@@ -113,28 +113,30 @@ describe('React quality diagnostics are demand-driven', () => {
         ...annotations[1]!, placement: { manual: { x: 325, y: 205 } }
       }],
       bounds, noteSizes,
-      obstacles: [{ x: 170, y: 163, width: 30, height: 25 }]
+      // This obstacle crosses a connector but leaves both note cards clear:
+      // informational crossings should not fail the default assertion.
+      obstacles: [{ x: 105, y: 110, width: 20, height: 20 }]
     };
     const session = createIncrementalAnnotationLayoutSession(opts);
     const { container, rerender } = render(
-      <AnnotationLayer {...opts} resolvedLayout={session.layout} />
+      <AnnotationLayer layout={session.layout} />
     );
     expect(evaluateAnnotationLayout).not.toHaveBeenCalled();
 
-    rerender(<AnnotationLayer {...opts} resolvedLayout={session.layout} assertQuality={{ minScore: 0 }} />);
+    rerender(<AnnotationLayer layout={session.layout} assertQuality={{ minScore: 0 }} />);
     expect(evaluateAnnotationLayout).toHaveBeenCalledTimes(1);
-    rerender(<AnnotationLayer {...opts} resolvedLayout={session.layout} qualityDebug />);
+    rerender(<AnnotationLayer layout={session.layout} qualityDebug />);
     // The report is identical: enabling the visual overlay consumes the
     // existing memoized report instead of recomputing a second time.
     expect(evaluateAnnotationLayout).toHaveBeenCalledTimes(1);
     expect(container.querySelectorAll('.pa-annotation__quality-issue').length).toBeGreaterThan(0);
-    rerender(<AnnotationLayer {...opts} resolvedLayout={session.layout} />);
-    rerender(<AnnotationLayer {...opts} resolvedLayout={session.layout} qualityDebug />);
+    rerender(<AnnotationLayer layout={session.layout} />);
+    rerender(<AnnotationLayer layout={session.layout} qualityDebug />);
     expect(evaluateAnnotationLayout).toHaveBeenCalledTimes(2);
 
     // SSR and usual consumers do not need the report just to render notes.
     vi.mocked(evaluateAnnotationLayout).mockClear();
-    const markup = renderToStaticMarkup(<AnnotationLayer {...opts} resolvedLayout={session.layout} />);
+    const markup = renderToStaticMarkup(<AnnotationLayer layout={session.layout} />);
     expect(markup).toContain('First');
     expect(evaluateAnnotationLayout).not.toHaveBeenCalled();
   });

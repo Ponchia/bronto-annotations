@@ -43,7 +43,7 @@ describe('controlled React layers skip redundant note-size estimates', () => {
     initial.reset();
 
     const first = renderToStaticMarkup(
-      <AnnotationLayer {...options} resolvedLayout={session.layout} />
+      <AnnotationLayer layout={session.layout} />
     );
     expect(first).toContain('Note 17');
     expect(initial.count()).toBe(0);
@@ -53,7 +53,7 @@ describe('controlled React layers skip redundant note-size estimates', () => {
     const layout = session.update({ ...options, annotations: updated });
     edited.reset();
     const html = renderToStaticMarkup(
-      <AnnotationLayer {...options} annotations={updated} resolvedLayout={layout} />
+      <AnnotationLayer layout={layout} />
     );
     expect(html).toContain('Edited note');
     expect(edited.count()).toBe(0);

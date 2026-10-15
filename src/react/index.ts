@@ -1,10 +1,8 @@
 /**
- * React adapter API stability.
- *
- * @public Stable for `0.1.x`: `AnnotationLayer`, `useAnnotations`, rendering,
- * measurement, quality, and target-alignment props/events.
- * @experimental During `0.x`: edit-handle authoring options, edit events,
- * and the opt-in host-owned resolvedLayout renderer input.
+ * React input-mode resolution and render-only layout presentation.
+ * @public Stable for 0.7.x: rendering, measurement and diagnostic callbacks.
+ * @experimental Editing events/options remain experimental during 0.x.
+ * The 0.7 development preview deliberately removes the dual-source props API.
  */
 export type {
   AnnotationLayerEditEvent,

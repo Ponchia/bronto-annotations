@@ -65,10 +65,12 @@ into this package's `Annotation` model.
 
 ```ts
 import {
-  annotationsFromD3Style,
   renderAnnotationsSvg,
   resolveAnnotationLayout
 } from '@ponchia/annotations';
+import {
+  annotationsFromD3Style
+} from '@ponchia/annotations/d3';
 
 const annotations = annotationsFromD3Style([
   {
@@ -118,7 +120,9 @@ renderAnnotationsSvg(layout);
 Editable layers can round-trip React edit events back into d3-style objects:
 
 ```ts
-import { applyD3StyleAnnotationEdit } from '@ponchia/annotations';
+import {
+  applyD3StyleAnnotationEdit
+} from '@ponchia/annotations/d3';
 
 const updated = applyD3StyleAnnotationEdit(annotation, editEvent, {
   x: 'period',
@@ -141,7 +145,7 @@ import {
   applyD3StyleAnnotationCollectionEdit,
   createD3StyleAnnotationBuilder,
   prepareD3StyleAnnotationCollection
-} from '@ponchia/annotations';
+} from '@ponchia/annotations/d3';
 
 const collection = {
   type: 'annotationCalloutCircle',

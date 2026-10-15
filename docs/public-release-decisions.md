@@ -1,5 +1,10 @@
 # Public Release Decisions
 
+**Historical decision record.** The repository and npm package are now public.
+Current operating instructions live in [release.md](release.md), and the
+[documentation index](README.md) routes consumer guides. Version numbers and
+future-tense decisions below describe the original release, not today’s status.
+
 This document records the release-positioning decisions for the `0.1.x`
 hardening lane. `npm run test:repo` and `npm run test:pre-release` check these
 decisions so package metadata, docs, and release automation do not drift.

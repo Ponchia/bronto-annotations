@@ -1,3 +1,5 @@
+import { PaintedAnnotation, PaintedEditHandle, MeasuredAnnotation } from './annotation-presentation.js';
+import { renderQualityIssues } from './quality-overlay.js';
 import {
   useCallback,
   useEffect,
@@ -8,37 +10,27 @@ import {
   useState
 } from 'react';
 import type {
-  CSSProperties,
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent
 } from 'react';
-import {
-  boxUnion,
-  expandBox,
-  normalizeBox
-} from '../core/anchors.js';
 import {
   annotationEditHandles,
   createAnnotationEditDelta,
   createAnnotationEditEvent,
   previewAnnotationEdit
 } from '../core/edit.js';
-import { estimateNoteSize, resolveAnnotationLayout } from '../core/layout.js';
+import { estimateNoteSize, resolveAnnotationLayout } from '../core/layout-resolver.js';
 import { annotationsForPaint } from '../core/order.js';
 import {
   assertAnnotationLayoutQuality,
   evaluateAnnotationLayout,
-  formatLayoutQualityReport,
-  type LayoutQualityIssue,
-  type LayoutQualityReport
+  formatLayoutQualityReport
 } from '../core/quality.js';
 import {
   assertAnchorAlignmentReportIfRequested,
   evaluateAnchorAlignment,
   formatAnchorAlignmentReport
 } from '../adapters/diagnostics.js';
-import { dataAttributes, annotationStyle } from './render-data.js';
-import { renderSubject, renderConnector, renderDebugBoxes } from './svg-annotation-parts.js';
 import { useMeasurementNodeRegistration, useDomNoteMeasurementObserver } from './dom-measurements.js';
 import { useEditableSvgTouchBoundary } from './touch-gestures.js';
 import {
@@ -50,14 +42,10 @@ import {
   groupEditHandles,
   normalizeEditOptions,
   keyboardDelta,
-  editHandlePosition,
   clientToSvgPoint
 } from './edit-geometry.js';
 import type { AnnotationEditHandle } from '../core/edit.js';
 import type {
-  Annotation,
-  AnnotationNoteLineOptions,
-  Box,
   ResolvedAnnotation,
   ResolvedLayout,
   Size
@@ -86,102 +74,78 @@ type ActiveEdit = {
  * not alter this component's callable type or the existing default renderer.
  */
 export function AnnotationLayer(props: AnnotationLayerProps) {
-  // Read *values* on controlled parent renders. A host may mutate a supported
-  // edit option or style object in place; React's memo comparator otherwise
-  // sees the same old/new reference and incorrectly skips the update. Avoid
-  // snapshot overhead entirely for normal internally resolved React layers.
-  const controlled = props.resolvedLayout !== undefined;
-  return <MemoizedAnnotationLayer
-    {...props}
-    __editableSnapshot={controlled ? inlinePropsSnapshot(props.editable) : ''}
-    __styleSnapshot={controlled ? inlinePropsSnapshot(props.style) : ''}
-    __boundsSnapshot={controlled ? JSON.stringify([
-      props.bounds.x, props.bounds.y, props.bounds.width, props.bounds.height
-    ]) : ''}
-    __idsSnapshot={controlled ? JSON.stringify(props.annotations.map((item) => item.id)) : ''}
-  />;
+  assertLayerMode(props);
+  return <MemoizedAnnotationLayer {...props} />;
 }
 
-type InternalRendererProps = AnnotationLayerProps & {
-  readonly __editableSnapshot: string;
-  readonly __styleSnapshot: string;
-  readonly __boundsSnapshot: string;
-  readonly __idsSnapshot: string;
-};
+// Geometry and presentation come from one source, so normal React identity
+// comparison is sufficient. Per-note and edit-handle memoization below retains
+// unchanged winners across incremental commits and inline presentation props.
+const MemoizedAnnotationLayer = memo(AnnotationLayerRenderer);
 
-const MemoizedAnnotationLayer = memo(AnnotationLayerRenderer, equalControlledLayerProps);
-
-// A controlled host may rebuild its raw annotation array and inline edit
-// options while its authoritative resolvedLayout object remains *identical*.
-// Do not reconcile hundreds of SVG notes and edit controls for this no-op.
-// Compare every other presentation/interaction prop by identity so callbacks,
-// accessibility and debug settings are never hidden by this optimization.
-const CONTROLLED_GEOMETRY_INPUTS = new Set<string>([
-  'annotations', 'bounds', 'padding', 'obstacles', 'placement',
-  'defaultNoteSize', 'noteSizes', 'refinement', 'editable', 'style'
-]);
-
-function equalControlledLayerProps(previous: InternalRendererProps, next: InternalRendererProps): boolean {
-  if (!previous.resolvedLayout || previous.resolvedLayout !== next.resolvedLayout) return false;
-  // Raw source diagnostics consume annotations directly rather than just the
-  // authoritative resolved geometry. Conservatively keep them reactive.
-  if (previous.targetAlignmentTargets || next.targetAlignmentTargets
-    || previous.onTargetAlignment || next.onTargetAlignment
-    || previous.assertTargetAlignment || next.assertTargetAlignment) return false;
-
-  const keys = new Set([...Object.keys(previous), ...Object.keys(next)]);
-  for (const key of keys) {
-    if (CONTROLLED_GEOMETRY_INPUTS.has(key)) continue;
-    if (previous[key as keyof InternalRendererProps] !== next[key as keyof InternalRendererProps]) return false;
+function assertLayerMode(props: AnnotationLayerProps): void {
+  if ('resolvedLayout' in props) {
+    throw new Error('AnnotationLayer.resolvedLayout was removed; use layout without annotations, bounds or other solver inputs.');
   }
-  return true;
+  if ('layout' in props) {
+    if (!props.layout) throw new Error('AnnotationLayer.layout must be a resolved layout.');
+    for (const key of [
+      'annotations', 'bounds', 'padding', 'obstacles', 'placement',
+      'defaultNoteSize', 'noteSizes', 'refinement', 'diagnostics', 'measure'
+    ]) {
+      if (key in props) {
+        throw new Error(`AnnotationLayer.layout cannot be combined with ${key}; pass solver inputs to resolveAnnotationLayout instead.`);
+      }
+    }
+  } else if (!props.annotations || !props.bounds) {
+    throw new Error('AnnotationLayer requires either layout, or annotations and bounds.');
+  }
 }
 
-function inlinePropsSnapshot(value: AnnotationLayerProps['editable'] | AnnotationLayerProps['style']): string {
-  if (!value || typeof value !== 'object') return String(value);
-  const record: Record<string, unknown> = value as Record<string, unknown>;
-  return JSON.stringify(Object.keys(record).sort().map((key) => [key, record[key]]));
-}
-
-function AnnotationLayerRenderer({
-  annotations,
-  assertQuality,
-  assertTargetAlignment,
-  bounds,
-  padding,
-  obstacles,
-  placement,
-  defaultNoteSize,
-  noteSizes,
-  className,
-  classPrefix = PREFIX,
-  debug = false,
-  editable,
-  previewEdits = false,
-  resolvedLayout,
-  label = 'Annotation layer',
-  measure = 'estimate',
-  markerIdPrefix,
-  editHandleTabIndex = 0,
-  noteTabIndex,
-  preserveAspectRatio,
-  qualityDebug = false,
-  refinement,
-  renderNote,
-  onEdit,
-  onEditEnd,
-  onEditStart,
-  onLayout,
-  onQuality,
-  onTargetAlignment,
-  qualityFormat,
-  targetAlignmentFormat,
-  targetAlignmentOptions,
-  targetAlignmentTargets,
-  style,
-  __boundsSnapshot,
-  __idsSnapshot
-}: InternalRendererProps) {
+function AnnotationLayerRenderer(props: AnnotationLayerProps) {
+  const {
+    annotations: inputAnnotations,
+    assertQuality,
+    assertTargetAlignment,
+    bounds: inputBounds,
+    padding,
+    obstacles,
+    placement,
+    defaultNoteSize,
+    noteSizes,
+    className,
+    classPrefix = PREFIX,
+    debug = false,
+    editable,
+    previewEdits = false,
+    layout: hostLayout,
+    label = 'Annotation layer',
+    measure = 'estimate',
+    markerIdPrefix,
+    editHandleTabIndex = 0,
+    noteTabIndex,
+    preserveAspectRatio,
+    qualityDebug = false,
+    refinement,
+    diagnostics,
+    renderNote,
+    onEdit,
+    onEditEnd,
+    onEditStart,
+    onLayout,
+    onQuality,
+    onTargetAlignment,
+    qualityFormat,
+    targetAlignmentFormat,
+    targetAlignmentOptions,
+    targetAlignmentTargets,
+    style
+  } = props;
+  const annotations = useMemo(
+    () => hostLayout ? hostLayout.annotations.map((item) => item.annotation) : inputAnnotations!,
+    [hostLayout, inputAnnotations]
+  );
+  const bounds = hostLayout ? hostLayout.bounds : inputBounds!;
   const prefix = classPrefix;
   const markerPrefix = markerIdPrefix ?? prefix;
   const svgRef = useRef<SVGSVGElement>(null);
@@ -200,7 +164,7 @@ function AnnotationLayerRenderer({
   // commit, and merging an unused size map can invalidate other memoization.
   // Keep both hooks unconditional so switching back to local layout resolution
   // still computes the correct sizes without changing React hook order.
-  const hasHostLayout = resolvedLayout !== undefined;
+  const hasHostLayout = hostLayout !== undefined;
   const estimatedSizes = useMemo(
     () => hasHostLayout ? EMPTY_NOTE_SIZES : Object.fromEntries(annotations.map((annotation) => [
       annotation.id,
@@ -220,13 +184,7 @@ function AnnotationLayerRenderer({
     // A host with an incremental session can supply its committed result.
     // Computing it again here would undo the optimization. All subsequent
     // quality, editing and SVG rendering use this same authoritative object.
-    if (resolvedLayout !== undefined) {
-      if (measure === 'dom') {
-        throw new Error('AnnotationLayer.resolvedLayout requires measure="estimate"; pass measured noteSizes through the host layout options instead.');
-      }
-      assertControlledLayout(resolvedLayout, annotations, bounds);
-      return resolvedLayout;
-    }
+    if (hostLayout !== undefined) return hostLayout;
 
     return resolveAnnotationLayout({
       annotations,
@@ -236,15 +194,12 @@ function AnnotationLayerRenderer({
       ...(obstacles ? { obstacles } : {}),
       ...(placement ? { placement } : {}),
       ...(defaultNoteSize ? { defaultNoteSize } : {}),
-      ...(refinement !== undefined ? { refinement } : {})
+      ...(refinement !== undefined ? { refinement } : {}),
+      ...(diagnostics !== undefined ? { diagnostics } : debug ? { diagnostics: { candidates: 8 } } : {})
     });
   }, [
     annotations, bounds, padding, obstacles, placement, defaultNoteSize,
-    refinement, resolvedNoteSizes, resolvedLayout, measure,
-    // These primitive snapshots change even when a host mutates the same
-    // bounds object or annotation IDs array in place. Revalidate controlled
-    // layouts rather than trusting stale useMemo source references.
-    __boundsSnapshot, __idsSnapshot
+    refinement, diagnostics, debug, resolvedNoteSizes, hostLayout
   ]);
   // Full quality diagnostics compare every note with every other note. Most
   // passive and host-controlled renderers do not request them. Avoid quadratic
@@ -371,6 +326,10 @@ function AnnotationLayerRenderer({
   const paintAnnotations = useMemo(
     () => annotationsForPaint(layout.annotations),
     [layout.annotations]
+  );
+  const debugCandidates = useMemo(
+    () => debug ? new Map(layout.diagnostics?.annotations.map((item) => [item.id, item.candidates])) : undefined,
+    [debug, layout.diagnostics]
   );
   const qualityIssues = useMemo(
     () => qualityDebug && quality ? renderQualityIssues(layout, quality, prefix) : null,
@@ -627,6 +586,7 @@ function AnnotationLayerRenderer({
             prefix={prefix}
             markerPrefix={markerPrefix}
             debug={debug}
+            candidates={debugCandidates?.get(item.id)}
             noteTabIndex={noteTabIndex}
             renderNote={renderNote}
           />
@@ -665,304 +625,4 @@ function AnnotationLayerRenderer({
       ) : null}
     </div>
   );
-}
-
-// Drag previews update one resolved annotation. Memoized paint boundaries keep
-// React from reconstructing note content, host renderNote callbacks, and edit
-// controls for every untouched neighbor on each pointer event.
-const PaintedAnnotation = memo(function PaintedAnnotation({
-  item,
-  prefix,
-  markerPrefix,
-  debug,
-  noteTabIndex,
-  renderNote
-}: {
-  item: ResolvedAnnotation;
-  prefix: string;
-  markerPrefix: string;
-  debug: boolean;
-  noteTabIndex: AnnotationLayerProps['noteTabIndex'];
-  renderNote: AnnotationLayerProps['renderNote'];
-}) {
-  return (
-    <g
-      className={[
-        prefix,
-        `${prefix}--${item.placement.side}`,
-        item.placement.manual ? `${prefix}--manual` : undefined,
-        item.annotation.variant ? `${prefix}--${item.annotation.variant}` : undefined,
-        item.annotation.tone ? `${prefix}--${item.annotation.tone}` : undefined,
-        item.annotation.motion ? `${prefix}--${item.annotation.motion}` : undefined,
-        item.annotation.className
-      ].filter(Boolean).join(' ')}
-      data-annotation-id={item.id}
-      data-annotation-side={item.placement.side}
-      role="group"
-      aria-label={item.annotation.note.ariaLabel ?? item.annotation.note.title ?? item.id}
-      style={annotationStyle(item.annotation.style)}
-      {...dataAttributes(item.annotation.data)}
-    >
-      {renderSubject(item, prefix)}
-      {renderConnector(item, prefix, markerPrefix)}
-      {item.annotation.note.visible === false ? null : (
-        <foreignObject
-          className={noteShellClass(prefix, item.annotation)}
-          x={item.noteBox.x}
-          y={item.noteBox.y}
-          width={item.noteBox.width}
-          height={item.noteBox.height}
-          data-note-align={item.annotation.note.align ?? 'start'}
-        >
-          <div
-            className={noteBoxClass(prefix, item.annotation)}
-            role="note"
-            aria-label={item.annotation.note.ariaLabel ?? item.annotation.note.title ?? item.id}
-            tabIndex={noteTabIndex}
-            {...dataAttributes(item.annotation.note.data)}
-            data-annotation-id={item.id}
-            data-note-align={item.annotation.note.align ?? 'start'}
-          >
-            {renderNote ? renderNote(item) : <DefaultNote annotation={item.annotation} classPrefix={prefix} />}
-          </div>
-        </foreignObject>
-      )}
-      {debug ? renderDebugBoxes(item, prefix) : null}
-    </g>
-  );
-});
-
-const PaintedEditHandle = memo(function PaintedEditHandle({
-  handle,
-  prefix,
-  tabIndex,
-  onPointerDown,
-  onKeyDown,
-  onLostPointerCapture
-}: {
-  handle: AnnotationEditHandle;
-  prefix: string;
-  tabIndex: number;
-  onPointerDown: (handle: AnnotationEditHandle, event: ReactPointerEvent<SVGCircleElement>) => void;
-  onKeyDown: (handle: AnnotationEditHandle, event: ReactKeyboardEvent<SVGCircleElement>) => void;
-  onLostPointerCapture: (event: ReactPointerEvent<SVGCircleElement>) => void;
-}) {
-  return (
-    <g
-      className={`${prefix}__edit-handle-group ${prefix}__edit-handle-group--${handle.kind}`}
-      data-annotation-id={handle.annotationId}
-      data-edit-handle={handle.kind}
-      data-edit-handle-position={editHandlePosition(handle)}
-    >
-      <circle
-        aria-hidden="true"
-        className={`${prefix}__edit-hit ${prefix}__edit-hit--${handle.kind}`}
-        cx={handle.point.x}
-        cy={handle.point.y}
-        r={handle.hitRadius}
-        data-edit-handle-position={editHandlePosition(handle)}
-        style={{ cursor: handle.cursor }}
-        onPointerDown={(event) => onPointerDown(handle, event)}
-        onLostPointerCapture={onLostPointerCapture}
-      />
-      <circle
-        aria-label={handle.ariaLabel}
-        className={`${prefix}__edit-handle ${prefix}__edit-handle--${handle.kind}`}
-        cx={handle.point.x}
-        cy={handle.point.y}
-        data-annotation-id={handle.annotationId}
-        data-edit-handle={handle.kind}
-        data-edit-handle-position={editHandlePosition(handle)}
-        r={handle.radius}
-        role="button"
-        style={{ cursor: handle.cursor }}
-        tabIndex={tabIndex}
-        aria-keyshortcuts="ArrowUp ArrowRight ArrowDown ArrowLeft Shift+ArrowUp Shift+ArrowRight Shift+ArrowDown Shift+ArrowLeft"
-        onKeyDown={(event) => onKeyDown(handle, event)}
-        onPointerDown={(event) => onPointerDown(handle, event)}
-        onLostPointerCapture={onLostPointerCapture}
-      />
-    </g>
-  );
-});
-
-const MeasuredAnnotation = memo(function MeasuredAnnotation({
-  item,
-  prefix,
-  renderNote,
-  setMeasureNode
-}: {
-  item: ResolvedAnnotation;
-  prefix: string;
-  renderNote: AnnotationLayerProps['renderNote'];
-  setMeasureNode: (id: string, node: HTMLDivElement | null) => void;
-}) {
-  return (
-    <div
-      className={noteBoxClass(prefix, item.annotation)}
-      ref={(node) => setMeasureNode(item.id, node)}
-      data-note-align={item.annotation.note.align ?? 'start'}
-      // The drawn note inherits the annotation's style variables from
-      // its <g>; the measured copy has no such parent, so without
-      // these its `border: 1px solid var(--pa-annotation-border)`
-      // computed to no border at all and every note measured 2px
-      // narrower than the box it was then drawn in — which is how a
-      // title that fit the measurer wrapped at the drawn box's edge.
-      style={annotationStyle(item.annotation.style)}
-      {...dataAttributes(item.annotation.note.data)}
-    >
-      {renderNote ? renderNote(item) : <DefaultNote annotation={item.annotation} classPrefix={prefix} />}
-    </div>
-  );
-});
-
-function assertControlledLayout(layout: ResolvedLayout, annotations: Annotation[], bounds: Box): void {
-  const normalizedBounds = normalizeBox(bounds);
-  if (layout.bounds.x !== normalizedBounds.x
-    || layout.bounds.y !== normalizedBounds.y
-    || layout.bounds.width !== normalizedBounds.width
-    || layout.bounds.height !== normalizedBounds.height) {
-    throw new Error('AnnotationLayer.resolvedLayout bounds do not match the current host bounds.');
-  }
-
-  const ids = new Set(annotations.map((annotation) => annotation.id));
-  if (ids.size !== annotations.length || layout.annotations.length !== ids.size
-    || layout.annotations.some((item) => !ids.delete(item.id)) || ids.size !== 0) {
-    throw new Error('AnnotationLayer.resolvedLayout must contain exactly the current host annotation IDs.');
-  }
-}
-
-function DefaultNote({ annotation, classPrefix }: { annotation: Annotation; classPrefix: string }) {
-  const line = normalizeNoteLine(annotation.note.line);
-  const lineOrientation = line?.orientation ?? 'horizontal';
-
-  return (
-    <>
-      {line ? (
-        <span
-          aria-hidden="true"
-          className={[
-            `${classPrefix}__note-line`,
-            `${classPrefix}__note-line--${lineOrientation}`,
-            line.className
-          ].filter(Boolean).join(' ')}
-          data-note-line="true"
-          data-note-line-orientation={lineOrientation}
-          style={noteLineStyle(line)}
-          {...dataAttributes(line.data)}
-        />
-      ) : null}
-      {annotation.note.title ? <strong className={`${classPrefix}__title`}>{annotation.note.title}</strong> : null}
-      {annotation.note.body ? <span className={`${classPrefix}__body ${classPrefix}__label`}>{annotation.note.body}</span> : null}
-    </>
-  );
-}
-
-function noteLineStyle(line: AnnotationNoteLineOptions): CSSProperties | undefined {
-  if (line.length === undefined) {
-    return undefined;
-  }
-
-  return line.orientation === 'vertical'
-    ? { blockSize: line.length }
-    : { inlineSize: line.length };
-}
-
-function normalizeNoteLine(line: Annotation['note']['line']): AnnotationNoteLineOptions | undefined {
-  if (line === undefined || line === false) {
-    return undefined;
-  }
-
-  if (line === true) {
-    return {};
-  }
-
-  return line.visible === false ? undefined : line;
-}
-
-function noteShellClass(prefix: string, annotation: Annotation): string {
-  return [
-    `${prefix}__note`,
-    `${prefix}__note--align-${annotation.note.align ?? 'start'}`
-  ].join(' ');
-}
-
-function noteBoxClass(prefix: string, annotation: Annotation): string {
-  return [
-    `${prefix}__note-box`,
-    `${prefix}__note-box--align-${annotation.note.align ?? 'start'}`,
-    annotation.note.className
-  ].filter(Boolean).join(' ');
-}
-
-function renderQualityIssues(
-  layout: ResolvedLayout,
-  quality: LayoutQualityReport,
-  prefix: string
-) {
-  const issues = quality.issues
-    .map((issue, index) => renderQualityIssue(layout, issue, index, prefix))
-    .filter(Boolean);
-
-  return issues.length > 0 ? <g className={`${prefix}__quality-issues`}>{issues}</g> : null;
-}
-
-function renderQualityIssue(
-  layout: ResolvedLayout,
-  issue: LayoutQualityIssue,
-  index: number,
-  prefix: string
-) {
-  const box = qualityIssueBox(layout, issue);
-
-  if (!box) {
-    return null;
-  }
-
-  const expanded = expandBox(box, 4);
-
-  return (
-    <g
-      aria-hidden="true"
-      className={[
-        `${prefix}__quality-issue`,
-        `${prefix}__quality-issue--${issue.severity}`,
-        `${prefix}__quality-issue--${issue.type}`
-      ].join(' ')}
-      data-quality-issue={issue.type}
-      data-quality-severity={issue.severity}
-      data-quality-index={index}
-      data-annotation-id={issue.annotationId}
-      data-annotation-ids={issue.annotationIds?.join(' ')}
-      data-obstacle-index={issue.obstacleIndex}
-      data-segment-index={issue.segmentIndex}
-      data-area={issue.area}
-      data-amount={issue.amount}
-      key={`quality-${index}`}
-    >
-      <title>{issue.message}</title>
-      <rect
-        x={expanded.x}
-        y={expanded.y}
-        width={expanded.width}
-        height={expanded.height}
-      />
-    </g>
-  );
-}
-
-function qualityIssueBox(layout: ResolvedLayout, issue: LayoutQualityIssue): Box | undefined {
-  if (issue.annotationId) {
-    return layout.annotations.find((item) => item.id === issue.annotationId)?.noteBox;
-  }
-
-  if (issue.annotationIds) {
-    const boxes = issue.annotationIds
-      .map((id) => layout.annotations.find((item) => item.id === id)?.noteBox)
-      .filter((box): box is Box => Boolean(box));
-
-    return boxes.length > 0 ? boxUnion(boxes) : undefined;
-  }
-
-  return undefined;
 }

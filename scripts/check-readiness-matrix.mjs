@@ -16,7 +16,7 @@ const guides = (await Promise.all(['core-guide', 'presets-guide', 'react-guide',
 const docsText = `${readme}\n${e2ePlan}\n${integrationRecipes}\n${guides}`;
 
 assert.equal(matrix.schemaVersion, 1, 'readiness matrix schemaVersion must be 1');
-assert.equal(matrix.status, 'usable-public-package-with-known-limits');
+assert.equal(matrix.status, 'pre-release-0.7-contract');
 assert.ok(Array.isArray(matrix.publicExports) && matrix.publicExports.length > 0, 'readiness matrix must list public exports');
 assert.ok(Array.isArray(matrix.contexts) && matrix.contexts.length > 0, 'readiness matrix must list contexts');
 assert.ok(Array.isArray(matrix.capabilities) && matrix.capabilities.length > 0, 'readiness matrix must list capabilities');

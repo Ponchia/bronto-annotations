@@ -10,10 +10,12 @@ import { encodeWorkerLayout } from './layout-patch.js';
 import type { LayoutResponse, LayoutRevision } from './layout-patch.js';
 
 type Request =
-  | { type: 'resolve'; id: number; baseRevision: number; options: LayoutOptions; delayMs?: number; forceSnapshot?: boolean; hostSentEpochMs: number }
-  | { type: 'ack'; revision: number };
+  | { type: 'resolve'; id: number; baseRevision: number; options: LayoutOptions; delayMs?: number; forceSnapshot?: boolean; holdReply?: boolean; hostSentEpochMs: number }
+  | { type: 'ack'; revision: number }
+  | { type: 'release-held'; id: number };
 type Reply =
   | { type: 'ready' }
+  | { type: 'held'; id: number }
   | {
     type: 'resolved'; id: number; response: LayoutResponse; resolverMs: number;
     encodeMs: number; jsonWireBytes: number; jsonFullBytes: number;
@@ -36,6 +38,9 @@ let acknowledged: LayoutRevision | undefined;
 let acknowledgedFullJSONBytes = -1;
 const pendingLayouts = new Map<number, ResolvedLayout>();
 const pendingFullJSONBytes = new Map<number, number>();
+// Test-owned response gate: real computation completes, but its message cannot
+// race the browser's cancellation actions. Never part of the package API.
+const heldReplies = new Map<number, Extract<Reply, { type: 'resolved' }>>();
 function publish(value: Reply) { self.postMessage(value); }
 function jsonBytes(value: unknown): number {
   try { return new Blob([JSON.stringify(value)]).size; }
@@ -52,6 +57,14 @@ self.addEventListener('message', (event: MessageEvent<Request>) => {
   // MessageEvent.origin for Worker.postMessage; reject foreign origins.
   if (event.origin !== '' && event.origin !== self.origin) return;
   const data = event.data;
+  if (data?.type === 'release-held') {
+    const reply = heldReplies.get(data.id);
+    if (reply) {
+      heldReplies.delete(data.id);
+      publish({ ...reply, workerReplySentEpochMs: performance.timeOrigin + performance.now() });
+    }
+    return;
+  }
   if (data?.type === 'ack') {
     if (!Number.isSafeInteger(data.revision) || data.revision < 1
       || (acknowledged && data.revision <= acknowledged.revision)) return;
@@ -105,9 +118,14 @@ self.addEventListener('message', (event: MessageEvent<Request>) => {
       // entry to its listener; this interval includes cloning, delivery and
       // main-thread scheduling, and must never be sold as pure clone time.
       const workerReplySentEpochMs = performance.timeOrigin + performance.now();
-      publish({ type: 'resolved', id: data.id, response, resolverMs, encodeMs,
+      const reply: Extract<Reply, { type: 'resolved' }> = { type: 'resolved', id: data.id, response, resolverMs, encodeMs,
         jsonWireBytes, jsonFullBytes, workerReceivedEpochMs,
-        workerSolveStartedEpochMs, workerReplySentEpochMs });
+        workerSolveStartedEpochMs, workerReplySentEpochMs };
+      if (data.holdReply) {
+        heldReplies.set(data.id, reply);
+        while (heldReplies.size > 16) heldReplies.delete(heldReplies.keys().next().value!);
+        publish({ type: 'held', id: data.id });
+      } else publish(reply);
     } catch (error) {
       publish({ type: 'error', id: data.id, message: error instanceof Error ? error.message : String(error) });
     }

@@ -1,0 +1,313 @@
+{
+  "baselineCommit": "693f4f9ef84acae0b821163164a51b01d80c29aa",
+  "sameInput": {
+    "benchmark": "bounded-placement",
+    "comparison": "same-input historical module versus current module",
+    "referenceVersion": "0.6.10",
+    "sourceCommit": "ae25d90e5047acd2d7dd43146a93ffef70a95c17",
+    "sourceDirty": false,
+    "runtime": {
+      "node": "v24.17.0",
+      "arch": "arm64",
+      "platform": "linux"
+    },
+    "warmupsPerConfiguration": 1,
+    "samplesPerConfiguration": 6,
+    "units": {
+      "duration": "milliseconds, solve only",
+      "layoutJsonBytes": "UTF-8 JSON bytes, not heap or structured-clone bytes"
+    },
+    "cases": [
+      {
+        "annotations": 5,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 1400,
+          "height": 950
+        },
+        "obstacles": 2,
+        "reference": {
+          "medianMs": 12.039746000000008,
+          "samplesMs": [
+            16.115901000000008,
+            15.240902000000006,
+            12.740505000000013,
+            10.796267999999998,
+            11.338987000000003,
+            9.497708999999986
+          ],
+          "layoutJsonBytes": 21785
+        },
+        "bounded": {
+          "medianMs": 5.084833500000002,
+          "samplesMs": [
+            6.221311999999983,
+            8.777630000000016,
+            16.21202100000002,
+            2.8001160000000027,
+            3.9483550000000207,
+            3.524275000000017
+          ],
+          "layoutJsonBytes": 21785
+        },
+        "quality": {
+          "annotationCount": 5,
+          "issueCount": 0,
+          "invalidBoxCount": 0,
+          "boundsOverflowArea": 0,
+          "noteOverlapArea": 0,
+          "obstacleOverlapArea": 0,
+          "connectorObstacleHits": 0,
+          "connectorNoteHits": 0
+        },
+        "exactParity": true
+      },
+      {
+        "annotations": 12,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 1400,
+          "height": 950
+        },
+        "obstacles": 2,
+        "reference": {
+          "medianMs": 15.502201499999956,
+          "samplesMs": [
+            17.240340000000003,
+            15.760220999999945,
+            15.244181999999967,
+            14.468383000000017,
+            36.18475699999999,
+            14.38642299999998
+          ],
+          "layoutJsonBytes": 51844
+        },
+        "bounded": {
+          "medianMs": 5.878353500000003,
+          "samplesMs": [
+            6.9445120000000315,
+            7.444352000000038,
+            6.418113000000005,
+            5.3385940000000005,
+            4.688474999999983,
+            4.86483400000003
+          ],
+          "layoutJsonBytes": 51844
+        },
+        "quality": {
+          "annotationCount": 12,
+          "issueCount": 0,
+          "invalidBoxCount": 0,
+          "boundsOverflowArea": 0,
+          "noteOverlapArea": 0,
+          "obstacleOverlapArea": 0,
+          "connectorObstacleHits": 0,
+          "connectorNoteHits": 0
+        },
+        "exactParity": true
+      },
+      {
+        "annotations": 20,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 1400,
+          "height": 950
+        },
+        "obstacles": 2,
+        "reference": {
+          "medianMs": 19.526077499999985,
+          "samplesMs": [
+            19.43321800000001,
+            28.67316599999998,
+            19.61893699999996,
+            57.40725300000008,
+            17.06669999999997,
+            16.98666000000003
+          ],
+          "layoutJsonBytes": 86512
+        },
+        "bounded": {
+          "medianMs": 7.339670999999953,
+          "samplesMs": [
+            7.008110999999985,
+            8.62370999999996,
+            7.671230999999921,
+            6.671592000000032,
+            6.677392000000054,
+            7.777430999999979
+          ],
+          "layoutJsonBytes": 86512
+        },
+        "quality": {
+          "annotationCount": 20,
+          "issueCount": 0,
+          "invalidBoxCount": 0,
+          "boundsOverflowArea": 0,
+          "noteOverlapArea": 0,
+          "obstacleOverlapArea": 0,
+          "connectorObstacleHits": 0,
+          "connectorNoteHits": 0
+        },
+        "exactParity": true
+      }
+    ]
+  },
+  "retentionConfiguration": {
+    "benchmark": "bounded-placement",
+    "comparison": "current exhaustive reference versus exact top-eight retention",
+    "referenceVersion": "current",
+    "sourceCommit": "ae25d90e5047acd2d7dd43146a93ffef70a95c17",
+    "sourceDirty": false,
+    "runtime": {
+      "node": "v24.17.0",
+      "arch": "arm64",
+      "platform": "linux"
+    },
+    "warmupsPerConfiguration": 1,
+    "samplesPerConfiguration": 6,
+    "units": {
+      "duration": "milliseconds, solve only",
+      "layoutJsonBytes": "UTF-8 JSON bytes, not heap or structured-clone bytes"
+    },
+    "cases": [
+      {
+        "annotations": 5,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 1400,
+          "height": 950
+        },
+        "obstacles": 2,
+        "reference": {
+          "medianMs": 14.527982999999999,
+          "samplesMs": [
+            17.28398,
+            21.469054999999997,
+            19.605616999999995,
+            10.552346999999997,
+            11.771985999999998,
+            9.364868999999999
+          ],
+          "layoutJsonBytes": 587673
+        },
+        "bounded": {
+          "medianMs": 3.5185359999999903,
+          "samplesMs": [
+            4.523554000000004,
+            3.7199150000000003,
+            4.438834999999983,
+            2.486717999999996,
+            2.4628370000000075,
+            3.3171569999999804
+          ],
+          "layoutJsonBytes": 21785
+        },
+        "quality": {
+          "annotationCount": 5,
+          "issueCount": 0,
+          "invalidBoxCount": 0,
+          "boundsOverflowArea": 0,
+          "noteOverlapArea": 0,
+          "obstacleOverlapArea": 0,
+          "connectorObstacleHits": 0,
+          "connectorNoteHits": 0
+        },
+        "exactParity": true
+      },
+      {
+        "annotations": 12,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 1400,
+          "height": 950
+        },
+        "obstacles": 2,
+        "reference": {
+          "medianMs": 20.579755999999975,
+          "samplesMs": [
+            20.971214999999972,
+            40.41807299999999,
+            15.258182000000033,
+            16.696421000000043,
+            55.112976,
+            20.188296999999977
+          ],
+          "layoutJsonBytes": 1397176
+        },
+        "bounded": {
+          "medianMs": 5.080774000000019,
+          "samplesMs": [
+            8.008871,
+            4.92891400000002,
+            6.1413930000000505,
+            3.9900350000000344,
+            3.817555000000027,
+            5.232634000000019
+          ],
+          "layoutJsonBytes": 51844
+        },
+        "quality": {
+          "annotationCount": 12,
+          "issueCount": 0,
+          "invalidBoxCount": 0,
+          "boundsOverflowArea": 0,
+          "noteOverlapArea": 0,
+          "obstacleOverlapArea": 0,
+          "connectorObstacleHits": 0,
+          "connectorNoteHits": 0
+        },
+        "exactParity": true
+      },
+      {
+        "annotations": 20,
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 1400,
+          "height": 950
+        },
+        "obstacles": 2,
+        "reference": {
+          "medianMs": 28.364486999999997,
+          "samplesMs": [
+            37.44887600000004,
+            21.177054999999996,
+            21.947573999999918,
+            22.80685399999993,
+            33.922120000000064,
+            34.73263900000006
+          ],
+          "layoutJsonBytes": 2331763
+        },
+        "bounded": {
+          "medianMs": 7.132671499999958,
+          "samplesMs": [
+            9.695988000000057,
+            6.104233000000022,
+            6.466351999999915,
+            13.909983000000011,
+            6.0712330000000065,
+            7.798991000000001
+          ],
+          "layoutJsonBytes": 86512
+        },
+        "quality": {
+          "annotationCount": 20,
+          "issueCount": 0,
+          "invalidBoxCount": 0,
+          "boundsOverflowArea": 0,
+          "noteOverlapArea": 0,
+          "obstacleOverlapArea": 0,
+          "connectorObstacleHits": 0,
+          "connectorNoteHits": 0
+        },
+        "exactParity": true
+      }
+    ]
+  }
+}

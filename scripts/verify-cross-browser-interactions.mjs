@@ -735,12 +735,35 @@ async function verifyReactFlow(browser, origin, viewport, label) {
     await page.mouse.move(start.x, start.y);
     await page.mouse.down();
     try {
-      await page.mouse.move(start.x + 14, start.y + 10, { steps: 5 });
-      await page.waitForFunction((before) => {
-        const rect = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box')
-          ?.getBoundingClientRect();
-        return Boolean(rect && (Math.abs(rect.x - before.x) > 2 || Math.abs(rect.y - before.y) > 2));
-      }, original.box, { timeout: 15000 });
+      // The note starts just above a padded review-node obstacle. Move
+      // outward, not downward into protected content: this test validates
+      // the edit gesture rather than deliberately forcing an invalid note.
+      await page.mouse.move(start.x - 14, start.y - 10, { steps: 5 });
+      try {
+        await page.waitForFunction((before) => {
+          const rect = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box')
+            ?.getBoundingClientRect();
+          return Boolean(rect && (Math.abs(rect.x - before.x) > 2 || Math.abs(rect.y - before.y) > 2));
+        }, original.box, { timeout: 15000 });
+      } catch (error) {
+        // If Firefox/WebKit never paint the preview, retain actionable input
+        // and geometry evidence rather than reporting only a generic timeout.
+        const diagnostic = await page.evaluate(({ x, y }) => {
+          const rect = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box')
+            ?.getBoundingClientRect();
+          return {
+            rect: rect ? { x: rect.x, y: rect.y } : null,
+            topElement: document.elementFromPoint(x, y)?.outerHTML.slice(0, 600),
+            activeElement: document.activeElement?.outerHTML.slice(0, 600),
+            lastEdit: window.__annotationsLastEdit,
+            quality: window.__annotationsExample?.quality,
+            editPatchIds: window.__annotationsExample?.editPatchIds
+          };
+        }, start);
+        throw new Error(label + ': preview did not move: ' + JSON.stringify({
+          before: original.box, diagnostic, browserErrors: errors
+        }) + ': ' + String(error));
+      }
       assert.equal(await page.evaluate(() =>
         window.__annotationsExample?.editPatchIds?.includes('flow-review') ?? false),
       false, label + ': preview must not persist before pointer release');
@@ -748,14 +771,32 @@ async function verifyReactFlow(browser, origin, viewport, label) {
       await page.mouse.up();
     }
 
-    await page.waitForFunction(() => {
-      const sample = window.__annotationsExample;
-      const edit = window.__annotationsLastEdit;
-      return edit?.annotationId === 'flow-review'
-        && edit.phase === 'end'
-        && sample?.editPatchIds?.includes('flow-review')
-        && sample.annotations?.find((note) => note.id === 'flow-review')?.manual;
-    }, null, { timeout: 15000 });
+    try {
+      await page.waitForFunction(() => {
+        const sample = window.__annotationsExample;
+        const edit = window.__annotationsLastEdit;
+        return edit?.annotationId === 'flow-review'
+          && edit.phase === 'end'
+          && sample?.editPatchIds?.includes('flow-review')
+          && sample.annotations?.find((note) => note.id === 'flow-review')?.manual;
+      }, null, { timeout: 15000 });
+    } catch (error) {
+      const diagnostic = await page.evaluate(() => {
+        const sample = window.__annotationsExample;
+        const rect = document.querySelector('g[data-annotation-id="flow-review"] .pa-annotation__note-box')
+          ?.getBoundingClientRect();
+        return {
+          lastEdit: window.__annotationsLastEdit,
+          patchIds: sample?.editPatchIds,
+          annotations: sample?.annotations,
+          quality: sample?.quality,
+          noteRect: rect ? { x: rect.x, y: rect.y } : null
+        };
+      });
+      throw new Error(label + ': transformed edit did not commit: ' + JSON.stringify({
+        diagnostic, browserErrors: errors
+      }) + ': ' + String(error));
+    }
     const committed = await page.evaluate(() => {
       const sample = window.__annotationsExample;
       const manual = sample.annotations.find((note) => note.id === 'flow-review')?.manual;
@@ -768,7 +809,7 @@ async function verifyReactFlow(browser, origin, viewport, label) {
     // on pointer capture or the transient pointer preview.
     const updatedHandle = page.locator('.pa-annotation__edit-handle--note[data-annotation-id="flow-review"]').first();
     await updatedHandle.focus();
-    await updatedHandle.press('ArrowRight');
+    await updatedHandle.press('ArrowLeft');
     await page.waitForFunction((previousX) => {
       const sample = window.__annotationsExample;
       const manual = sample?.annotations?.find((note) => note.id === 'flow-review')?.manual;
@@ -819,10 +860,14 @@ async function verifyWorker(browser, origin, viewport, label) {
     const state = await page.evaluate(() => ({
       commits: window.__annotationsWorkerDemo.commits,
       parity: window.__annotationsWorkerDemo.freshParity(),
+      leanLayout: window.__annotationsWorkerDemo.leanLayout,
+      measuring: Boolean(document.querySelector('.pa-annotation-layer__measurer')),
       workerErrors: window.__annotationsWorkerDemo.errors
     }));
     assert.equal(state.commits, 2, label + ': cancelled result must not commit');
     assert.equal(state.parity, true, label + ': committed state must remain authoritative');
+    assert.equal(state.leanLayout, true, label + ': default Worker payload must omit candidate diagnostics');
+    assert.equal(state.measuring, false, label + ': Worker layout rendering must never self-measure');
     assert.deepEqual(state.workerErrors, [], label + ': Worker runtime errors');
     await verifyAccessibility(page, label);
     assert.deepEqual(errors, [], label + ': browser console or runtime errors');

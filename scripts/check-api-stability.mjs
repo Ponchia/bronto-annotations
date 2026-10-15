@@ -9,6 +9,7 @@ const manifestUrl = new URL('../docs/api-stability.manifest.json', import.meta.u
 const writeManifest = process.argv.includes('--write-manifest');
 const publicSubpaths = {
   '.': { source: 'src/index.ts', requiresExperimental: true },
+  './d3': { source: 'src/d3/index.ts', requiresExperimental: true },
   './react': { source: 'src/react/index.ts', requiresExperimental: true },
   './dom': { source: 'src/dom/index.ts', requiresExperimental: true },
   './vega': { source: 'src/adapters/vega.ts', requiresExperimental: true },
@@ -48,7 +49,7 @@ async function assertApiStabilityManifest(actualSubpaths) {
 
   assert.equal(manifest.schemaVersion, 1, 'API stability manifest schemaVersion must be 1');
   assert.equal(manifest.package, '@ponchia/annotations', 'API stability manifest package must match package name');
-  assert.equal(manifest.policy, '0.1.x', 'API stability policy must be 0.1.x');
+  assert.equal(manifest.policy, '0.7.x', 'API stability policy must be 0.7.x');
   assert.deepEqual(
     Object.keys(manifest.subpaths).sort(),
     Object.keys(actualSubpaths).sort(),
@@ -99,8 +100,8 @@ async function writeApiStabilityManifest(actualSubpaths) {
   const manifest = {
     schemaVersion: 1,
     package: '@ponchia/annotations',
-    policy: '0.1.x',
-    description: 'Stable and experimental public export labels for the 0.1.x API contract.',
+    policy: '0.7.x',
+    description: 'Stable and experimental public export labels for the 0.7.x API contract.',
     updateCommand: 'node scripts/check-api-stability.mjs --write-manifest',
     subpaths: Object.fromEntries(Object.entries(actualSubpaths).map(([subpath, actual]) => {
       const stable = [];
@@ -173,6 +174,8 @@ function isExperimentalExport(subpath, name) {
   if (subpath === '.') {
     return rootExperimental(name);
   }
+
+  if (subpath === './d3') return true;
 
   if (subpath === './react') {
     return name === 'AnnotationLayerEditEvent' || name === 'AnnotationLayerEditOptions';

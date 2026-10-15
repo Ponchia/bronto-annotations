@@ -71,7 +71,7 @@ for (const [content, term, label] of [
   [compatibility, 'TypeScript 7.0.2', 'docs/compatibility.md'],
   [typescript7Lane, 'typescript@7.0.2', 'scripts/smoke-typescript7.mjs'],
   [typescript7Lane, 'skipLibCheck: false', 'scripts/smoke-typescript7.mjs'],
-  [typescript7Lane, 'resolvedLayout: resolved', 'scripts/smoke-typescript7.mjs'],
+  [typescript7Lane, 'layout: resolved', 'scripts/smoke-typescript7.mjs'],
   [compatibility, 'Mermaid 12.1', 'docs/compatibility.md'],
   [compatibility, 'Node >=22.12.0', 'docs/compatibility.md'],
   [mermaid12Lane, 'mermaid@12.1.0', 'scripts/smoke-mermaid12-browser.mjs'],

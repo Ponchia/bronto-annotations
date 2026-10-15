@@ -37,8 +37,7 @@ describe('controlled React annotation layouts', () => {
     const onQuality = vi.fn();
     const { container, rerender } = render(
       <AnnotationLayer
-        {...options}
-        resolvedLayout={session.layout}
+        layout={session.layout}
         renderNote={renderNote}
         onLayout={onLayout}
         onQuality={onQuality}
@@ -64,9 +63,7 @@ describe('controlled React annotation layouts', () => {
     expect(identical).toBe(firstLayout);
     rerender(
       <AnnotationLayer
-        {...options}
-        annotations={noOp}
-        resolvedLayout={identical}
+        layout={identical}
         renderNote={renderNote}
         onLayout={onLayout}
         onQuality={onQuality}
@@ -85,9 +82,7 @@ describe('controlled React annotation layouts', () => {
     expect(updated.annotations[7]).not.toBe(firstLayout.annotations[7]);
     rerender(
       <AnnotationLayer
-        {...options}
-        annotations={edited}
-        resolvedLayout={updated}
+        layout={updated}
         renderNote={renderNote}
         onLayout={onLayout}
         onQuality={onQuality}
@@ -117,26 +112,36 @@ describe('controlled React annotation layouts', () => {
       }, ...layout.annotations.slice(1)]
     };
     const markup = renderToStaticMarkup(
-      <AnnotationLayer {...options} resolvedLayout={controlled} />
+      <AnnotationLayer layout={controlled} />
     );
     expect(markup).toContain('x="11"');
     expect(markup).toContain('y="14"');
     expect(markup).toContain('Controlled 0');
   });
 
-  it('rejects mismatched host bounds, annotation IDs and incompatible DOM measurement', () => {
+  it.each([
+    ['annotations', []], ['bounds', bounds], ['padding', 0], ['obstacles', []],
+    ['placement', {}], ['noteSizes', {}], ['defaultNoteSize', { width: 80, height: 40 }],
+    ['refinement', false], ['diagnostics', { candidates: 1 }],
+    ['measure', 'dom'], ['measure', 'estimate'], ['annotations', undefined]
+  ])('rejects mixed JavaScript inputs: %s=%s', (key, value) => {
+    const layout = createIncrementalAnnotationLayoutSession(fixture()).layout;
+    // Deliberately bypass TypeScript as a JavaScript consumer would.
+    const invalid = { layout, [key]: value } as unknown as Parameters<typeof AnnotationLayer>[0];
+    expect(() => renderToStaticMarkup(<AnnotationLayer {...invalid} />))
+      .toThrow(`layout cannot be combined with ${key}`);
+  });
+
+  it('rejects the removed resolvedLayout prop and missing modes for JavaScript consumers', () => {
     const options = fixture();
     const layout = createIncrementalAnnotationLayoutSession(options).layout;
+    for (const props of [{ ...options, resolvedLayout: layout }, { layout, resolvedLayout: undefined }]) {
+      expect(() => renderToStaticMarkup(
+        <AnnotationLayer {...props as unknown as Parameters<typeof AnnotationLayer>[0]} />
+      )).toThrow('resolvedLayout was removed');
+    }
     expect(() => renderToStaticMarkup(
-      <AnnotationLayer {...options} bounds={{ ...bounds, width: 500 }} resolvedLayout={layout} />
-    )).toThrow('bounds do not match');
-    expect(() => renderToStaticMarkup(
-      <AnnotationLayer {...options} annotations={[...options.annotations.slice(0, 7), {
-        ...options.annotations[7]!, id: 'wrong-id'
-      }]} resolvedLayout={layout} />
-    )).toThrow('exactly the current host annotation IDs');
-    expect(() => renderToStaticMarkup(
-      <AnnotationLayer {...options} resolvedLayout={layout} measure="dom" />
-    )).toThrow('requires measure="estimate"');
+      <AnnotationLayer {...{} as Parameters<typeof AnnotationLayer>[0]} />
+    )).toThrow('requires either layout, or annotations and bounds');
   });
 });

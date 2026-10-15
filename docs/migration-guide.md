@@ -24,10 +24,12 @@ DOM-free layout model and renderer contract.
 
 ```ts
 import {
-  annotationsFromD3Style,
   renderAnnotationsSvg,
   resolveAnnotationLayout
 } from '@ponchia/annotations';
+import {
+  annotationsFromD3Style
+} from '@ponchia/annotations/d3';
 import '@ponchia/annotations/bronto.css';
 
 const annotations = annotationsFromD3Style([
@@ -69,7 +71,9 @@ For existing code organized around the d3-annotation generator, keep the same
 collection-level generator-style configs and convert them without D3:
 
 ```ts
-import { prepareD3StyleAnnotationCollection } from '@ponchia/annotations';
+import {
+  prepareD3StyleAnnotationCollection
+} from '@ponchia/annotations/d3';
 
 const prepared = prepareD3StyleAnnotationCollection({
   type: 'annotationCalloutCircle',
@@ -98,7 +102,9 @@ Use `createD3StyleAnnotationBuilder` when the old code was organized around
 chainable generator calls:
 
 ```ts
-import { createD3StyleAnnotationBuilder } from '@ponchia/annotations';
+import {
+  createD3StyleAnnotationBuilder
+} from '@ponchia/annotations/d3';
 
 const builder = createD3StyleAnnotationBuilder()
   .type('annotationCalloutCircle')
@@ -140,7 +146,9 @@ const annotations = builder.toAnnotations();
 Editable React layers can round-trip back to d3-style data:
 
 ```ts
-import { applyD3StyleAnnotationEdit } from '@ponchia/annotations';
+import {
+  applyD3StyleAnnotationEdit
+} from '@ponchia/annotations/d3';
 
 const updated = applyD3StyleAnnotationEdit(annotation, editEvent, {
   x: 'period',
@@ -155,7 +163,9 @@ const updated = applyD3StyleAnnotationEdit(annotation, editEvent, {
 Reusable d3-style custom types can migrate to a pure data converter:
 
 ```ts
-import { defineD3StyleAnnotationType } from '@ponchia/annotations';
+import {
+  defineD3StyleAnnotationType
+} from '@ponchia/annotations/d3';
 
 const statusBand = defineD3StyleAnnotationType({
   baseType: 'annotationCalloutRect',
