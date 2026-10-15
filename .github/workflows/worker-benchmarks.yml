@@ -9,6 +9,12 @@ on:
       - 'scripts/worker-benchmark-summary.*'
       - 'test/fixtures/worker-browser/**'
       - 'test/scripts/worker-benchmark-summary.test.ts'
+      - 'src/core/layout-resolver.ts'
+      - 'src/core/refinement-score.ts'
+      - 'src/core/quality*.ts'
+      - 'scripts/benchmark-refinement.mjs'
+      - 'test/core/refinement-scoring.test.ts'
+      - 'test/fixtures/refinement-reference.ts'
   workflow_dispatch:
 
 permissions:
@@ -38,6 +44,8 @@ jobs:
         run: |
           mkdir -p browser-evidence
           node scripts/benchmark-worker-transport.mjs --counts=40,200 --rounds=5 > browser-evidence/worker-node.json
+      - name: Paired exact refinement comparison
+        run: node scripts/benchmark-refinement.mjs > browser-evidence/refinement-paired.json
       - name: Retain measured samples and source identity
         if: always()
         uses: actions/upload-artifact@v7

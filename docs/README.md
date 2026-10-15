@@ -5,7 +5,7 @@
 
 ## Start here
 
-This branch targets the 0.7 release candidate API. Existing users should read the
+This branch targets development after the first 0.7 release candidate. Existing users should read the
 [0.7 migration guide](migration-0.7.md) and [release readiness](release-readiness.md).
 The [0.6.10 guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/README.md)
 remains the version-matched entry for the confirmed stable npm release.
