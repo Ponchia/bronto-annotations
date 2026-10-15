@@ -35,16 +35,16 @@ reasonable.
 
 ### Performance and internal boundaries
 
-- Preserve the exact retained placement ranking while avoiding connector routing
-  for candidates whose geometric lower bound cannot enter a positive integer
-  `maxCandidates` frontier. Exhaustive/default, manual and unusual limit behavior
-  remains unchanged; regression tests compare geometry, scores and reference
-  topology against an independent eager oracle.
+- Preserve exact placement ranking while avoiding connector routing for candidates
+  whose geometric lower bound cannot enter the solver frontier. The default is
+  lean; exhaustive diagnostics are opt-in. Regression tests compare geometry,
+  scores and reference topology against an independent eager oracle.
 - Separate basic presets from D3-style migration, ordinary resolution from
   incremental-session bookkeeping, and React presentation from interaction
-  orchestration. No public exports, runtime dependencies, or version change.
-- Bound diagnostic retention in the Worker examples instead of transporting the
-  full search graph for each note; keep authoritative revision checks intact.
+  orchestration. The breaking export changes are listed above; no runtime
+  dependencies are added.
+- Use lean Worker responses without routine candidate diagnostics; keep
+  authoritative revision checks intact.
 
 ### Verification and guidance
 
@@ -57,6 +57,27 @@ reasonable.
 - Route quality and upstream proof guides, add a fast contributor check, and
   distinguish current guidance from historical release/readiness records.
 
+
+## 0.7.0-rc.1 - 2026-10-15
+
+First candidate of the breaking 0.7 API: lean default layouts, diagnostics
+independent of refinement, one React geometry owner, scoped D3 helpers, and
+stricter identity/host-content quality checks. See `docs/migration-0.7.md`.
+
+- Make the source/published version distinction visible on every generated
+  page, including direct example links; point stable installs to matching docs.
+- Add repeated production-browser Worker evidence for desktop/mobile, early
+  and late edits, bounds, refinement and routed obstacles. Preserve raw samples
+  and integrate repeated encoder measurements into the current transport tool.
+- Remove an implicit solver-speed race from the main-thread ping test.
+- Select release notes by exact version, reject ambiguous/missing notes, and
+  validate notes before entering the protected npm publication stage.
+- Record the remaining human touch/pen/screen-reader and real-consumer acceptance
+  work without equating automated checks with production usability.
+
+This candidate does not automatically upgrade or deploy downstream applications.
+Publication uses the protected tag-driven workflow and the `next` npm tag;
+`latest` stays on 0.6.10 until a separately validated stable release.
 
 ## 0.6.10 - 2026-10-13
 

@@ -19,10 +19,14 @@ import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
 import { JSDOM } from 'jsdom';
 import createDOMPurify from 'dompurify';
+import { injectReleaseNotice, siteReleaseStatus } from './site-release.mjs';
 
 const exec = promisify(execFile);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const out = join(root, '_site');
+const pkg = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'));
+const publication = JSON.parse(await readFile(join(root, 'site/release-status.json'), 'utf8'));
+const releaseStatus = siteReleaseStatus(pkg.version, publication);
 const exampleCatalog = JSON.parse(await readFile(join(root, 'examples/catalog.json'), 'utf8'));
 const exampleNames = Object.keys(exampleCatalog);
 const titles = {
@@ -47,6 +51,7 @@ const titles = {
   'upstream-consumers': 'Upstream consumer validation',
   'security-automation': 'Security and development',
   release: 'Releases and publishing',
+  'release-readiness': '0.7 release readiness',
 };
 const maintainerDocs = new Set(['security-automation', 'release']);
 const primaryDocs = Object.keys(titles).filter((name) => !maintainerDocs.has(name));
@@ -72,6 +77,7 @@ const guideSummaries = {
   'upstream-consumers': 'Render pinned upstream inputs and verify real browser geometry and interactions.',
   'security-automation': 'Maintainer reference for security checks and public runner safeguards.',
   release: 'Maintainer reference for tags, verification, publication, and recovery.',
+  'release-readiness': 'Match source and npm versions, review automated gates, and record human usability checks.',
 };
 const baseUrl = 'https://ponchia.github.io/bronto-annotations/';
 // Host-and-path-limited analytics for public GitHub Pages only. The npm
@@ -559,6 +565,24 @@ await writeFile(
       .join('') +
     '</urlset>\n',
 );
+// Version notices cover editorial pages AND independently linked compiled demos.
+// Keep this after compilation: example source/runtime packages stay untouched.
+async function stampVersions(directory) {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const file = join(directory, entry.name);
+    if (entry.isDirectory()) await stampVersions(file);
+    else if (entry.isFile() && entry.name.endsWith('.html')) {
+      const depth = relative(out, file).split(sep).length - 1;
+      let html = await readFile(file, 'utf8');
+      if (file === landingPath) {
+        html = html.replaceAll('npm install @ponchia/annotations', releaseStatus.stableInstall);
+      }
+      await writeFile(file, injectReleaseNotice(html, releaseStatus, depth ? '../'.repeat(depth) : './'));
+    }
+  }
+}
+await stampVersions(out);
+await writeFile(join(out, 'release-status.json'), JSON.stringify(releaseStatus, null, 2) + '\n');
 console.log(
   'Public site built: ' +
     docsFiles.length +

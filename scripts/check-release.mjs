@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { writeLine } from './log.mjs';
 import { verifyPublishedRegistry } from './verify-published-registry.mjs';
+import { extractChangelogSection } from './changelog-section.mjs';
 
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const changelog = await read('CHANGELOG.md');
@@ -16,6 +17,7 @@ assert.equal(pkg.scripts?.['test:release'], 'node scripts/check-release.mjs');
 assert.ok(pkg.scripts?.check?.includes('npm run test:release'), 'npm run check must include test:release');
 
 const version = pkg.version;
+assert(extractChangelogSection(changelog, version).trim(), 'Version must have unambiguous release notes');
 const baseVersion = version.split('-')[0];
 const headings = [...changelog.matchAll(/^##\s+(.+)$/gm)].map((match) => match[1].trim());
 const heading = headings.find((candidate) => candidate.includes(baseVersion));

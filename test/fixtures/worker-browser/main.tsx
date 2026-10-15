@@ -272,6 +272,34 @@ function App() {
     next.obstacles = [{ ...old, x: old.x - 25 }];
     send('obstacle', next);
   }
+  function earlyNote() {
+    const next = structuredClone(committed.current);
+    const first = next.annotations[0]!;
+    first.note.title = `Early edit ${latestId.current + 1}`;
+    if (first.anchor.type === 'point') first.anchor.point.x += 8;
+    send('early-note', next);
+  }
+  function changeBounds() {
+    const next = structuredClone(committed.current);
+    next.bounds = { ...next.bounds, width: next.bounds.width + 80 };
+    send('bounds-change', next);
+  }
+  function enableRefinement() {
+    const next = structuredClone(committed.current);
+    next.refinement = { passes: 2, maxCandidatesPerAnnotation: 8 };
+    send('refinement', next);
+  }
+  function changeRoutes() {
+    const next = structuredClone(committed.current);
+    next.refinement = false;
+    // A limited set keeps this a representative route invalidation scenario,
+    // rather than an unbounded all-note visibility-graph stress test.
+    next.annotations = next.annotations.map((annotation, index) => index < 3
+      ? { ...annotation, connector: { type: 'elbow', routing: 'orthogonal' } }
+      : annotation);
+    next.obstacles = [...(next.obstacles ?? []), { x: 115, y: 45, width: 18, height: 55 }];
+    send('routed-obstacles', next);
+  }
   function burst() {
     const old = structuredClone(committed.current);
     const fresh = structuredClone(committed.current);
@@ -317,6 +345,10 @@ function App() {
       <nav aria-label="Worker test controls" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
         <button id="worker-anchor" onClick={moveAnchor}>Move latest anchor in Worker</button>
         <button id="worker-obstacle" onClick={moveGlobalObstacle}>Move host obstacle in Worker</button>
+        <button id="worker-early" onClick={earlyNote}>Edit first priority note</button>
+        <button id="worker-bounds" onClick={changeBounds}>Change layout bounds</button>
+        <button id="worker-refinement" onClick={enableRefinement}>Enable bounded refinement</button>
+        <button id="worker-routes" onClick={changeRoutes}>Change routed host geometry</button>
         <button id="worker-burst" onClick={burst}>Issue superseded requests</button>
         <button id="worker-delay" onClick={delayed}>Start cancellable request</button>
         <button id="worker-cancel" onClick={cancel}>Ignore pending response</button>

@@ -19,6 +19,7 @@ import {
   resolveAnnotationLayout
 } from '../dist/index.js';
 import { writeLine } from './log.mjs';
+import { distribution } from './worker-benchmark-summary.mjs';
 
 const args = process.argv.slice(2);
 function positiveIntegerArg(prefix, fallback, maximum) {
@@ -170,9 +171,17 @@ for (const count of counts) {
     assert.deepStrictEqual(updated, fresh, 'Incremental layout differs from full resolution');
     assert.deepStrictEqual(evaluateAnnotationLayout(updated), evaluateAnnotationLayout(fresh));
 
-    const encodeStart = performance.now();
-    const response = encodeWorkerLayout(2, 1, updated, { revision: 1, layout: before });
-    const encodeMs = ms(performance.now() - encodeStart);
+    const encodeSamples = [];
+    let response;
+    for (let round = 0; round < repeat; round++) {
+      const encodeStart = performance.now();
+      response = encodeWorkerLayout(2, 1, updated, { revision: 1, layout: before });
+      encodeSamples.push(performance.now() - encodeStart);
+      assert.deepStrictEqual(applyWorkerLayout(
+        { revision: 1, layout: before }, structuredClone(response)).state.layout, fresh,
+      'Repeated encoding must preserve exact layout values');
+    }
+    const encodeMs = ms(median(encodeSamples));
     const decoded = applyWorkerLayout(
       { revision: 1, layout: before }, structuredClone(response)).state.layout;
     assert.deepStrictEqual(decoded, fresh, 'Transport reconstruction differs from full layout');
@@ -201,6 +210,8 @@ for (const count of counts) {
       incrementalMs,
       independentFullSolveMs: fullSolveMs,
       encodeMs,
+      encodeSamplesMs: encodeSamples,
+      encodeDistributionMs: distribution(encodeSamples, 'patch-encoding'),
       jsonBytes: { completeLayout: fullJsonBytes, encodedReply: replyJsonBytes },
       nodeStructuredCloneMs: {
         fullLayout: fullCloneMs,
