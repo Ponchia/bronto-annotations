@@ -222,4 +222,3 @@ export type D3StyleAnnotationBuilder<TDatum = unknown> = {
   editPatch(edit: AnnotationEditSuggestion | AnnotationEditPatch): D3StyleAnnotationCollectionEditPatch<TDatum>;
   applyEdit(edit: AnnotationEditSuggestion | AnnotationEditPatch): D3StyleAnnotationBuilder<TDatum>;
 };
-

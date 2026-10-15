@@ -174,4 +174,3 @@ export function badgeAnnotation(options: BadgeAnnotationOptions): Annotation {
     }
   });
 }
-

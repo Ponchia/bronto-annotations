@@ -36,4 +36,3 @@ export function annotation(input: AnnotationPresetBase & {
     ...(input.metadata ? { metadata: input.metadata } : {})
   };
 }
-

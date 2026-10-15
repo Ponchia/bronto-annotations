@@ -446,4 +446,3 @@ function incrementalFingerprint(input: unknown): string | undefined {
     return undefined;
   }
 }
-

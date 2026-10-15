@@ -224,4 +224,3 @@ function noteBoxClass(prefix: string, annotation: Annotation): string {
     annotation.note.className
   ].filter(Boolean).join(' ');
 }
-
