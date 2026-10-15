@@ -359,13 +359,7 @@ function App() {
               ))}
             </svg>
             <AnnotationLayer
-              annotations={view.annotations}
-              bounds={bounds}
-              obstacles={obstacles}
-              noteSizes={noteSizes}
-              padding={16}
-              refinement={false}
-              resolvedLayout={view.layout}
+              layout={view.layout}
               // The transparent hit circle is larger than the visible knob.
               // Under this demo's scaled mobile viewBox it still provides an
               // easily targetable touch area without covering the full stage.

@@ -37,12 +37,14 @@ See [adapter examples](adapter-guide.md) and the
 ## Text is clipped or wrapping is unexpected
 
 The DOM-free core estimates text size; it cannot measure a loaded browser font.
-Provide accurate `noteSizes` or use the React layer's documented DOM measurement
+Wrapping preserves whole grapheme clusters, including accented text and emoji,
+but the pixel-width estimate remains approximate for proportional/custom
+fonts and scripts with wide glyphs. Provide accurate `noteSizes` or use the React layer's documented DOM measurement
 mode after fonts and styles are ready. Keep note size units in the layout's
 coordinate space. Use the note wrapping and padding options in the
 [styling guide](styling-guide.md).
 
-The controlled `resolvedLayout` React path requires host-owned note sizes and
+The render-only `layout` React path derives note sizes from its result and
 cannot be combined with component-owned `measure="dom"` resolution. Follow
 [the React guide](react-guide.md) rather than computing two competing layouts.
 
@@ -63,6 +65,13 @@ Avoid a full layout solve on every pointer movement. Use `previewEdits` for
 provisional feedback and commit through `onEditEnd`. A cancelled gesture does
 not produce a completed edit. Keep IDs stable and ensure the host applies the
 patch to its own annotation inputs.
+
+When using strict `assertQuality` in an interactive editor, validate each
+proposed committed edit before updating authored state. A suggested drag is
+not guaranteed to be acceptable: it can cover a protected diagram node even
+when the prior layout was clear. Keep the original annotation and announce a
+rejected drop rather than allowing an assertion to throw during the next
+render. See the [React guide](react-guide.md#validate-edits-before-committing).
 
 Incremental sessions can reuse an unchanged priority prefix; edits earlier in
 the order and global geometry changes may need a full solve. A Worker moves

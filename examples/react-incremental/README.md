@@ -21,6 +21,8 @@ Click or Tab to a note in the diagram to select it for text editing. Drag a note
 
 ## Host and package boundary
 
+The layer receives only `layout={view.layout}` plus presentation and edit callbacks. Source annotations, bounds and final note geometry come from that layout; the layer does not solve or measure it again. Request `diagnostics: { candidates: 8 }` from the host solver when inspecting alternatives with `debug`. Normal Worker and incremental results omit diagnostics.
+
 History, selection, forms, JSON validation, and persistence decisions are application code. The small importer accepts point/box annotations and at most ten notes; it is not a general package serializer.
 
 The source lives in [main.tsx](main.tsx), with its host styles in

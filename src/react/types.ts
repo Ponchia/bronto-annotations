@@ -43,23 +43,18 @@ export type AnnotationLayerTargetAlignmentEvent = {
   summary: string;
 };
 
-export type AnnotationLayerProps = LayoutOptions & {
+type AnnotationLayerPresentationProps = {
   assertQuality?: boolean | LayoutQualityAssertOptions;
   assertTargetAlignment?: AnchorAlignmentAssertInput;
   className?: string;
   classPrefix?: string;
+  /** Draw supplied diagnostics. Input mode requests 8 candidates by default when debug is enabled. */
   debug?: boolean;
   editable?: boolean | AnnotationLayerEditOptions;
   previewEdits?: boolean;
-  /**
-   * @experimental Host-owned, authoritative layout supplied by
-   * createIncrementalAnnotationLayoutSession or resolveAnnotationLayout.
-   * Must correspond to the current annotations/bounds. DOM self-measurement
-   * is unsupported because it cannot update a host-owned layout session.
-   */
-  resolvedLayout?: ResolvedLayout;
+  /** Removed: pass the authoritative layout as `layout`, without solver inputs. */
+  resolvedLayout?: never;
   label?: string;
-  measure?: 'estimate' | 'dom';
   markerIdPrefix?: string;
   editHandleTabIndex?: number;
   noteTabIndex?: number;
@@ -78,3 +73,13 @@ export type AnnotationLayerProps = LayoutOptions & {
   onTargetAlignment?: (event: AnnotationLayerTargetAlignmentEvent) => void;
   style?: React.CSSProperties;
 };
+
+/** Resolve from inputs, or render a host-owned layout as the sole source of geometry. */
+export type AnnotationLayerProps = AnnotationLayerPresentationProps & (
+  | (LayoutOptions & { layout?: never; measure?: 'estimate' | 'dom' })
+  | ({
+    /** Render only: no solver or DOM measurement runs in this mode. */
+    layout: ResolvedLayout;
+    measure?: never;
+  } & { [Key in keyof LayoutOptions]?: never })
+);

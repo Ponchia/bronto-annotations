@@ -30,7 +30,7 @@ describe('incremental React edit-handle generation', () => {
     const session = createIncrementalAnnotationLayoutSession(options);
     const onEditStart = vi.fn();
     const { container, rerender } = render(
-      <AnnotationLayer {...options} resolvedLayout={session.layout}
+      <AnnotationLayer layout={session.layout}
         editable={{ includeAnchor: true }} onEditStart={onEditStart} />
     );
     expect(vi.mocked(annotationEditHandles)).toHaveBeenCalledTimes(1);
@@ -44,7 +44,7 @@ describe('incremental React edit-handle generation', () => {
     edited[31]!.note.title = 'Latest changed note';
     const updated = session.update({ ...options, annotations: edited });
     rerender(
-      <AnnotationLayer {...options} annotations={edited} resolvedLayout={updated}
+      <AnnotationLayer layout={updated}
         editable={{ includeAnchor: true }} onEditStart={onEditStart} />
     );
     expect(vi.mocked(annotationEditHandles)).toHaveBeenCalledTimes(2);
@@ -63,14 +63,14 @@ describe('incremental React edit-handle generation', () => {
     const stable = session.update({ ...options, annotations: noOp });
     expect(stable).toBe(updated);
     rerender(
-      <AnnotationLayer {...options} annotations={noOp} resolvedLayout={stable}
+      <AnnotationLayer layout={stable}
         editable={{ includeAnchor: true }} onEditStart={onEditStart} />
     );
     expect(vi.mocked(annotationEditHandles)).toHaveBeenCalledTimes(2);
 
     // Option changes regenerate all handles so hit areas and labels remain correct.
     rerender(
-      <AnnotationLayer {...options} annotations={noOp} resolvedLayout={stable}
+      <AnnotationLayer layout={stable}
         editable={{ includeAnchor: true, noteHandlePosition: 'bottom-left', radius: 9 }} />
     );
     expect(vi.mocked(annotationEditHandles)).toHaveBeenCalledTimes(3);

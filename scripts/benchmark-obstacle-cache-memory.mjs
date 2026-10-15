@@ -42,8 +42,7 @@ const notes = Array.from({ length: count }, (_, index) => ({
     side: ['left', 'right', 'top', 'bottom'],
     allowedSides: ['left', 'right', 'top', 'bottom'],
     align: 'center', allowedAligns: ['center', 'start', 'end'],
-    offset: [6, 12, 18, 24, 32], crossOffset: [0, -12, 12],
-    maxCandidates: 2
+    offset: [6, 12, 18, 24, 32], crossOffset: [0, -12, 12]
   }
 }));
 const options = {

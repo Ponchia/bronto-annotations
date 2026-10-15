@@ -5,6 +5,14 @@
 Resolve note placement from host geometry, preserve editorial positions,
 and inspect collision and bounds diagnostics.
 
+## Lean results and optional diagnostics
+
+Normal layouts contain only chosen placements. Request alternatives with
+`diagnostics: { candidates: 8 }` or `{ candidates: 'all' }` in the layout options.
+They are returned separately in `layout.diagnostics.annotations`, not under each
+placement. Diagnostic retention never changes winners or refinement quality.
+See [0.7 migration](migration-0.7.md) for removed fields and complete examples.
+
 ## Core Usage
 
 ```ts
@@ -230,3 +238,32 @@ formatLayoutQualityReport(report, { includeInfo: true });
 The report covers invalid note boxes, bounds overflow, note overlap, obstacle
 overlap, connector-obstacle crossings, connector-note crossings, aggregate
 metrics, and a simple quality score.
+
+### Interpreting the quality result
+
+The report separates basic geometry from host-content protection:
+
+- `geometryValid`: finite note boxes within bounds, with no note-to-note overlap.
+- `hostContentClear`: note rectangles do not cover *declared* host obstacles.
+- `ok`: both checks pass. An obstacle-overlap warning now makes `ok` false
+  and causes the default `assertAnnotationLayoutQuality` call to fail.
+  Informational connector crossings may include a legitimate target contact.
+
+This is a limited geometric guarantee, not proof of readable typography,
+semantic anchor correctness or accessibility. If host obstacles are missing,
+a passing `hostContentClear` cannot establish that content was protected.
+The score remains advisory and should not replace these explicit checks.
+
+## Keep ordinary integrations small
+
+Start with a few explanatory notes and measured text sizes. The default solve
+returns only winners and uses exact bounded search for the result it needs.
+Optional `diagnostics: { candidates: 8 }` retains ranked alternatives separately;
+omit it for ordinary rendering and transport. The refinement frontier belongs
+to `refinement.maxCandidatesPerAnnotation` and never depends on diagnostic output.
+
+Measure note text and verify `evaluateAnnotationLayout` before introducing a
+Worker. When content cannot fit, let the host choose fewer simultaneously
+visible explanations, a separate note list, or a larger surface; do not mistake
+a completed solve for a readable layout. See the
+[quality corpus](placement-quality.md) and [migration guide](migration-0.7.md).

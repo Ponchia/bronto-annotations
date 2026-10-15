@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import * as placementSearch from '../../src/core/placement.js';
 import {
   annotationEditPatch,
   annotationEditHandles,
@@ -11,6 +12,8 @@ import {
   resolveAnnotationLayout,
   translateAnchor
 } from '../../src/index.js';
+
+afterEach(() => vi.restoreAllMocks());
 
 describe('annotation edit handles', () => {
   it('creates deterministic note handles for resolved annotations', () => {
@@ -426,6 +429,7 @@ describe('annotation edit handles', () => {
       noteSizes: { 'preview-note': { width: 100, height: 48 } }
     });
     const original = layout.annotations[0]!;
+    const search = vi.spyOn(placementSearch, 'allPlacementCandidates');
     const patch = { annotationId: 'preview-note', placement: {
       manual: { x: 145, y: 160, side: 'right' as const }
     } };
@@ -435,7 +439,8 @@ describe('annotation edit handles', () => {
     expect(preview.noteBox).toEqual({ x: 108, y: 100, width: 100, height: 48 });
     expect(preview.annotation.placement?.manual).toEqual(patch.placement.manual);
     expect(preview.placement.manual).toBe(true);
-    expect(preview.placement.candidates).toBe(original.placement.candidates);
+    expect(search).not.toHaveBeenCalled();
+    expect(preview.placement).not.toHaveProperty('candidates');
     expect(preview.connector.d).not.toBe(original.connector.d);
     expect(layout.annotations[0]).toBe(original);
     expect(previewAnnotationEdit(original, { annotationId: 'preview-note' })).toBe(original);

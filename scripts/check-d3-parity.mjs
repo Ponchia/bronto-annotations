@@ -8,20 +8,21 @@ const readme = await readFile(new URL('../README.md', import.meta.url), 'utf8');
 const presetsGuide = await readFile(new URL('../docs/presets-guide.md', import.meta.url), 'utf8');
 const plan = await readFile(new URL('../docs/e2e-plan.md', import.meta.url), 'utf8');
 const core = await import('@ponchia/annotations');
+const d3 = await import('@ponchia/annotations/d3');
 
 assert.equal(parity.schemaVersion, 1, 'd3 annotation parity schemaVersion must be 1');
 assert.equal(parity.sourcePackage, 'd3-svg-annotation@2.5.1');
 
 for (const helper of parity.supportedRuntimeHelpers) {
-  assert.equal(typeof core[helper], 'function', `root export ${helper} must be a function`);
+  assert.equal(typeof (/d3/i.test(helper) ? d3[helper] : core[helper]), 'function', `scoped export ${helper} must be a function`);
 }
 
 for (const type of parity.supportedTypeAliases) {
-  const annotation = core.annotationFromD3Style(inputForType(type));
+  const annotation = d3.annotationFromD3Style(inputForType(type));
   assert.equal(annotation.id, `d3-${type}`);
 }
 
-const [defaultTyped] = core.annotationsFromD3Style([{
+const [defaultTyped] = d3.annotationsFromD3Style([{
   id: 'default-type',
   x: 20,
   y: 30,
@@ -33,7 +34,7 @@ const [defaultTyped] = core.annotationsFromD3Style([{
 });
 assert.equal(defaultTyped.variant, 'circle', 'defaultType should apply d3-style type aliases');
 
-const [accessorMapped] = core.annotationsFromD3Style([{
+const [accessorMapped] = d3.annotationsFromD3Style([{
   id: 'accessor',
   data: { period: 12, value: 34 },
   dx: 16,
@@ -45,7 +46,7 @@ const [accessorMapped] = core.annotationsFromD3Style([{
 });
 assert.deepEqual(accessorMapped.anchor.point, { x: 12, y: 34 }, 'd3-style accessors should map datum coordinates');
 
-const preparedCollection = core.prepareD3StyleAnnotationCollection({
+const preparedCollection = d3.prepareD3StyleAnnotationCollection({
   annotations: [{
     data: { period: 3, value: 8 },
     dx: 20,
@@ -70,7 +71,7 @@ assert.equal(preparedCollection.annotations[0].variant, 'circle', 'd3-style coll
 assert.equal(preparedCollection.annotations[0].note.padding, 7, 'd3-style collection notePadding should map to note padding');
 assert.equal(preparedCollection.annotations[0].note.wrap, 16, 'd3-style collection textWrap should map to note wrapping');
 
-const editedCollection = core.applyD3StyleAnnotationCollectionEdit({
+const editedCollection = d3.applyD3StyleAnnotationCollectionEdit({
   idPrefix: 'collection',
   accessors: { x: 'period', y: 'value' },
   accessorsInverse: { x: 'period', y: 'value' },
@@ -93,7 +94,7 @@ assert.deepEqual(
 assert.equal(editedCollection.annotations[0].dx, 25);
 assert.equal(editedCollection.annotations[0].dy, 9);
 
-const builder = core.createD3StyleAnnotationBuilder()
+const builder = d3.createD3StyleAnnotationBuilder()
   .type('annotationCalloutCircle')
   .accessors({ x: 'period', y: 'value' })
   .accessorsInverse({ x: 'period', y: 'value' })
@@ -124,7 +125,7 @@ assert.deepEqual(
 );
 assert.equal(builder.toAnnotations()[0].placement.manual.x, 32);
 
-const rich = core.annotationFromD3Style({
+const rich = d3.annotationFromD3Style({
   id: 'rich',
   type: 'annotationCalloutCircle',
   x: 40,
@@ -170,7 +171,7 @@ assert.deepEqual(rich.data, { color: 'override', hook: 'd3-rich' });
 assert.equal(rich.metadata.datum.source, 'd3-style');
 assert.equal(rich.metadata.source, 'd3-style');
 
-const customType = core.defineD3StyleAnnotationType({
+const customType = d3.defineD3StyleAnnotationType({
   baseType: 'annotationCalloutRect',
   defaults: {
     dx: 48,
@@ -192,7 +193,7 @@ const customType = core.defineD3StyleAnnotationType({
     }
   })
 });
-const [custom] = core.annotationsFromD3StyleType(customType, [{
+const [custom] = d3.annotationsFromD3StyleType(customType, [{
   id: 'custom-band',
   x: 160,
   y: 90,
@@ -212,7 +213,7 @@ assert.equal(custom.metadata.customType, 'status-band');
 assert.equal(custom.metadata.customIndex, 0);
 assert.equal(custom.metadata.mergedTone, 'info');
 
-const disabled = core.annotationFromD3Style({
+const disabled = d3.annotationFromD3Style({
   id: 'disabled',
   x: 10,
   y: 20,
@@ -223,7 +224,7 @@ assert.equal(disabled.subject.shape, 'none');
 assert.equal(disabled.connector.type, 'none');
 assert.equal(disabled.note.visible, false);
 
-const styledBadge = core.annotationFromD3Style({
+const styledBadge = d3.annotationFromD3Style({
   id: 'styled-badge',
   type: 'annotationBadge',
   x: 24,
@@ -247,7 +248,7 @@ assert.ok(
   'd3-style badge class should render on the badge element'
 );
 
-const editPatch = core.d3StyleAnnotationEditPatch({
+const editPatch = d3.d3StyleAnnotationEditPatch({
   id: 'edit',
   x: 40,
   y: 50,
@@ -264,7 +265,7 @@ assert.deepEqual(editPatch, {
   placement: { manual: { x: 90, y: 35 } }
 });
 
-const edited = core.applyD3StyleAnnotationEdit({
+const edited = d3.applyD3StyleAnnotationEdit({
   id: 'edit-data',
   data: { period: 1, score: 2 },
   note: { label: 'Edit data' }

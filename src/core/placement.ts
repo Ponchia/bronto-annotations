@@ -13,6 +13,7 @@ import type {
   PlacementCandidate,
   PlacementPreference,
   PlacementSide,
+  Point,
   Size
 } from './model.js';
 
@@ -90,10 +91,22 @@ export function candidateNoteBox(
 }
 
 export function scorePlacementCandidate(input: CandidateInput): PlacementCandidate {
+  assertPlacementPreference(input.placement);
+  assertPlacementPreference(input.annotation.placement);
+  const subject = anchorSubject(input.annotation.anchor, input.side);
+  return routePlacementCandidate(input, candidateGeometry(input, subject), subject.point,
+    [...input.obstacles, ...input.placedNotes]);
+}
+
+type CandidateGeometry = Omit<PlacementCandidate, 'connector' | 'score'>;
+
+function candidateGeometry(
+  input: CandidateInput,
+  subject: ReturnType<typeof anchorSubject>
+): CandidateGeometry {
   const align = input.align ?? firstAlign(input.placement?.align) ?? DEFAULT_PLACEMENT.align;
   const offset = input.offset ?? firstNumber(input.placement?.offset) ?? DEFAULT_PLACEMENT.offset;
   const crossOffset = input.crossOffset ?? 0;
-  const subject = anchorSubject(input.annotation.anchor, input.side);
   const rawNoteBox = candidateNoteBox(
     subject.box,
     subject.point,
@@ -103,19 +116,14 @@ export function scorePlacementCandidate(input: CandidateInput): PlacementCandida
     { align, offset, crossOffset }
   );
   const noteBox = fitBoxWithin(rawNoteBox, input.bounds);
-  const connector = connectorPath(subject.point, noteBox, input.annotation.connector, {
-    obstacles: [...input.obstacles, ...input.placedNotes],
-    bounds: input.bounds
-  });
   const overflow = overflowArea(rawNoteBox, input.bounds);
   const obstacleOverlap = input.obstacles.reduce((total, obstacle) => total + overlapArea(noteBox, obstacle), 0);
   const placedOverlap = input.placedNotes.reduce((total, placed) => total + overlapArea(noteBox, placed), 0);
-  const connectorObstacleHits = connectorObstaclePenalty(connector.points, input.obstacles);
   const breakdown = {
     preferredSide: input.sideIndex * 150,
     overflow: overflow * 8,
     obstacles: obstacleOverlap * 4,
-    connectors: connectorObstacleHits * 90,
+    connectors: 0,
     annotations: placedOverlap * 6,
     distance: offset * 0.1,
     alignment: (input.alignIndex ?? 0) * 12,
@@ -130,30 +138,146 @@ export function scorePlacementCandidate(input: CandidateInput): PlacementCandida
     crossOffset,
     noteBox,
     rawNoteBox,
+    scoreBreakdown: breakdown
+  };
+}
+
+function routePlacementCandidate(
+  input: CandidateInput,
+  geometry: CandidateGeometry,
+  anchorPoint: Point,
+  routingObstacles: Box[]
+): PlacementCandidate {
+  const connector = connectorPath(anchorPoint, geometry.noteBox, input.annotation.connector, {
+    obstacles: routingObstacles,
+    bounds: input.bounds
+  });
+  const breakdown = geometry.scoreBreakdown;
+  breakdown.connectors = connectorObstaclePenalty(connector.points, input.obstacles) * 90;
+
+  return {
+    side: geometry.side,
+    align: geometry.align,
+    offset: geometry.offset,
+    crossOffset: geometry.crossOffset,
+    noteBox: geometry.noteBox,
+    rawNoteBox: geometry.rawNoteBox,
     connector,
     score: Object.values(breakdown).reduce((total, value) => total + value, 0),
     scoreBreakdown: breakdown
   };
 }
 
-export function resolvePlacementCandidate(input: Omit<CandidateInput, 'side' | 'sideIndex'>): PlacementCandidate {
-  const candidates = allPlacementCandidates(input);
+export type PlacementSearchOptions = { limit?: number | undefined };
+
+export function resolvePlacementCandidate(
+  input: Omit<CandidateInput, 'side' | 'sideIndex'>,
+  options?: PlacementSearchOptions
+): PlacementCandidate {
+  const candidates = allPlacementCandidates(input, options);
 
   return candidates[0] ?? scorePlacementCandidate({ ...input, side: 'top', sideIndex: 0 });
 }
 
-export function allPlacementCandidates(input: Omit<CandidateInput, 'side' | 'sideIndex'>): PlacementCandidate[] {
+export function allPlacementCandidates(
+  input: Omit<CandidateInput, 'side' | 'sideIndex'>,
+  options: PlacementSearchOptions = {}
+): PlacementCandidate[] {
+  assertPlacementPreference(input.placement);
+  assertPlacementPreference(input.annotation.placement);
+  const limit = options.limit;
+  if (limit !== undefined && (!Number.isSafeInteger(limit) || limit <= 0)) {
+    throw new TypeError('PlacementSearchOptions.limit must be a positive safe integer');
+  }
   if (input.placement?.manual) {
     return [manualPlacementCandidate(input, input.placement.manual)];
   }
 
-  const candidates = placementSearchSpace(input.placement)
+  const searchSpace = placementSearchSpace(input.placement);
+  if (limit !== undefined && limit < searchSpace.length) {
+    const bounded = boundedPlacementCandidates(input, searchSpace, limit);
+    if (bounded) return bounded;
+  }
+
+  const candidates = searchSpace
     .map((candidate) => scorePlacementCandidate({ ...input, ...candidate }))
     .sort((a, b) => a.score - b.score || sideSort(a.side) - sideSort(b.side));
 
-  return input.placement?.maxCandidates
-    ? candidates.slice(0, input.placement.maxCandidates)
+  return limit !== undefined
+    ? candidates.slice(0, limit)
     : candidates;
+}
+
+/** @internal Reject stale JS configuration before it can be silently ignored. */
+export function assertPlacementPreference(preference?: PlacementPreference): void {
+  if (preference && 'maxCandidates' in preference) {
+    throw new TypeError('placement.maxCandidates was removed; use layout diagnostics: { candidates: n } or the placement search second argument { limit: n }. Refinement quality uses refinement.maxCandidatesPerAnnotation.');
+  }
+}
+
+function boundedPlacementCandidates(
+  input: Omit<CandidateInput, 'side' | 'sideIndex'>,
+  searchSpace: ReturnType<typeof placementSearchSpace>,
+  limit: number
+): PlacementCandidate[] | undefined {
+  // These subjects only supply numeric geometry. Routing gets a fresh subject
+  // so computed box/path points do not become shared between public candidates.
+  const subjects = new Map<PlacementSide, ReturnType<typeof anchorSubject>>();
+  const pending = searchSpace.map((candidate, index) => {
+    let subject = subjects.get(candidate.side);
+    if (!subject) {
+      subject = anchorSubject(input.annotation.anchor, candidate.side);
+      subjects.set(candidate.side, subject);
+    }
+    const candidateInput = { ...input, ...candidate };
+    const geometry = candidateGeometry(candidateInput, subject);
+    const score = Object.values(geometry.scoreBreakdown).reduce((total, value) => total + value, 0);
+    return { input: candidateInput, geometry: { ...geometry, score }, index };
+  });
+
+  // Nonfinite scores have special JS sort behavior. Large cancelling terms
+  // can also overflow when routing adds a penalty; keep those searches eager.
+  if (pending.some(({ geometry }) => !safeGeometryScore(geometry))) return undefined;
+  pending.sort((a, b) => compareCandidates(a.geometry, b.geometry) || a.index - b.index);
+
+  const routingObstacles = [...input.obstacles, ...input.placedNotes];
+  const retained: Array<{ candidate: PlacementCandidate; index: number }> = [];
+  for (const entry of pending) {
+    // Replacing the nonnegative connector penalty with zero, in the original
+    // addition order, is a lower bound even with floating point rounding.
+    // Route equal bounds too; score ties use side and original insertion order.
+    if (retained.length === limit && entry.geometry.score > retained.at(-1)!.candidate.score) break;
+    const point = anchorSubject(input.annotation.anchor, entry.input.side).point;
+    const candidate = routePlacementCandidate(entry.input, entry.geometry, point, routingObstacles);
+    if (!Number.isFinite(candidate.score)) return undefined;
+
+    const value = { candidate, index: entry.index };
+    let low = 0;
+    let high = retained.length;
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+      const other = retained[middle]!;
+      if ((compareCandidates(candidate, other.candidate) || value.index - other.index) < 0) high = middle;
+      else low = middle + 1;
+    }
+    retained.splice(low, 0, value);
+    if (retained.length > limit) retained.pop();
+  }
+  return retained.map(({ candidate }) => candidate);
+}
+
+function safeGeometryScore(geometry: CandidateGeometry & { score: number }): boolean {
+  const values = Object.values(geometry.scoreBreakdown);
+  return Number.isFinite(geometry.score)
+    && values.every(Number.isFinite)
+    && values.reduce((total, value) => total + Math.abs(value), 0) < Number.MAX_VALUE / 2;
+}
+
+function compareCandidates(
+  a: Pick<PlacementCandidate, 'score' | 'side'>,
+  b: Pick<PlacementCandidate, 'score' | 'side'>
+): number {
+  return a.score - b.score || sideSort(a.side) - sideSort(b.side);
 }
 
 function manualPlacementCandidate(

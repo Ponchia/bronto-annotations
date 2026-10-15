@@ -1,7 +1,7 @@
 /**
  * Vega adapter API stability.
  *
- * @public Stable for `0.1.x`: view, scale, scenegraph, rendered SVG anchor
+ * @public Stable for `0.7.x`: view, scale, scenegraph, rendered SVG anchor
  * extraction, prepared annotation helpers, obstacle helpers, validation, and
  * target-alignment diagnostics.
  * @experimental During `0.x`: low-level datum-to-anchor conversion and rendered

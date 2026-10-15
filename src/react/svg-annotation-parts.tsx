@@ -12,6 +12,7 @@ import type {
   AnnotationSubjectOptions,
   Box,
   Point,
+  PlacementCandidate,
   ResolvedAnnotation
 } from '../core/model.js';
 import { dataAttributes } from './render-data.js';
@@ -193,7 +194,7 @@ export function renderConnector(item: ResolvedAnnotation, prefix: string, marker
   );
 }
 
-export function renderDebugBoxes(item: ResolvedAnnotation, prefix: string) {
+export function renderDebugBoxes(item: ResolvedAnnotation, prefix: string, candidates: PlacementCandidate[] = []) {
   return [
     <rect
       aria-hidden="true"
@@ -206,7 +207,7 @@ export function renderDebugBoxes(item: ResolvedAnnotation, prefix: string) {
       x={item.noteBox.x}
       y={item.noteBox.y}
     />,
-    ...item.placement.candidates.map((candidate, index) => (
+    ...candidates.map((candidate, index) => (
       <rect
         aria-hidden="true"
         className={`${prefix}__debug-box ${prefix}__debug-box--candidate`}

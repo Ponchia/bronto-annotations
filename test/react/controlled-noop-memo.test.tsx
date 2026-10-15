@@ -23,7 +23,7 @@ function fixture(count = 40) {
 }
 
 describe('controlled React layout no-op reconciliation', () => {
-  it('skips the expensive renderer when host clones equivalent inputs and inline edit options', () => {
+  it('retains notes when the host returns the same layout and rebuilds inline presentation props', () => {
     const { annotations, noteSizes, session } = fixture(40);
     const onEdit = vi.fn();
     const onLayout = vi.fn();
@@ -31,8 +31,7 @@ describe('controlled React layout no-op reconciliation', () => {
     const { container, rerender } = render(
       <Profiler id="controlled" onRender={onRender}>
         <AnnotationLayer
-          annotations={annotations} bounds={bounds} noteSizes={noteSizes}
-          resolvedLayout={session.layout}
+          layout={session.layout}
           editable={{ includeAnchor: true }}
           onEdit={onEdit} onLayout={onLayout}
           label="Stable graph"
@@ -51,10 +50,7 @@ describe('controlled React layout no-op reconciliation', () => {
     rerender(
       <Profiler id="controlled" onRender={onRender}>
         <AnnotationLayer
-          annotations={clone}
-          bounds={{ ...bounds }}
-          noteSizes={structuredClone(noteSizes)}
-          resolvedLayout={session.layout}
+          layout={session.layout}
           editable={{ includeAnchor: true }}
           onEdit={onEdit} onLayout={onLayout}
           label="Stable graph"
@@ -72,13 +68,13 @@ describe('controlled React layout no-op reconciliation', () => {
   });
 
   it('does not hide changed host callbacks, labels, editing options or debugging', () => {
-    const { annotations, noteSizes, session } = fixture(2);
+    const { session } = fixture(2);
     const firstHandler = vi.fn();
     const newHandler = vi.fn();
     const nextLayoutCallback = vi.fn();
     const { container, rerender } = render(
-      <AnnotationLayer annotations={annotations} bounds={bounds} noteSizes={noteSizes}
-        resolvedLayout={session.layout} editable={{ includeAnchor: true, radius: 4 }}
+      <AnnotationLayer
+        layout={session.layout} editable={{ includeAnchor: true, radius: 4 }}
         onEditStart={firstHandler} label="Original" />
     );
     expect(container.querySelector('svg.pa-annotation-layer')?.getAttribute('aria-label')).toBe('Original');
@@ -86,8 +82,7 @@ describe('controlled React layout no-op reconciliation', () => {
     expect(oldHandle?.getAttribute('r')).toBe('4');
 
     rerender(
-      <AnnotationLayer annotations={structuredClone(annotations)} bounds={{ ...bounds }}
-        noteSizes={noteSizes} resolvedLayout={session.layout}
+      <AnnotationLayer layout={session.layout}
         editable={{ includeAnchor: true, radius: 9 }}
         onEditStart={newHandler} onLayout={nextLayoutCallback}
         label="Updated" qualityDebug style={{ opacity: 0.65 }} />
@@ -105,66 +100,38 @@ describe('controlled React layout no-op reconciliation', () => {
     expect(firstHandler).not.toHaveBeenCalled();
   });
 
-  it('preserves target-alignment reports when raw source annotations change', () => {
+  it('derives target-alignment reports from source annotations in the new layout', () => {
     const { annotations, noteSizes, session } = fixture(2);
     const target = [{ id: 'annotation-0', point: { x: 20, y: 85 } }];
     const onTargetAlignment = vi.fn();
     const { rerender } = render(
-      <AnnotationLayer annotations={annotations} bounds={bounds} resolvedLayout={session.layout}
-        noteSizes={noteSizes} targetAlignmentTargets={target} onTargetAlignment={onTargetAlignment} />
+      <AnnotationLayer layout={session.layout} targetAlignmentTargets={target} onTargetAlignment={onTargetAlignment} />
     );
     expect(onTargetAlignment).toHaveBeenCalledTimes(1);
     expect(onTargetAlignment.mock.calls[0]![0].targetAlignment.aligned).toContain('annotation-0');
 
     const changed = structuredClone(annotations);
     changed[0]!.anchor = { type: 'point', point: { x: 170, y: 85 } };
+    const updated = session.update({ annotations: changed, bounds, noteSizes, refinement: false });
     rerender(
-      <AnnotationLayer annotations={changed} bounds={{ ...bounds }} resolvedLayout={session.layout}
-        noteSizes={noteSizes} targetAlignmentTargets={target} onTargetAlignment={onTargetAlignment} />
+      <AnnotationLayer layout={updated} targetAlignmentTargets={target} onTargetAlignment={onTargetAlignment} />
     );
     expect(onTargetAlignment).toHaveBeenCalledTimes(2);
     expect(onTargetAlignment.mock.calls[1]![0].targetAlignment.aligned).not.toContain('annotation-0');
   });
 
-  it('detects in-place style and annotation ID edits with a stable host layout', () => {
-    const { annotations, noteSizes, session } = fixture(2);
-    const style = { opacity: 0.25 };
+  it('updates presentation and SVG bounds from the current authoritative layout', () => {
+    const { session } = fixture(2);
     const { container, rerender } = render(
-      <AnnotationLayer annotations={annotations} bounds={bounds} resolvedLayout={session.layout}
-        noteSizes={noteSizes} style={style} />
+      <AnnotationLayer layout={session.layout} style={{ opacity: 0.25 }} />
     );
     expect(container.querySelector('.pa-annotation-layer-wrap')?.getAttribute('style'))
       .toContain('opacity: 0.25');
-    style.opacity = 0.75;
-    rerender(
-      <AnnotationLayer annotations={annotations} bounds={bounds} resolvedLayout={session.layout}
-        noteSizes={noteSizes} style={style} />
-    );
+    const updated = { ...session.layout, bounds: { x: 10, y: 20, width: 900, height: 500 } };
+    rerender(<AnnotationLayer layout={updated} style={{ opacity: 0.75 }} />);
     expect(container.querySelector('.pa-annotation-layer-wrap')?.getAttribute('style'))
       .toContain('opacity: 0.75');
-
-    annotations[0]!.id = 'changed-in-place';
-    expect(() => rerender(
-      <AnnotationLayer annotations={annotations} bounds={bounds} resolvedLayout={session.layout}
-        noteSizes={noteSizes} style={style} />
-    )).toThrow(/exactly the current host annotation IDs/);
-  });
-
-  it('preserves validation of changed IDs and bounds even with a stable layout reference', () => {
-    const { annotations, noteSizes, session } = fixture(2);
-    const { rerender } = render(
-      <AnnotationLayer annotations={annotations} bounds={bounds} noteSizes={noteSizes}
-        resolvedLayout={session.layout} />
-    );
-    expect(() => rerender(
-      <AnnotationLayer annotations={annotations} bounds={{ ...bounds, width: 801 }} noteSizes={noteSizes}
-        resolvedLayout={session.layout} />
-    )).toThrow(/bounds do not match/);
-    const changed = structuredClone(annotations);
-    changed[0]!.id = 'unexpected-id';
-    expect(() => rerender(
-      <AnnotationLayer annotations={changed} bounds={bounds} noteSizes={noteSizes}
-        resolvedLayout={session.layout} />
-    )).toThrow(/exactly the current host annotation IDs/);
+    expect(container.querySelector('svg')?.getAttribute('viewBox')).toBe('10 20 900 500');
+    expect(container.querySelector('svg')?.getAttribute('width')).toBe('900');
   });
 });

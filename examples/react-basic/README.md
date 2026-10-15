@@ -17,11 +17,15 @@ rebuilding library code, and running the complete published site locally.
 
 ## What to try
 
-Inspect the workflow and notes together, then change a note in main.tsx and observe the rendered update.
+Inspect the workflow and notes, then drag a note handle into clear space and observe the committed update. A drop that obscures a protected workflow region is rejected without crashing the host; the live status message explains the rejection.
 
 ## Host and package boundary
 
 React state, the underlying workflow SVG, and overlay mounting belong to this host.
+
+The host uses the most recent DOM-measured resolved note boxes when assessing an edit. Its shared `validateHostAnnotationEdit` recipe checks proposed source changes *before* accepting an edit patch, and only commits if `evaluateAnnotationLayout` considers the new layout acceptable. The annotation library emits suggestions; it does not persist them or implement host undo/validation.
+
+This example uses input mode: `annotations` and `bounds` let the layer solve locally. In input mode, `debug` requests eight candidate diagnostics unless `diagnostics` supplies a different count. For a host-resolved result, pass only `layout` plus presentation props; alternatives come from its existing diagnostics.
 
 The source lives in [main.tsx](main.tsx), with its host styles in
 [styles.css](styles.css). Read the [integration guide](../../docs/react-guide.md)

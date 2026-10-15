@@ -21,6 +21,8 @@ Move the final anchor or host obstacle, supersede a request, and start a cancell
 
 ## Host and package boundary
 
+The layer receives only `layout={view.layout}` plus presentation and edit callbacks. Source annotations, bounds and final note geometry come from that layout; the layer does not solve or measure it again. Request `diagnostics: { candidates: 8 }` from the host solver when inspecting alternatives with `debug`. Normal Worker and incremental results omit diagnostics.
+
 The host creates the Worker, tracks revisions, and decides which result to accept. Ignoring a result does not interrupt solver CPU work. This is an experimental recipe, not a public Worker API.
 
 The source lives in [main.tsx](main.tsx), with its host styles in

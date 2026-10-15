@@ -50,6 +50,9 @@ export function encodeWorkerLayout(
     || !Number.isSafeInteger(baseRevision) || baseRevision < 0
     || revision <= baseRevision) throw new Error('Invalid Worker layout revisions');
   const snapshot = (): LayoutSnapshot => ({ kind: 'snapshot', revision, baseRevision, layout });
+  // Diagnostic graphs can alias winning geometry and source anchors. Transfer
+  // the whole graph instead of mixing new diagnostics with retained winners.
+  if (layout.diagnostics || acknowledged?.layout.diagnostics) return snapshot();
   if (!acknowledged || acknowledged.revision !== baseRevision
     || acknowledged.layout.annotations.length !== layout.annotations.length) return snapshot();
 

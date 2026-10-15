@@ -1,5 +1,9 @@
 # Bronto Annotations
 
+> **0.7 development preview:** this source introduces a breaking API not yet
+> published on npm. Read the [0.7 migration guide](docs/migration-0.7.md) before
+> upgrading a 0.6.x application.
+
 **Explain an existing chart, diagram, or interface without rebuilding it.**
 
 [Website](https://ponchia.github.io/bronto-annotations/) ·

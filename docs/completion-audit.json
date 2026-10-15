@@ -83,7 +83,7 @@
           ]
         },
         {
-          "file": "src/core/layout.ts",
+          "file": "src/core/layout-resolver.ts",
           "terms": [
             "resolveAnnotationLayout",
             "estimateNoteSize",
@@ -722,7 +722,7 @@
           ]
         },
         {
-          "file": "src/presets/index.ts",
+          "file": "src/d3/index.ts",
           "terms": [
             "annotationFromD3Style",
             "annotationsFromD3Style",
@@ -730,8 +730,18 @@
             "d3StyleAnnotationCollectionEditPatch",
             "createD3StyleAnnotationBuilder",
             "defineD3StyleAnnotationType",
-            "applyD3StyleAnnotationEdit",
-            "accessorsInverse",
+            "applyD3StyleAnnotationEdit"
+          ]
+        },
+        {
+          "file": "src/presets/d3-types.ts",
+          "terms": [
+            "accessorsInverse"
+          ]
+        },
+        {
+          "file": "src/presets/d3-style.ts",
+          "terms": [
             "style: mergeObjects"
           ]
         },
@@ -964,7 +974,7 @@
         {
           "file": "docs/api-stability.manifest.json",
           "terms": [
-            "\"policy\": \"0.1.x\"",
+            "\"policy\": \"0.7.x\"",
             "\"./react\"",
             "\"./vega\"",
             "\"stable\"",
@@ -1022,7 +1032,7 @@
         {
           "file": "package.json",
           "terms": [
-            "\"version\": \"0.6.10\"",
+            "\"version\": \"0.7.0-dev.0\"",
             "\"repository\"",
             "\"publishConfig\"",
             "\"test:repo\"",
@@ -1217,7 +1227,7 @@
         {
           "file": "docs/api-stability.md",
           "terms": [
-            "Stable for `0.1.x`",
+            "Stable for `0.7.x`",
             "Experimental",
             "Root imports must remain DOM-free",
             "docs/api-stability.manifest.json",
@@ -1230,7 +1240,7 @@
           "file": "docs/api-stability.manifest.json",
           "terms": [
             "\"schemaVersion\": 1",
-            "\"policy\": \"0.1.x\"",
+            "\"policy\": \"0.7.x\"",
             "\"./bronto.css\"",
             "\"stable\"",
             "\"experimental\""

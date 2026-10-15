@@ -110,6 +110,13 @@ try {
       assert.ok(event.changed >= 0 && event.changed <= config.count);
       const parity = await page.evaluate(() => window.__workerProof?.checkParity());
       assert.equal(parity, true, `${config.name}/${action}: worker layout must match full main-thread solver`);
+      const lean = await page.evaluate(() => {
+        const layout = window.__workerProof?.lastLayout;
+        return layout && !Object.hasOwn(layout, 'diagnostics')
+          && layout.annotations.every((item) => !Object.hasOwn(item.placement, 'candidates'))
+          && !document.querySelector('.pa-annotation-layer__measurer');
+      });
+      assert.equal(lean, true, `${config.name}/${action}: default Worker result must stay lean and render only`);
       return event;
     }
 
@@ -141,9 +148,9 @@ try {
       await page.locator('#worker-burst').click();
       await page.waitForFunction(() => window.__workerProof?.events.at(-1)?.action === 'newest-request'
         && typeof window.__workerProof?.events.at(-1)?.noteCount === 'number',
-      { timeout: 45000 });
+      null, { timeout: 45000 });
       await page.waitForFunction(() => (window.__workerProof?.dropped ?? 0) >= 1,
-        { timeout: 45000 });
+        null, { timeout: 45000 });
       const burst = await page.evaluate(() => ({
         current: window.__workerProof?.events.at(-1),
         dropped: window.__workerProof?.dropped,
@@ -155,14 +162,19 @@ try {
       assert.equal(burst.parity, true);
       assert.match(burst.latestTitle ?? '', /^Latest burst /);
 
-      // An in-flight request is intentionally cancelled in host state. Since
-      // Worker CPU tasks are not preemptible, the reply must simply be ignored.
+      // Hold a genuinely computed Worker response until the host invalidates
+      // its revision. A timer race here would fail merely because lean layouts
+      // complete before Playwright's next click. The gate changes only fixture
+      // delivery; no CPU preemption or real-time performance claim is made.
       await page.locator('#worker-delay').click();
-      await page.waitForFunction(() => window.__workerProof?.pendingId !== null);
+      await page.waitForFunction(() => {
+        const proof = window.__workerProof;
+        return proof?.pendingId != null && proof.heldReplyId === proof.pendingId;
+      }, null, { timeout: 45000 });
       await page.locator('#worker-ping').click();
       await page.locator('#worker-cancel').click();
       await page.waitForFunction(() => (window.__workerProof?.dropped ?? 0) >= 2,
-        { timeout: 45000 });
+        null, { timeout: 45000 });
       const afterCancel = await page.evaluate(() => ({
         pendingId: window.__workerProof?.pendingId,
         dropped: window.__workerProof?.dropped,

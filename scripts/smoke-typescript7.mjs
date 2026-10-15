@@ -118,9 +118,7 @@ const onQuality = (event: AnnotationLayerQualityEvent): void => {
 };
 
 const props: AnnotationLayerProps = {
-  annotations,
-  bounds,
-  resolvedLayout: resolved,
+  layout: resolved,
   previewEdits: true,
   editable: { includeAnchor: true },
   onQuality,

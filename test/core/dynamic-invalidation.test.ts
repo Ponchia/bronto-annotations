@@ -18,8 +18,7 @@ function note(index: number, routing: 'none' | 'orthogonal' = 'none'): Annotatio
       align: 'center',
       allowedAligns: ['center'],
       offset: [12, 22],
-      crossOffset: [0, 12],
-      maxCandidates: 2
+      crossOffset: [0, 12]
     },
     connector: { type: 'straight', routing }
   };
@@ -120,8 +119,8 @@ describe('dynamic topology / obstacle invalidation', () => {
 
   it('does not falsely reuse a truncated unselected placement candidate', () => {
     const options = scenario(8);
-    // Every candidate must be examined, not only the two retained winners.
-    for (const item of options.annotations) item.placement!.maxCandidates = 1;
+    // Every candidate must be examined, not only the retained winner.
+    options.diagnostics = { candidates: 1 };
     const session = createIncrementalAnnotationLayoutSession(options);
     const before = session.layout;
     const next = structuredClone(options);
@@ -230,7 +229,7 @@ describe('dynamic topology / obstacle invalidation', () => {
       placement: {
         side: 'right', allowedSides: ['right'],
         align: 'center', allowedAligns: ['center'],
-        offset: 12, crossOffset: 0, maxCandidates: 2
+        offset: 12, crossOffset: 0
       }
     }));
     const options: LayoutOptions = {

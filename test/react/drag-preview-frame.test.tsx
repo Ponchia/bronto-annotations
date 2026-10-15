@@ -253,12 +253,12 @@ describe('high-frequency React pointer previews', () => {
     const commits: AnnotationLayerEditEvent[] = [];
     const edits: AnnotationLayerEditEvent[] = [];
     const props = {
-      bounds, noteSizes, editable: true as const, previewEdits: true,
+      editable: true as const, previewEdits: true,
       onEdit: (event: AnnotationLayerEditEvent) => edits.push(event),
       onEditEnd: (event: AnnotationLayerEditEvent) => commits.push(event)
     };
     const { container, rerender } = render(
-      <AnnotationLayer {...props} annotations={annotations} resolvedLayout={first} />
+      <AnnotationLayer {...props} layout={first} />
     );
     const layer = container.querySelector('svg.pa-annotation-layer')!;
     const note = () => container.querySelector(
@@ -270,8 +270,8 @@ describe('high-frequency React pointer previews', () => {
     const queuedFrame = [...frames.frames.values()][0]!;
     expect(queuedFrame).toBeDefined();
 
-    rerender(<AnnotationLayer {...props} annotations={replacedAnnotations}
-      resolvedLayout={second} />);
+    rerender(<AnnotationLayer {...props}
+      layout={second} />);
     expect(frames.cancel).toHaveBeenCalledTimes(1);
     expect(Number(note().getAttribute('x')))
       .toBe(second.annotations.find((item) => item.id === 'selected')!.noteBox.x);

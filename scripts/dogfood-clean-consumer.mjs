@@ -468,8 +468,10 @@ async function renderVegaLiteAnnotations() {
   host.innerHTML = await view.toSVG();
 
   const svg = requiredElement('#chart-host svg');
+  // The release bar is surrounded by other measured marks. Reserve an
+  // explicit right-side note lane rather than accepting a note over chart data.
   const frame = annotationFrameFromSvg(svg, {
-    padding: { top: 38, right: 230, bottom: 44, left: 54 }
+    padding: { top: 38, right: 360, bottom: 44, left: 54 }
   });
   const prepared = prepareVegaScenegraphAnnotations(view, [{
     id: 'vega-release-note',
@@ -480,7 +482,9 @@ async function renderVegaLiteAnnotations() {
       title: 'Vega-Lite bar',
       body: 'Anchor comes from the compiled Vega scenegraph.'
     },
-    placement: { side: ['right', 'top'], offset: [20, 32], crossOffset: [0, -42, 42] },
+    // Chart-aware clearance: candidate offsets must reach past the actual
+    // bars into the reserved note lane; mere finite boxes were insufficient.
+    placement: { side: ['right', 'top'], offset: [180, 220, 260], crossOffset: [0, -42, 42] },
     subject: { shape: 'rect', padding: 4 },
     connector: { type: 'curve', end: 'arrow' },
     tone: 'success',
@@ -552,7 +556,9 @@ async function renderMermaidAnnotations() {
   edgePaths[0]?.setAttribute('data-edge-id', 'capture-review');
   edgePaths[1]?.setAttribute('data-edge-id', 'review-publish');
   const frame = annotationFrameFromSvg(svg, {
-    padding: { top: 70, right: 180, bottom: 70, left: 90 }
+    // Leave a dedicated band for both a node callout and an editorial edge
+    // callout instead of covering the rendered flow nodes and link labels.
+    padding: { top: 165, right: 205, bottom: 85, left: 90 }
   });
   const prepared = prepareMermaidAnnotations(svg, [
     {
@@ -563,7 +569,7 @@ async function renderMermaidAnnotations() {
         title: 'Mermaid node',
         body: 'Matched after Mermaid rendered SVG.'
       },
-      placement: { side: ['top', 'bottom'], offset: [18, 30], crossOffset: [0, -38, 38] },
+      placement: { side: ['top'], allowedSides: ['top'], offset: [55, 75, 95], crossOffset: [0, -38, 38] },
       subject: { shape: 'rect', padding: 5 },
       connector: { end: 'arrow' },
       tone: 'info',
@@ -578,7 +584,11 @@ async function renderMermaidAnnotations() {
         title: 'Rendered edge',
         body: 'Selector targets the generated path.'
       },
-      placement: { manual: { x: frame.bounds.x + 18, y: frame.bounds.y + 18, side: 'bottom' } },
+      placement: { manual: {
+        x: frame.bounds.x + frame.bounds.width - 164 - 12,
+        y: frame.bounds.y + 18,
+        side: 'bottom'
+      } },
       subject: { shape: 'path' },
       tone: 'accent'
     }

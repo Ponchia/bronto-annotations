@@ -41,7 +41,10 @@ const titles = {
   compatibility: 'Compatibility and environments',
   'api-stability': 'API stability and versioning',
   'migration-guide': 'Migrating existing annotations',
+  'migration-0.7': 'Upgrading to the 0.7 API',
   performance: 'Performance and stress testing',
+  'placement-quality': 'Placement quality and evidence',
+  'upstream-consumers': 'Upstream consumer validation',
   'security-automation': 'Security and development',
   release: 'Releases and publishing',
 };
@@ -63,7 +66,10 @@ const guideSummaries = {
   compatibility: 'Tested browser, runtime, compiler, and optional peer environments.',
   'api-stability': 'Understand stable and experimental exports before choosing an integration path.',
   'migration-guide': 'Move existing d3-style and BrontoUI annotation usage onto the standalone package.',
+  'migration-0.7': 'Lean layouts, opt-in diagnostics and a single source of truth for React.',
   performance: 'Read workload-specific measurements and the limits of full and incremental layouts.',
+  'placement-quality': 'Reproduce geometric quality budgets and inspect complete annotated host fixtures.',
+  'upstream-consumers': 'Render pinned upstream inputs and verify real browser geometry and interactions.',
   'security-automation': 'Maintainer reference for security checks and public runner safeguards.',
   release: 'Maintainer reference for tags, verification, publication, and recovery.',
 };
@@ -390,10 +396,18 @@ for (const file of docsFiles) {
 }
 // The reference JSON resources remain linkable from Markdown pages without
 // silently changing source documents or rewriting their technical examples.
-for (const file of await readdir(docsRoot)) {
-  if (file.endsWith('.json'))
-    await copyFile(join(docsRoot, file), join(out, 'docs', file));
+async function copyReferenceJson(directory) {
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const source = join(directory, entry.name);
+    if (entry.isDirectory()) await copyReferenceJson(source);
+    else if (entry.isFile() && entry.name.endsWith('.json')) {
+      const destination = join(out, 'docs', relative(docsRoot, source));
+      await mkdir(dirname(destination), { recursive: true });
+      await copyFile(source, destination);
+    }
+  }
 }
+await copyReferenceJson(docsRoot);
 // Put the current guides before historical audits and archived evidence.
 const orderedDocsFiles = [...docsFiles].sort((a, b) => {
   const key = (file) => web(relative(docsRoot, file)).slice(0, -3);

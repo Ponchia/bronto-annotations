@@ -1,7 +1,7 @@
 /**
  * Mermaid adapter API stability.
  *
- * @public Stable for `0.1.x`: rendered SVG anchor extraction, prepared
+ * @public Stable for `0.7.x`: rendered SVG anchor extraction, prepared
  * annotation helpers, obstacle helpers, validation, and target-alignment
  * diagnostics.
  * @experimental During `0.x`: low-level rendered element finder helpers.

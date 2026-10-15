@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { resolveAnnotationLayout } from '../core/layout.js';
+import { resolveAnnotationLayout } from '../core/layout-resolver.js';
 import type { ResolvedLayout } from '../core/model.js';
 import type { UseAnnotationsOptions } from './types.js';
 
@@ -10,6 +10,7 @@ export function useAnnotations(options: UseAnnotationsOptions): ResolvedLayout {
       options.annotations,
       options.bounds,
       options.defaultNoteSize,
+      options.diagnostics,
       options.noteSizes,
       options.obstacles,
       options.padding,

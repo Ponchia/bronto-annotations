@@ -6,7 +6,7 @@ import type {
   PlacementPreference,
   ResolvedLayout
 } from '../core/model.js';
-import { resolveAnnotationLayout } from '../core/layout.js';
+import { resolveAnnotationLayout } from '../core/layout-resolver.js';
 import {
   assertAnnotationLayoutQuality,
   evaluateAnnotationLayout,
@@ -129,7 +129,8 @@ export function resolvePreparedAnnotationLayout<
     ...(options.noteSizes ? { noteSizes: options.noteSizes } : {}),
     ...(options.defaultNoteSize ? { defaultNoteSize: options.defaultNoteSize } : {}),
     ...(options.placement ? { placement: options.placement } : {}),
-    ...(options.refinement !== undefined ? { refinement: options.refinement } : {})
+    ...(options.refinement !== undefined ? { refinement: options.refinement } : {}),
+    ...(options.diagnostics !== undefined ? { diagnostics: options.diagnostics } : {})
   });
   const quality = evaluateAnnotationLayout(layout);
 

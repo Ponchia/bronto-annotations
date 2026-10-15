@@ -1,0 +1,2603 @@
+{
+  "schema": 1,
+  "fixtures": [
+    {
+      "id": "chart-wide",
+      "title": "Chart",
+      "provenance": "authored synthetic host geometry",
+      "description": "Deterministic authored geometry; not an upstream or independent adoption example.",
+      "options": {
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 960,
+          "height": 600
+        },
+        "padding": 16,
+        "annotations": [
+          {
+            "id": "chart-0",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 55.0,
+                "y": 346.0,
+                "width": 32,
+                "height": 189.0
+              }
+            },
+            "note": {
+              "title": "Launch",
+              "body": "First full month.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 10
+          },
+          {
+            "id": "chart-1",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 221.0,
+                "y": 251.5,
+                "width": 32,
+                "height": 283.5
+              }
+            },
+            "note": {
+              "title": "Promotion",
+              "body": "Campaign lift.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 9
+          },
+          {
+            "id": "chart-2",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 387.0,
+                "y": 296.5,
+                "width": 32,
+                "height": 238.5
+              }
+            },
+            "note": {
+              "title": "Returns",
+              "body": "Demand normalizes.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 8
+          },
+          {
+            "id": "chart-3",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 553.0,
+                "y": 202.0,
+                "width": 32,
+                "height": 333.0
+              }
+            },
+            "note": {
+              "title": "Peak",
+              "body": "Highest monthly units.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 7
+          },
+          {
+            "id": "chart-4",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 719.0,
+                "y": 242.5,
+                "width": 32,
+                "height": 292.5
+              }
+            },
+            "note": {
+              "title": "Steady",
+              "body": "Repeat orders hold.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 6
+          }
+        ],
+        "noteSizes": {
+          "chart-0": {
+            "width": 130,
+            "height": 76
+          },
+          "chart-1": {
+            "width": 130,
+            "height": 76
+          },
+          "chart-2": {
+            "width": 130,
+            "height": 76
+          },
+          "chart-3": {
+            "width": 130,
+            "height": 76
+          },
+          "chart-4": {
+            "width": 130,
+            "height": 76
+          }
+        },
+        "obstacles": [
+          {
+            "x": 55.0,
+            "y": 346.0,
+            "width": 32,
+            "height": 189.0
+          },
+          {
+            "x": 221.0,
+            "y": 251.5,
+            "width": 32,
+            "height": 283.5
+          },
+          {
+            "x": 387.0,
+            "y": 296.5,
+            "width": 32,
+            "height": 238.5
+          },
+          {
+            "x": 553.0,
+            "y": 202.0,
+            "width": 32,
+            "height": 333.0
+          },
+          {
+            "x": 719.0,
+            "y": 242.5,
+            "width": 32,
+            "height": 292.5
+          }
+        ],
+        "placement": {
+          "offset": [
+            16,
+            36,
+            64
+          ],
+          "crossOffset": [
+            0,
+            -32,
+            32,
+            -64,
+            64
+          ]
+        },
+        "refinement": {
+          "enabled": true,
+          "passes": 2,
+          "maxCandidatesPerAnnotation": 8
+        }
+      },
+      "host": [
+        {
+          "type": "line",
+          "x1": 35,
+          "y1": 535,
+          "x2": 935,
+          "y2": 535
+        },
+        {
+          "type": "text",
+          "x": 35,
+          "y": 570,
+          "text": "Monthly units: Jan \u2014 May"
+        },
+        {
+          "type": "rect",
+          "x": 55.0,
+          "y": 346.0,
+          "width": 32,
+          "height": 189.0,
+          "fill": "#dbeafe",
+          "label": "210"
+        },
+        {
+          "type": "rect",
+          "x": 221.0,
+          "y": 251.5,
+          "width": 32,
+          "height": 283.5,
+          "fill": "#dbeafe",
+          "label": "315"
+        },
+        {
+          "type": "rect",
+          "x": 387.0,
+          "y": 296.5,
+          "width": 32,
+          "height": 238.5,
+          "fill": "#dbeafe",
+          "label": "265"
+        },
+        {
+          "type": "rect",
+          "x": 553.0,
+          "y": 202.0,
+          "width": 32,
+          "height": 333.0,
+          "fill": "#dbeafe",
+          "label": "370"
+        },
+        {
+          "type": "rect",
+          "x": 719.0,
+          "y": 242.5,
+          "width": 32,
+          "height": 292.5,
+          "fill": "#dbeafe",
+          "label": "325"
+        }
+      ],
+      "expectation": {
+        "kind": "feasible",
+        "budgets": {
+          "noteOverlapArea": 0,
+          "boundsOverflowArea": 0,
+          "obstacleOverlapArea": 0
+        },
+        "rationale": "Readable notes must remain disjoint, inside the padded viewport, and leave host content unobscured. Connector intersections are reported separately."
+      }
+    },
+    {
+      "id": "report-wide",
+      "title": "Report",
+      "provenance": "authored synthetic host geometry",
+      "description": "Deterministic authored geometry; not an upstream or independent adoption example.",
+      "options": {
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 960,
+          "height": 600
+        },
+        "padding": 16,
+        "annotations": [
+          {
+            "id": "report-0",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 345,
+                "y": 107
+              }
+            },
+            "note": {
+              "title": "Revenue",
+              "body": "Growth exceeds plan.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 10
+          },
+          {
+            "id": "report-1",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 345,
+                "y": 207
+              }
+            },
+            "note": {
+              "title": "Margin",
+              "body": "Input costs stabilized.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 9
+          },
+          {
+            "id": "report-2",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 345,
+                "y": 307
+              }
+            },
+            "note": {
+              "title": "Retention",
+              "body": "Renewals remain healthy.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 8
+          },
+          {
+            "id": "report-3",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 345,
+                "y": 407
+              }
+            },
+            "note": {
+              "title": "Inventory",
+              "body": "Stock buffer restored.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 7
+          },
+          {
+            "id": "report-4",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 345,
+                "y": 507
+              }
+            },
+            "note": {
+              "title": "Outlook",
+              "body": "Forecast assumes steady demand.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 6
+          }
+        ],
+        "noteSizes": {
+          "report-0": {
+            "width": 190,
+            "height": 84
+          },
+          "report-1": {
+            "width": 190,
+            "height": 84
+          },
+          "report-2": {
+            "width": 190,
+            "height": 84
+          },
+          "report-3": {
+            "width": 190,
+            "height": 84
+          },
+          "report-4": {
+            "width": 190,
+            "height": 84
+          }
+        },
+        "obstacles": [
+          {
+            "x": 35,
+            "y": 80,
+            "width": 310,
+            "height": 54
+          },
+          {
+            "x": 35,
+            "y": 180,
+            "width": 310,
+            "height": 54
+          },
+          {
+            "x": 35,
+            "y": 280,
+            "width": 310,
+            "height": 54
+          },
+          {
+            "x": 35,
+            "y": 380,
+            "width": 310,
+            "height": 54
+          },
+          {
+            "x": 35,
+            "y": 480,
+            "width": 310,
+            "height": 54
+          }
+        ],
+        "placement": {
+          "offset": [
+            16,
+            36,
+            64
+          ],
+          "crossOffset": [
+            0,
+            -32,
+            32,
+            -64,
+            64
+          ]
+        },
+        "refinement": {
+          "enabled": true,
+          "passes": 2,
+          "maxCandidatesPerAnnotation": 8
+        }
+      },
+      "host": [
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 80,
+          "width": 310,
+          "height": 54,
+          "fill": "#e2e8f0",
+          "label": "Revenue"
+        },
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 180,
+          "width": 310,
+          "height": 54,
+          "fill": "#e2e8f0",
+          "label": "Margin"
+        },
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 280,
+          "width": 310,
+          "height": 54,
+          "fill": "#e2e8f0",
+          "label": "Retention"
+        },
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 380,
+          "width": 310,
+          "height": 54,
+          "fill": "#e2e8f0",
+          "label": "Inventory"
+        },
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 480,
+          "width": 310,
+          "height": 54,
+          "fill": "#e2e8f0",
+          "label": "Outlook"
+        },
+        {
+          "type": "text",
+          "x": 35,
+          "y": 35,
+          "text": "Quarterly operating report"
+        }
+      ],
+      "expectation": {
+        "kind": "feasible",
+        "budgets": {
+          "noteOverlapArea": 0,
+          "boundsOverflowArea": 0,
+          "obstacleOverlapArea": 0
+        },
+        "rationale": "Readable notes must remain disjoint, inside the padded viewport, and leave host content unobscured. Connector intersections are reported separately."
+      }
+    },
+    {
+      "id": "architecture-wide",
+      "title": "Architecture",
+      "provenance": "authored synthetic host geometry",
+      "description": "Deterministic authored geometry; not an upstream or independent adoption example.",
+      "options": {
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 960,
+          "height": 600
+        },
+        "padding": 16,
+        "annotations": [
+          {
+            "id": "architecture-0",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 60,
+                "y": 90,
+                "width": 90,
+                "height": 44
+              }
+            },
+            "note": {
+              "title": "Ingress",
+              "body": "TLS boundary.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 10
+          },
+          {
+            "id": "architecture-1",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 810,
+                "y": 90,
+                "width": 90,
+                "height": 44
+              }
+            },
+            "note": {
+              "title": "API",
+              "body": "Validate requests.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 9
+          },
+          {
+            "id": "architecture-2",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 60,
+                "y": 255,
+                "width": 90,
+                "height": 44
+              }
+            },
+            "note": {
+              "title": "Queue",
+              "body": "Buffer bursts.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 8
+          },
+          {
+            "id": "architecture-3",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 810,
+                "y": 255,
+                "width": 90,
+                "height": 44
+              }
+            },
+            "note": {
+              "title": "Worker",
+              "body": "Retry safely.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 7
+          },
+          {
+            "id": "architecture-4",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 60,
+                "y": 420,
+                "width": 90,
+                "height": 44
+              }
+            },
+            "note": {
+              "title": "Store",
+              "body": "Durable records.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 6
+          },
+          {
+            "id": "architecture-5",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 810,
+                "y": 420,
+                "width": 90,
+                "height": 44
+              }
+            },
+            "note": {
+              "title": "Metrics",
+              "body": "Observe latency.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 5
+          }
+        ],
+        "noteSizes": {
+          "architecture-0": {
+            "width": 150,
+            "height": 76
+          },
+          "architecture-1": {
+            "width": 150,
+            "height": 76
+          },
+          "architecture-2": {
+            "width": 150,
+            "height": 76
+          },
+          "architecture-3": {
+            "width": 150,
+            "height": 76
+          },
+          "architecture-4": {
+            "width": 150,
+            "height": 76
+          },
+          "architecture-5": {
+            "width": 150,
+            "height": 76
+          }
+        },
+        "obstacles": [
+          {
+            "x": 60,
+            "y": 90,
+            "width": 90,
+            "height": 44
+          },
+          {
+            "x": 810,
+            "y": 90,
+            "width": 90,
+            "height": 44
+          },
+          {
+            "x": 60,
+            "y": 255,
+            "width": 90,
+            "height": 44
+          },
+          {
+            "x": 810,
+            "y": 255,
+            "width": 90,
+            "height": 44
+          },
+          {
+            "x": 60,
+            "y": 420,
+            "width": 90,
+            "height": 44
+          },
+          {
+            "x": 810,
+            "y": 420,
+            "width": 90,
+            "height": 44
+          }
+        ],
+        "placement": {
+          "offset": [
+            16,
+            36,
+            64
+          ],
+          "crossOffset": [
+            0,
+            -32,
+            32,
+            -64,
+            64
+          ]
+        },
+        "refinement": {
+          "enabled": true,
+          "passes": 2,
+          "maxCandidatesPerAnnotation": 8
+        }
+      },
+      "host": [
+        {
+          "type": "rect",
+          "x": 60,
+          "y": 90,
+          "width": 90,
+          "height": 44,
+          "fill": "#dcfce7",
+          "label": "Ingress"
+        },
+        {
+          "type": "line",
+          "x1": 105,
+          "y1": 112,
+          "x2": 855,
+          "y2": 112
+        },
+        {
+          "type": "rect",
+          "x": 810,
+          "y": 90,
+          "width": 90,
+          "height": 44,
+          "fill": "#dcfce7",
+          "label": "API"
+        },
+        {
+          "type": "line",
+          "x1": 855,
+          "y1": 112,
+          "x2": 105,
+          "y2": 277
+        },
+        {
+          "type": "rect",
+          "x": 60,
+          "y": 255,
+          "width": 90,
+          "height": 44,
+          "fill": "#dcfce7",
+          "label": "Queue"
+        },
+        {
+          "type": "line",
+          "x1": 105,
+          "y1": 277,
+          "x2": 855,
+          "y2": 277
+        },
+        {
+          "type": "rect",
+          "x": 810,
+          "y": 255,
+          "width": 90,
+          "height": 44,
+          "fill": "#dcfce7",
+          "label": "Worker"
+        },
+        {
+          "type": "line",
+          "x1": 855,
+          "y1": 277,
+          "x2": 105,
+          "y2": 442
+        },
+        {
+          "type": "rect",
+          "x": 60,
+          "y": 420,
+          "width": 90,
+          "height": 44,
+          "fill": "#dcfce7",
+          "label": "Store"
+        },
+        {
+          "type": "line",
+          "x1": 105,
+          "y1": 442,
+          "x2": 855,
+          "y2": 442
+        },
+        {
+          "type": "rect",
+          "x": 810,
+          "y": 420,
+          "width": 90,
+          "height": 44,
+          "fill": "#dcfce7",
+          "label": "Metrics"
+        }
+      ],
+      "expectation": {
+        "kind": "feasible",
+        "budgets": {
+          "noteOverlapArea": 0,
+          "boundsOverflowArea": 0,
+          "obstacleOverlapArea": 0
+        },
+        "rationale": "Readable notes must remain disjoint, inside the padded viewport, and leave host content unobscured. Connector intersections are reported separately."
+      }
+    },
+    {
+      "id": "long-text-wide",
+      "title": "Long Text",
+      "provenance": "authored synthetic host geometry",
+      "description": "Authored long-form report with rows tall enough for complete multi-line notes; not independent adoption evidence.",
+      "options": {
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 960,
+          "height": 980
+        },
+        "padding": 16,
+        "annotations": [
+          {
+            "id": "long-text-0",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 160,
+                "y": 88
+              }
+            },
+            "note": {
+              "title": "Method",
+              "body": "Compare like periods. Seasonal effects can change the apparent trend.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 10
+          },
+          {
+            "id": "long-text-1",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 160,
+                "y": 263
+              }
+            },
+            "note": {
+              "title": "Coverage",
+              "body": "This sample includes active accounts. Inactive accounts are outside scope.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 9
+          },
+          {
+            "id": "long-text-2",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 160,
+                "y": 438
+              }
+            },
+            "note": {
+              "title": "Uncertainty",
+              "body": "Small cohorts vary more. Treat month to month movement as directional.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 8
+          },
+          {
+            "id": "long-text-3",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 160,
+                "y": 613
+              }
+            },
+            "note": {
+              "title": "Decision",
+              "body": "Review sustained changes before changing capacity or staffing plans.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 7
+          },
+          {
+            "id": "long-text-4",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 160,
+                "y": 788
+              }
+            },
+            "note": {
+              "title": "Follow-up",
+              "body": "Repeat the review after the next complete reporting period closes.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 6
+          }
+        ],
+        "noteSizes": {
+          "long-text-0": {
+            "width": 280,
+            "height": 140
+          },
+          "long-text-1": {
+            "width": 280,
+            "height": 140
+          },
+          "long-text-2": {
+            "width": 280,
+            "height": 140
+          },
+          "long-text-3": {
+            "width": 280,
+            "height": 140
+          },
+          "long-text-4": {
+            "width": 280,
+            "height": 140
+          }
+        },
+        "obstacles": [
+          {
+            "x": 30,
+            "y": 70,
+            "width": 130,
+            "height": 35
+          },
+          {
+            "x": 30,
+            "y": 245,
+            "width": 130,
+            "height": 35
+          },
+          {
+            "x": 30,
+            "y": 420,
+            "width": 130,
+            "height": 35
+          },
+          {
+            "x": 30,
+            "y": 595,
+            "width": 130,
+            "height": 35
+          },
+          {
+            "x": 30,
+            "y": 770,
+            "width": 130,
+            "height": 35
+          }
+        ],
+        "placement": {
+          "offset": [
+            16,
+            36,
+            64
+          ],
+          "crossOffset": [
+            0,
+            -32,
+            32,
+            -64,
+            64
+          ]
+        },
+        "refinement": {
+          "enabled": true,
+          "passes": 2,
+          "maxCandidatesPerAnnotation": 8
+        }
+      },
+      "host": [
+        {
+          "type": "rect",
+          "x": 30,
+          "y": 70,
+          "width": 130,
+          "height": 35,
+          "fill": "#fef3c7",
+          "label": "\u00a7 1"
+        },
+        {
+          "type": "rect",
+          "x": 30,
+          "y": 245,
+          "width": 130,
+          "height": 35,
+          "fill": "#fef3c7",
+          "label": "\u00a7 2"
+        },
+        {
+          "type": "rect",
+          "x": 30,
+          "y": 420,
+          "width": 130,
+          "height": 35,
+          "fill": "#fef3c7",
+          "label": "\u00a7 3"
+        },
+        {
+          "type": "rect",
+          "x": 30,
+          "y": 595,
+          "width": 130,
+          "height": 35,
+          "fill": "#fef3c7",
+          "label": "\u00a7 4"
+        },
+        {
+          "type": "rect",
+          "x": 30,
+          "y": 770,
+          "width": 130,
+          "height": 35,
+          "fill": "#fef3c7",
+          "label": "\u00a7 5"
+        }
+      ],
+      "expectation": {
+        "kind": "feasible",
+        "budgets": {
+          "noteOverlapArea": 0,
+          "boundsOverflowArea": 0,
+          "obstacleOverlapArea": 0
+        },
+        "rationale": "Readable notes must remain disjoint, inside the padded viewport, and leave host content unobscured. Connector intersections are reported separately."
+      }
+    },
+    {
+      "id": "chart-narrow",
+      "title": "Chart",
+      "provenance": "authored synthetic host geometry",
+      "description": "Authored narrow chart reflows to horizontal bars; every value and annotation is retained. Not independent adoption evidence.",
+      "options": {
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 480,
+          "height": 980
+        },
+        "padding": 16,
+        "annotations": [
+          {
+            "id": "chart-0",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 35,
+                "y": 170,
+                "width": 115.50000000000001,
+                "height": 32
+              }
+            },
+            "note": {
+              "title": "Launch",
+              "body": "First full month.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 10
+          },
+          {
+            "id": "chart-1",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 35,
+                "y": 320,
+                "width": 173.25,
+                "height": 32
+              }
+            },
+            "note": {
+              "title": "Promotion",
+              "body": "Campaign lift.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 9
+          },
+          {
+            "id": "chart-2",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 35,
+                "y": 470,
+                "width": 145.75,
+                "height": 32
+              }
+            },
+            "note": {
+              "title": "Returns",
+              "body": "Demand normalizes.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 8
+          },
+          {
+            "id": "chart-3",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 35,
+                "y": 620,
+                "width": 203.50000000000003,
+                "height": 32
+              }
+            },
+            "note": {
+              "title": "Peak",
+              "body": "Highest monthly units.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 7
+          },
+          {
+            "id": "chart-4",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 35,
+                "y": 770,
+                "width": 178.75000000000003,
+                "height": 32
+              }
+            },
+            "note": {
+              "title": "Steady",
+              "body": "Repeat orders hold.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 6
+          }
+        ],
+        "noteSizes": {
+          "chart-0": {
+            "width": 130,
+            "height": 76
+          },
+          "chart-1": {
+            "width": 130,
+            "height": 76
+          },
+          "chart-2": {
+            "width": 130,
+            "height": 76
+          },
+          "chart-3": {
+            "width": 130,
+            "height": 76
+          },
+          "chart-4": {
+            "width": 130,
+            "height": 76
+          }
+        },
+        "obstacles": [
+          {
+            "x": 35,
+            "y": 170,
+            "width": 115.50000000000001,
+            "height": 32
+          },
+          {
+            "x": 35,
+            "y": 320,
+            "width": 173.25,
+            "height": 32
+          },
+          {
+            "x": 35,
+            "y": 470,
+            "width": 145.75,
+            "height": 32
+          },
+          {
+            "x": 35,
+            "y": 620,
+            "width": 203.50000000000003,
+            "height": 32
+          },
+          {
+            "x": 35,
+            "y": 770,
+            "width": 178.75000000000003,
+            "height": 32
+          }
+        ],
+        "placement": {
+          "offset": [
+            16,
+            36,
+            64
+          ],
+          "crossOffset": [
+            0,
+            -32,
+            32,
+            -64,
+            64
+          ]
+        },
+        "refinement": {
+          "enabled": true,
+          "passes": 2,
+          "maxCandidatesPerAnnotation": 8
+        }
+      },
+      "host": [
+        {
+          "type": "text",
+          "x": 35,
+          "y": 35,
+          "text": "Monthly units: Jan \u2014 May"
+        },
+        {
+          "type": "line",
+          "x1": 35,
+          "y1": 915,
+          "x2": 430,
+          "y2": 915
+        },
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 170,
+          "width": 115.50000000000001,
+          "height": 32,
+          "fill": "#dbeafe",
+          "label": "210"
+        },
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 320,
+          "width": 173.25,
+          "height": 32,
+          "fill": "#dbeafe",
+          "label": "315"
+        },
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 470,
+          "width": 145.75,
+          "height": 32,
+          "fill": "#dbeafe",
+          "label": "265"
+        },
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 620,
+          "width": 203.50000000000003,
+          "height": 32,
+          "fill": "#dbeafe",
+          "label": "370"
+        },
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 770,
+          "width": 178.75000000000003,
+          "height": 32,
+          "fill": "#dbeafe",
+          "label": "325"
+        }
+      ],
+      "expectation": {
+        "kind": "feasible",
+        "budgets": {
+          "noteOverlapArea": 0,
+          "boundsOverflowArea": 0,
+          "obstacleOverlapArea": 0
+        },
+        "rationale": "Readable notes must remain disjoint, inside the padded viewport, and leave host content unobscured. Connector intersections are reported separately."
+      }
+    },
+    {
+      "id": "report-narrow",
+      "title": "Report",
+      "provenance": "authored synthetic host geometry",
+      "description": "Deterministic authored geometry; not an upstream or independent adoption example.",
+      "options": {
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 480,
+          "height": 980
+        },
+        "padding": 16,
+        "annotations": [
+          {
+            "id": "report-0",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 145,
+                "y": 107
+              }
+            },
+            "note": {
+              "title": "Revenue",
+              "body": "Growth exceeds plan.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 10
+          },
+          {
+            "id": "report-1",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 145,
+                "y": 272
+              }
+            },
+            "note": {
+              "title": "Margin",
+              "body": "Input costs stabilized.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 9
+          },
+          {
+            "id": "report-2",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 145,
+                "y": 437
+              }
+            },
+            "note": {
+              "title": "Retention",
+              "body": "Renewals remain healthy.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 8
+          },
+          {
+            "id": "report-3",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 145,
+                "y": 602
+              }
+            },
+            "note": {
+              "title": "Inventory",
+              "body": "Stock buffer restored.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 7
+          },
+          {
+            "id": "report-4",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 145,
+                "y": 767
+              }
+            },
+            "note": {
+              "title": "Outlook",
+              "body": "Forecast assumes steady demand.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 6
+          }
+        ],
+        "noteSizes": {
+          "report-0": {
+            "width": 190,
+            "height": 84
+          },
+          "report-1": {
+            "width": 190,
+            "height": 84
+          },
+          "report-2": {
+            "width": 190,
+            "height": 84
+          },
+          "report-3": {
+            "width": 190,
+            "height": 84
+          },
+          "report-4": {
+            "width": 190,
+            "height": 84
+          }
+        },
+        "obstacles": [
+          {
+            "x": 35,
+            "y": 80,
+            "width": 110,
+            "height": 54
+          },
+          {
+            "x": 35,
+            "y": 245,
+            "width": 110,
+            "height": 54
+          },
+          {
+            "x": 35,
+            "y": 410,
+            "width": 110,
+            "height": 54
+          },
+          {
+            "x": 35,
+            "y": 575,
+            "width": 110,
+            "height": 54
+          },
+          {
+            "x": 35,
+            "y": 740,
+            "width": 110,
+            "height": 54
+          }
+        ],
+        "placement": {
+          "offset": [
+            16,
+            36,
+            64
+          ],
+          "crossOffset": [
+            0,
+            -32,
+            32,
+            -64,
+            64
+          ]
+        },
+        "refinement": {
+          "enabled": true,
+          "passes": 2,
+          "maxCandidatesPerAnnotation": 8
+        }
+      },
+      "host": [
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 80,
+          "width": 110,
+          "height": 54,
+          "fill": "#e2e8f0",
+          "label": "Revenue"
+        },
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 245,
+          "width": 110,
+          "height": 54,
+          "fill": "#e2e8f0",
+          "label": "Margin"
+        },
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 410,
+          "width": 110,
+          "height": 54,
+          "fill": "#e2e8f0",
+          "label": "Retention"
+        },
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 575,
+          "width": 110,
+          "height": 54,
+          "fill": "#e2e8f0",
+          "label": "Inventory"
+        },
+        {
+          "type": "rect",
+          "x": 35,
+          "y": 740,
+          "width": 110,
+          "height": 54,
+          "fill": "#e2e8f0",
+          "label": "Outlook"
+        },
+        {
+          "type": "text",
+          "x": 35,
+          "y": 35,
+          "text": "Quarterly operating report"
+        }
+      ],
+      "expectation": {
+        "kind": "feasible",
+        "budgets": {
+          "noteOverlapArea": 0,
+          "boundsOverflowArea": 0,
+          "obstacleOverlapArea": 0
+        },
+        "rationale": "Readable notes must remain disjoint, inside the padded viewport, and leave host content unobscured. Connector intersections are reported separately."
+      }
+    },
+    {
+      "id": "architecture-narrow",
+      "title": "Architecture",
+      "provenance": "authored synthetic host geometry",
+      "description": "Deterministic authored geometry; not an upstream or independent adoption example.",
+      "options": {
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 480,
+          "height": 980
+        },
+        "padding": 16,
+        "annotations": [
+          {
+            "id": "architecture-0",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 60,
+                "y": 90,
+                "width": 90,
+                "height": 44
+              }
+            },
+            "note": {
+              "title": "Ingress",
+              "body": "TLS boundary.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 10
+          },
+          {
+            "id": "architecture-1",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 330,
+                "y": 90,
+                "width": 90,
+                "height": 44
+              }
+            },
+            "note": {
+              "title": "API",
+              "body": "Validate requests.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 9
+          },
+          {
+            "id": "architecture-2",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 60,
+                "y": 360,
+                "width": 90,
+                "height": 44
+              }
+            },
+            "note": {
+              "title": "Queue",
+              "body": "Buffer bursts.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 8
+          },
+          {
+            "id": "architecture-3",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 330,
+                "y": 360,
+                "width": 90,
+                "height": 44
+              }
+            },
+            "note": {
+              "title": "Worker",
+              "body": "Retry safely.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 7
+          },
+          {
+            "id": "architecture-4",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 60,
+                "y": 660,
+                "width": 90,
+                "height": 44
+              }
+            },
+            "note": {
+              "title": "Store",
+              "body": "Durable records.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 6
+          },
+          {
+            "id": "architecture-5",
+            "anchor": {
+              "type": "box",
+              "box": {
+                "x": 330,
+                "y": 660,
+                "width": 90,
+                "height": 44
+              }
+            },
+            "note": {
+              "title": "Metrics",
+              "body": "Observe latency.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 5
+          }
+        ],
+        "noteSizes": {
+          "architecture-0": {
+            "width": 150,
+            "height": 76
+          },
+          "architecture-1": {
+            "width": 150,
+            "height": 76
+          },
+          "architecture-2": {
+            "width": 150,
+            "height": 76
+          },
+          "architecture-3": {
+            "width": 150,
+            "height": 76
+          },
+          "architecture-4": {
+            "width": 150,
+            "height": 76
+          },
+          "architecture-5": {
+            "width": 150,
+            "height": 76
+          }
+        },
+        "obstacles": [
+          {
+            "x": 60,
+            "y": 90,
+            "width": 90,
+            "height": 44
+          },
+          {
+            "x": 330,
+            "y": 90,
+            "width": 90,
+            "height": 44
+          },
+          {
+            "x": 60,
+            "y": 360,
+            "width": 90,
+            "height": 44
+          },
+          {
+            "x": 330,
+            "y": 360,
+            "width": 90,
+            "height": 44
+          },
+          {
+            "x": 60,
+            "y": 660,
+            "width": 90,
+            "height": 44
+          },
+          {
+            "x": 330,
+            "y": 660,
+            "width": 90,
+            "height": 44
+          }
+        ],
+        "placement": {
+          "offset": [
+            16,
+            36,
+            64
+          ],
+          "crossOffset": [
+            0,
+            -32,
+            32,
+            -64,
+            64
+          ]
+        },
+        "refinement": {
+          "enabled": true,
+          "passes": 2,
+          "maxCandidatesPerAnnotation": 8
+        }
+      },
+      "host": [
+        {
+          "type": "rect",
+          "x": 60,
+          "y": 90,
+          "width": 90,
+          "height": 44,
+          "fill": "#dcfce7",
+          "label": "Ingress"
+        },
+        {
+          "type": "line",
+          "x1": 105,
+          "y1": 112,
+          "x2": 375,
+          "y2": 112
+        },
+        {
+          "type": "rect",
+          "x": 330,
+          "y": 90,
+          "width": 90,
+          "height": 44,
+          "fill": "#dcfce7",
+          "label": "API"
+        },
+        {
+          "type": "line",
+          "x1": 375,
+          "y1": 112,
+          "x2": 105,
+          "y2": 382
+        },
+        {
+          "type": "rect",
+          "x": 60,
+          "y": 360,
+          "width": 90,
+          "height": 44,
+          "fill": "#dcfce7",
+          "label": "Queue"
+        },
+        {
+          "type": "line",
+          "x1": 105,
+          "y1": 382,
+          "x2": 375,
+          "y2": 382
+        },
+        {
+          "type": "rect",
+          "x": 330,
+          "y": 360,
+          "width": 90,
+          "height": 44,
+          "fill": "#dcfce7",
+          "label": "Worker"
+        },
+        {
+          "type": "line",
+          "x1": 375,
+          "y1": 382,
+          "x2": 105,
+          "y2": 682
+        },
+        {
+          "type": "rect",
+          "x": 60,
+          "y": 660,
+          "width": 90,
+          "height": 44,
+          "fill": "#dcfce7",
+          "label": "Store"
+        },
+        {
+          "type": "line",
+          "x1": 105,
+          "y1": 682,
+          "x2": 375,
+          "y2": 682
+        },
+        {
+          "type": "rect",
+          "x": 330,
+          "y": 660,
+          "width": 90,
+          "height": 44,
+          "fill": "#dcfce7",
+          "label": "Metrics"
+        }
+      ],
+      "expectation": {
+        "kind": "feasible",
+        "budgets": {
+          "noteOverlapArea": 0,
+          "boundsOverflowArea": 0,
+          "obstacleOverlapArea": 0
+        },
+        "rationale": "Readable notes must remain disjoint, inside the padded viewport, and leave host content unobscured. Connector intersections are reported separately."
+      }
+    },
+    {
+      "id": "long-text-narrow",
+      "title": "Long Text",
+      "provenance": "authored synthetic host geometry",
+      "description": "Deterministic authored geometry; not an upstream or independent adoption example.",
+      "options": {
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 480,
+          "height": 980
+        },
+        "padding": 16,
+        "annotations": [
+          {
+            "id": "long-text-0",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 100,
+                "y": 88
+              }
+            },
+            "note": {
+              "title": "Method",
+              "body": "Compare like periods. Seasonal effects can change the apparent trend.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 10
+          },
+          {
+            "id": "long-text-1",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 100,
+                "y": 263
+              }
+            },
+            "note": {
+              "title": "Coverage",
+              "body": "This sample includes active accounts. Inactive accounts are outside scope.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 9
+          },
+          {
+            "id": "long-text-2",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 100,
+                "y": 438
+              }
+            },
+            "note": {
+              "title": "Uncertainty",
+              "body": "Small cohorts vary more. Treat month to month movement as directional.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 8
+          },
+          {
+            "id": "long-text-3",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 100,
+                "y": 613
+              }
+            },
+            "note": {
+              "title": "Decision",
+              "body": "Review sustained changes before changing capacity or staffing plans.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 7
+          },
+          {
+            "id": "long-text-4",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 100,
+                "y": 788
+              }
+            },
+            "note": {
+              "title": "Follow-up",
+              "body": "Repeat the review after the next complete reporting period closes.",
+              "wrap": 24,
+              "padding": 10,
+              "maxLines": 6
+            },
+            "connector": {
+              "type": "elbow"
+            },
+            "priority": 6
+          }
+        ],
+        "noteSizes": {
+          "long-text-0": {
+            "width": 280,
+            "height": 140
+          },
+          "long-text-1": {
+            "width": 280,
+            "height": 140
+          },
+          "long-text-2": {
+            "width": 280,
+            "height": 140
+          },
+          "long-text-3": {
+            "width": 280,
+            "height": 140
+          },
+          "long-text-4": {
+            "width": 280,
+            "height": 140
+          }
+        },
+        "obstacles": [
+          {
+            "x": 30,
+            "y": 70,
+            "width": 70,
+            "height": 35
+          },
+          {
+            "x": 30,
+            "y": 245,
+            "width": 70,
+            "height": 35
+          },
+          {
+            "x": 30,
+            "y": 420,
+            "width": 70,
+            "height": 35
+          },
+          {
+            "x": 30,
+            "y": 595,
+            "width": 70,
+            "height": 35
+          },
+          {
+            "x": 30,
+            "y": 770,
+            "width": 70,
+            "height": 35
+          }
+        ],
+        "placement": {
+          "offset": [
+            16,
+            36,
+            64
+          ],
+          "crossOffset": [
+            0,
+            -32,
+            32,
+            -64,
+            64
+          ]
+        },
+        "refinement": {
+          "enabled": true,
+          "passes": 2,
+          "maxCandidatesPerAnnotation": 8
+        }
+      },
+      "host": [
+        {
+          "type": "rect",
+          "x": 30,
+          "y": 70,
+          "width": 70,
+          "height": 35,
+          "fill": "#fef3c7",
+          "label": "\u00a7 1"
+        },
+        {
+          "type": "rect",
+          "x": 30,
+          "y": 245,
+          "width": 70,
+          "height": 35,
+          "fill": "#fef3c7",
+          "label": "\u00a7 2"
+        },
+        {
+          "type": "rect",
+          "x": 30,
+          "y": 420,
+          "width": 70,
+          "height": 35,
+          "fill": "#fef3c7",
+          "label": "\u00a7 3"
+        },
+        {
+          "type": "rect",
+          "x": 30,
+          "y": 595,
+          "width": 70,
+          "height": 35,
+          "fill": "#fef3c7",
+          "label": "\u00a7 4"
+        },
+        {
+          "type": "rect",
+          "x": 30,
+          "y": 770,
+          "width": 70,
+          "height": 35,
+          "fill": "#fef3c7",
+          "label": "\u00a7 5"
+        }
+      ],
+      "expectation": {
+        "kind": "feasible",
+        "budgets": {
+          "noteOverlapArea": 0,
+          "boundsOverflowArea": 0,
+          "obstacleOverlapArea": 0
+        },
+        "rationale": "Readable notes must remain disjoint, inside the padded viewport, and leave host content unobscured. Connector intersections are reported separately."
+      }
+    },
+    {
+      "id": "impossible-400",
+      "title": "Impossible crowded review",
+      "provenance": "authored synthetic host geometry",
+      "description": "Five 180 \u00d7 100 notes cannot fit without overlap inside the padded viewport: total note area exceeds available area.",
+      "options": {
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 400,
+          "height": 220
+        },
+        "padding": 16,
+        "annotations": [
+          {
+            "id": "cramped-0",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 45,
+                "y": 110
+              }
+            },
+            "note": {
+              "title": "Requirement 1",
+              "body": "All required notes remain visible.",
+              "padding": 10,
+              "wrap": 22
+            },
+            "connector": {
+              "type": "straight"
+            }
+          },
+          {
+            "id": "cramped-1",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 70,
+                "y": 110
+              }
+            },
+            "note": {
+              "title": "Requirement 2",
+              "body": "All required notes remain visible.",
+              "padding": 10,
+              "wrap": 22
+            },
+            "connector": {
+              "type": "straight"
+            }
+          },
+          {
+            "id": "cramped-2",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 95,
+                "y": 110
+              }
+            },
+            "note": {
+              "title": "Requirement 3",
+              "body": "All required notes remain visible.",
+              "padding": 10,
+              "wrap": 22
+            },
+            "connector": {
+              "type": "straight"
+            }
+          },
+          {
+            "id": "cramped-3",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 120,
+                "y": 110
+              }
+            },
+            "note": {
+              "title": "Requirement 4",
+              "body": "All required notes remain visible.",
+              "padding": 10,
+              "wrap": 22
+            },
+            "connector": {
+              "type": "straight"
+            }
+          },
+          {
+            "id": "cramped-4",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 145,
+                "y": 110
+              }
+            },
+            "note": {
+              "title": "Requirement 5",
+              "body": "All required notes remain visible.",
+              "padding": 10,
+              "wrap": 22
+            },
+            "connector": {
+              "type": "straight"
+            }
+          }
+        ],
+        "noteSizes": {
+          "cramped-0": {
+            "width": 180,
+            "height": 100
+          },
+          "cramped-1": {
+            "width": 180,
+            "height": 100
+          },
+          "cramped-2": {
+            "width": 180,
+            "height": 100
+          },
+          "cramped-3": {
+            "width": 180,
+            "height": 100
+          },
+          "cramped-4": {
+            "width": 180,
+            "height": 100
+          }
+        },
+        "obstacles": [
+          {
+            "x": 20,
+            "y": 95,
+            "width": 360,
+            "height": 25
+          }
+        ],
+        "placement": {
+          "offset": [
+            16,
+            36,
+            64
+          ],
+          "crossOffset": [
+            0,
+            -32,
+            32,
+            -64,
+            64
+          ]
+        },
+        "refinement": {
+          "enabled": true,
+          "passes": 2,
+          "maxCandidatesPerAnnotation": 8
+        }
+      },
+      "host": [
+        {
+          "type": "rect",
+          "x": 20,
+          "y": 95,
+          "width": 360,
+          "height": 25,
+          "fill": "#fecaca",
+          "label": "Required content"
+        }
+      ],
+      "expectation": {
+        "kind": "impossible",
+        "requiredProblems": [
+          "note-overlap"
+        ],
+        "rationale": "Pigeonhole area bound proves disjoint notes impossible; keep every note and expose nonzero overlap."
+      }
+    },
+    {
+      "id": "impossible-240",
+      "title": "Impossible crowded review",
+      "provenance": "authored synthetic host geometry",
+      "description": "Five 180 \u00d7 100 notes cannot fit without overlap inside the padded viewport: total note area exceeds available area.",
+      "options": {
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 240,
+          "height": 220
+        },
+        "padding": 16,
+        "annotations": [
+          {
+            "id": "cramped-0",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 45,
+                "y": 110
+              }
+            },
+            "note": {
+              "title": "Requirement 1",
+              "body": "All required notes remain visible.",
+              "padding": 10,
+              "wrap": 22
+            },
+            "connector": {
+              "type": "straight"
+            }
+          },
+          {
+            "id": "cramped-1",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 70,
+                "y": 110
+              }
+            },
+            "note": {
+              "title": "Requirement 2",
+              "body": "All required notes remain visible.",
+              "padding": 10,
+              "wrap": 22
+            },
+            "connector": {
+              "type": "straight"
+            }
+          },
+          {
+            "id": "cramped-2",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 95,
+                "y": 110
+              }
+            },
+            "note": {
+              "title": "Requirement 3",
+              "body": "All required notes remain visible.",
+              "padding": 10,
+              "wrap": 22
+            },
+            "connector": {
+              "type": "straight"
+            }
+          },
+          {
+            "id": "cramped-3",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 120,
+                "y": 110
+              }
+            },
+            "note": {
+              "title": "Requirement 4",
+              "body": "All required notes remain visible.",
+              "padding": 10,
+              "wrap": 22
+            },
+            "connector": {
+              "type": "straight"
+            }
+          },
+          {
+            "id": "cramped-4",
+            "anchor": {
+              "type": "point",
+              "point": {
+                "x": 145,
+                "y": 110
+              }
+            },
+            "note": {
+              "title": "Requirement 5",
+              "body": "All required notes remain visible.",
+              "padding": 10,
+              "wrap": 22
+            },
+            "connector": {
+              "type": "straight"
+            }
+          }
+        ],
+        "noteSizes": {
+          "cramped-0": {
+            "width": 180,
+            "height": 100
+          },
+          "cramped-1": {
+            "width": 180,
+            "height": 100
+          },
+          "cramped-2": {
+            "width": 180,
+            "height": 100
+          },
+          "cramped-3": {
+            "width": 180,
+            "height": 100
+          },
+          "cramped-4": {
+            "width": 180,
+            "height": 100
+          }
+        },
+        "obstacles": [
+          {
+            "x": 20,
+            "y": 95,
+            "width": 200,
+            "height": 25
+          }
+        ],
+        "placement": {
+          "offset": [
+            16,
+            36,
+            64
+          ],
+          "crossOffset": [
+            0,
+            -32,
+            32,
+            -64,
+            64
+          ]
+        },
+        "refinement": {
+          "enabled": true,
+          "passes": 2,
+          "maxCandidatesPerAnnotation": 8
+        }
+      },
+      "host": [
+        {
+          "type": "rect",
+          "x": 20,
+          "y": 95,
+          "width": 200,
+          "height": 25,
+          "fill": "#fecaca",
+          "label": "Required content"
+        }
+      ],
+      "expectation": {
+        "kind": "impossible",
+        "requiredProblems": [
+          "note-overlap"
+        ],
+        "rationale": "Pigeonhole area bound proves disjoint notes impossible; keep every note and expose nonzero overlap."
+      }
+    }
+  ]
+}

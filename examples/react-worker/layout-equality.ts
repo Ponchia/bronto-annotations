@@ -142,6 +142,9 @@ export function shareUnchangedWorkerLayout(before: ResolvedLayout, after: Resolv
   layout: ResolvedLayout;
   reused: number;
 } {
+  // Optional diagnostics may share references with winners. Reuse of isolated
+  // annotations would split that graph; ordinary lean layouts keep the fast path.
+  if (before.diagnostics || after.diagnostics) return { layout: after, reused: 0 };
   if (before.annotations.length !== after.annotations.length
     || before.annotations.some((item, i) => item.id !== after.annotations[i]?.id)) {
     return { layout: after, reused: 0 };

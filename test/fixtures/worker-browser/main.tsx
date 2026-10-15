@@ -34,10 +34,12 @@ const initialOptions: LayoutOptions = {
 const initialLayout = resolveAnnotationLayout(initialOptions);
 
 type Request =
-  | { type: 'resolve'; id: number; baseRevision: number; options: LayoutOptions; delayMs?: number; forceSnapshot?: boolean; hostSentEpochMs: number }
-  | { type: 'ack'; revision: number };
+  | { type: 'resolve'; id: number; baseRevision: number; options: LayoutOptions; delayMs?: number; forceSnapshot?: boolean; holdReply?: boolean; hostSentEpochMs: number }
+  | { type: 'ack'; revision: number }
+  | { type: 'release-held'; id: number };
 type Reply =
   | { type: 'ready' }
+  | { type: 'held'; id: number }
   | {
     type: 'resolved'; id: number; response: LayoutResponse; resolverMs: number;
     encodeMs: number; jsonWireBytes: number; jsonFullBytes: number;
@@ -77,6 +79,7 @@ type Probe = {
   errors: string[];
   pings: number;
   pendingId: number | null;
+  heldReplyId: number | null;
   lastLayout: ResolvedLayout;
   checkParity: () => boolean;
 };
@@ -133,6 +136,10 @@ function App() {
       if (message.type === 'ready') {
         window.__workerProof!.ready = true;
         setStatus('Worker ready');
+        return;
+      }
+      if (message.type === 'held') {
+        if (active.current?.id === message.id) window.__workerProof!.heldReplyId = message.id;
         return;
       }
       if (message.id !== latestId.current || active.current?.id !== message.id) {
@@ -235,7 +242,7 @@ function App() {
     };
   }, []);
 
-  function send(action: string, next: LayoutOptions, delayMs = 0, forceSnapshot = false) {
+  function send(action: string, next: LayoutOptions, delayMs = 0, forceSnapshot = false, holdReply = false) {
     if (!worker.current) throw new Error('Worker is not ready');
     const id = ++latestId.current;
     const sentAt = performance.now();
@@ -245,7 +252,7 @@ function App() {
     window.__workerProof!.pendingId = id;
     setStatus(`Computing ${action} in Worker`);
     const request: Request = { type: 'resolve', id, baseRevision: committedRevision.current,
-      options: next, delayMs, forceSnapshot, hostSentEpochMs: sentEpochMs };
+      options: next, delayMs, forceSnapshot, holdReply, hostSentEpochMs: sentEpochMs };
     const beforeClone = performance.now();
     worker.current.postMessage(request);
     if (active.current?.id === id) active.current.postMessageMs = performance.now() - beforeClone;
@@ -273,12 +280,15 @@ function App() {
     send('stale-request', old, 160);
     send('newest-request', fresh, 0);
   }
-  function delayed() { send('delayed-request', structuredClone(committed.current), 160); }
+  function delayed() { send('delayed-request', structuredClone(committed.current), 0, false, true); }
   function cancel() {
+    const cancelledId = active.current?.id;
     latestId.current += 1;
     active.current = null;
     window.__workerProof!.pendingId = null;
     setStatus('Cancelled request; existing layout retained');
+    // Invalidate host admission BEFORE releasing the held real Worker response.
+    if (cancelledId !== undefined) worker.current?.postMessage({ type: 'release-held', id: cancelledId } satisfies Request);
   }
   function ping() {
     pingCount.current += 1;
@@ -296,7 +306,7 @@ function App() {
   useEffect(() => {
     window.__workerProof = {
       ready: false, events: observations.current, dropped: 0, errors: [],
-      pings: 0, pendingId: null, lastLayout: initialLayout, checkParity: verifyParity
+      pings: 0, pendingId: null, heldReplyId: null, lastLayout: initialLayout, checkParity: verifyParity
     };
   }, [verifyParity]);
 
@@ -327,11 +337,7 @@ function App() {
           if (pending) pending.observation.reactRenderMs = actualDuration;
         }}>
           <AnnotationLayer
-            annotations={annotations}
-            bounds={bounds}
-            obstacles={obstacles}
-            noteSizes={noteSizes}
-            resolvedLayout={layout}
+            layout={layout}
             label="Worker-hosted annotation SVG layer"
           />
         </Profiler>
