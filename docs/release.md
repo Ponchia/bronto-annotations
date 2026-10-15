@@ -161,6 +161,21 @@ It cannot recover a failed npm upload or publish a missing package. Its audit
 requires signed attestations from the original protected release; if those are
 missing or differ from the immutable tag, recovery fails closed.
 
+## Publication status on the website
+
+`site/release-status.json` records only confirmed immutable registry versions.
+`package.json` supplies the source version separately. Update `stableVersion`
+only after a stable release is actually installable; update `previewVersion`
+only after the exact prerelease tarball and registry metadata are verified.
+A release-preparation PR must not predeclare a successful publication. Every
+compiled HTML entry receives the same accessible, version-matched notice,
+including examples reached without visiting the homepage.
+
+The tag-validation job extracts **exact-version** changelog notes before npm
+approval. A missing, empty or ambiguous section fails before publication;
+`0.6.1` cannot accidentally select `0.6.10`. Prereleases prefer an exact named
+section, with an explicit unreleased-base fallback only for development notes.
+
 ## Post-Release
 
 - Confirm clean install smoke in a new consumer:

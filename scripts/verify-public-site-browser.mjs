@@ -47,6 +47,12 @@ async function visit(path, width) {
     timeout: 40000,
   });
   assert.equal(response?.status(), 200, 'HTTP failure on ' + path);
+  const notice = page.locator('[data-release-notice]');
+  assert.equal(await notice.count(), 1, 'Direct page entry lacks publication status: ' + path);
+  assert(await notice.isVisible(), 'Publication status must be visible: ' + path);
+  assert.match(await notice.innerText(), /Docs and demos:.*Stable npm:/s);
+  const noticeBox = await notice.boundingBox();
+  assert(noticeBox && noticeBox.width <= width, 'Version notice overflows narrow viewport');
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - innerWidth,
   );

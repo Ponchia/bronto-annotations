@@ -2,39 +2,37 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const raw = (process.argv[2] || '').replace(/^v/, '');
-const base = raw.split('-')[0];
-// A manual release-notes recovery can use the immutable tag's CHANGELOG.
-const changelog = readFileSync(process.argv[3] ? resolve(process.argv[3]) : resolve(root, 'CHANGELOG.md'), 'utf8');
-const lines = changelog.split('\n');
-
-let start = -1;
-for (let i = 0; i < lines.length; i++) {
-  if (/^##\s/.test(lines[i]) && base && lines[i].includes(base)) {
-    start = i;
-    break;
+export function extractChangelogSection(changelog, requestedVersion) {
+  const version = requestedVersion.replace(/^v/, '');
+  if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/.test(version)) {
+    throw new Error('Expected an exact release version');
   }
-}
-
-if (start === -1) {
-  process.stdout.write(
-    `Release ${process.argv[2] || ''}. See [CHANGELOG.md](https://github.com/Ponchia/bronto-annotations/blob/main/CHANGELOG.md).\n`
-  );
-  process.exit(0);
-}
-
-let end = lines.length;
-for (let i = start + 1; i < lines.length; i++) {
-  if (/^##\s/.test(lines[i])) {
-    end = i;
-    break;
+  const lines = changelog.split('\n');
+  const sections = [];
+  for (const line of lines) {
+    const heading = /^##\s+(.+)$/.exec(line);
+    if (heading) sections.push({ heading: heading[1].trim(), lines: [] });
+    else if (sections.length) sections.at(-1).lines.push(line);
   }
+  const parsed = sections.map((section) => {
+    const named = /^(?:Unreleased\s+[-—]\s+)?v?(\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?)(?:\s+[-—]\s+\d{4}-\d{2}-\d{2})?$/.exec(section.heading);
+    return { heading: section.heading, version: named?.[1], body: section.lines.join('\n').trim() };
+  });
+  let matching = parsed.filter((section) => section.version === version);
+  // Development tags may intentionally use their unreleased base-version notes.
+  // An exact prerelease section always takes precedence over that fallback.
+  if (!matching.length && version.includes('-')) {
+    matching = parsed.filter((section) => section.version === version.split('-')[0]
+      && section.heading.startsWith('Unreleased'));
+  }
+  if (matching.length !== 1 || !matching[0].body) {
+    throw new Error(`Expected exactly one nonempty changelog section for ${version}`);
+  }
+  return matching[0].body + '\n';
 }
 
-const body = lines
-  .slice(start + 1, end)
-  .join('\n')
-  .trim();
-
-process.stdout.write(`${body}\n`);
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+  const path = process.argv[3] ? resolve(process.argv[3]) : resolve(root, 'CHANGELOG.md');
+  process.stdout.write(extractChangelogSection(readFileSync(path, 'utf8'), process.argv[2] || ''));
+}

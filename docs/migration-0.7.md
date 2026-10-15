@@ -1,9 +1,11 @@
 # Migrating to the 0.7 API
 
-The source branch is a **0.7.0 development preview**, not a published release.
-Do not expect an existing 0.6.x installation to implement this guide. Build and
-pack this revision to test it in a separate consumer before upgrading a live
-application. No runtime dependencies or persistence service are added.
+The source branch targets **0.7.0-rc.1**. A candidate commit or tag is not evidence
+that npm has accepted the package. Check the published site's version notice and
+[release readiness](release-readiness.md); do not expect a 0.6.x installation to
+implement this guide. Build and pack this revision for isolated consumer testing
+until its exact candidate is confirmed installable. No runtime dependencies or
+persistence service are added.
 
 ## Why change the contract?
 
