@@ -1,6 +1,6 @@
 # Migrating to the 0.7 API
 
-The source branch targets **0.7.0-rc.1**. A candidate commit or tag is not evidence
+The source branch targets **0.7.0-dev.1**, after the immutable RC1 tag. A candidate commit or tag is not evidence
 that npm has accepted the package. Check the published site's version notice and
 [release readiness](release-readiness.md); do not expect a 0.6.x installation to
 implement this guide. Build and pack this revision for isolated consumer testing

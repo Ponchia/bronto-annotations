@@ -1,6 +1,6 @@
 {
   "name": "@ponchia/annotations",
-  "version": "0.7.0-rc.1",
+  "version": "0.7.0-dev.1",
   "description": "Headless annotation placement and rendering helpers for charts, diagrams, reports, and UI surfaces.",
   "keywords": [
     "annotations",
@@ -149,7 +149,8 @@
     "check:fast": "npm run typecheck && npm test && npm run check:dead && npm run test:types && npm run test:exports && npm run test:api-stability",
     "test:quality": "npm run build && node scripts/placement-quality-corpus.mjs",
     "test:upstream": "npm run build && node scripts/verify-upstream-consumers.mjs",
-    "benchmark:placement": "npm run build && node scripts/benchmark-bounded-placement.mjs"
+    "benchmark:placement": "npm run build && node scripts/benchmark-bounded-placement.mjs",
+    "benchmark:refinement": "npm run build && node scripts/benchmark-refinement.mjs"
   },
   "peerDependencies": {
     "@terrastruct/d2": ">=0.1.0",
