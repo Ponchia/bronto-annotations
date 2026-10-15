@@ -14,18 +14,21 @@ try { reference = (await compiler.ssrLoadModule('/test/fixtures/refinement-refer
 finally { await compiler.close(); }
 const observations = [];
 for (const count of [40, 200]) {
+ for (const workload of ['already-clear', 'crowded']) {
   const annotations = Array.from({ length: count }, (_, index) => ({
     id: `node-${String(index).padStart(3, '0')}`, priority: count - index,
     anchor: { type: 'point', point: { x: 65 + index % 13 * 96, y: 75 + Math.floor(index / 13) * 79 } },
     note: { title: `Node ${index}` }, placement: { side: 'right', offset: [12, 24], align: 'center' },
     connector: { type: 'straight', routing: 'none' }
   }));
-  const options = { annotations, bounds: { x: 0, y: 0, width: 1780, height: 1400 },
+  const options = { annotations, bounds: { x: 0, y: 0, width: 1780, height: workload === 'crowded' && count === 40 ? 300 : 1400 },
     obstacles: [{ x: 1405, y: 1130, width: 60, height: 50 }],
-    noteSizes: Object.fromEntries(annotations.map((note) => [note.id, { width: 84, height: 38 }])),
+    noteSizes: Object.fromEntries(annotations.map((note) => [note.id, workload === 'crowded' ? { width: 136, height: 110 } : { width: 84, height: 38 }])),
     diagnostics: { candidates: 8 } };
   const greedy = resolveAnnotationLayout(options);
   const frontier = greedy.diagnostics.annotations.map((row) => row.candidates);
+  if (workload === 'crowded') assert(evaluateAnnotationLayout(greedy).metrics.noteOverlapArea > 0,
+    'The crowded comparison must exercise actual nonzero refinement scoring');
   const old = () => reference(greedy, frontier, 2, 8);
   const current = () => refineAnnotationLayout(greedy, frontier, { passes: 2, maxCandidatesPerAnnotation: 8 });
   const expected = old();
@@ -40,10 +43,11 @@ for (const count of [40, 200]) {
       assert.deepStrictEqual(evaluateAnnotationLayout(layout), evaluateAnnotationLayout(expected));
     }
   }
-  observations.push({ count, exactLayoutAndQualityParity: true, samplesMs: samples,
+  observations.push({ count, workload, exactLayoutAndQualityParity: true, samplesMs: samples,
     referenceMs: distribution(samples.reference), optimizedMs: distribution(samples.optimized),
     initialQuality: evaluateAnnotationLayout(greedy).metrics,
     refinedQuality: evaluateAnnotationLayout(expected).metrics });
+ }
 }
 console.log(JSON.stringify({ schemaVersion: 1, benchmark: 'paired-exact-refinement-scoring',
   sourceRevision: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),

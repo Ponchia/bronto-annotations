@@ -90,7 +90,14 @@ pre-optimization full-quality algorithm, using warmed alternating samples on
 identical greedy layouts and candidate frontiers. Candidate generation is outside
 that paired timer. The normal repeated browser workflow also runs the complete
 updated solver; report its measurements separately from this isolated comparison.
-No speedup is claimed until the exact-head paired and browser evidence passes.
+The first exact-head proof passed: the already-clear 200-note workload avoided
+unnecessary refinement trials, with the complete production browser solve around
+103–105 ms rather than the earlier approximately 1.95 s. Those are separate
+hosted runs, not a controlled cross-run speedup estimate. The isolated paired
+comparison also records its zero initial penalty explicitly: a lower-bound exit
+must not be presented as evidence about difficult crowded scenes. A second,
+nonzero crowded workload in the same paired harness exercises cached scoring;
+report its raw samples and unchanged quality independently.
 
 ## Historical 0.6 measurements and configuration
 

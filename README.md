@@ -2,7 +2,8 @@
 
 > **0.7 development source:** the stable npm release is **0.6.10**.
 > This checkout is `0.7.0-dev.1`, newer than the immutable RC1 tag. The website
-> labels source and confirmed published versions separately. Read the
+> labels source and confirmed published versions separately. **0.7.0-rc.1 is
+> published under `next`**; install it explicitly to evaluate the candidate. Read the
 > [0.7 migration guide](docs/migration-0.7.md) and
 > [release readiness](docs/release-readiness.md) before upgrading.
 

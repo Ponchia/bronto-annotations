@@ -17,6 +17,10 @@ describe('versioned public documentation', () => {
   it('does not advertise an unpublished candidate as installable', () => {
     const status = siteReleaseStatus('0.7.0-rc.2', { ...record, previewVersion: '0.7.0-rc.1' });
     expect(status.sourcePublished).toBe(false);
+    const nextSource = injectReleaseNotice('<main></main>', status);
+    expect(nextSource).toContain('Publication of this source is not confirmed');
+    expect(nextSource).toContain('Published candidate: <strong>0.7.0-rc.1</strong>');
+    expect(nextSource).not.toContain('npm install @ponchia/annotations@0.7.0-rc.2');
     const confirmed = siteReleaseStatus('0.7.0-rc.1', { ...record, previewVersion: '0.7.0-rc.1' });
     expect(injectReleaseNotice('<body><div id="root"></div></body>', confirmed, '../../'))
       .toContain('npm install @ponchia/annotations@0.7.0-rc.1');
