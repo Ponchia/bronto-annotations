@@ -67,6 +67,31 @@ The **Worker performance evidence** Actions workflow retains these reports for
 no test assumes that a fast solver must still be computing when a later browser
 click occurs. Functional responsiveness and measurement interpretation stay separate.
 
+## Bounded refinement scoring experiment
+
+The repeated RC1 production benchmark exposed refinement as the dominant cost
+for the 200-note fixture: about 1.95 seconds in both tested Chromium viewports,
+while compact patch encoding took about 6 milliseconds. These are medians of
+three samples from one hosted runner, not a mobile-device performance claim.
+The raw browser report is in the Worker performance evidence artifact for
+[the RC1 measurement run](https://github.com/Ponchia/bronto-annotations/actions/runs/38770018148).
+
+Current development investigates a private scratch scorer. It recomputes the
+changed note's incoming/outgoing interactions instead of testing every unchanged
+pair and allocating a full issue report for each trial. Floating-point areas
+are still accumulated in exactly the public evaluator's order; no subtractive
+updates, approximated rankings or weakened quality budgets are used. At most
+1 MiB of scalar scratch is allowed, only during refinement; larger layouts use
+the original evaluator. A zero penalty is already a global lower bound and can
+stop refinement without changing its selected result.
+
+`npm run benchmark:refinement` compares the exact current result with the
+pre-optimization full-quality algorithm, using warmed alternating samples on
+identical greedy layouts and candidate frontiers. Candidate generation is outside
+that paired timer. The normal repeated browser workflow also runs the complete
+updated solver; report its measurements separately from this isolated comparison.
+No speedup is claimed until the exact-head paired and browser evidence passes.
+
 ## Historical 0.6 measurements and configuration
 
 The following pre-0.7 measurements retain their original API context. The

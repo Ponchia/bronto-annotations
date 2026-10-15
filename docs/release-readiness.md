@@ -8,8 +8,8 @@ it the default npm version or prove every host integration.
 
 The confirmed stable release is **0.6.10**. Its versioned documentation is at
 [the stable guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/README.md).
-The current candidate source is **0.7.0-rc.1**. Publication is not confirmed by
-this document. Public pages read their build version from `package.json` and
+The first candidate tag is **0.7.0-rc.1**; current development is **0.7.0-dev.1**.
+Publication is not confirmed by this document. Public pages read their build version from `package.json` and
 confirmed registry versions from `site/release-status.json`; the banner is
 present on the homepage, every guide, and every directly linked example.
 There is no runtime registry request or analytics in the example notices.

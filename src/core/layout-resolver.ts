@@ -3,6 +3,7 @@ import { anchorSubject, insetBox, isFiniteBox, normalizeBox, resolvePadding } fr
 import { allPlacementCandidates, assertPlacementPreference } from './placement.js';
 import { DEFAULT_NOTE_SIZE, DEFAULT_NOTE_PADDING } from './model.js';
 import { evaluateAnnotationLayout } from './quality.js';
+import { createRefinementScoreWorkspace } from './refinement-score.js';
 import { wrapNoteText, countTextGraphemes } from './text.js';
 import type { Annotation, Box, LayoutDiagnostics, LayoutOptions, LayoutRefinementOptions, PlacementCandidate, PlacementPreference, ResolvedAnnotation, ResolvedLayout, Size } from './model.js';
 
@@ -128,6 +129,10 @@ export function refineAnnotationLayout(
 
   let current = cloneLayout(layout);
   let currentScore = refinementScore(current);
+  // Every score contribution is nonnegative: zero is already a global lower
+  // bound. Preserve the existing shallow-clone return behavior without trials.
+  if (currentScore === 0) return current;
+  const scoring = createRefinementScoreWorkspace(current);
   const passes = boundedInteger(options.passes, 2, 1, 8);
   const maxCandidates = boundedInteger(options.maxCandidatesPerAnnotation, 32, 1, 256);
 
@@ -151,7 +156,9 @@ export function refineAnnotationLayout(
         }
 
         const next = applyCandidate(current, index, candidate);
-        const nextScore = refinementScore(next);
+        const nextScore = scoring
+          ? scoring.scoreReplacement(index, next.annotations[index]!)
+          : refinementScore(next);
 
         if (nextScore < bestScore - 0.0001) {
           bestLayout = next;
@@ -162,7 +169,9 @@ export function refineAnnotationLayout(
       if (bestLayout !== current) {
         current = bestLayout;
         currentScore = bestScore;
+        scoring?.commit(index, current.annotations[index]!);
         changed = true;
+        if (currentScore === 0) return current;
       }
     }
 

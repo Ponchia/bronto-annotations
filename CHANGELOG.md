@@ -35,6 +35,13 @@ reasonable.
 
 ### Performance and internal boundaries
 
+- Investigate exact refinement scoring with at most 1 MiB of per-call scratch.
+  Cache unchanged geometric contributions, but sum areas in the same order as
+  the public evaluator. Candidate trials restore their base; large inputs fall
+  back to the original full evaluator. No public API or persistent cache.
+  A separate paired benchmark checks the pre-optimization algorithm and keeps
+  measurements separate from output/quality parity.
+
 - Preserve exact placement ranking while avoiding connector routing for candidates
   whose geometric lower bound cannot enter the solver frontier. The default is
   lean; exhaustive diagnostics are opt-in. Regression tests compare geometry,
