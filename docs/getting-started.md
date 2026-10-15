@@ -1,5 +1,10 @@
 # Your first annotation
 
+> **Version boundary:** this guide follows the 0.7 source API. The confirmed
+> stable release is 0.6.10; its [versioned guide](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/getting-started.md)
+> matches a stable npm install. Check the public page's version notice or the
+> [release-readiness guide](release-readiness.md) before testing a candidate.
+
 [Documentation index](README.md) · [Choose an adapter](context-quickstart.md)
 
 The smallest integration has three parts: your host supplies an anchor, the

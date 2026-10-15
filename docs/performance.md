@@ -37,6 +37,36 @@ medians of 3.61, 6.87 and 11.29 ms; timings on a shared host are observational,
 and noise can make a bounded-diagnostic sample faster than a normal one.
 [Raw samples and provenance](measurements/2026-10-13-lean-api.json) are retained.
 
+## Repeated current Worker measurements
+
+Run the existing production browser fixture with repeated, independent contexts:
+
+```sh
+npm run build
+node scripts/verify-worker-browser.mjs --production --benchmark --benchmark-samples=3 --benchmark-output=browser-evidence/worker-browser.json
+node scripts/benchmark-worker-transport.mjs --counts=40,200 --rounds=5
+```
+
+The first command records every raw sample and source/runtime identity, then
+separates min/median/max by viewport, note count and workload. Its sequential
+transitions include a late anchor, distant obstacle, early note, changed bounds,
+bounded refinement and routed obstacles. It never pools unlike workloads or
+calls three samples a reliable tail-latency estimate. Chromium main-thread heap
+endpoints are sampled without forced GC; they exclude Worker heap and do not
+measure peak allocation or retained memory. Response-delivery timing includes
+scheduling, and a requestAnimationFrame callback is not compositor paint.
+
+The second command incorporates the unfinished standalone encoder experiment
+into the maintained transport harness. It repeatedly encodes the real current
+Worker codec, checks every reconstruction against the full layout, and retains
+encoding samples separately from structuredClone and MessageChannel timings.
+There is no duplicate comparator or pre-0.7 layout in the benchmark.
+
+The **Worker performance evidence** Actions workflow retains these reports for
+14 days. A ping is explicitly tested while a computed reply is held pending;
+no test assumes that a fast solver must still be computing when a later browser
+click occurs. Functional responsiveness and measurement interpretation stay separate.
+
 ## Historical 0.6 measurements and configuration
 
 The following pre-0.7 measurements retain their original API context. The

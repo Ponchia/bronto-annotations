@@ -39,6 +39,14 @@ constructor or a new package export. Hosts can move expensive full annotation
 layout calculations off the main thread using native module Web Workers while
 continuing to use the same synchronous headless API inside the Worker.
 
+## Current repeated evidence
+
+The [current performance recipe](performance.md#repeated-current-worker-measurements)
+measures production Chromium at desktop/mobile sizes and 40/200 notes, including
+early edits, global bounds/refinement and routed-obstacle changes. Saved reports
+retain raw samples, source identity and per-workload summaries. The historical
+0.6 numbers below do not describe this candidate's lean default.
+
 ## When to use a Worker
 
 For a committed edit late in priority order, start with

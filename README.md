@@ -1,8 +1,10 @@
 # Bronto Annotations
 
-> **0.7 development preview:** this source introduces a breaking API not yet
-> published on npm. Read the [0.7 migration guide](docs/migration-0.7.md) before
-> upgrading a 0.6.x application.
+> **0.7 release candidate source:** the stable npm release is **0.6.10**.
+> Publication of `0.7.0-rc.1` is not confirmed by this source commit. The website
+> labels source and confirmed published versions separately. Read the
+> [0.7 migration guide](docs/migration-0.7.md) and
+> [release readiness](docs/release-readiness.md) before upgrading.
 
 **Explain an existing chart, diagram, or interface without rebuilding it.**
 
@@ -33,8 +35,12 @@ application state or persistence, or provide a design system.
 ## Install
 
 ```bash
-npm install @ponchia/annotations
+npm install @ponchia/annotations@0.6.10
 ```
+
+This installs the stable release, not the 0.7 source shown in these guides.
+Use the [0.6.10 documentation](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/README.md)
+for that version, or build and pack this checkout to evaluate the candidate.
 
 ES modules only. The root import has no runtime dependencies and is DOM-free;
 React and adapter peer packages are optional. React applications also need

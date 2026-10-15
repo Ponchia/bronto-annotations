@@ -67,6 +67,11 @@ jobs:
             exit 1
           fi
 
+      - name: Verify exact changelog notes before publishing
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node scripts/changelog-section.mjs "$RELEASE_TAG" > "${RUNNER_TEMP}/release-notes.md"
+
   publish-preflight:
     name: Publish preflight
     runs-on: ubuntu-latest

@@ -88,6 +88,12 @@ for (const rel of pages) {
     'Missing document language: ' + rel,
   );
   assert(html.querySelector('title')?.textContent, 'Missing title: ' + rel);
+  const published = JSON.parse(await readFile(join(target, 'release-status.json'), 'utf8'));
+  const notices = html.querySelectorAll('[data-release-notice]');
+  assert.equal(notices.length, 1, 'Every direct entry needs a version notice: ' + rel);
+  assert.equal(notices[0].getAttribute('data-source-version'), published.sourceVersion);
+  assert.equal(notices[0].getAttribute('data-stable-version'), published.stableVersion);
+  assert(notices[0].textContent.includes(published.stableVersion));
   // Only the public editorial site is instrumented; package and independent
   // interactive example fixtures must not inherit website analytics.
   const editorial = rel === 'index.html' || rel.startsWith('docs/') || rel === 'examples/index.html';

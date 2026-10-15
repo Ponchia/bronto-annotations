@@ -1,0 +1,48 @@
+name: Worker performance evidence
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/worker-benchmarks.yml'
+      - 'scripts/verify-worker-browser.mjs'
+      - 'scripts/benchmark-worker-transport.mjs'
+      - 'scripts/worker-benchmark-summary.*'
+      - 'test/fixtures/worker-browser/**'
+      - 'test/scripts/worker-benchmark-summary.test.ts'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: worker-evidence-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  measure:
+    name: Repeated desktop and mobile Worker costs
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Repeated production browser workloads
+        run: node scripts/verify-worker-browser.mjs --production --benchmark --benchmark-samples=3 --benchmark-output=browser-evidence/worker-browser.json
+      - name: Node transport and repeated codec costs
+        run: |
+          mkdir -p browser-evidence
+          node scripts/benchmark-worker-transport.mjs --counts=40,200 --rounds=5 > browser-evidence/worker-node.json
+      - name: Retain measured samples and source identity
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: worker-performance-evidence
+          path: browser-evidence/
+          retention-days: 14
+          if-no-files-found: warn
