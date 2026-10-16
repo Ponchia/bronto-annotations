@@ -218,6 +218,7 @@
         "CreateAnnotationEditDeltaOptions",
         "CreateAnnotationEditEventOptions",
         "CreateAnnotationEditSessionOptions",
+        "LayoutReadabilityReport",
         "allPlacementCandidates",
         "annotationEditHandles",
         "annotationEditPatch",

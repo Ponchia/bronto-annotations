@@ -99,6 +99,17 @@ must not be presented as evidence about difficult crowded scenes. A second,
 nonzero crowded workload in the same paired harness exercises cached scoring;
 report its raw samples and unchanged quality independently.
 
+## Optional readability cost
+
+The experimental `refinement.readability` pass is disabled by default. Its
+private route workspace retains O(n) route summaries rather than another
+quadratic matrix; a trial checks only the proposed connector against the other
+routes. Promising readability improvements are still admitted through a complete
+geometry-quality check, so dense or long routed inputs can be expensive.
+The same existing bounded pass/candidate limits apply. Measure this opt-in work
+separately from normal layout, and use host-owned Worker scheduling for expensive
+committed edits. No automatic note hiding or frame-rate guarantee is introduced.
+
 ## Historical 0.6 measurements and configuration
 
 The following pre-0.7 measurements retain their original API context. The
