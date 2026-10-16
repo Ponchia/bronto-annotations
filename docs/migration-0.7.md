@@ -188,3 +188,12 @@ should set `refinement.maxCandidatesPerAnnotation: 8` explicitly when retaining
 that search policy. Do not compare only serialized sizes and assume quality is
 the same. The repository includes parity, negative API/type, browser and
 packed-consumer tests for this migration.
+
+
+## Independent Vega coordinates
+
+The coordinate helpers `vegaScaleCoordinate`, `vegaScaleInterval` and
+`vegaViewOrigin` are additive. Hosts can remove copied per-axis band handling and
+synthetic zero-scale views. Existing bulk adapter behavior is unchanged. Use
+`{ band: 'center', coerce: true }` for JSON-authored point callouts, and the
+interval helper for inclusive regions with either endpoint order.
