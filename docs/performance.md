@@ -117,6 +117,19 @@ exact-scoring comparison. Every geometric metric is checked for non-regression,
 and 1/8/all diagnostic retention must select identical winners. A bounded
 frontier may find no improvement; its raw report retains that outcome.
 
+A hosted Node 22 x64 Linux run at PR merge revision `848d401` recorded four
+warmed alternating samples for each mode. In the 40-note spaced scene,
+crossing pairs fell from 1 to 0 and total polyline length from 636.57 to 547.03
+solver units; full-solve medians were 19.02 ms without the editorial pass and
+20.76 ms with it. The 40-note crowded scene remained at one crossing and
+1,427.00 route units: medians were 19.33 and 27.70 ms respectively. The two
+12-note scenes needed no route changes. All existing geometry metrics were
+non-regressing and diagnostic-retention parity passed. These are descriptive
+single-runner observations, not device latency promises or a claim that the
+bounded pass solves impossible crowding. [Raw samples and source identity](measurements/2026-10-16-readability.json)
+retain both improved and unchanged outcomes.
+
+
 ## Historical 0.6 measurements and configuration
 
 The following pre-0.7 measurements retain their original API context. The
