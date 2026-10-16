@@ -18,9 +18,13 @@ require consumer credentials or a long-lived npm token.
 - OpenSSF Scorecard runs on pushes to `main`, branch protection changes, a
   weekly schedule, and manual dispatch. It publishes Scorecard results and
   uploads SARIF into GitHub code scanning. The Scorecard action is pinned to
-  the immutable `v2.4.4` release commit, rather than a mutable version tag.
-  This updates the underlying Scorecard engine to v5.5.0 while preserving
+  the immutable `v2.5.0` release commit, rather than a mutable version tag.
+  This updates the underlying Scorecard engine to v5.6.0 while preserving
   the workflow permissions and SARIF upload behavior.
+  Repository checks require a full immutable SHA on every actual Scorecard
+  `uses` entry instead of duplicating one historical release SHA. Negative tests
+  reject mutable tags, short hashes, comment-only pins and mixed pinned/mutable
+  executions. Upstream upgrades still require review and the complete CI gates.
 
 ## Version Update Compatibility Policy
 

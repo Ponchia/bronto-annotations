@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { writeLine } from './log.mjs';
+import { assertImmutableAction } from './workflow-action-pin.mjs';
 
 const pkg = JSON.parse(await read('package.json'));
 const ci = await read('.github/workflows/ci.yml');
@@ -8,6 +9,7 @@ const codeql = await read('.github/workflows/codeql.yml');
 const codeqlConfig = await read('.github/codeql/codeql-config.yml');
 const dependencyReview = await read('.github/workflows/dependency-review.yml');
 const scorecard = await read('.github/workflows/scorecard.yml');
+assertImmutableAction(scorecard, 'ossf/scorecard-action', '.github/workflows/scorecard.yml');
 const dependabot = await read('.github/dependabot.yml');
 const securityPolicy = await read('SECURITY.md');
 const docs = await read('docs/security-automation.md');
@@ -84,7 +86,6 @@ for (const term of [
   'id-token: write',
   'security-events: write',
   'persist-credentials: false',
-  'ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc',
   'results_format: sarif',
   'publish_results: true',
   'github/codeql-action/upload-sarif@v4'
