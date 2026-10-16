@@ -1,7 +1,7 @@
 # Bronto Annotations
 
-> Docs and demos track **main (`0.7.0-rc.2`)**. Stable npm: **0.6.10**;
-> published candidate: **0.7.0-rc.2**. [Choose your version](#install).
+> Docs and demos track **main (`0.7.0-rc.3`)**. Stable npm: **0.6.10**;
+> published candidate: **0.7.0-rc.3**. [Choose your version](#install).
 
 **Explain an existing chart, diagram, or interface without rebuilding it.**
 
@@ -39,11 +39,11 @@ Use the [0.6.10 documentation](https://github.com/Ponchia/bronto-annotations/blo
 with this stable install. To evaluate the published 0.7 candidate instead:
 
 ```bash
-npm install @ponchia/annotations@0.7.0-rc.2
+npm install @ponchia/annotations@0.7.0-rc.3
 ```
 
 The candidate is published under `next`; the exact version remains
-unambiguous if that tag moves. Its [versioned documentation](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0-rc.2/docs/README.md)
+unambiguous if that tag moves. Its [versioned documentation](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0-rc.3/docs/README.md)
 matches that package. This README and the website follow `main`;
 use the tagged guide when matching documentation to installed package bytes. Read the
 [0.7 migration guide](docs/migration-0.7.md) before upgrading and
