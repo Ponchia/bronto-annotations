@@ -8,7 +8,7 @@ import { expect, it } from 'vitest';
 
 it('passes the unchanged published Bronto UI v0.16.3 geometry contract', () => {
   const fixture = resolve('test/fixtures/legacy-ui-geometry');
-  const source = readFileSync(join(fixture, 'annotations.test.mjs'), 'utf8');
+  const source = readFileSync(join(fixture, 'annotations.test.mjs.txt'), 'utf8');
   const provenance = JSON.parse(readFileSync(join(fixture, 'provenance.json'), 'utf8'));
   expect(createHash('sha256').update(source).digest('hex')).toBe(provenance.sha256);
   expect(provenance.revision).toMatch(/^[a-f0-9]{40}$/);
