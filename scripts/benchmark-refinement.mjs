@@ -49,8 +49,58 @@ for (const count of [40, 200]) {
     refinedQuality: evaluateAnnotationLayout(expected).metrics });
  }
 }
+// Compare the full public solver with optional editorial refinement separately
+// from the exact-scoring optimization above. These authored inputs are synthetic,
+// and a bounded frontier is allowed to find no readability improvement.
+const readabilityObservations = [];
+for (const count of [12, 40]) for (const topology of ['spaced', 'crowded']) {
+  let seed = 173;
+  const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
+  const annotations = Array.from({ length: count }, (_, index) => ({
+    id: `editorial-${index}`, priority: count - index,
+    anchor: { type: 'point', point: { x: 80 + random() * 980, y: 80 + random() * 670 } },
+    note: { title: `Authored note ${index}` },
+    connector: { type: 'straight', routing: 'none' }
+  }));
+  const options = { annotations, bounds: { x: 0, y: 0, width: 1280, height: 900 },
+    noteSizes: Object.fromEntries(annotations.map((note) => [note.id,
+      topology === 'crowded' ? { width: 190, height: 110 } : { width: 110, height: 48 }])),
+    obstacles: [{ x: 420, y: 260, width: 120, height: 160 }],
+    refinement: { passes: 2, maxCandidatesPerAnnotation: 8 } };
+  const solve = (readability) => resolveAnnotationLayout({ ...options,
+    refinement: { ...options.refinement, readability } });
+  const baseline = solve(false);
+  const refined = solve(true);
+  const before = evaluateAnnotationLayout(baseline, { readability: true });
+  const after = evaluateAnnotationLayout(refined, { readability: true });
+  for (const key of ['invalidBoxCount', 'boundsOverflowArea', 'noteOverlapArea',
+    'obstacleOverlapArea', 'connectorObstacleHits', 'connectorNoteHits']) {
+    assert(after.metrics[key] <= before.metrics[key], `Readability worsened ${key}`);
+  }
+  assert(after.readability.connectorCrossingPairs <= before.readability.connectorCrossingPairs);
+  for (const candidates of [1, 8, 'all']) {
+    assert.deepStrictEqual(resolveAnnotationLayout({ ...options,
+      refinement: { ...options.refinement, readability: true }, diagnostics: { candidates } }).annotations,
+    refined.annotations, 'Readability winners must not depend on diagnostic retention');
+  }
+  const samplesMs = { geometric: [], readability: [] };
+  for (let repeat = 0; repeat < 4; repeat++) {
+    for (const mode of repeat % 2 ? ['readability', 'geometric'] : ['geometric', 'readability']) {
+      const start = performance.now();
+      const result = solve(mode === 'readability');
+      samplesMs[mode].push(performance.now() - start);
+      assert.deepStrictEqual(result.annotations, mode === 'readability' ? refined.annotations : baseline.annotations);
+    }
+  }
+  readabilityObservations.push({ count, topology, before: { metrics: before.metrics, readability: before.readability },
+    after: { metrics: after.metrics, readability: after.readability }, samplesMs,
+    geometricMs: distribution(samplesMs.geometric), readabilityMs: distribution(samplesMs.readability),
+    geometryMetricsNonRegressing: true, diagnosticRetentionParity: true });
+}
 console.log(JSON.stringify({ schemaVersion: 1, benchmark: 'paired-exact-refinement-scoring',
   sourceRevision: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
   runtime: { node: process.version, platform: process.platform, arch: process.arch },
   interpretation: 'Same greedy layout, fixed candidate frontier, two passes/eight candidates. Warmed alternating trials in one Node process measure refinement only, not initial placement, browser input latency or paint. The reference uses the pre-optimization full-quality algorithm. Timings are observations, not CI thresholds.',
-  observations }, null, 2));
+  observations,
+  readabilityInterpretation: 'Synthetic seeded 12/40-note scenes. Full public solves with matched two-pass/eight-candidate refinement, with or without the optional readability pass. Warmed alternating timings describe its additional cost, not a speedup or device/paint guarantee. Every existing geometry metric is non-regressing and retained diagnostics do not change winners. Crowded inputs may remain impossible; zero readability improvement is reported honestly.',
+  readabilityObservations }, null, 2));

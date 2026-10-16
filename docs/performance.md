@@ -110,6 +110,13 @@ The same existing bounded pass/candidate limits apply. Measure this opt-in work
 separately from normal layout, and use host-owned Worker scheduling for expensive
 committed edits. No automatic note hiding or frame-rate guarantee is introduced.
 
+The maintained `benchmark:refinement` harness also records seeded 12/40-note
+spaced and crowded scenes with the optional pass enabled/disabled. It reports raw
+alternating samples, crossing pairs and route lengths separately from the earlier
+exact-scoring comparison. Every geometric metric is checked for non-regression,
+and 1/8/all diagnostic retention must select identical winners. A bounded
+frontier may find no improvement; its raw report retains that outcome.
+
 ## Historical 0.6 measurements and configuration
 
 The following pre-0.7 measurements retain their original API context. The
