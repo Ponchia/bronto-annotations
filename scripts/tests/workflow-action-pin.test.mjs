@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
 import { assertImmutableAction } from '../workflow-action-pin.mjs';
 
 const action = 'ossf/scorecard-action';
@@ -31,3 +32,11 @@ test('a pinned decoy cannot hide a second mutable execution', () => {
 test('rejects references with an appended payload', () => {
   assert.throws(() => check(`- uses: ${action}@${newSha} unexpected`));
 });
+
+for (const name of ['readiness-matrix.json', 'completion-audit.json']) {
+  test(`${name} delegates immutable pin validation rather than freezing an old release`, () => {
+    const text = readFileSync(new URL(`../../docs/${name}`, import.meta.url), 'utf8');
+    assert.ok(text.includes(`${action}@`));
+    assert.ok(!/ossf\/scorecard-action@[a-f0-9]{40}/.test(text));
+  });
+}
