@@ -1,10 +1,7 @@
-// Run with playwright-cli run-code --filename=<absolute path> after opening
-// the Vite-served incremental example. Artifacts go outside the checkout.
-async page => {
+// Shared browser scenario for the maintained example gate. The caller owns
+// the browser, loopback origin and evidence directory; no extra CLI is required.
+export async function verifyResponsiveAuthoring(page, { origin, evidenceDirectory }) {
   const check = (condition, message) => { if (!condition) throw new Error(message); };
-  const origin = await page.evaluate(() => location.origin);
-  const evidenceDirectory = await page.evaluate(() =>
-    new URL(location.href).searchParams.get('evidence') ?? '/tmp/annotations-responsive-evidence');
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
@@ -71,8 +68,14 @@ async page => {
     await page.keyboard.press('ControlOrMeta+Shift+z');
     await page.waitForFunction(() => window.__annotationsExample?.action === 'Redid: Edited intake text');
 
-    if (width === 390) await page.locator('#diagram-disclosure').click();
+    const beforeNavigation = await inputs();
+    await page.locator('#go-to-diagram').focus();
+    await page.keyboard.press('Enter');
     await page.locator('#full-diagram').waitFor({ state: 'visible' });
+    await page.waitForFunction(() => document.activeElement?.classList.contains('stage-scroll'));
+    check(await inputs() === beforeNavigation, 'Diagram navigation never rewrites authored state');
+    await page.locator('#back-to-notes').click();
+    check(await rows.first().evaluate(el => el === document.activeElement), 'Diagram return restores selected list focus');
     const note = page.locator('.pa-annotation__note-box[data-annotation-id="signal"]');
     await note.focus();
     check(await select() === 'signal', 'Diagram focus synchronizes list/editor selection');
@@ -134,4 +137,14 @@ async page => {
   check(errors.length === 0, `Browser errors: ${errors.join('\n')}`);
   return { passed: true, widths: [1200, 390], checks: 'full text, crowded fallback, selection, keyboard edit/undo/redo, drag, invalid import, recovery, overflow',
     acceptance: 'Automated Chromium viewport checks; screen reader and physical device acceptance remain unperformed.' };
+}
+
+
+/** Existing geometry tests explicitly enter the optional full-detail view. */
+export async function openEditorDiagram(page) {
+  await page.locator('.note-list').waitFor({ state: 'visible' });
+  const control = page.locator('#diagram-disclosure');
+  await control.waitFor({ state: 'visible' });
+  if (await control.getAttribute('aria-expanded') !== 'true') await control.click();
+  await page.locator('#full-diagram').waitFor({ state: 'visible' });
 }

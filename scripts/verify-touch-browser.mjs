@@ -1,3 +1,4 @@
+import { openEditorDiagram } from '../test/examples/responsive-authoring.browser.js';
 /**
  * Real Chromium mobile-emulated touch input for the published React editor.
  * Uses CDP Input.dispatchTouchEvent, not synthetic PointerEvents: browser
@@ -75,6 +76,7 @@ try {
   assert.equal(response?.status(), 200, 'Interactive editor did not load');
   await page.waitForFunction(() => window.__annotationsExample?.annotations.length === 4);
   await reset();
+  await openEditorDiagram(page);
 
   const handle = page.locator(
     '.pa-annotation__edit-handle--note[data-annotation-id="signal"]').first();

@@ -137,3 +137,5 @@ h1 { font-size: clamp(30px, 4.3vw, 49px); font-weight: 680; letter-spacing: -0.0
   .note-text-editor-body { grid-column: auto; }
   .note-text-editor :is(select, input, textarea) { font-size: 16px; }
 }
+
+.diagram-heading button.diagram-return { width: auto; padding: 8px 0; border: 0; background: transparent; text-decoration: underline; font-weight: 600; }

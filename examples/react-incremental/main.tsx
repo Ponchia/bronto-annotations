@@ -138,6 +138,21 @@ function App() {
   const canRemoveLastNote = view.annotations.length > 1;
   const recoveredSelection = recoverNoteSelection(view.annotations, selectedNoteId);
   const selectedTextNote = view.annotations.find((item) => item.id === recoveredSelection)!;
+  const focusSelectedNote = () => {
+    const button = Array.from(card.current?.querySelectorAll<HTMLButtonElement>('.note-list button') ?? [])
+      .find((item) => item.dataset.noteId === recoveredSelection);
+    button?.focus({ preventScroll: true });
+    button?.scrollIntoView({ block: 'center' });
+  };
+  const goToDiagram = () => {
+    setDiagramOverride(true);
+    requestAnimationFrame(() => {
+      const stage = diagram.current?.querySelector<HTMLElement>('.stage-scroll');
+      stage?.focus({ preventScroll: true });
+      stage?.scrollIntoView({ block: 'start' });
+    });
+  };
+
   useEffect(() => {
     // Forget IDs removed by import/removal so undo cannot resurrect a stale
     // selection after the author has moved on to another note.
@@ -333,6 +348,7 @@ function App() {
 
       <section ref={card} className="demo-card" aria-label="Live incremental annotation editor">
         <div className="toolbar" role="group" aria-label="Annotation editing actions">
+          <button id="go-to-diagram" type="button" aria-controls="full-diagram" onClick={goToDiagram}>Go to diagram</button>
           <button id="move-note" type="button" onClick={moveLastAnchor}
             title="Move the final annotation anchor, including after importing your own JSON">Move final anchor</button>
           <button id="append-note" type="button" onClick={addAnnotation}
@@ -358,10 +374,7 @@ function App() {
           annotation={selectedTextNote}
           annotations={view.annotations}
           onSelect={setSelectedNoteId}
-          onReturn={() => {
-            Array.from(card.current?.querySelectorAll<HTMLButtonElement>('.note-list button') ?? [])
-              .find((button) => button.dataset.noteId === recoveredSelection)?.focus();
-          }}
+          onReturn={focusSelectedNote}
           onApply={(id, title, body) => {
             const next = editAnnotationText(history.current!.present.annotations, id, title, body);
             commit(next, `Edited ${id} text`);
@@ -375,6 +388,7 @@ function App() {
           <p>{crowded ? 'Crowded layout: use the list to read every note. Geometry is unchanged.'
             : narrow ? 'Narrow space: read and edit above. Open the diagram for geometry and drag handles.'
               : 'The full diagram shares the selection and committed edits above.'}</p>
+          <button id="back-to-notes" className="diagram-return" type="button" onClick={focusSelectedNote}>Back to selected note</button>
         </div>
         <div ref={diagram} id="full-diagram" hidden={!diagramOpen}>
         <p className="scroll-hint">Swipe sideways to follow the diagram <span aria-hidden="true">↔</span></p>

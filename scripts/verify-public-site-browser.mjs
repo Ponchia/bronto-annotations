@@ -1,3 +1,4 @@
+import { openEditorDiagram } from '../test/examples/responsive-authoring.browser.js';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile } from 'node:fs/promises';
@@ -28,7 +29,7 @@ const url = 'http://127.0.0.1:' + port.port;
 const browser = await chromium.launch({ headless: true });
 const wcagTags = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
 let variants = 0;
-const onboardingEvidence = resolve(root, '.tmp/screenshots/public-onboarding');
+const onboardingEvidence = resolve(root, 'browser-evidence/public-onboarding');
 await mkdir(onboardingEvidence, { recursive: true });
 
 async function visit(path, width) {
@@ -379,6 +380,7 @@ try {
   for (const width of [390, 1200]) {
     for (const name of publishedExamples) {
       const example = await visit(`/examples/${name}/`, width);
+      if (name === 'react-incremental') await openEditorDiagram(example);
       await example.locator('.pa-annotation').first().waitFor({ timeout: 30000 });
       if (name === 'svg-basic') {
         const strokes = await example.evaluate(() => {

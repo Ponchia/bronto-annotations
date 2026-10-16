@@ -3,6 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
 import { createServer } from 'vite';
+import { openEditorDiagram, verifyResponsiveAuthoring } from '../test/examples/responsive-authoring.browser.js';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const screenshotsDir = resolve(root, '.tmp/screenshots');
@@ -176,6 +177,8 @@ try {
       } catch (error) {
         throw new Error(`${label} did not render the initial annotation layer: ${error instanceof Error ? error.message : String(error)}${formatBrowserErrors(consoleErrors, pageErrors)}`);
       }
+
+      if (example.verifyIncrementalDemo) await openEditorDiagram(page);
 
       const evidence = await page.evaluate(() => {
         const connectors = Array.from(document.querySelectorAll('.pa-annotation__connector'));
@@ -866,6 +869,15 @@ try {
       await page.close();
     }
   }
+  const responsiveEvidence = resolve(root, 'browser-evidence/responsive-authoring');
+  await mkdir(responsiveEvidence, { recursive: true });
+  const responsivePage = await browser.newPage();
+  try {
+    const result = await verifyResponsiveAuthoring(responsivePage, {
+      origin: baseUrl, evidenceDirectory: responsiveEvidence
+    });
+    console.log(JSON.stringify({ responsiveAuthoring: result }));
+  } finally { await responsivePage.close(); }
 } finally {
   await browser.close();
   await server.close();

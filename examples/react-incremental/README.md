@@ -73,3 +73,11 @@ before copying an advanced pattern into an application.
 This fixture follows the checked-out repository revision. The public demo tracks
 `main` and can be ahead of the npm release. Match installed package versions to
 [release notes](https://github.com/Ponchia/bronto-annotations/releases).
+
+
+The responsive scenario runs automatically within `npm run test:browser`
+(and therefore `npm run check`) through the existing Playwright harness. It
+retains normal, full-detail and crowded screenshots in
+`browser-evidence/responsive-authoring/`, which survives subsequent package
+builds. Existing Firefox/WebKit and Chromium touch checks explicitly open the
+full diagram before testing geometry; they do not remove text-first coverage.
