@@ -9,6 +9,19 @@ import { AnnotatedPoint } from './react-example.js';
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
 describe('executable first-use documentation', () => {
+  it('pins install choices to the recorded publications rather than installing stable for a source tutorial', () => {
+    const record = JSON.parse(read('../../site/release-status.json'));
+    for (const path of ['../../README.md', '../../docs/getting-started.md']) {
+      const source = read(path);
+      expect(source).toContain(`npm install @ponchia/annotations@${record.stableVersion}`);
+      if (record.previewVersion) {
+        expect(source).toContain(`npm install @ponchia/annotations@${record.previewVersion}`);
+        expect(source).toContain(`/blob/v${record.previewVersion}/docs/`);
+      }
+      expect(source).not.toMatch(/^npm install @ponchia\/annotations$/m);
+    }
+  });
+
   it('runs the exact browser example printed in the README and first-use guide', async () => {
     const fixture = read('./readme-example.ts').trim();
     const fenced = `\`\`\`ts\n${fixture}\n\`\`\``;

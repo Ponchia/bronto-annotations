@@ -3,6 +3,9 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
 import { createServer } from 'vite';
+import {
+  verifyAuthoringDefault, openAuthoringDiagram, verifyResponsiveAuthoring
+} from './responsive-authoring-scenario.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const screenshotsDir = resolve(root, '.tmp/screenshots');
@@ -175,6 +178,16 @@ try {
         });
       } catch (error) {
         throw new Error(`${label} did not render the initial annotation layer: ${error instanceof Error ? error.message : String(error)}${formatBrowserErrors(consoleErrors, pageErrors)}`);
+      }
+
+      if (example.verifyIncrementalDemo) {
+        await verifyAuthoringDefault(page, label);
+        // Preserve initial list-first evidence separately from the existing
+        // full-detail geometry/drag screenshots and assertions below.
+        await page.screenshot({
+          path: resolve(screenshotsDir, `react-incremental-${viewport.name}-default.png`), fullPage: true
+        });
+        await openAuthoringDiagram(page);
       }
 
       const evidence = await page.evaluate(() => {
@@ -865,6 +878,16 @@ try {
       }
       await page.close();
     }
+  }
+  const responsivePage = await browser.newPage();
+  try {
+    const responsiveDir = resolve(root, 'browser-evidence/responsive-authoring');
+    await mkdir(responsiveDir, { recursive: true });
+    const result = await verifyResponsiveAuthoring(responsivePage, { origin: baseUrl, screenshotsDir: responsiveDir });
+    assert.equal(result.passed, true, 'Responsive authoring scenarios must pass in the mandatory browser gate');
+    console.log(JSON.stringify({ responsiveAuthoring: result }));
+  } finally {
+    await responsivePage.close();
   }
 } finally {
   await browser.close();

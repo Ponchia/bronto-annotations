@@ -184,6 +184,8 @@ export type LayoutRefinementOptions = {
   enabled?: boolean;
   passes?: number;
   maxCandidatesPerAnnotation?: number;
+  /** @experimental Improve polyline readability without worsening geometric metrics. */
+  readability?: boolean;
 };
 
 export type Annotation = {

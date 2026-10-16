@@ -205,6 +205,7 @@ function rootExperimental(name) {
     || name.includes('Edit')
     || [
       'AnnotationLayoutSession',
+      'LayoutReadabilityReport',
       'createIncrementalAnnotationLayoutSession',
       'allPlacementCandidates',
       'annotationEditHandles',

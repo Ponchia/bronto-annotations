@@ -73,3 +73,14 @@ Newer toolchain lanes already exist; changing defaults must preserve or explicit
 revise the Node 20 support policy. Registry observation remains advisory after a
 successful immutable npm publication. Notes-only recovery is implemented, but
 retrying npm publication itself must never be described as generally idempotent.
+
+
+### Text-first authoring acceptance
+
+For this development source, include the full-text note list and optional
+full-diagram controls in human review. Read every long or diagram-hidden note,
+select via keyboard, apply text and undo, use the direct diagram/return controls,
+and collapse a focused diagram under magnification. Confirm that focus and the
+selected note remain understandable after removal/import. Record the exact
+package/revision, device, browser and assistive technology. Automated scenarios
+exercise these paths, but do not turn this checklist into completed human evidence.

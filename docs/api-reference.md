@@ -503,3 +503,12 @@ Styled class families:
 
 Boundary: this subpath is styling only. It does not import `@ponchia/ui` or
 provide a design system.
+
+
+### Readability evidence (experimental)
+
+`evaluateAnnotationLayout(layout, { readability: true })` additionally returns
+`readability?: LayoutReadabilityReport`: polyline crossing-pair count, total route
+length, bends and explicit coverage counts. It does not redefine the geometry
+score. `refinement: { readability: true }` enables the bounded non-regressing
+editorial pass described in the [core guide](core-guide.md#optional-connector-readability).

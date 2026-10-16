@@ -267,3 +267,47 @@ Worker. When content cannot fit, let the host choose fewer simultaneously
 visible explanations, a separate note list, or a larger surface; do not mistake
 a completed solve for a readable layout. See the
 [quality corpus](placement-quality.md) and [migration guide](migration-0.7.md).
+
+## Optional connector readability
+
+Geometric validity and editorial readability are different. A disjoint layout
+can still have crossing or unnecessarily long connectors. Inspect polyline
+readability explicitly without changing the existing geometry score:
+
+```ts
+const quality = evaluateAnnotationLayout(layout, { readability: true });
+console.log(quality.readability?.connectorCrossingPairs);
+console.log(quality.readability?.totalConnectorLength);
+```
+
+This experimental report counts unordered connector pairs with a
+non-collinear intersection away from either route's source/target endpoints.
+Internal elbow contacts count once per pair; shared endpoints and collinear
+contacts do not. Length and bends use solver coordinates, not browser pixels.
+Curves are not measured using their control polygons: `skippedCurveCount`
+and `invalidConnectorCount` explain incomplete coverage, and `complete` stays
+false when any such route was skipped. This is not a typography, reading-order
+or accessibility grade. Existing `ok`, geometry metrics and `score` retain their
+meaning; requested crossing issues are informational.
+
+For an authored scene, enable the optional bounded readability pass:
+
+```ts
+const layout = resolveAnnotationLayout({
+  annotations,
+  bounds,
+  noteSizes,
+  refinement: { passes: 2, maxCandidatesPerAnnotation: 32, readability: true }
+});
+```
+
+The normal geometric refinement runs first. The editorial pass then considers
+that same private candidate frontier, preferring fewer polyline crossing pairs,
+shorter total routes, and fewer bends in that order. It preserves manually
+placed notes and accepts a move only when none of the existing invalid-box,
+overflow, note-overlap, obstacle-overlap, connector-obstacle or connector-note
+metrics gets worse. Diagnostic retention is independent of that frontier.
+The pass is off by default and has no frame-time or global-optimality guarantee.
+It does not reroute the underlying chart/graph edges or choose which notes to
+hide. With impossible crowding, retain diagnostics and provide a host-owned
+readable note list or explicit disclosure rather than hiding the failure.

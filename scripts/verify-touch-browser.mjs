@@ -13,6 +13,7 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { createServer } from 'vite';
+import { verifyAuthoringDefault, openAuthoringDiagram } from './responsive-authoring-scenario.mjs';
 
 const server = await createServer({
   configFile: false,
@@ -74,6 +75,8 @@ try {
   );
   assert.equal(response?.status(), 200, 'Interactive editor did not load');
   await page.waitForFunction(() => window.__annotationsExample?.annotations.length === 4);
+  await verifyAuthoringDefault(page, 'Chromium touch editor');
+  await openAuthoringDiagram(page);
   await reset();
 
   const handle = page.locator(

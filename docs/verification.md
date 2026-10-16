@@ -9,7 +9,9 @@ guides instead. Repository-relative paths in commands are run from the root.
 
 `npm run check:fast` covers compilation, unit tests, dead-code checks, declarations,
 package exports and the existing API contract. Use it while iterating; it is not
-a replacement for the full CI suite.
+a replacement for the full CI suite. It compiles once, then reuses the existing
+byte-verified build for declaration/export checks. Changed source or compiled
+output still refuses reuse; standalone `npm run build` remains a fresh build.
 
 `npm run test:quality` checks authored wide/narrow host geometry, exact retained
 placement parity, measured collision budgets, and expected impossible layouts.

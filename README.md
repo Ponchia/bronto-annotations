@@ -1,11 +1,7 @@
 # Bronto Annotations
 
-> **0.7 development source:** the stable npm release is **0.6.10**.
-> This checkout is `0.7.0-dev.1`, newer than the immutable RC1 tag. The website
-> labels source and confirmed published versions separately. **0.7.0-rc.1 is
-> published under `next`**; install it explicitly to evaluate the candidate. Read the
-> [0.7 migration guide](docs/migration-0.7.md) and
-> [release readiness](docs/release-readiness.md) before upgrading.
+> Docs and demos track **main (`0.7.0-dev.1`)**. Stable npm: **0.6.10**;
+> published candidate: **0.7.0-rc.1**. [Choose your version](#install).
 
 **Explain an existing chart, diagram, or interface without rebuilding it.**
 
@@ -39,9 +35,19 @@ application state or persistence, or provide a design system.
 npm install @ponchia/annotations@0.6.10
 ```
 
-This installs the stable release, not the 0.7 source shown in these guides.
 Use the [0.6.10 documentation](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/README.md)
-for that version, or build and pack this checkout to evaluate the candidate.
+with this stable install. To evaluate the published 0.7 candidate instead:
+
+```bash
+npm install @ponchia/annotations@0.7.0-rc.1
+```
+
+The candidate is published under `next`; the exact version remains
+unambiguous if that tag moves. Its [versioned documentation](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0-rc.1/docs/README.md)
+matches that package. This README follows newer, unpublished `main` source;
+clone the repository to run that source's examples. Read the
+[0.7 migration guide](docs/migration-0.7.md) before upgrading and
+[release readiness](docs/release-readiness.md) for source-testing instructions.
 
 ES modules only. The root import has no runtime dependencies and is DOM-free;
 React and adapter peer packages are optional. React applications also need
@@ -93,6 +99,10 @@ document.body.append(container);
 Start with the [first-annotation guide](docs/getting-started.md) for local setup,
 React, and coordinate-space basics. The [SVG example](examples/svg-basic/)
 shows annotations together with an actual host-rendered figure.
+For an existing surface, choose a first-success path for
+[SVG](docs/context-quickstart.md#first-note-on-a-figure),
+[DOM report](docs/context-quickstart.md#first-note-on-a-report), or
+[React Flow](docs/context-quickstart.md#first-note-on-a-graph).
 
 ## React
 

@@ -146,7 +146,7 @@
     "site:build": "npm run build && node scripts/build-public-site.mjs",
     "test:site": "npm run site:build && node scripts/check-public-site.mjs && node scripts/verify-public-site-browser.mjs",
     "example": "npm run build && vite",
-    "check:fast": "npm run typecheck && npm test && npm run check:dead && npm run test:types && npm run test:exports && npm run test:api-stability",
+    "check:fast": "npm run typecheck && export PONCHIA_ANNOTATIONS_REUSE_BUILD=1 && npm test && npm run check:dead && npm run test:types && npm run test:exports && npm run test:api-stability",
     "test:quality": "npm run build && node scripts/placement-quality-corpus.mjs",
     "test:upstream": "npm run build && node scripts/verify-upstream-consumers.mjs",
     "benchmark:placement": "npm run build && node scripts/benchmark-bounded-placement.mjs",

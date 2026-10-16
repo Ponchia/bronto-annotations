@@ -1,0 +1,311 @@
+{
+  "schemaVersion": 1,
+  "benchmark": "opt-in-connector-readability",
+  "sourceRevision": "848d40196f7653991d0b112e68248b569dfe113d",
+  "pullRequestHead": "471dfd55507ec440354a19df5ea6349bd694dadf",
+  "workflowRun": "https://github.com/Ponchia/bronto-annotations/actions/runs/38887343975",
+  "runtime": {
+    "node": "v22.23.3",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "interpretation": "Synthetic seeded 12/40-note scenes. Full public solves with matched two-pass/eight-candidate refinement, with or without the optional readability pass. Warmed alternating timings describe its additional cost, not a speedup or device/paint guarantee. Every existing geometry metric is non-regressing and retained diagnostics do not change winners. Crowded inputs may remain impossible; zero readability improvement is reported honestly.",
+  "observations": [
+    {
+      "count": 12,
+      "topology": "spaced",
+      "before": {
+        "metrics": {
+          "annotationCount": 12,
+          "issueCount": 0,
+          "invalidBoxCount": 0,
+          "boundsOverflowArea": 0,
+          "noteOverlapArea": 0,
+          "obstacleOverlapArea": 0,
+          "connectorObstacleHits": 0,
+          "connectorNoteHits": 0
+        },
+        "readability": {
+          "connectorCrossingPairs": 0,
+          "totalConnectorLength": 120,
+          "connectorBendCount": 0,
+          "evaluatedConnectorCount": 12,
+          "skippedCurveCount": 0,
+          "invalidConnectorCount": 0,
+          "complete": true
+        }
+      },
+      "after": {
+        "metrics": {
+          "annotationCount": 12,
+          "issueCount": 0,
+          "invalidBoxCount": 0,
+          "boundsOverflowArea": 0,
+          "noteOverlapArea": 0,
+          "obstacleOverlapArea": 0,
+          "connectorObstacleHits": 0,
+          "connectorNoteHits": 0
+        },
+        "readability": {
+          "connectorCrossingPairs": 0,
+          "totalConnectorLength": 120,
+          "connectorBendCount": 0,
+          "evaluatedConnectorCount": 12,
+          "skippedCurveCount": 0,
+          "invalidConnectorCount": 0,
+          "complete": true
+        }
+      },
+      "samplesMs": {
+        "geometric": [
+          8.226827999998932,
+          5.604553000004671,
+          3.7935960000031628,
+          3.89554599999974
+        ],
+        "readability": [
+          8.042462999997952,
+          8.844443000001775,
+          3.432679999998072,
+          3.4336630000034347
+        ]
+      },
+      "geometricMs": {
+        "samples": 4,
+        "min": 3.7935960000031628,
+        "median": 4.750049500002206,
+        "max": 8.226827999998932
+      },
+      "readabilityMs": {
+        "samples": 4,
+        "min": 3.432679999998072,
+        "median": 5.738063000000693,
+        "max": 8.844443000001775
+      },
+      "geometryMetricsNonRegressing": true,
+      "diagnosticRetentionParity": true
+    },
+    {
+      "count": 12,
+      "topology": "crowded",
+      "before": {
+        "metrics": {
+          "annotationCount": 12,
+          "issueCount": 0,
+          "invalidBoxCount": 0,
+          "boundsOverflowArea": 0,
+          "noteOverlapArea": 0,
+          "obstacleOverlapArea": 0,
+          "connectorObstacleHits": 0,
+          "connectorNoteHits": 0
+        },
+        "readability": {
+          "connectorCrossingPairs": 0,
+          "totalConnectorLength": 181.05221845696087,
+          "connectorBendCount": 0,
+          "evaluatedConnectorCount": 12,
+          "skippedCurveCount": 0,
+          "invalidConnectorCount": 0,
+          "complete": true
+        }
+      },
+      "after": {
+        "metrics": {
+          "annotationCount": 12,
+          "issueCount": 0,
+          "invalidBoxCount": 0,
+          "boundsOverflowArea": 0,
+          "noteOverlapArea": 0,
+          "obstacleOverlapArea": 0,
+          "connectorObstacleHits": 0,
+          "connectorNoteHits": 0
+        },
+        "readability": {
+          "connectorCrossingPairs": 0,
+          "totalConnectorLength": 181.05221845696087,
+          "connectorBendCount": 0,
+          "evaluatedConnectorCount": 12,
+          "skippedCurveCount": 0,
+          "invalidConnectorCount": 0,
+          "complete": true
+        }
+      },
+      "samplesMs": {
+        "geometric": [
+          3.6096620000025723,
+          4.253145000002405,
+          3.8081029999957536,
+          3.260639000000083
+        ],
+        "readability": [
+          7.097536000001128,
+          3.7824649999965914,
+          3.4882639999996172,
+          3.912477999998373
+        ]
+      },
+      "geometricMs": {
+        "samples": 4,
+        "min": 3.260639000000083,
+        "median": 3.708882499999163,
+        "max": 4.253145000002405
+      },
+      "readabilityMs": {
+        "samples": 4,
+        "min": 3.4882639999996172,
+        "median": 3.847471499997482,
+        "max": 7.097536000001128
+      },
+      "geometryMetricsNonRegressing": true,
+      "diagnosticRetentionParity": true
+    },
+    {
+      "count": 40,
+      "topology": "spaced",
+      "before": {
+        "metrics": {
+          "annotationCount": 40,
+          "issueCount": 4,
+          "invalidBoxCount": 0,
+          "boundsOverflowArea": 0,
+          "noteOverlapArea": 0,
+          "obstacleOverlapArea": 0,
+          "connectorObstacleHits": 0,
+          "connectorNoteHits": 3
+        },
+        "readability": {
+          "connectorCrossingPairs": 1,
+          "totalConnectorLength": 636.5713690355881,
+          "connectorBendCount": 0,
+          "evaluatedConnectorCount": 40,
+          "skippedCurveCount": 0,
+          "invalidConnectorCount": 0,
+          "complete": true
+        }
+      },
+      "after": {
+        "metrics": {
+          "annotationCount": 40,
+          "issueCount": 3,
+          "invalidBoxCount": 0,
+          "boundsOverflowArea": 0,
+          "noteOverlapArea": 0,
+          "obstacleOverlapArea": 0,
+          "connectorObstacleHits": 0,
+          "connectorNoteHits": 3
+        },
+        "readability": {
+          "connectorCrossingPairs": 0,
+          "totalConnectorLength": 547.0255875479135,
+          "connectorBendCount": 0,
+          "evaluatedConnectorCount": 40,
+          "skippedCurveCount": 0,
+          "invalidConnectorCount": 0,
+          "complete": true
+        }
+      },
+      "samplesMs": {
+        "geometric": [
+          19.491808999999193,
+          19.237122999998974,
+          18.81268799999816,
+          18.429682000001776
+        ],
+        "readability": [
+          21.78095100000064,
+          20.79373399999895,
+          20.727148999998462,
+          20.444941000001563
+        ]
+      },
+      "geometricMs": {
+        "samples": 4,
+        "min": 18.429682000001776,
+        "median": 19.024905499998567,
+        "max": 19.491808999999193
+      },
+      "readabilityMs": {
+        "samples": 4,
+        "min": 20.444941000001563,
+        "median": 20.760441499998706,
+        "max": 21.78095100000064
+      },
+      "geometryMetricsNonRegressing": true,
+      "diagnosticRetentionParity": true
+    },
+    {
+      "count": 40,
+      "topology": "crowded",
+      "before": {
+        "metrics": {
+          "annotationCount": 40,
+          "issueCount": 76,
+          "invalidBoxCount": 0,
+          "boundsOverflowArea": 0,
+          "noteOverlapArea": 76229.59019240021,
+          "obstacleOverlapArea": 18887.434102199335,
+          "connectorObstacleHits": 0,
+          "connectorNoteHits": 38
+        },
+        "readability": {
+          "connectorCrossingPairs": 1,
+          "totalConnectorLength": 1427.00219883776,
+          "connectorBendCount": 0,
+          "evaluatedConnectorCount": 40,
+          "skippedCurveCount": 0,
+          "invalidConnectorCount": 0,
+          "complete": true
+        }
+      },
+      "after": {
+        "metrics": {
+          "annotationCount": 40,
+          "issueCount": 76,
+          "invalidBoxCount": 0,
+          "boundsOverflowArea": 0,
+          "noteOverlapArea": 76229.59019240021,
+          "obstacleOverlapArea": 18887.434102199335,
+          "connectorObstacleHits": 0,
+          "connectorNoteHits": 38
+        },
+        "readability": {
+          "connectorCrossingPairs": 1,
+          "totalConnectorLength": 1427.00219883776,
+          "connectorBendCount": 0,
+          "evaluatedConnectorCount": 40,
+          "skippedCurveCount": 0,
+          "invalidConnectorCount": 0,
+          "complete": true
+        }
+      },
+      "samplesMs": {
+        "geometric": [
+          21.280774999999267,
+          18.68090200000006,
+          19.393235000003187,
+          19.25702900000033
+        ],
+        "readability": [
+          27.731079999997746,
+          27.612969000001613,
+          27.895077000001038,
+          27.660266999999294
+        ]
+      },
+      "geometricMs": {
+        "samples": 4,
+        "min": 18.68090200000006,
+        "median": 19.32513200000176,
+        "max": 21.280774999999267
+      },
+      "readabilityMs": {
+        "samples": 4,
+        "min": 27.612969000001613,
+        "median": 27.69567349999852,
+        "max": 27.895077000001038
+      },
+      "geometryMetricsNonRegressing": true,
+      "diagnosticRetentionParity": true
+    }
+  ]
+}

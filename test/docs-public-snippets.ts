@@ -21,6 +21,8 @@ import { prepareMermaidAnnotations } from '@ponchia/annotations/mermaid';
 import { prepareD2DiagramAnnotations } from '@ponchia/annotations/d2';
 import { prepareReactFlowAnnotations } from '@ponchia/annotations/react-flow';
 import '@ponchia/annotations/bronto.css';
+import { annotateReport } from './docs/dom-report-example.js';
+import { FlowNotes } from './docs/react-flow-example.js';
 
 declare const hostRoot: ParentNode;
 declare const mermaidSvg: SVGSVGElement;
@@ -221,3 +223,5 @@ void quickstartSvg;
 void publicRecipeLayout.annotations.length;
 void reactLayerProps;
 void AnnotationLayer;
+void annotateReport;
+void FlowNotes;
