@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Annotation } from '@ponchia/annotations';
 import {
@@ -10,19 +10,27 @@ export function NoteTextEditor({
   annotation,
   annotations,
   onSelect,
-  onApply
+  onApply,
+  onReturn
 }: {
   annotation: Annotation;
   annotations: readonly Annotation[];
   onSelect: (id: string) => void;
   onApply: (id: string, title: string, body: string) => void;
+  onReturn: () => void;
 }) {
   // Draft changes never affect the authoritative layout or editor history
-  // until the author presses Apply. The parent remounts this component after
-  // selecting another note, importing, committing, undoing or redoing.
+  // until the author presses Apply. Refresh drafts from committed inputs
+  // without remounting the form and dropping keyboard focus.
   const [title, setTitle] = useState(annotation.note.title ?? '');
   const [body, setBody] = useState(annotation.note.body ?? '');
   const [error, setError] = useState('');
+  const titleInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    setTitle(annotation.note.title ?? '');
+    setBody(annotation.note.body ?? '');
+    setError('');
+  }, [annotation]);
   const changed = title !== (annotation.note.title ?? '') || body !== (annotation.note.body ?? '');
   const missingContent = !title.trim() && !body.trim();
 
@@ -32,6 +40,7 @@ export function NoteTextEditor({
     try {
       onApply(annotation.id, title, body);
       setError('');
+      titleInput.current?.focus();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to update this note.');
     }
@@ -41,7 +50,8 @@ export function NoteTextEditor({
     <section className="note-text-editor" aria-labelledby="note-text-editor-title">
       <div className="note-text-editor-heading">
         <h2 id="note-text-editor-title">Edit annotation text</h2>
-        <p>Click or focus a note in the diagram to select it, or use the menu. Apply creates one undoable commit.</p>
+        <p>Select a note in the list, diagram or menu. Apply creates one undoable commit.</p>
+        <button className="return-to-note" type="button" onClick={onReturn}>Return to selected note</button>
       </div>
       <form onSubmit={apply}>
         <div className="note-text-editor-grid">
@@ -58,7 +68,7 @@ export function NoteTextEditor({
           </div>
           <div>
             <label htmlFor="text-editor-title">Title</label>
-            <input id="text-editor-title" type="text" value={title}
+            <input ref={titleInput} id="text-editor-title" type="text" value={title}
               maxLength={EDITOR_TITLE_MAX_LENGTH}
               onChange={(event) => { setTitle(event.target.value); setError(''); }} />
           </div>

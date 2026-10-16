@@ -15,9 +15,9 @@
   },
   "react-incremental": {
     "title": "Interactive annotation editor",
-    "summary": "Drag and edit notes, inspect JSON, and undo committed changes with host-owned history.",
-    "try": "Click or Tab to a note in the diagram to select it for text editing. Drag a note handle, use Move final anchor, edit a note title and apply it, then Undo and Redo. Copy the current JSON and load it back. Invalid JSON must leave the current state untouched.",
-    "boundary": "History, selection, forms, JSON validation, and persistence decisions are application code. The small importer accepts point/box annotations and at most ten notes; it is not a general package serializer.",
+    "summary": "Read every note in a synchronized list, edit text or geometry, inspect JSON, and undo committed changes with host-owned history.",
+    "try": "Select a title in All notes; use arrow keys, Home or End to navigate, then edit and apply its text. At narrow widths or in crowded layouts, open Show full diagram for geometry handles. Drag a note, Undo and Redo, then copy and reload JSON. Invalid JSON leaves the current state untouched.",
+    "boundary": "The host owns the complete note list, responsive disclosure, selection, history, forms and JSON validation. It retains every authored note and its geometry. The importer accepts point/box annotations and at most ten notes; it is not a general package serializer.",
     "guide": "react-guide"
   },
   "react-worker": {

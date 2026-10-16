@@ -8,13 +8,14 @@ import {
 } from '@ponchia/annotations';
 import { AnnotationLayer } from '@ponchia/annotations/react';
 import '@ponchia/annotations/bronto.css';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { EDITOR_MAX_NOTES, parseEditorAnnotationJson } from './json-import.js';
 import { appendDemoNote, removeFinalNote, moveFinalNoteAnchor } from './note-actions.js';
 import { editAnnotationText } from './note-text-editor.js';
 import { NoteTextEditor } from './NoteTextEditor.js';
-import { noteIdFromCanvasTarget } from './note-selection.js';
+import { noteIdFromCanvasTarget, recoverNoteSelection } from './note-selection.js';
+import { NoteList } from './NoteList.js';
 import {
   createEditorHistory, pushEditorHistory, undoEditorHistory, redoEditorHistory,
   type EditorHistory
@@ -102,6 +103,27 @@ function App() {
     redoCount: 0
   }));
   const quality = useMemo(() => evaluateAnnotationLayout(view.layout), [view.layout]);
+  const card = useRef<HTMLElement>(null);
+  const diagram = useRef<HTMLDivElement>(null);
+  const diagramToggle = useRef<HTMLButtonElement>(null);
+  const [availableWidth, setAvailableWidth] = useState(0);
+  const [diagramOverride, setDiagramOverride] = useState<boolean | null>(null);
+  // This is an example-host policy, not a solver rule: crowded/unavailable
+  // space gets a text-first view. No input, priority or geometry is rewritten.
+  const narrow = availableWidth < 690;
+  const crowded = !quality.ok;
+  const diagramOpen = diagramOverride ?? !(narrow || crowded);
+  useLayoutEffect(() => {
+    if (!card.current) return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) setAvailableWidth(entry.contentRect.width);
+    });
+    observer.observe(card.current);
+    return () => observer.disconnect();
+  }, []);
+  useLayoutEffect(() => {
+    if (!diagramOpen && diagram.current?.contains(document.activeElement)) diagramToggle.current?.focus();
+  }, [diagramOpen]);
   // Expose just the host-authored inputs, not the large candidate/quality
   // graph. This stays independent of package serialization or persistence.
   const annotationJson = useMemo(
@@ -114,8 +136,13 @@ function App() {
   const [importStatus, setImportStatus] = useState('');
   const atNoteLimit = view.annotations.length >= EDITOR_MAX_NOTES;
   const canRemoveLastNote = view.annotations.length > 1;
-  const selectedTextNote = view.annotations.find((item) => item.id === selectedNoteId)
-    ?? view.annotations[0]!;
+  const recoveredSelection = recoverNoteSelection(view.annotations, selectedNoteId);
+  const selectedTextNote = view.annotations.find((item) => item.id === recoveredSelection)!;
+  useEffect(() => {
+    // Forget IDs removed by import/removal so undo cannot resurrect a stale
+    // selection after the author has moved on to another note.
+    if (selectedNoteId !== recoveredSelection) setSelectedNoteId(recoveredSelection);
+  }, [selectedNoteId, recoveredSelection]);
 
   // Only authoritative edits enter this history: a pointer-move preview
   // remains visual-only and does not create a user-visible undo step.
@@ -299,12 +326,12 @@ function App() {
         <div>
           <p className="eyebrow">Bronto Annotations / React</p>
           <h1>Change one note. Keep the rest.</h1>
-          <p className="intro">A host-controlled layout in practice. Drag the handles or change the graph; earlier placements stay put when they can.</p>
+          <p className="intro">Read and edit every note below. Open the diagram to move geometry; earlier placements stay put when they can.</p>
         </div>
         <a className="source-link" href="https://github.com/Ponchia/bronto-annotations/tree/main/examples/react-incremental">View example source <span aria-hidden="true">↗</span></a>
       </header>
 
-      <section className="demo-card" aria-label="Live incremental annotation editor">
+      <section ref={card} className="demo-card" aria-label="Live incremental annotation editor">
         <div className="toolbar" role="group" aria-label="Annotation editing actions">
           <button id="move-note" type="button" onClick={moveLastAnchor}
             title="Move the final annotation anchor, including after importing your own JSON">Move final anchor</button>
@@ -321,13 +348,36 @@ function App() {
           <span className="history-shortcuts">Undo: Ctrl/⌘ Z · Redo: Ctrl/⌘ Shift Z</span>
         </div>
         <div className="selection-hint">
-          <span>Click or focus a note on the diagram to select its text.</span>
+          <span>Select a note in the list or diagram to edit its text.</span>
           <span role="status" aria-live="polite">
             Selected: <strong>{selectedTextNote.note.title?.trim() || selectedTextNote.id}</strong>
           </span>
         </div>
+        <NoteList annotations={view.annotations} selectedId={recoveredSelection} onSelect={setSelectedNoteId} />
+        <NoteTextEditor
+          annotation={selectedTextNote}
+          annotations={view.annotations}
+          onSelect={setSelectedNoteId}
+          onReturn={() => {
+            Array.from(card.current?.querySelectorAll<HTMLButtonElement>('.note-list button') ?? [])
+              .find((button) => button.dataset.noteId === recoveredSelection)?.focus();
+          }}
+          onApply={(id, title, body) => {
+            const next = editAnnotationText(history.current!.present.annotations, id, title, body);
+            commit(next, `Edited ${id} text`);
+          }}
+        />
+        <div className="diagram-heading">
+          <button ref={diagramToggle} id="diagram-disclosure" type="button" aria-expanded={diagramOpen}
+            aria-controls="full-diagram" onClick={() => setDiagramOverride(!diagramOpen)}>
+            {diagramOpen ? 'Hide full diagram' : 'Show full diagram'} <span aria-hidden="true">{diagramOpen ? '−' : '+'}</span>
+          </button>
+          <p>{crowded ? 'Crowded layout: use the list to read every note. Geometry is unchanged.'
+            : narrow ? 'Narrow space: read and edit above. Open the diagram for geometry and drag handles.'
+              : 'The full diagram shares the selection and committed edits above.'}</p>
+        </div>
+        <div ref={diagram} id="full-diagram" hidden={!diagramOpen}>
         <p className="scroll-hint">Swipe sideways to follow the diagram <span aria-hidden="true">↔</span></p>
-
         <div className="stage-scroll" tabIndex={0} aria-label="Scrollable diagram with editable annotations">
           <div className="workflow-stage"
             onClickCapture={(event) => {
@@ -376,23 +426,14 @@ function App() {
             />
           </div>
         </div>
+        </div>
 
         <div className="metrics" aria-live="polite" aria-atomic="true">
           <div className="metric"><span>Current action</span><strong id="current-action">{view.action}</strong></div>
           <div className="metric"><span>Reused placements</span><strong id="reused-placements">{view.reused} / {view.layout.annotations.length}</strong></div>
-          <div className="metric"><span>Visible annotations</span><strong id="annotation-count">{view.layout.annotations.length}</strong></div>
+          <div className="metric"><span>Authored notes</span><strong id="annotation-count">{view.annotations.length}</strong></div>
           <div className="metric"><span>Layout quality</span><strong id="quality-score">{quality.score} / 100</strong></div>
         </div>
-        <NoteTextEditor
-          key={`${selectedTextNote.id}/${view.changes}`}
-          annotation={selectedTextNote}
-          annotations={view.annotations}
-          onSelect={setSelectedNoteId}
-          onApply={(id, title, body) => {
-            const next = editAnnotationText(history.current!.present.annotations, id, title, body);
-            commit(next, `Edited ${id} text`);
-          }}
-        />
         <details className="annotation-source">
           <summary>Inspect current annotations (JSON)</summary>
           <p>These are the host-owned annotation inputs after committed edits.

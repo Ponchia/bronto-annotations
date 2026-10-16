@@ -5,6 +5,13 @@
  * paths, editing handles, arbitrary SVG subjects and elements outside this
  * stage cannot hijack the text editor's selected annotation.
  */
+export function recoverNoteSelection(
+  annotations: readonly { id: string }[], selectedId: string
+): string {
+  return annotations.some((item) => item.id === selectedId)
+    ? selectedId : annotations[0]?.id ?? '';
+}
+
 export function noteIdFromCanvasTarget(
   target: EventTarget | null, stage: HTMLElement
 ): string | undefined {
