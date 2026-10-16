@@ -14,11 +14,11 @@ one or two notes before adding measurements, editable state, or a Worker.
 | You want | Install and matching guidance |
 | --- | --- |
 | The stable release | `npm install @ponchia/annotations@0.6.10` and the [0.6.10 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/getting-started.md) |
-| The published 0.7 candidate | `npm install @ponchia/annotations@0.7.0-rc.1` and the [RC1 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0-rc.1/docs/getting-started.md) |
+| The published 0.7 candidate | `npm install @ponchia/annotations@0.7.0-rc.2` and the [RC2 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0-rc.2/docs/getting-started.md) |
 | The exact source shown here | Clone `main` and run the examples below |
 
-Source version `0.7.0-dev.1` is newer than RC1; its npm publication is
-unconfirmed.
+The RC2 candidate is published and its actual npm bytes were verified.
+The stable release remains on the 0.6 line; select the candidate deliberately.
 The standalone setup below pins the published candidate. Its first-point API
 also exists in this checkout, but newer source features may differ. Use the
 [migration guide](migration-0.7.md) when upgrading and
@@ -57,7 +57,7 @@ repository and a Node version from the [compatibility matrix](compatibility.md):
 mkdir annotation-demo
 cd annotation-demo
 npm init -y
-npm install @ponchia/annotations@0.7.0-rc.1
+npm install @ponchia/annotations@0.7.0-rc.2
 npm install --save-dev vite@8
 ```
 
@@ -95,7 +95,7 @@ TypeScript typecheck in your application's CI.
 In an existing TypeScript application whose bundler handles CSS imports:
 
 ```bash
-npm install @ponchia/annotations@0.7.0-rc.1
+npm install @ponchia/annotations@0.7.0-rc.2
 ```
 
 Put this in a browser entry point that runs after the document body exists:
@@ -150,7 +150,7 @@ Keep the same `viewBox` coordinate system and `preserveAspectRatio` as the host.
 In an existing React application, install the annotation package:
 
 ```bash
-npm install @ponchia/annotations@0.7.0-rc.1
+npm install @ponchia/annotations@0.7.0-rc.2
 ```
 
 React and React DOM remain peer dependencies: keep the application's existing

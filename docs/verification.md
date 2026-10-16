@@ -279,6 +279,7 @@ contract from UI v0.16.3, its immutable revision, SHA-256 and MIT notice.
 `test/scripts/legacy-ui-geometry.test.ts` changes only the import specifier and
 executes those assertions against this package's built exports. The published
 Annotations 0.6.10 package failed the oversized-note and invalid-input groups;
-those behaviors are corrected in the current source, not retroactively in the
-immutable published version. This test is stronger than checking export names,
+those behaviors are corrected in the published 0.7.0-rc.2 tarball, whose
+verified npm bytes also pass all 20 tests in a clean consumer. The immutable
+0.6.10 version is not retroactively modified. This test is stronger than checking export names,
 but covers only that historical test set, not all rendering or human usability.

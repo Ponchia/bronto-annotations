@@ -8,20 +8,31 @@ it the default npm version or prove every host integration.
 
 The confirmed stable release is **0.6.10**. Its versioned documentation is at
 [the stable guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/README.md).
-The first candidate tag is **0.7.0-rc.1**; current development is **0.7.0-rc.2**.
-RC1 is now published under `next`: its actual npm tarball (318,782 bytes) was
-retrieved and checked against the registry SHA-512 on October 15, 2026.
-`latest` remains **0.6.10**. Install the candidate explicitly:
+The confirmed candidate is **0.7.0-rc.2**, published under `next` on
+October 16, 2026. Its actual npm tarball (**338,865 bytes**) was downloaded
+and verified against the registry SHA-512. A clean consumer installed those
+verified bytes without UI or React and passed all **20 unchanged historical
+Bronto UI geometry tests**. `latest` remains **0.6.10**.
 
 ```sh
-npm install @ponchia/annotations@0.7.0-rc.1
+npm install @ponchia/annotations@0.7.0-rc.2
 ```
 
-The source's `0.7.0-rc.2` changes are not included in that immutable candidate.
-[Protected RC1 release](https://github.com/Ponchia/bronto-annotations/actions/runs/38771033258). Public pages read their build version from `package.json` and
-confirmed registry versions from `site/release-status.json`; the banner is
-present on the homepage, every guide, and every directly linked example.
-There is no runtime registry request or analytics in the example notices.
+[Protected RC2 release](https://github.com/Ponchia/bronto-annotations/actions/runs/38903003692).
+The first RC1 archive remains immutable; it does not contain RC2's oversized-note
+and invalid-input fixes. Public pages read their build version from `package.json`
+and confirmed registry versions from `site/release-status.json`. The notice is
+present on the homepage, every guide and directly linked example; there is no
+runtime registry request or analytics in the notice.
+
+Verified archive SHA-512:
+
+```text
+sha512-m2ytm7HT6UflYSSMJOnNh0Rmgf/Tsdj1DPkfyJ9fbQ6Ojl5e1MKocAXYvrufj6j9+qRjyBBGEQ0NlVoEMnTZ2Q==
+```
+
+These are package and automated integration results, not a claim of human
+accessibility acceptance or a production application deployment.
 
 Before publication, build and pack a clean checkout, then install its tarball
 in a separate disposable consumer. After the protected release succeeds and

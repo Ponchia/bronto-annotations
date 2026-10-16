@@ -1,11 +1,13 @@
 # Migrating to the 0.7 API
 
-The source branch targets **0.7.0-dev.1**, after the immutable RC1 tag. A candidate commit or tag is not evidence
-that npm has accepted the package. Check the published site's version notice and
-[release readiness](release-readiness.md); do not expect a 0.6.x installation to
-implement this guide. Build and pack this revision for isolated consumer testing
-until its exact candidate is confirmed installable. No runtime dependencies or
-persistence service are added.
+The verified published candidate is **0.7.0-rc.2**; the stable npm channel
+remains **0.6.10**. The RC2 npm tarball was retrieved and integrity-checked;
+see [release readiness](release-readiness.md) for publication and consumer
+proof. A future source commit or tag is not evidence of registry publication.
+
+```sh
+npm install @ponchia/annotations@0.7.0-rc.2
+```
 
 ## Why change the contract?
 

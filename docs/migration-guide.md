@@ -14,8 +14,10 @@ selections, own chart scales, parse diagram source, or depend on `@ponchia/ui`.
 For a complete UI-helper migration, use a release containing the 20-test legacy
 geometry contract added for 0.7.0-rc.2. The published 0.6.10 package differs on
 oversized-note fallback placement and invalid timeline/subject handling.
-The corrected RC2 source preserves those historical expectations; do not treat
-source preparation as confirmation that the RC2 tarball is published.
+The published RC2 tarball preserves those historical expectations: all 20
+unchanged UI geometry tests passed against its verified npm bytes. Install
+`@ponchia/annotations@0.7.0-rc.2` explicitly and read the separate 0.7 API
+migration guide before upgrading an application.
 
 UI's 0.17 `analytical.css` and `report-kit.css` roll-ups still include legacy
 annotation CSS. Migrated applications should import only the UI leaves they
