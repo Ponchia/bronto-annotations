@@ -5,7 +5,7 @@
  * renderer helpers, prepared-layout diagnostics, presets, and Bronto class/CSS
  * helpers.
  * @experimental During `0.x`: edit/authoring
- * helpers, and low-level placement candidate scoring exports.
+ * helpers, polyline readability evidence/refinement, and low-level placement candidate scoring exports.
  */
 export type {
   Anchor,
@@ -196,6 +196,7 @@ export type {
   LayoutQualityMetrics,
   LayoutQualityOptions,
   LayoutQualityReport,
+  LayoutReadabilityReport,
   LayoutQualitySeverity
 } from './core/quality.js';
 export {

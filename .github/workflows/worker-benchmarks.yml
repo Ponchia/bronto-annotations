@@ -11,6 +11,8 @@ on:
       - 'test/scripts/worker-benchmark-summary.test.ts'
       - 'src/core/layout-resolver.ts'
       - 'src/core/refinement-score.ts'
+      - 'src/core/connector-readability.ts'
+      - 'test/core/connector-readability.test.ts'
       - 'src/core/quality*.ts'
       - 'scripts/benchmark-refinement.mjs'
       - 'test/core/refinement-scoring.test.ts'

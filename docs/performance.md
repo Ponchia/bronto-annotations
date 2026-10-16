@@ -99,6 +99,37 @@ must not be presented as evidence about difficult crowded scenes. A second,
 nonzero crowded workload in the same paired harness exercises cached scoring;
 report its raw samples and unchanged quality independently.
 
+## Optional readability cost
+
+The experimental `refinement.readability` pass is disabled by default. Its
+private route workspace is linear in routes and their polyline points rather
+than retaining another quadratic matrix; a trial checks only the proposed connector against the other
+routes. Promising readability improvements are still admitted through a complete
+geometry-quality check, so dense or long routed inputs can be expensive.
+The same existing bounded pass/candidate limits apply. Measure this opt-in work
+separately from normal layout, and use host-owned Worker scheduling for expensive
+committed edits. No automatic note hiding or frame-rate guarantee is introduced.
+
+The maintained `benchmark:refinement` harness also records seeded 12/40-note
+spaced and crowded scenes with the optional pass enabled/disabled. It reports raw
+alternating samples, crossing pairs and route lengths separately from the earlier
+exact-scoring comparison. Every geometric metric is checked for non-regression,
+and 1/8/all diagnostic retention must select identical winners. A bounded
+frontier may find no improvement; its raw report retains that outcome.
+
+A hosted Node 22 x64 Linux run at PR merge revision `848d401` recorded four
+warmed alternating samples for each mode. In the 40-note spaced scene,
+crossing pairs fell from 1 to 0 and total polyline length from 636.57 to 547.03
+solver units; full-solve medians were 19.02 ms without the editorial pass and
+20.76 ms with it. The 40-note crowded scene remained at one crossing and
+1,427.00 route units: medians were 19.33 and 27.70 ms respectively. The two
+12-note scenes needed no route changes. All existing geometry metrics were
+non-regressing and diagnostic-retention parity passed. These are descriptive
+single-runner observations, not device latency promises or a claim that the
+bounded pass solves impossible crowding. [Raw samples and source identity](measurements/2026-10-16-readability.json)
+retain both improved and unchanged outcomes.
+
+
 ## Historical 0.6 measurements and configuration
 
 The following pre-0.7 measurements retain their original API context. The

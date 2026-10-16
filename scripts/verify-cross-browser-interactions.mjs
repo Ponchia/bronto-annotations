@@ -15,6 +15,7 @@ import assert from 'node:assert/strict';
 import { chromium, firefox, webkit } from 'playwright';
 import { createServer } from 'vite';
 import AxeBuilder from '@axe-core/playwright';
+import { verifyAuthoringDefault, openAuthoringDiagram } from './responsive-authoring-scenario.mjs';
 import {
   captureBrowserEvidence, evidenceError, writeBrowserEvidence
 } from './browser-evidence.mjs';
@@ -93,6 +94,8 @@ async function verifyIncremental(browser, origin, viewport, label) {
       window.__annotationsExample?.name === 'react-incremental'
       && window.__annotationsExample.annotations.length === 4
     );
+    await verifyAuthoringDefault(page, label);
+    await openAuthoringDiagram(page);
     assert.equal(await page.locator('svg.pa-annotation-layer').getAttribute('role'), 'group',
       label + ': interactive SVG must expose keyboard-focusable descendants');
     assert.equal(await page.locator('g.pa-annotation').count(), 4);

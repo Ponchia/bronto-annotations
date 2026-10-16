@@ -8,6 +8,25 @@ reasonable.
 
 ## Unreleased - 0.7.0
 
+### Readability and authoring refinement
+
+- Add experimental opt-in polyline readability reports and bounded refinement.
+  Prefer fewer connector-crossing pairs and shorter routes without worsening
+  any existing geometric-quality metric. Preserve manual notes and report
+  unmeasured curves explicitly; default layout and quality scores are unchanged.
+- Keep every authored note accessible in the incremental example's full-text
+  list. Narrow and crowded hosts default to text-first presentation with an
+  explicit full-diagram control. Synchronize keyboard selection, editing,
+  undo/redo and focus recovery; provide direct diagram/selected-note navigation.
+- Replace the long version warning with always-visible source/stable identity
+  and native expandable install details. Add version-matched SVG, DOM-report
+  and React Flow onboarding paths with executable snippet checks.
+- Run responsive scenarios in the existing browser gate, retain their evidence
+  across later builds, and reuse verified output in the fast check instead of
+  compiling repeatedly. Preserve all existing browser/package/quality gates.
+- Retain paired 12/40-note readability timings and both improved and unchanged
+  layouts. These do not establish physical-device or screen-reader acceptance.
+
 ### Breaking API changes
 
 - Return lean layouts by default; move candidate lists out of each placement

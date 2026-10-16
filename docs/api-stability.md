@@ -78,3 +78,12 @@ turn these formats into a compatibility promise for consumers.
 - New public subpaths require declaration checks, packed-consumer smoke tests,
   docs, and readiness/completion audit evidence.
 - Root imports must remain DOM-free and free of optional peer runtime imports.
+
+
+### Experimental readability extension
+
+`LayoutReadabilityReport`, `LayoutQualityOptions.readability`, and
+`LayoutRefinementOptions.readability` are experimental during the 0.7 development
+lane. They are opt-in; existing geometry validity, default solver selection and
+quality scores remain unchanged. The report describes polylines only and records
+unmeasured curves/invalid routes explicitly. See the [core guide](core-guide.md#optional-connector-readability).

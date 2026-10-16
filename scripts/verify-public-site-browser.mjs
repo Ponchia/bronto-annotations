@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { mkdir, readdir } from 'node:fs/promises';
+import { mkdir, readdir, readFile } from 'node:fs/promises';
 import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 import { resolve } from 'node:path';
+import { verifyAuthoringDefault, openAuthoringDiagram } from './responsive-authoring-scenario.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
+const publication = JSON.parse(await readFile(resolve(root, '_site/release-status.json'), 'utf8'));
 const publishedExamples = (await readdir(resolve(root, '_site/examples'), { withFileTypes: true }))
   .filter((entry) => entry.isDirectory() &&
     existsSync(resolve(root, '_site/examples', entry.name, 'index.html')))
@@ -27,7 +29,7 @@ const url = 'http://127.0.0.1:' + port.port;
 const browser = await chromium.launch({ headless: true });
 const wcagTags = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
 let variants = 0;
-const onboardingEvidence = resolve(root, '.tmp/screenshots/public-onboarding');
+const onboardingEvidence = resolve(root, 'browser-evidence/public-onboarding');
 await mkdir(onboardingEvidence, { recursive: true });
 
 async function visit(path, width) {
@@ -37,6 +39,10 @@ async function visit(path, width) {
   });
   const page = await context.newPage();
   const errors = [];
+  page.on('request', (request) => {
+    if (new URL(request.url()).hostname === 'registry.npmjs.org')
+      errors.push('Version notice must not query the npm registry at runtime');
+  });
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('response', (response) => {
     if (response.status() >= 400)
@@ -53,6 +59,15 @@ async function visit(path, width) {
   assert.match(await notice.innerText(), /Docs and demos:.*Stable npm:/s);
   const noticeBox = await notice.boundingBox();
   assert(noticeBox && noticeBox.width <= width, 'Version notice overflows narrow viewport');
+  assert(noticeBox.height <= (width < 500 ? 140 : 90),
+    'Collapsed version notice must leave room for page content: ' + path);
+  assert.equal(await notice.locator('details').getAttribute('open'), null,
+    'Install guidance should start collapsed: ' + path);
+  const identity = notice.locator('[data-release-identity]');
+  assert(await identity.isVisible(), 'Source and stable identities must remain visible');
+  assert((await identity.innerText()).includes(publication.sourceVersion));
+  assert((await identity.innerText()).includes('Stable npm: ' + publication.stableVersion));
+  assert.equal(await identity.locator('a').getAttribute('href'), publication.stableDocs);
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - innerWidth,
   );
@@ -62,6 +77,58 @@ async function visit(path, width) {
   );
   assert.equal(errors.length, 0, errors.join('; '));
   return page;
+}
+
+async function verifyVersionDisclosure(page, width) {
+  const notice = page.locator('[data-release-notice]');
+  const details = notice.locator('details');
+  const summary = details.locator('summary');
+  const collapsed = await notice.boundingBox();
+  const guidance = details.locator('[data-release-guidance]');
+  assert.equal(await guidance.isVisible(), false);
+  await notice.screenshot({ path: resolve(onboardingEvidence, `version-collapsed-${width}.png`) });
+  await summary.focus();
+  assert(await summary.evaluate((node) => node.matches(':focus-visible')),
+    'Disclosure must expose keyboard focus');
+  const focus = await summary.evaluate((node) => ({
+    style: getComputedStyle(node).outlineStyle,
+    width: parseFloat(getComputedStyle(node).outlineWidth)
+  }));
+  assert(focus.style !== 'none' && focus.width >= 2, 'Disclosure needs a visible keyboard focus ring');
+  await page.keyboard.press('Enter');
+  assert.equal(await details.getAttribute('open'), '');
+  assert(await guidance.isVisible(), 'Keyboard Enter must reveal install guidance');
+  assert((await guidance.innerText()).includes(publication.stableInstall));
+  if (publication.previewVersion) {
+    assert((await guidance.innerText()).includes('npm install @ponchia/annotations@' + publication.previewVersion));
+    assert.equal(await guidance.locator('[data-candidate-docs]').getAttribute('href'),
+      `https://github.com/Ponchia/bronto-annotations/blob/v${publication.previewVersion}/docs/README.md`);
+  }
+  if (!publication.sourcePublished) {
+    assert((await guidance.innerText()).includes('Publication of this source is not confirmed'));
+    assert(!(await guidance.innerText()).includes('npm install @ponchia/annotations@' + publication.sourceVersion));
+  }
+  const expanded = await notice.boundingBox();
+  assert(expanded && expanded.height > collapsed.height,
+    'Expanded guidance must have room to display its actual content');
+  assert(expanded.height <= (width < 500 ? 620 : 360) && expanded.width <= width,
+    'Expanded notice should fit its viewport without clipping install commands');
+  assert.equal(await guidance.locator('a:last-child').getAttribute('href'), './docs/migration-0.7.html');
+  const audit = await new AxeBuilder({ page }).include('[data-release-notice]').withTags(wcagTags).analyze();
+  assert.deepEqual(audit.violations, [], 'Expanded version guidance must remain accessible');
+  await notice.screenshot({ path: resolve(onboardingEvidence, `version-expanded-${width}.png`) });
+  await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(() => document.activeElement?.textContent),
+    publication.previewVersion ? 'Candidate documentation' : '0.7 migration guide');
+  await page.keyboard.press('Shift+Tab');
+  assert(await summary.evaluate((node) => document.activeElement === node));
+  await page.keyboard.press('Space');
+  assert.equal(await details.getAttribute('open'), null, 'Space must close the native disclosure');
+  assert.equal(await guidance.isVisible(), false);
+  assert.equal((await notice.boundingBox()).height, collapsed.height, 'Closing restores the compact size');
+  await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(() => Boolean(document.activeElement?.closest('[data-release-guidance]'))), false,
+    'Collapsed guidance must not leave hidden links in the keyboard order');
 }
 // Unlike the headless Worker fixture, this verifies the *published* Vite
 // application and separately bundled module Worker. Loading the page (or
@@ -153,6 +220,7 @@ async function verifyPublicWorkerDemo(width) {
 try {
   for (const width of [390, 1200]) {
     const home = await visit('/', width);
+    await verifyVersionDisclosure(home, width);
     assert.equal(
       await home.locator('#annotation-overlay .pa-annotation').count(),
       3,
@@ -312,7 +380,42 @@ try {
   for (const width of [390, 1200]) {
     for (const name of publishedExamples) {
       const example = await visit(`/examples/${name}/`, width);
+      if (name === 'react-incremental') {
+        // The narrow host starts with readable notes and a closed diagram.
+        // Verify that initial reading surface before opening the optional SVG;
+        // retain the same visible-diagram and WCAG checks below afterward.
+        await verifyAuthoringDefault(example, `Published incremental example (${width}px)`);
+        const notes = example.locator('.note-list');
+        await notes.waitFor({ timeout: 30000 });
+        assert.equal(await notes.locator('ol > li').count(), 4);
+        for (const [id, title, body] of [
+          ['intake', 'Intake', 'Source geometry stays fixed.'],
+          ['triage', 'Triage', 'Previous placements can be reused.'],
+          ['delivery', 'Delivery', 'One authoritative resolved layout.'],
+          ['signal', 'Live marker', 'Move this anchor or drag the note.'],
+        ]) {
+          const row = notes.locator('li').filter({ has: example.locator(`button[data-note-id="${id}"]`) });
+          assert(await row.isVisible(), `Authored note ${id} must be readable before opening the diagram`);
+          assert.equal(await row.locator('button strong').innerText(), title);
+          assert(await row.locator('p').isVisible(), `Full body for ${id} must be visible in the note list`);
+          assert.equal(await row.locator('p').innerText(), body,
+            `The note list must preserve the complete authored body for ${id}`);
+        }
+        const disclosure = example.locator('button#diagram-disclosure');
+        assert.equal(await disclosure.getAttribute('aria-controls'), 'full-diagram');
+        await openAuthoringDiagram(example);
+        assert.equal(await disclosure.getAttribute('aria-expanded'), 'true');
+      }
       await example.locator('.pa-annotation').first().waitFor({ timeout: 30000 });
+      if (name === 'svg-basic') {
+        const strokes = await example.evaluate(() => {
+          const chart = document.querySelector('.base-chart__line');
+          const connector = document.querySelector('.pa-annotation__connector');
+          return chart && connector ? [getComputedStyle(chart).stroke, getComputedStyle(connector).stroke] : [];
+        });
+        assert.equal(strokes.length, 2, 'SVG chart and annotation connector must both render');
+        assert.notEqual(strokes[0], strokes[1], 'Host chart edges must remain visually distinct from annotation connectors');
+      }
       const audit = await new AxeBuilder({ page: example })
         .withTags(wcagTags)
         .analyze();

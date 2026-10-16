@@ -23,17 +23,34 @@ export function siteReleaseStatus(sourceVersion, record) {
 export function renderReleaseNotice(status, prefix = './') {
   if (!/^(?:\.\/|(?:\.\.\/)+)$/.test(prefix)) throw new Error('Invalid site-relative prefix');
   const current = status.sourceVersion === status.stableVersion;
+  const identity = current ? 'stable release'
+    : status.sourcePublished ? 'published candidate' : 'development source';
   const availableCandidate = status.previewVersion && status.previewVersion !== status.sourceVersion
     ? `Published candidate: <strong>${escape(status.previewVersion)}</strong>. Install it with <code>npm install @ponchia/annotations@${escape(status.previewVersion)}</code>.`
     : '';
   const source = status.sourcePublished
     ? `This version is published. Install the exact version with <code>npm install @ponchia/annotations@${escape(status.sourceVersion)}</code>.`
     : 'Publication of this source is not confirmed. Build and pack this checkout for isolated testing; do not expect the stable npm install to implement these APIs.';
-  return `<aside data-release-notice data-source-version="${escape(status.sourceVersion)}" data-stable-version="${escape(status.stableVersion)}" aria-label="Documentation version" style="box-sizing:border-box;max-width:100%;padding:12px 20px;margin:0;background:#edf2f4;color:#183540;border-bottom:1px solid #a9b9c0;font:14px/1.6 system-ui,sans-serif;overflow-wrap:anywhere">
-<strong>Docs and demos: ${escape(status.sourceVersion)}${current ? '' : ' — development / preview API'}.</strong>
-Stable npm: <strong>${escape(status.stableVersion)}</strong>. ${source} ${availableCandidate}
-<a style="color:inherit;text-decoration:underline" href="${escape(status.stableDocs)}">Stable documentation</a> ·
+  const candidateDocs = status.previewVersion
+    ? `<a data-candidate-docs style="color:inherit;text-decoration:underline" href="https://github.com/Ponchia/bronto-annotations/blob/v${escape(status.previewVersion)}/docs/README.md">Candidate documentation</a> ·`
+    : '';
+  // Inline presentation travels with independently bundled demos. Native details
+  // keeps the version warning useful without a runtime script or registry lookup.
+  return `<aside data-release-notice data-source-version="${escape(status.sourceVersion)}" data-stable-version="${escape(status.stableVersion)}" aria-label="Documentation version" style="box-sizing:border-box;max-width:100%;padding:8px 20px;margin:0;background:#edf2f4;color:#183540;border-bottom:1px solid #a9b9c0;font:14px/1.6 system-ui,sans-serif;overflow-wrap:anywhere">
+<div data-release-identity style="display:flex;flex-wrap:wrap;column-gap:20px;row-gap:0">
+<span>Docs and demos: <strong>${escape(status.sourceVersion)}</strong> (main · ${identity}).</span>
+<span>Stable npm: <strong>${escape(status.stableVersion)}</strong> · <a style="color:inherit;text-decoration:underline" href="${escape(status.stableDocs)}">Stable docs</a>.</span>
+</div>
+<details style="margin:0;padding:0;border:0;background:transparent">
+<summary style="cursor:pointer;min-height:24px;width:fit-content">Install and version details</summary>
+<div data-release-guidance style="padding:4px 0 8px">
+<p style="margin:4px 0">Stable install: <code>${escape(status.stableInstall)}</code>. The stable documentation matches that package.</p>
+<p style="margin:4px 0">${source}</p>
+${availableCandidate ? `<p style="margin:4px 0">${availableCandidate}</p>` : ''}
+${candidateDocs}
 <a style="color:inherit;text-decoration:underline" href="${prefix}docs/migration-0.7.html">0.7 migration guide</a>
+</div>
+</details>
 </aside>`;
 }
 

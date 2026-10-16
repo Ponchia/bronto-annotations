@@ -3,6 +3,10 @@ import {
   overlapArea
 } from './anchors.js';
 import { overflowArea, connectorIntersections } from './quality-geometry.js';
+import { connectorReadability, type ConnectorReadabilityReport } from './connector-readability.js';
+
+/** @experimental Polyline readability evidence; separate from layout validity. */
+export type LayoutReadabilityReport = ConnectorReadabilityReport;
 import type {
   Box,
   ResolvedLayout
@@ -16,7 +20,8 @@ export type LayoutQualityIssueType =
   | 'note-overlap'
   | 'obstacle-overlap'
   | 'connector-obstacle'
-  | 'connector-note';
+  | 'connector-note'
+  | 'connector-crossing';
 
 export type LayoutQualityIssue = {
   type: LayoutQualityIssueType;
@@ -53,12 +58,16 @@ export type LayoutQualityReport = {
   score: number;
   metrics: LayoutQualityMetrics;
   issues: LayoutQualityIssue[];
+  /** @experimental Present only when readability is explicitly requested. */
+  readability?: LayoutReadabilityReport;
 };
 
 export type LayoutQualityOptions = {
   bounds?: Box;
   obstacles?: Box[];
   ignoreConnectorNoteIds?: boolean;
+  /** @experimental Inspect polyline crossings, route length and bends. */
+  readability?: boolean;
 };
 
 export type LayoutQualityFormatOptions = {
@@ -186,6 +195,10 @@ export function evaluateAnnotationLayout(
     }
   }
 
+  const readability = options.readability ? connectorReadability(layout.annotations, (first, second) => {
+    issues.push({ type: 'connector-crossing', severity: 'info', annotationIds: [first, second],
+      message: `Annotation connectors "${first}" and "${second}" intersect away from their endpoints.` });
+  }) : undefined;
   metrics.issueCount = issues.length;
 
   const geometryValid = !issues.some((issue) => issue.severity === 'error');
@@ -196,7 +209,8 @@ export function evaluateAnnotationLayout(
     ok: geometryValid && hostContentClear,
     score: qualityScore(metrics),
     metrics,
-    issues
+    issues,
+    ...(readability ? { readability } : {})
   };
 }
 

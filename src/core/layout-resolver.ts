@@ -4,6 +4,7 @@ import { allPlacementCandidates, assertPlacementPreference } from './placement.j
 import { DEFAULT_NOTE_SIZE, DEFAULT_NOTE_PADDING } from './model.js';
 import { evaluateAnnotationLayout } from './quality.js';
 import { createRefinementScoreWorkspace } from './refinement-score.js';
+import { createReadabilityWorkspace, betterReadability } from './connector-readability.js';
 import { wrapNoteText, countTextGraphemes } from './text.js';
 import type { Annotation, Box, LayoutDiagnostics, LayoutOptions, LayoutRefinementOptions, PlacementCandidate, PlacementPreference, ResolvedAnnotation, ResolvedLayout, Size } from './model.js';
 
@@ -131,7 +132,7 @@ export function refineAnnotationLayout(
   let currentScore = refinementScore(current);
   // Every score contribution is nonnegative: zero is already a global lower
   // bound. Preserve the existing shallow-clone return behavior without trials.
-  if (currentScore === 0) return current;
+  if (currentScore === 0) return options.readability ? refineReadability(current, workspace, options) : current;
   const scoring = createRefinementScoreWorkspace(current);
   const passes = boundedInteger(options.passes, 2, 1, 8);
   const maxCandidates = boundedInteger(options.maxCandidatesPerAnnotation, 32, 1, 256);
@@ -171,7 +172,7 @@ export function refineAnnotationLayout(
         currentScore = bestScore;
         scoring?.commit(index, current.annotations[index]!);
         changed = true;
-        if (currentScore === 0) return current;
+        if (currentScore === 0) return options.readability ? refineReadability(current, workspace, options) : current;
       }
     }
 
@@ -180,7 +181,7 @@ export function refineAnnotationLayout(
     }
   }
 
-  return current;
+  return options.readability ? refineReadability(current, workspace, options) : current;
 }
 
 export function estimateNoteSize(annotation: Annotation, base: Size = DEFAULT_NOTE_SIZE): Size {
@@ -273,7 +274,8 @@ function normalizeRefinement(refinement: boolean | LayoutRefinementOptions): Req
     return {
       enabled: true,
       passes: 2,
-      maxCandidatesPerAnnotation: 32
+      maxCandidatesPerAnnotation: 32,
+      readability: false
     };
   }
 
@@ -281,14 +283,16 @@ function normalizeRefinement(refinement: boolean | LayoutRefinementOptions): Req
     return {
       enabled: false,
       passes: 0,
-      maxCandidatesPerAnnotation: 0
+      maxCandidatesPerAnnotation: 0,
+      readability: false
     };
   }
 
   return {
     enabled: refinement.enabled !== false,
     passes: refinement.passes ?? 2,
-    maxCandidatesPerAnnotation: refinement.maxCandidatesPerAnnotation ?? 32
+    maxCandidatesPerAnnotation: refinement.maxCandidatesPerAnnotation ?? 32,
+    readability: refinement.readability === true
   };
 }
 
@@ -370,4 +374,48 @@ function boundedInteger(
   }
 
   return Math.min(Math.max(Math.floor(finiteValue), min), max);
+}
+
+/** Bounded editorial pass over the SAME private frontier. Geometric quality
+ * remains a hard gate for every readability move, not a weighted tradeoff.
+ * Curves are skipped: their control polygon is not their rendered route.
+ */
+function refineReadability(layout: ResolvedLayout, frontier: PlacementCandidate[][],
+  options: Required<LayoutRefinementOptions>): ResolvedLayout {
+  let current = layout;
+  let metrics = evaluateAnnotationLayout(current).metrics;
+  const routes = createReadabilityWorkspace(current.annotations);
+  let readable = routes.score();
+  const passes = boundedInteger(options.passes, 2, 1, 8);
+  const maxCandidates = boundedInteger(options.maxCandidatesPerAnnotation, 32, 1, 256);
+  const protectedMetrics = ['invalidBoxCount', 'boundsOverflowArea', 'noteOverlapArea',
+    'obstacleOverlapArea', 'connectorObstacleHits', 'connectorNoteHits'] as const;
+  for (let pass = 0; pass < passes; pass++) {
+    let changed = false;
+    for (const index of refinementOrder(current.annotations)) {
+      const item = current.annotations[index]!;
+      if (item.placement.manual || !routes.canRefine(index)) continue;
+      let best = current;
+      let bestMetrics = metrics;
+      let bestReadable = readable;
+      for (const candidate of (frontier[index] ?? []).slice(0, maxCandidates)) {
+        if (sameBox(candidate.noteBox, item.noteBox)) continue;
+        const proposed = routes.replacement(index, candidate.connector);
+        if (!proposed || !betterReadability(proposed, bestReadable)) continue;
+        const next = applyCandidate(current, index, candidate);
+        const nextMetrics = evaluateAnnotationLayout(next).metrics;
+        // Every accepted move is individually no worse, including on impossible
+        // scenes. Do not purchase shorter routes by covering a note or host node.
+        if (!protectedMetrics.every((key) => nextMetrics[key] <= bestMetrics[key])) continue;
+        best = next; bestMetrics = nextMetrics; bestReadable = proposed;
+      }
+      if (best !== current) {
+        current = best; metrics = bestMetrics; readable = bestReadable;
+        routes.commit(index, current.annotations[index]!.connector);
+        changed = true;
+      }
+    }
+    if (!changed) break;
+  }
+  return current;
 }
