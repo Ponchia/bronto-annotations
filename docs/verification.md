@@ -263,3 +263,10 @@ registry provenance, or update a live consuming application merely to inspect it
 Keep the application's source, lockfile and real browser acceptance results
 beside the exact package identity. A passing isolated module fixture is not a
 substitute for the consuming application's full browser and persistence paths.
+
+The historical Bronto parity check proves selector/property coverage and exported
+helper availability. It does not compare computed styles, complete CSS values,
+function signatures or every generated SVG path. Those require a consumer's
+rendering, typing and interaction checks. Negative tests cover absent source,
+strict mode, partial removal and unexpected additions to the old UI contract;
+optional local source is inspected as text, never executed.
