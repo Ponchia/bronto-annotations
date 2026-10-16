@@ -1,6 +1,6 @@
 # Bronto Annotations
 
-> Docs and demos track **main (`0.7.0-dev.1`)**. Stable npm: **0.6.10**;
+> Docs and demos track **main (`0.7.0-rc.2`)**. Stable npm: **0.6.10**;
 > published candidate: **0.7.0-rc.1**. [Choose your version](#install).
 
 **Explain an existing chart, diagram, or interface without rebuilding it.**

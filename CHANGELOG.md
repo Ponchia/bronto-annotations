@@ -6,6 +6,19 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.7.0-rc.2 - 2026-10-16
+
+- Restore legacy UI geometry behavior for oversized note placement and invalid
+  timeline/subject input. Verify all 20 unchanged UI v0.16.3 geometry tests
+  against standalone exports, with source hash and MIT attribution retained.
+- Preserve historical UI CSS/export checks without a sibling UI checkout;
+  reject partial removals and undocumented legacy additions.
+- Include the post-RC1 readability, responsive authoring and Worker allocation
+  improvements described below. Editing and Worker APIs remain experimental;
+  physical-input and screen-reader acceptance is still outstanding.
+- Publish this candidate only under `next`; `latest` stays on the stable 0.6
+  line. Source preparation does not itself establish registry availability.
+
 ## Unreleased - 0.7.0
 
 ### Readability and authoring refinement
@@ -41,6 +54,12 @@ reasonable.
   `docs/migration-0.7.md` for the complete migration.
 
 ### Correctness hardening
+
+- Preserve the legacy UI helper behavior for oversized notes: anchor their
+  leading edge inside padded bounds instead of returning off-canvas starts.
+- Reject unknown timeline directions and subject kinds rather than returning
+  undefined SVG or treating invalid subjects as rectangles. Run the unchanged
+  20-test geometry suite from UI v0.16.3 against this package's built exports.
 
 - Make ID tie ordering independent of runtime locale and reject duplicate
   annotation IDs before resolution or session updates.
