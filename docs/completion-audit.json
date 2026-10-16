@@ -1100,7 +1100,7 @@
           "file": ".github/workflows/scorecard.yml",
           "terms": [
             "name: Scorecard",
-            "ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc",
+            "ossf/scorecard-action@",
             "results_format: sarif",
             "github/codeql-action/upload-sarif@v4"
           ]
