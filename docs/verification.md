@@ -164,10 +164,15 @@ into this package. `npm run test:bronto-parity` proves the legacy
 `ui-annotation*` classes, package-prefixed renderer classes, motion/print/forced
 color rules, and Bronto geometry helper exports remain available without adding
 a hard `@ponchia/ui` dependency.
-When a local `@ponchia/ui` checkout is available, `npm run test:bronto-upstream`
-also compares the parity manifest and CSS bridge against the upstream annotation
-CSS selectors, legacy declaration properties, custom properties, keyframes, and
-helper exports.
+`npm run test:bronto-upstream` uses a **frozen published
+`@ponchia/ui@0.16.3` annotation contract** with the original tag, commit and
+source SHA-256 values recorded in the manifest. The test validates legacy
+selectors, CSS declaration properties, variables, keyframes and helper exports
+even when the UI source is absent. If a local `@ponchia/ui` checkout still
+ships the legacy files, it also refuses undocumented new legacy APIs. A local
+checkout is optional because Bronto UI is deprecating the annotation APIs
+before removing them in a later minor. `--require` retains strict checkout
+mode for targeted development diagnostics.
 `docs/migration-guide.md` also covers moving existing Bronto static SVG snippets
 and helper usage onto this package.
 
@@ -258,3 +263,10 @@ registry provenance, or update a live consuming application merely to inspect it
 Keep the application's source, lockfile and real browser acceptance results
 beside the exact package identity. A passing isolated module fixture is not a
 substitute for the consuming application's full browser and persistence paths.
+
+The historical Bronto parity check proves selector/property coverage and exported
+helper availability. It does not compare computed styles, complete CSS values,
+function signatures or every generated SVG path. Those require a consumer's
+rendering, typing and interaction checks. Negative tests cover absent source,
+strict mode, partial removal and unexpected additions to the old UI contract;
+optional local source is inspected as text, never executed.

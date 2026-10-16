@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 1,
-  "sourceSurface": "@ponchia/ui/css/annotations.css and @ponchia/ui/annotations",
-  "purpose": "Track the public Bronto annotation CSS/helper surface carried into @ponchia/annotations/bronto.css and root helper exports.",
+  "schemaVersion": 2,
+  "sourceSurface": "Historical @ponchia/ui@0.16.3 CSS and JS public annotation contracts. New annotation ownership: @ponchia/annotations.",
+  "purpose": "Frozen proof that @ponchia/annotations preserves the legacy UI geometry and CSS API after the UI source is deprecated and eventually removed.",
   "legacySelectors": [
     ".ui-annotation",
     ".ui-annotation--muted",
@@ -64,18 +64,20 @@
   ],
   "customProperties": [
     "--annotation-color",
+    "--annotation-dash",
+    "--annotation-delay",
     "--annotation-line",
     "--annotation-note-bg",
-    "--annotation-subject-fill",
     "--annotation-stroke-width",
+    "--annotation-subject-fill",
     "--pa-annotation-accent",
-    "--pa-annotation-line",
-    "--pa-annotation-paper",
     "--pa-annotation-border",
     "--pa-annotation-ink",
+    "--pa-annotation-line",
     "--pa-annotation-muted",
-    "--pa-annotation-subject-fill",
-    "--pa-annotation-stroke-width"
+    "--pa-annotation-paper",
+    "--pa-annotation-stroke-width",
+    "--pa-annotation-subject-fill"
   ],
   "mediaQueries": [
     "@media (prefers-reduced-motion: no-preference)",
@@ -121,5 +123,266 @@
     "Package annotation overlays are pointer-transparent by default while edit handles opt back into pointer events for authoring.",
     "The Bronto CSS bridge is styling-only and must not depend on @ponchia/ui at runtime.",
     "When a local @ponchia/ui checkout is available, upstream parity checks compare legacy selector coverage, legacy CSS declaration properties, custom properties, keyframes, and helper exports."
-  ]
+  ],
+  "sourceSnapshot": {
+    "version": "0.16.3",
+    "tag": "v0.16.3",
+    "revision": "bc90494436109e0831e2be9241706d3e7a4d4fde",
+    "cssPath": "css/annotations.css",
+    "cssSha256": "56584161110fdbb51e0554f6ffa9fe2248302135f43264e82cb4caf263dacd0d",
+    "helperPath": "annotations/index.js",
+    "helperSha256": "59f5ee03a380d9713c3beaae78f2735fbcf90bb31d48b7b211db9c4bab405370"
+  },
+  "legacyCssDeclarationProperties": {
+    ".ui-annotation": [
+      "--annotation-color",
+      "--annotation-line",
+      "--annotation-note-bg",
+      "--annotation-stroke-width",
+      "--annotation-subject-fill",
+      "color",
+      "font-family",
+      "font-size",
+      "overflow"
+    ],
+    ".ui-annotation--accent": [
+      "--annotation-color",
+      "--annotation-line"
+    ],
+    ".ui-annotation--axis .ui-annotation__subject": [
+      "fill",
+      "stroke",
+      "stroke-linecap"
+    ],
+    ".ui-annotation--badge .ui-annotation__badge": [
+      "fill"
+    ],
+    ".ui-annotation--badge .ui-annotation__connector": [
+      "display"
+    ],
+    ".ui-annotation--badge .ui-annotation__label": [
+      "fill",
+      "stroke"
+    ],
+    ".ui-annotation--badge .ui-annotation__note-line": [
+      "display"
+    ],
+    ".ui-annotation--badge .ui-annotation__subject": [
+      "fill"
+    ],
+    ".ui-annotation--badge .ui-annotation__title": [
+      "fill",
+      "stroke"
+    ],
+    ".ui-annotation--band .ui-annotation__subject": [
+      "fill",
+      "stroke",
+      "stroke-dasharray"
+    ],
+    ".ui-annotation--bracket .ui-annotation__subject": [
+      "fill",
+      "stroke",
+      "stroke-linecap"
+    ],
+    ".ui-annotation--callout .ui-annotation__note-line": [
+      "stroke"
+    ],
+    ".ui-annotation--circle .ui-annotation__subject": [
+      "stroke-dasharray",
+      "stroke-linecap"
+    ],
+    ".ui-annotation--cluster .ui-annotation__subject": [
+      "fill",
+      "stroke",
+      "stroke-dasharray",
+      "stroke-linecap"
+    ],
+    ".ui-annotation--compare .ui-annotation__subject": [
+      "fill",
+      "stroke",
+      "stroke-linecap"
+    ],
+    ".ui-annotation--curve .ui-annotation__connector": [
+      "stroke-linecap"
+    ],
+    ".ui-annotation--curve .ui-annotation__note-line": [
+      "stroke"
+    ],
+    ".ui-annotation--danger": [
+      "--annotation-color"
+    ],
+    ".ui-annotation--draw .ui-annotation__badge": [
+      "animation",
+      "animation-delay"
+    ],
+    ".ui-annotation--draw .ui-annotation__connector": [
+      "animation",
+      "animation-delay",
+      "stroke-dasharray",
+      "stroke-dashoffset"
+    ],
+    ".ui-annotation--draw .ui-annotation__note-line": [
+      "animation",
+      "animation-delay",
+      "stroke-dasharray",
+      "stroke-dashoffset"
+    ],
+    ".ui-annotation--draw .ui-annotation__subject": [
+      "animation",
+      "animation-delay"
+    ],
+    ".ui-annotation--elbow .ui-annotation__connector": [
+      "stroke-linejoin"
+    ],
+    ".ui-annotation--elbow .ui-annotation__note-line": [
+      "stroke"
+    ],
+    ".ui-annotation--evidence .ui-annotation__badge": [
+      "fill",
+      "stroke"
+    ],
+    ".ui-annotation--evidence .ui-annotation__title": [
+      "fill",
+      "stroke"
+    ],
+    ".ui-annotation--focus": [
+      "--annotation-stroke-width",
+      "--annotation-subject-fill"
+    ],
+    ".ui-annotation--info": [
+      "--annotation-color"
+    ],
+    ".ui-annotation--label .ui-annotation__subject": [
+      "display"
+    ],
+    ".ui-annotation--muted": [
+      "--annotation-color",
+      "--annotation-line"
+    ],
+    ".ui-annotation--pulse .ui-annotation__badge": [
+      "animation",
+      "animation-delay",
+      "transform-box",
+      "transform-origin"
+    ],
+    ".ui-annotation--pulse .ui-annotation__subject": [
+      "animation",
+      "animation-delay",
+      "transform-box",
+      "transform-origin"
+    ],
+    ".ui-annotation--rect .ui-annotation__subject": [
+      "stroke-dasharray"
+    ],
+    ".ui-annotation--reveal .ui-annotation__note": [
+      "animation",
+      "animation-delay"
+    ],
+    ".ui-annotation--slope .ui-annotation__subject": [
+      "fill",
+      "stroke",
+      "stroke-linecap"
+    ],
+    ".ui-annotation--success": [
+      "--annotation-color"
+    ],
+    ".ui-annotation--threshold .ui-annotation__subject": [
+      "fill",
+      "stroke",
+      "stroke-dasharray"
+    ],
+    ".ui-annotation--timeline .ui-annotation__subject": [
+      "fill",
+      "stroke",
+      "stroke-linecap"
+    ],
+    ".ui-annotation--warning": [
+      "--annotation-color"
+    ],
+    ".ui-annotation__badge": [
+      "animation",
+      "fill",
+      "opacity",
+      "stroke",
+      "stroke-dashoffset",
+      "stroke-width",
+      "transform",
+      "vector-effect"
+    ],
+    ".ui-annotation__connector": [
+      "animation",
+      "fill",
+      "opacity",
+      "stroke",
+      "stroke-dashoffset",
+      "stroke-linecap",
+      "stroke-linejoin",
+      "stroke-opacity",
+      "stroke-width",
+      "transform",
+      "vector-effect"
+    ],
+    ".ui-annotation__connector-end": [
+      "fill",
+      "stroke",
+      "vector-effect"
+    ],
+    ".ui-annotation__label": [
+      "fill",
+      "font-size",
+      "letter-spacing",
+      "paint-order",
+      "stroke",
+      "stroke-linejoin",
+      "stroke-width"
+    ],
+    ".ui-annotation__note": [
+      "animation",
+      "color",
+      "fill",
+      "opacity",
+      "stroke-dashoffset"
+    ],
+    ".ui-annotation__note > rect": [
+      "fill",
+      "stroke",
+      "stroke-width",
+      "vector-effect"
+    ],
+    ".ui-annotation__note-line": [
+      "animation",
+      "fill",
+      "opacity",
+      "stroke",
+      "stroke-dashoffset",
+      "stroke-linecap",
+      "stroke-linejoin",
+      "stroke-opacity",
+      "stroke-width",
+      "transform",
+      "vector-effect"
+    ],
+    ".ui-annotation__subject": [
+      "animation",
+      "fill",
+      "opacity",
+      "stroke",
+      "stroke-dashoffset",
+      "stroke-linejoin",
+      "stroke-width",
+      "transform",
+      "vector-effect"
+    ],
+    ".ui-annotation__title": [
+      "fill",
+      "font-size",
+      "font-weight",
+      "letter-spacing",
+      "paint-order",
+      "stroke",
+      "stroke-linejoin",
+      "stroke-width",
+      "text-transform"
+    ]
+  }
 }

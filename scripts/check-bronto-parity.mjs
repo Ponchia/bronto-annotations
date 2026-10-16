@@ -7,7 +7,7 @@ const css = await readFile(new URL('../src/styles/bronto.css', import.meta.url),
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const core = await import('@ponchia/annotations');
 
-assert.equal(parity.schemaVersion, 1, 'Bronto annotation parity schemaVersion must be 1');
+assert.equal(parity.schemaVersion, 2, 'Bronto annotation parity schemaVersion must be 2');
 
 for (const selector of [
   ...parity.legacySelectors,
