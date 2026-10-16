@@ -106,6 +106,8 @@ function App() {
   const card = useRef<HTMLElement>(null);
   const diagram = useRef<HTMLDivElement>(null);
   const diagramToggle = useRef<HTMLButtonElement>(null);
+  const diagramStage = useRef<HTMLDivElement>(null);
+  const pendingDiagramFocus = useRef(false);
   const [availableWidth, setAvailableWidth] = useState(0);
   const [diagramOverride, setDiagramOverride] = useState<boolean | null>(null);
   // This is an example-host policy, not a solver rule: crowded/unavailable
@@ -123,7 +125,14 @@ function App() {
   }, []);
   useLayoutEffect(() => {
     if (!diagramOpen && diagram.current?.contains(document.activeElement)) diagramToggle.current?.focus();
+    if (diagramOpen && pendingDiagramFocus.current) focusDiagramStage();
   }, [diagramOpen]);
+
+  function focusDiagramStage() {
+    pendingDiagramFocus.current = false;
+    diagramStage.current?.focus({ preventScroll: true });
+    diagramStage.current?.scrollIntoView({ block: 'start' });
+  }
   // Expose just the host-authored inputs, not the large candidate/quality
   // graph. This stays independent of package serialization or persistence.
   const annotationJson = useMemo(
@@ -138,26 +147,16 @@ function App() {
   const canRemoveLastNote = view.annotations.length > 1;
   const recoveredSelection = recoverNoteSelection(view.annotations, selectedNoteId);
   const selectedTextNote = view.annotations.find((item) => item.id === recoveredSelection)!;
-  const focusSelectedNote = () => {
-    const button = Array.from(card.current?.querySelectorAll<HTMLButtonElement>('.note-list button') ?? [])
-      .find((item) => item.dataset.noteId === recoveredSelection);
-    button?.focus({ preventScroll: true });
-    button?.scrollIntoView({ block: 'center' });
-  };
-  const goToDiagram = () => {
-    setDiagramOverride(true);
-    requestAnimationFrame(() => {
-      const stage = diagram.current?.querySelector<HTMLElement>('.stage-scroll');
-      stage?.focus({ preventScroll: true });
-      stage?.scrollIntoView({ block: 'start' });
-    });
-  };
-
   useEffect(() => {
     // Forget IDs removed by import/removal so undo cannot resurrect a stale
     // selection after the author has moved on to another note.
     if (selectedNoteId !== recoveredSelection) setSelectedNoteId(recoveredSelection);
   }, [selectedNoteId, recoveredSelection]);
+
+  function focusSelectedNote() {
+    Array.from(card.current?.querySelectorAll<HTMLButtonElement>('.note-list button') ?? [])
+      .find((button) => button.dataset.noteId === recoveredSelection)?.focus();
+  }
 
   // Only authoritative edits enter this history: a pointer-move preview
   // remains visual-only and does not create a user-visible undo step.
@@ -348,7 +347,6 @@ function App() {
 
       <section ref={card} className="demo-card" aria-label="Live incremental annotation editor">
         <div className="toolbar" role="group" aria-label="Annotation editing actions">
-          <button id="go-to-diagram" type="button" aria-controls="full-diagram" onClick={goToDiagram}>Go to diagram</button>
           <button id="move-note" type="button" onClick={moveLastAnchor}
             title="Move the final annotation anchor, including after importing your own JSON">Move final anchor</button>
           <button id="append-note" type="button" onClick={addAnnotation}
@@ -361,6 +359,11 @@ function App() {
             disabled={view.undoCount === 0} onClick={() => stepHistory('undo')}>Undo</button>
           <button id="redo-edit" type="button" aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y"
             disabled={view.redoCount === 0} onClick={() => stepHistory('redo')}>Redo</button>
+          <button id="go-to-diagram" type="button" aria-controls="full-diagram" onClick={() => {
+            pendingDiagramFocus.current = true;
+            setDiagramOverride(true);
+            if (diagramOpen) focusDiagramStage();
+          }}>Go to diagram</button>
           <span className="history-shortcuts">Undo: Ctrl/⌘ Z · Redo: Ctrl/⌘ Shift Z</span>
         </div>
         <div className="selection-hint">
@@ -388,11 +391,12 @@ function App() {
           <p>{crowded ? 'Crowded layout: use the list to read every note. Geometry is unchanged.'
             : narrow ? 'Narrow space: read and edit above. Open the diagram for geometry and drag handles.'
               : 'The full diagram shares the selection and committed edits above.'}</p>
-          <button id="back-to-notes" className="diagram-return" type="button" onClick={focusSelectedNote}>Back to selected note</button>
+          {diagramOpen && <a id="diagram-return" className="diagram-return" href="#note-list-title"
+            onClick={(event) => { event.preventDefault(); focusSelectedNote(); }}>Back to selected note ↑</a>}
         </div>
         <div ref={diagram} id="full-diagram" hidden={!diagramOpen}>
         <p className="scroll-hint">Swipe sideways to follow the diagram <span aria-hidden="true">↔</span></p>
-        <div className="stage-scroll" tabIndex={0} aria-label="Scrollable diagram with editable annotations">
+        <div ref={diagramStage} className="stage-scroll" tabIndex={0} aria-label="Scrollable diagram with editable annotations">
           <div className="workflow-stage"
             onClickCapture={(event) => {
               const id = noteIdFromCanvasTarget(event.target, event.currentTarget);

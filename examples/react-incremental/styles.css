@@ -29,6 +29,8 @@ h1 { font-size: clamp(30px, 4.3vw, 49px); font-weight: 680; letter-spacing: -0.0
 .diagram-heading { padding: 18px 22px; border-top: 1px solid #e4eaf0; background: #f9fbfd; }
 .diagram-heading button { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 44px; width: 100%; border: 1px solid #c9d9e4; border-radius: 8px; padding: 10px 12px; background: #fff; color: #2d546a; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .diagram-heading p { margin: 9px 0 0; color: #526574; font-size: 12px; line-height: 1.6; }
+.diagram-return { display: inline-flex; align-items: center; min-height: 44px; margin-top: 5px; color: #275e77; font-size: 12px; font-weight: 650; }
+.diagram-return:focus-visible { outline: 3px solid #3292a3; outline-offset: 2px; }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; padding: 19px 22px; border-bottom: 1px solid #e4eaf0; }
 .toolbar button { min-height: 44px; background: #fff; color: #33475a; border: 1px solid #cfdce5; border-radius: 8px; padding: 9px 13px; font-family: inherit; font-size: 12px; font-weight: 650; cursor: pointer; transition: background 130ms, border-color 130ms; }
 .toolbar button:first-child { background: #247e8f; border-color: #247e8f; color: #fff; }
@@ -137,5 +139,3 @@ h1 { font-size: clamp(30px, 4.3vw, 49px); font-weight: 680; letter-spacing: -0.0
   .note-text-editor-body { grid-column: auto; }
   .note-text-editor :is(select, input, textarea) { font-size: 16px; }
 }
-
-.diagram-heading button.diagram-return { width: auto; padding: 8px 0; border: 0; background: transparent; text-decoration: underline; font-weight: 600; }

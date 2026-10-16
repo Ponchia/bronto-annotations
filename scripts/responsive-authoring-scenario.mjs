@@ -86,6 +86,27 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
       await page.waitForFunction(() => document.querySelector('#diagram-disclosure')?.getAttribute('aria-expanded') === 'true');
     }
 
+    const beforeNavigation = await inputs();
+    const selectionBeforeNavigation = await select();
+    const changesBeforeNavigation = await page.evaluate(() => window.__annotationsExample.changes);
+    await page.locator('#go-to-diagram').focus();
+    await page.keyboard.press('Enter');
+    await page.locator('#full-diagram').waitFor({ state: 'visible' });
+    check(await page.locator('.stage-scroll').evaluate(el => el === document.activeElement),
+      'Keyboard shortcut opens and focuses the existing diagram stage');
+    const stagePosition = await page.locator('.stage-scroll').boundingBox();
+    check(stagePosition && stagePosition.y >= -1 && stagePosition.y < 100,
+      'Go to diagram scrolls the stage into view');
+    await page.keyboard.press('Shift+Tab');
+    check(await page.locator('#diagram-return').evaluate(el => el === document.activeElement),
+      'The stage has an immediate keyboard return path');
+    await page.keyboard.press('Enter');
+    check(await page.locator('.note-list button[aria-pressed="true"]').evaluate(el => el === document.activeElement),
+      'Keyboard return restores selected note focus');
+    check(await inputs() === beforeNavigation && await select() === selectionBeforeNavigation
+      && await page.evaluate(() => window.__annotationsExample.changes) === changesBeforeNavigation,
+    'Diagram navigation preserves selection, authored geometry and history');
+
     const beforeSelection = await inputs();
     const rows = page.locator('.note-list button');
     await rows.first().focus();
@@ -110,14 +131,10 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
     await page.keyboard.press('ControlOrMeta+Shift+z');
     await page.waitForFunction(() => window.__annotationsExample?.action === 'Redid: Edited intake text');
 
-    const beforeNavigation = await inputs();
-    await page.locator('#go-to-diagram').focus();
-    await page.keyboard.press('Enter');
+    if (await page.locator('#diagram-disclosure').getAttribute('aria-expanded') === 'false') {
+      await page.locator('#diagram-disclosure').click();
+    }
     await page.locator('#full-diagram').waitFor({ state: 'visible' });
-    await page.waitForFunction(() => document.activeElement?.classList.contains('stage-scroll'));
-    check(await inputs() === beforeNavigation, 'Diagram navigation never rewrites authored state');
-    await page.locator('#back-to-notes').click();
-    check(await rows.first().evaluate(el => el === document.activeElement), 'Diagram return restores selected list focus');
     const note = page.locator('.pa-annotation__note-box[data-annotation-id="signal"]');
     await note.focus();
     check(await select() === 'signal', 'Diagram focus synchronizes list/editor selection');
