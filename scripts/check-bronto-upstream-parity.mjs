@@ -12,88 +12,96 @@ const upstreamRoot = resolve(
 );
 const requireUpstream = process.argv.includes('--require') || process.env.PONCHIA_REQUIRE_UPSTREAM_UI === '1';
 
-if (!await exists(upstreamRoot)) {
-  const message = `Skipped upstream Bronto UI parity: ${upstreamRoot} does not exist. Set PONCHIA_UI_ROOT or pass --ui-root to compare a local @ponchia/ui checkout.`;
-
-  if (requireUpstream) {
-    throw new Error(message);
-  }
-
-  writeLine(message);
-  process.exit(0);
-}
-
 const parity = JSON.parse(await readFile(new URL('../docs/bronto-ui-annotation-parity.json', import.meta.url), 'utf8'));
 const bridgeCss = await readFile(new URL('../src/styles/bronto.css', import.meta.url), 'utf8');
-const upstreamCss = await readFile(resolve(upstreamRoot, 'css/annotations.css'), 'utf8');
-const upstreamHelpers = await readFile(resolve(upstreamRoot, 'annotations/index.js'), 'utf8');
 const core = await import('@ponchia/annotations');
 
-const upstreamSelectors = selectors(upstreamCss);
-const upstreamExports = [...upstreamHelpers.matchAll(/export function (\w+)/g)].map((match) => match[1]).sort();
-const upstreamProperties = customProperties(upstreamCss).filter((property) => property.startsWith('--annotation-'));
-const upstreamKeyframes = [...upstreamCss.matchAll(/@keyframes\s+([a-zA-Z0-9_-]+)/g)].map((match) => match[1]).sort();
-const upstreamDeclarationIndex = legacyDeclarationIndex(upstreamCss);
+assert.equal(parity.schemaVersion, 2, 'frozen Bronto UI contract must use schema version 2');
+assert.match(parity.sourceSnapshot.revision, /^[a-f0-9]{40}$/);
+assert.match(parity.sourceSnapshot.cssSha256, /^[a-f0-9]{64}$/);
+assert.match(parity.sourceSnapshot.helperSha256, /^[a-f0-9]{64}$/);
+
+const legacySelectors = parity.legacySelectors;
+const legacyExports = parity.helperExports;
+const legacyProperties = parity.customProperties.filter((property) => property.startsWith('--annotation-'));
+const legacyKeyframes = parity.keyframes.filter((value) => value.startsWith('uiAnnotation'));
+const frozenDeclarations = new Map(
+  Object.entries(parity.legacyCssDeclarationProperties).map(([selector, props]) => [selector, new Set(props)])
+);
 const bridgeDeclarationIndex = legacyDeclarationIndex(bridgeCss);
 
 assert.deepEqual(
-  missing(upstreamSelectors, parity.legacySelectors),
+  missing(legacySelectors, selectors(bridgeCss)),
   [],
-  'docs/bronto-ui-annotation-parity.json is missing upstream .ui-annotation selectors'
+  'src/styles/bronto.css must preserve historical .ui-annotation selectors'
 );
 assert.deepEqual(
-  missing(upstreamSelectors, selectors(bridgeCss)),
+  legacyExports.filter((helper) => typeof core[helper] !== 'function'),
   [],
-  'src/styles/bronto.css is missing upstream .ui-annotation selectors'
+  'root package must preserve historical Bronto UI annotation helper exports'
 );
 assert.deepEqual(
-  missing(upstreamExports, parity.helperExports),
+  missing(legacyProperties, customProperties(bridgeCss)),
   [],
-  'docs/bronto-ui-annotation-parity.json is missing upstream annotation helpers'
+  'src/styles/bronto.css must preserve historical annotation custom properties'
 );
 assert.deepEqual(
-  upstreamExports.filter((helper) => typeof core[helper] !== 'function'),
+  missing(legacyKeyframes, keyframes(bridgeCss)),
   [],
-  'root package export is missing upstream annotation helper functions'
-);
-assert.deepEqual(
-  missing(upstreamProperties, customProperties(bridgeCss)),
-  [],
-  'src/styles/bronto.css is missing upstream annotation custom properties'
-);
-assert.deepEqual(
-  missing(upstreamKeyframes, parity.keyframes),
-  [],
-  'docs/bronto-ui-annotation-parity.json is missing upstream annotation keyframes'
-);
-assert.deepEqual(
-  missing(upstreamKeyframes, keyframes(bridgeCss)),
-  [],
-  'src/styles/bronto.css is missing upstream annotation keyframes'
+  'src/styles/bronto.css must preserve historical annotation keyframes'
 );
 
 const missingDeclarations = [];
 
-for (const [selector, properties] of upstreamDeclarationIndex) {
+for (const [selector, properties] of frozenDeclarations) {
   const bridgeProperties = bridgeDeclarationIndex.get(selector) ?? new Set();
-
   for (const property of properties) {
     if (!bridgeProperties.has(property)) {
       missingDeclarations.push(`${selector} { ${property} }`);
     }
   }
 }
+assert.deepEqual(missingDeclarations, [], 'annotation CSS must retain the published legacy declaration contract');
 
-assert.deepEqual(
-  missingDeclarations,
-  [],
-  'src/styles/bronto.css is missing upstream legacy annotation CSS declarations'
-);
+// A checkout is extra drift evidence, never the sole source of the contract:
+// Bronto UI removes its legacy annotation files after the deprecation window.
+const hasCss = await exists(resolve(upstreamRoot, 'css/annotations.css'));
+const hasHelpers = await exists(resolve(upstreamRoot, 'annotations/index.js'));
+if (hasCss !== hasHelpers) {
+  throw new Error('Local Bronto UI checkout contains only one of the two legacy files; inspect this partial removal.');
+}
 
-const declarationCount = [...upstreamDeclarationIndex.values()]
+if (hasCss && hasHelpers) {
+  const upstreamCss = await readFile(resolve(upstreamRoot, 'css/annotations.css'), 'utf8');
+  const upstreamHelpers = await readFile(resolve(upstreamRoot, 'annotations/index.js'), 'utf8');
+  const upstreamSelectors = selectors(upstreamCss);
+  const upstreamExports = [...upstreamHelpers.matchAll(/export function (\w+)/g)].map((match) => match[1]).sort();
+  const upstreamProperties = customProperties(upstreamCss).filter((property) => property.startsWith('--annotation-'));
+  const upstreamKeyframes = [...upstreamCss.matchAll(/@keyframes\s+([a-zA-Z0-9_-]+)/g)].map((match) => match[1]).sort();
+
+  assert.deepEqual(missing(upstreamSelectors, legacySelectors), [], 'local UI added undocumented legacy selectors');
+  assert.deepEqual(missing(upstreamExports, legacyExports), [], 'local UI added undocumented legacy functions');
+  assert.deepEqual(missing(upstreamProperties, legacyProperties), [], 'local UI added undocumented legacy variables');
+  assert.deepEqual(missing(upstreamKeyframes, legacyKeyframes), [], 'local UI added undocumented legacy keyframes');
+
+  const upstreamDeclarations = legacyDeclarationIndex(upstreamCss);
+  for (const [selector, props] of upstreamDeclarations) {
+    assert.deepEqual(
+      missing([...props], [...(frozenDeclarations.get(selector) ?? [])]),
+      [],
+      `local UI added new legacy CSS declarations to ${selector}`
+    );
+  }
+  writeLine(`Frozen UI annotation parity verified against local checkout ${upstreamRoot}.`);
+} else if (requireUpstream) {
+  throw new Error(`--require demands a local UI checkout with both legacy files: ${upstreamRoot}`);
+} else {
+  writeLine('Local UI legacy source absent; validating against immutable 0.16.3 contract, not skipping verification.');
+}
+
+const declarationCount = [...frozenDeclarations.values()]
   .reduce((count, properties) => count + properties.size, 0);
-
-writeLine(`Upstream Bronto UI parity verified: ${upstreamSelectors.length} selectors, ${declarationCount} legacy CSS declarations, ${upstreamExports.length} helpers, ${upstreamKeyframes.length} keyframes from ${upstreamRoot}.`);
+writeLine(`Historical Bronto UI ${parity.sourceSnapshot.version} contract: ${legacySelectors.length} selectors, ${declarationCount} CSS declarations, ${legacyExports.length} helpers, ${legacyKeyframes.length} keyframes.`);
 
 function cliValue(name) {
   const index = process.argv.indexOf(name);
