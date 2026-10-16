@@ -8,27 +8,30 @@ it the default npm version or prove every host integration.
 
 The confirmed stable release is **0.6.10**. Its versioned documentation is at
 [the stable guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/README.md).
-The confirmed candidate is **0.7.0-rc.2**, published under `next` on
-October 16, 2026. Its actual npm tarball (**338,865 bytes**) was downloaded
-and verified against the registry SHA-512. A clean consumer installed those
-verified bytes without UI or React and passed all **20 unchanged historical
-Bronto UI geometry tests**. `latest` remains **0.6.10**.
+The confirmed candidate is **0.7.0-rc.3**, published under `next` on
+October 16, 2026. Its actual npm tarball (**341,170 bytes**) was independently
+downloaded and verified against registry SHA-512. A fresh consumer installed
+that exact version without UI, React or Vega; the headless root and new
+structural Vega helpers passed runtime checks. Registry signature and provenance
+attestation verification passed. `latest` remains **0.6.10**.
 
 ```sh
-npm install @ponchia/annotations@0.7.0-rc.2
+npm install @ponchia/annotations@0.7.0-rc.3
 ```
 
-[Protected RC2 release](https://github.com/Ponchia/bronto-annotations/actions/runs/38903003692).
-The first RC1 archive remains immutable; it does not contain RC2's oversized-note
-and invalid-input fixes. Public pages read their build version from `package.json`
-and confirmed registry versions from `site/release-status.json`. The notice is
-present on the homepage, every guide and directly linked example; there is no
-runtime registry request or analytics in the notice.
+[Protected RC3 release](https://github.com/Ponchia/bronto-annotations/actions/runs/38950698578).
+RC3 adds per-axis coordinate, inclusive interval and view-origin helpers. Earlier
+candidate archives stay immutable: RC1 does not contain RC2's oversized-note
+and invalid-input fixes, and RC2 does not contain these new Vega helpers.
+Public pages read their build version from `package.json` and confirmed registry
+versions from `site/release-status.json`. The notice is present on the homepage,
+every guide and directly linked example; there is no runtime registry request
+or analytics in the notice.
 
 Verified archive SHA-512:
 
 ```text
-sha512-m2ytm7HT6UflYSSMJOnNh0Rmgf/Tsdj1DPkfyJ9fbQ6Ojl5e1MKocAXYvrufj6j9+qRjyBBGEQ0NlVoEMnTZ2Q==
+sha512-wQwogErquMvH8y8yViQ8/LVY0O20ZXnt+0jkaEgiEH0ENKakXxhNqSzhU5DDyz4U+NvaybTX3afSWj7oyxRnYA==
 ```
 
 These are package and automated integration results, not a claim of human
