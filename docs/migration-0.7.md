@@ -1,12 +1,12 @@
 # Migrating to the 0.7 API
 
-The verified published candidate is **0.7.0-rc.2**; the stable npm channel
+The verified published candidate is **0.7.0-rc.3**; the stable npm channel
 remains **0.6.10**. The RC2 npm tarball was retrieved and integrity-checked;
 see [release readiness](release-readiness.md) for publication and consumer
 proof. A future source commit or tag is not evidence of registry publication.
 
 ```sh
-npm install @ponchia/annotations@0.7.0-rc.2
+npm install @ponchia/annotations@0.7.0-rc.3
 ```
 
 ## Why change the contract?
