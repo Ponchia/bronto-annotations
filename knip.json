@@ -16,8 +16,6 @@
         "test/**/*.test.ts",
         "test/fixtures/*/main.tsx",
         "test/fixtures/*/*.worker.ts",
-        "test/docs-public-snippets.ts",
-        "test/export-consumer.ts",
         "examples/*/main.ts",
         "examples/*/main.tsx",
         "scripts/**/*.mjs",
