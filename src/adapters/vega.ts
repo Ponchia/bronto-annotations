@@ -136,6 +136,73 @@ export type VegaScaleFunction = {
   bandwidth?: () => number;
 };
 
+/** Structural scale input; unknown output is checked before it becomes geometry. */
+export type VegaCoordinateScale = {
+  (value: unknown): unknown;
+  bandwidth?: () => number;
+};
+
+export type VegaScaleCoordinateOptions = {
+  /** Position within a categorical band; continuous scales ignore this. */
+  band?: 'start' | 'center' | 'end';
+  /** Try a JSON date as Date, or a numeric category as string, after the exact value. */
+  coerce?: boolean;
+};
+
+/** Resolve one axis independently, including mixed band/continuous charts.
+ * Unresolvable, throwing, nonfinite and invalid-band scales return undefined.
+ * Coercion is opt-in; the original domain value always wins.
+ */
+export function vegaScaleCoordinate(
+  scale: VegaCoordinateScale,
+  value: unknown,
+  options: VegaScaleCoordinateOptions = {}
+): number | undefined {
+  const band = options.band ?? 'start';
+  if (!['start', 'center', 'end'].includes(band)) return undefined;
+  const candidates = [value];
+  if (options.coerce && typeof value === 'string') {
+    const time = Date.parse(value);
+    if (Number.isFinite(time)) candidates.push(new Date(time));
+  } else if (options.coerce && typeof value === 'number' && Number.isFinite(value)) {
+    candidates.push(String(value));
+  }
+  for (const candidate of candidates) {
+    let position: unknown;
+    try {
+      position = scale(candidate);
+    } catch {
+      continue;
+    }
+    if (typeof position !== 'number' || !Number.isFinite(position)) continue;
+    let width: number | undefined;
+    try {
+      width = band === 'start' ? undefined : scale.bandwidth?.();
+    } catch {
+      return undefined;
+    }
+    if (width !== undefined && (!Number.isFinite(width) || width < 0)) return undefined;
+    const result = position + (width ?? 0) * (band === 'center' ? 0.5 : band === 'end' ? 1 : 0);
+    return Number.isFinite(result) ? result : undefined;
+  }
+  return undefined;
+}
+
+/** Ordered inclusive interval, independent of domain or scale-range direction. */
+export function vegaScaleInterval(
+  scale: VegaCoordinateScale,
+  from: unknown,
+  to: unknown,
+  options: Pick<VegaScaleCoordinateOptions, 'coerce'> = {}
+): [number, number] | undefined {
+  const a = vegaScaleCoordinate(scale, from, { ...options, band: 'start' });
+  const b = vegaScaleCoordinate(scale, to, { ...options, band: 'start' });
+  const ae = vegaScaleCoordinate(scale, from, { ...options, band: 'end' });
+  const be = vegaScaleCoordinate(scale, to, { ...options, band: 'end' });
+  if (a === undefined || b === undefined || ae === undefined || be === undefined) return undefined;
+  return [Math.min(a, b, ae, be), Math.max(a, b, ae, be)];
+}
+
 export type VegaScaleViewLike<TDatum = Record<string, unknown>> = VegaViewLike<TDatum> & {
   scale(name: string): VegaScaleFunction;
 };
@@ -438,7 +505,7 @@ export function anchorsFromVegaScenegraph<TDatum>(
       return [];
     }
 
-    const box = translateBox(boxFromVegaScenegraphItem(item), spec.offset ?? viewOrigin(view));
+    const box = translateBox(boxFromVegaScenegraphItem(item), spec.offset ?? vegaViewOrigin(view));
     const anchor = anchorFromBox(box);
     const markName = scenegraphName(item);
     const markType = scenegraphMarkType(item);
@@ -508,7 +575,7 @@ export function obstaclesFromVegaScenegraph<TDatum>(
     .filter((item, index) => hasScenegraphFilter(options)
       ? matchesScenegraphSpec(item, { id: 'obstacle', ...options }, index)
       : hasGeometry(item))
-    .map((item) => inflateBox(translateBox(boxFromVegaScenegraphItem(item), viewOrigin(view)), options.padding ?? 0));
+    .map((item) => inflateBox(translateBox(boxFromVegaScenegraphItem(item), vegaViewOrigin(view)), options.padding ?? 0));
 }
 
 export function anchorsFromVegaSvg(root: ParentNode, specs: VegaSvgAnchorSpec[]): Array<VegaAnchorResult<unknown>> {
@@ -767,7 +834,7 @@ function anchorFromVegaScaleDatum<TDatum>(
     ...(height === undefined ? {} : { height })
   };
 
-  return translateAnchor(anchorFromScaledGeometry(scaledGeometry), spec.offset ?? viewOrigin(view));
+  return translateAnchor(anchorFromScaledGeometry(scaledGeometry), spec.offset ?? vegaViewOrigin(view));
 }
 
 function anchorFromScaledGeometry(input: {
@@ -1155,8 +1222,9 @@ function translatePoint(point: Point, offset: Point): Point {
   };
 }
 
-function viewOrigin(view: {
-  padding?: VegaViewPaddingAccessor;
+/** Plot offset in the rendered surface: Vega origin excludes view padding. */
+export function vegaViewOrigin(view: {
+  padding?: () => VegaViewPadding | undefined;
   origin?: VegaViewOriginAccessor;
 }): Point {
   const padding = normalizeViewPadding(view.padding?.());

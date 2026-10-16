@@ -376,7 +376,9 @@
         "VegaAnnotationAuthoring",
         "VegaAnnotationLayerInput",
         "VegaAnnotationLayerOptions",
+        "VegaCoordinateScale",
         "VegaScaleAnchorSpec",
+        "VegaScaleCoordinateOptions",
         "VegaScaleFunction",
         "VegaScaleObstacleOptions",
         "VegaScaleViewLike",
@@ -418,7 +420,10 @@
         "validateVegaScaleAnchors",
         "validateVegaScenegraphAnchors",
         "validateVegaSvgAnchors",
-        "validateVegaViewAnchors"
+        "validateVegaViewAnchors",
+        "vegaScaleCoordinate",
+        "vegaScaleInterval",
+        "vegaViewOrigin"
       ],
       "experimental": [
         "anchorFromVegaDatum",

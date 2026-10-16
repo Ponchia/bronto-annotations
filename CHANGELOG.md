@@ -6,6 +6,17 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.7.0-rc.3 - 2026-10-16
+
+- Add structural Vega coordinate, inclusive interval and view-origin helpers.
+  Resolve mixed band/continuous axes independently, preserve exact domain values,
+  and make JSON date/category coercion explicit. Reversed categorical intervals
+  retain both complete endpoint bands; invalid geometry returns no coordinate.
+- Preserve existing bulk adapter contracts and the DOM-free core. No Vega runtime
+  dependency, host state, Worker ownership or persistence is added.
+- This is a testing candidate for `next`, not promotion of the 0.7 line to stable.
+  Registry availability is recorded only after the protected release completes.
+
 ## 0.7.0-rc.2 - 2026-10-16
 
 - Restore legacy UI geometry behavior for oversized note placement and invalid

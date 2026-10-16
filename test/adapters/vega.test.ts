@@ -3,6 +3,9 @@
 import { describe, expect, it } from 'vitest';
 import type { Spec } from 'vega';
 import {
+  vegaScaleCoordinate,
+  vegaScaleInterval,
+  vegaViewOrigin,
   anchorsFromVegaScales,
   anchorsFromVegaScenegraph,
   anchorsFromVegaSvg,
@@ -592,5 +595,46 @@ describe('Vega adapter', () => {
     expect(sceneReport.missing[0]).toMatchObject({ id: 'bars', expected: 'mark name "bars"' });
     expect(svgReport.found).toEqual(['points']);
     expect(svgReport.missing[0]).toMatchObject({ id: 'bars', expected: 'selector ".mark-rect.bars"' });
+  });
+});
+
+
+describe('independent Vega coordinate helpers', () => {
+  const positions: Record<string, number> = { a: 80, b: 20 };
+  const band = Object.assign((value: unknown) => positions[String(value)], { bandwidth: () => 16 });
+  it('centers each band axis without requiring the other axis to have bandwidth', () => {
+    expect(vegaScaleCoordinate(band, 'a', { band: 'center' })).toBe(88);
+    expect(vegaScaleCoordinate((v) => Number(v) * 2, 5, { band: 'center' })).toBe(10);
+    expect(vegaScaleCoordinate(band, 'a')).toBe(80);
+    expect(vegaScaleCoordinate(band, 'a', { band: 'end' })).toBe(96);
+  });
+  it('covers both complete bands in either argument and scale direction', () => {
+    expect(vegaScaleInterval(band, 'a', 'b')).toEqual([20, 96]);
+    expect(vegaScaleInterval(band, 'b', 'a')).toEqual([20, 96]);
+    expect(vegaScaleInterval(band, 'a', 'a')).toEqual([80, 96]);
+    expect(vegaScaleInterval((v) => 100 - Number(v), 10, 30)).toEqual([70, 90]);
+  });
+  it('keeps exact values authoritative and only coerces on request', () => {
+    const dates = (v: unknown) => v instanceof Date ? 42 : undefined;
+    expect(vegaScaleCoordinate(dates, '2026-01-01')).toBeUndefined();
+    expect(vegaScaleCoordinate(dates, '2026-01-01', { coerce: true })).toBe(42);
+    expect(vegaScaleCoordinate((v) => typeof v === 'string' ? 7 : undefined, 12, { coerce: true })).toBe(7);
+    expect(vegaScaleCoordinate((v) => typeof v === 'string' ? 3 : 9, '2026-01-01', { coerce: true })).toBe(3);
+  });
+  it('refuses invalid outputs, exceptions, bands and overflowing coordinates', () => {
+    for (const value of [NaN, Infinity, -Infinity, '12', undefined, null]) {
+      expect(vegaScaleCoordinate(() => value, 'a')).toBeUndefined();
+    }
+    expect(vegaScaleCoordinate(() => { throw new Error('unready'); }, 'a')).toBeUndefined();
+    for (const width of [-1, Infinity, NaN]) {
+      expect(vegaScaleCoordinate(Object.assign(() => 1, { bandwidth: () => width }), 'a', { band: 'center' })).toBeUndefined();
+    }
+    expect(vegaScaleCoordinate(Object.assign(() => Number.MAX_VALUE, { bandwidth: () => Number.MAX_VALUE }), 'a', { band: 'end' })).toBeUndefined();
+    expect(vegaScaleInterval(band, 'a', 'missing')).toBeUndefined();
+  });
+  it('exposes the real view offset without requiring a synthetic data/scale view', () => {
+    expect(vegaViewOrigin({ origin: () => [8, 2], padding: () => 5 })).toEqual({ x: 13, y: 7 });
+    expect(vegaViewOrigin({ origin: () => ({ x: 8 }), padding: () => ({ top: 3 }) })).toEqual({ x: 8, y: 3 });
+    expect(vegaViewOrigin({ padding: () => undefined })).toEqual({ x: 0, y: 0 });
   });
 });
