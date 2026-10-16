@@ -1,4 +1,3 @@
-import { openEditorDiagram } from '../test/examples/responsive-authoring.browser.js';
 /**
  * Real Chromium mobile-emulated touch input for the published React editor.
  * Uses CDP Input.dispatchTouchEvent, not synthetic PointerEvents: browser
@@ -14,6 +13,7 @@ import { openEditorDiagram } from '../test/examples/responsive-authoring.browser
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { createServer } from 'vite';
+import { verifyAuthoringDefault, openAuthoringDiagram } from './responsive-authoring-scenario.mjs';
 
 const server = await createServer({
   configFile: false,
@@ -75,8 +75,9 @@ try {
   );
   assert.equal(response?.status(), 200, 'Interactive editor did not load');
   await page.waitForFunction(() => window.__annotationsExample?.annotations.length === 4);
+  await verifyAuthoringDefault(page, 'Chromium touch editor');
+  await openAuthoringDiagram(page);
   await reset();
-  await openEditorDiagram(page);
 
   const handle = page.locator(
     '.pa-annotation__edit-handle--note[data-annotation-id="signal"]').first();

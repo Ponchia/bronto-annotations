@@ -32,7 +32,8 @@ the host selects the first remaining note.
 At narrow container widths, or when layout quality reports overlaps or invalid
 geometry, the host starts with the full diagram collapsed. The list remains
 complete: no note is deleted, ranked out, or silently replaced. Open **Show full
-diagram** for sideways scrolling and geometry handles. Your disclosure choice
+diagram** for sideways scrolling and geometry handles. **Go to diagram** opens
+and focuses the stage directly; **Back to selected note** restores list focus. Your disclosure choice
 persists while editing and resizing. Fixed diagram boxes may clip long text;
 the list is the reading surface for the complete authored text.
 
@@ -42,6 +43,8 @@ the current state untouched. Presentation and selection changes do not create
 history entries or rewrite authored geometry.
 
 ## Host and package boundary
+
+The host owns the complete note list, responsive disclosure, selection, history, forms and JSON validation. It retains every authored note and its geometry. The importer accepts point/box annotations and at most ten notes; it is not a general package serializer.
 
 The layer receives only `layout={view.layout}` plus presentation and edit
 callbacks. Source annotations, bounds, and final note geometry come from that
@@ -55,14 +58,14 @@ importer accepts point/box annotations and at most ten notes; it is not a
 general package import/export API. The fallback checks the host container width
 and the resolved layout quality. It does not change package placement policy.
 
-The scoped browser check is [responsive-authoring.browser.js](../../test/examples/responsive-authoring.browser.js).
-With the library built and Vite serving this checkout, create the output directory
-with `mkdir -p /tmp/annotations-responsive-evidence`. Open the example through
-`playwright-cli`, then run it with `playwright-cli run-code --filename=<absolute-file-path>`.
-Screenshots go to that directory. An `?evidence=<absolute-directory>` query on the
-initial example URL selects another existing directory.
-It checks desktop and 390px viewport behavior. Automated keyboard and DOM checks
-are not screen-reader or physical-device acceptance.
+The shared [responsive scenario](../../scripts/responsive-authoring-scenario.mjs)
+runs with repository Playwright through `npm run test:browser`, which is part of
+`npm run check` and CI. It checks desktop and 390px viewport behavior and stores
+default, full-diagram, and crowded screenshots under
+`browser-evidence/responsive-authoring/`. The existing example, cross-browser,
+and touch verifiers check the initial list first, then explicitly open the diagram
+for geometry interactions. Automated keyboard and DOM checks are not
+screen-reader or physical-device acceptance.
 
 The source lives in [main.tsx](main.tsx), with its host styles in
 [styles.css](styles.css). Read the [integration guide](../../docs/react-guide.md)
@@ -73,11 +76,3 @@ before copying an advanced pattern into an application.
 This fixture follows the checked-out repository revision. The public demo tracks
 `main` and can be ahead of the npm release. Match installed package versions to
 [release notes](https://github.com/Ponchia/bronto-annotations/releases).
-
-
-The responsive scenario runs automatically within `npm run test:browser`
-(and therefore `npm run check`) through the existing Playwright harness. It
-retains normal, full-detail and crowded screenshots in
-`browser-evidence/responsive-authoring/`, which survives subsequent package
-builds. Existing Firefox/WebKit and Chromium touch checks explicitly open the
-full diagram before testing geometry; they do not remove text-first coverage.

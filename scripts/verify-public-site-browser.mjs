@@ -1,4 +1,3 @@
-import { openEditorDiagram } from '../test/examples/responsive-authoring.browser.js';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile } from 'node:fs/promises';
@@ -6,6 +5,7 @@ import { createServer } from 'vite';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 import { resolve } from 'node:path';
+import { verifyAuthoringDefault, openAuthoringDiagram } from './responsive-authoring-scenario.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const publication = JSON.parse(await readFile(resolve(root, '_site/release-status.json'), 'utf8'));
@@ -380,7 +380,32 @@ try {
   for (const width of [390, 1200]) {
     for (const name of publishedExamples) {
       const example = await visit(`/examples/${name}/`, width);
-      if (name === 'react-incremental') await openEditorDiagram(example);
+      if (name === 'react-incremental') {
+        // The narrow host starts with readable notes and a closed diagram.
+        // Verify that initial reading surface before opening the optional SVG;
+        // retain the same visible-diagram and WCAG checks below afterward.
+        await verifyAuthoringDefault(example, `Published incremental example (${width}px)`);
+        const notes = example.locator('.note-list');
+        await notes.waitFor({ timeout: 30000 });
+        assert.equal(await notes.locator('ol > li').count(), 4);
+        for (const [id, title, body] of [
+          ['intake', 'Intake', 'Source geometry stays fixed.'],
+          ['triage', 'Triage', 'Previous placements can be reused.'],
+          ['delivery', 'Delivery', 'One authoritative resolved layout.'],
+          ['signal', 'Live marker', 'Move this anchor or drag the note.'],
+        ]) {
+          const row = notes.locator('li').filter({ has: example.locator(`button[data-note-id="${id}"]`) });
+          assert(await row.isVisible(), `Authored note ${id} must be readable before opening the diagram`);
+          assert.equal(await row.locator('button strong').innerText(), title);
+          assert(await row.locator('p').isVisible(), `Full body for ${id} must be visible in the note list`);
+          assert.equal(await row.locator('p').innerText(), body,
+            `The note list must preserve the complete authored body for ${id}`);
+        }
+        const disclosure = example.locator('button#diagram-disclosure');
+        assert.equal(await disclosure.getAttribute('aria-controls'), 'full-diagram');
+        await openAuthoringDiagram(example);
+        assert.equal(await disclosure.getAttribute('aria-expanded'), 'true');
+      }
       await example.locator('.pa-annotation').first().waitFor({ timeout: 30000 });
       if (name === 'svg-basic') {
         const strokes = await example.evaluate(() => {

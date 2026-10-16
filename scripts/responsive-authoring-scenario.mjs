@@ -1,6 +1,48 @@
-// Shared browser scenario for the maintained example gate. The caller owns
-// the browser, loopback origin and evidence directory; no extra CLI is required.
-export async function verifyResponsiveAuthoring(page, { origin, evidenceDirectory }) {
+/** Check the initial reading surface before any deliberate diagram override. */
+export async function verifyAuthoringDefault(page, label = 'incremental authoring') {
+  const check = (condition, message) => { if (!condition) throw new Error(`${label}: ${message}`); };
+  await page.waitForFunction(() => Boolean(window.__annotationsExample?.quality));
+  await page.waitForFunction(() => {
+    const card = document.querySelector('.demo-card');
+    const expected = card.clientWidth >= 690 && window.__annotationsExample.quality.ok;
+    return document.querySelector('#diagram-disclosure')?.getAttribute('aria-expanded') === String(expected);
+  });
+  const notes = JSON.parse(await page.locator('#annotation-json').textContent());
+  check(await page.locator('.note-list li').count() === notes.length, 'reading list dropped an authored note');
+  const titles = await page.locator('.note-list li button strong').allTextContents();
+  check(JSON.stringify(titles) === JSON.stringify(notes.map(note => note.note.title?.trim() || note.id)),
+    'reading list changed authored order or titles');
+  const bodies = await page.locator('.note-list li p').allTextContents();
+  check(JSON.stringify(bodies) === JSON.stringify(notes.filter(note => note.note.body).map(note => note.note.body)),
+    'reading list lost full authored text');
+  check(await page.locator('.note-list li p').evaluateAll(elements => elements.every(element =>
+    element.getClientRects().length > 0 && element.scrollHeight <= element.clientHeight + 1
+      && element.scrollWidth <= element.clientWidth + 1)), 'reading list clips or hides body text');
+  check(await page.locator('.note-list').isVisible(), 'default reading list is hidden');
+  const narrow = await page.locator('.demo-card').evaluate(card => card.clientWidth < 690);
+  if (narrow) {
+    check(await page.locator('#diagram-disclosure').getAttribute('aria-expanded') === 'false',
+      'narrow default must start with the diagram collapsed');
+    check(await page.locator('#full-diagram').isHidden(), 'narrow default exposes the full graph before the list');
+  }
+}
+
+/** Establish a user choice so later edits/crowding cannot hide geometry tests. */
+export async function openAuthoringDiagram(page) {
+  const before = await page.locator('#annotation-json').textContent();
+  const changes = await page.evaluate(() => window.__annotationsExample.changes);
+  const toggle = page.locator('#diagram-disclosure');
+  if (await toggle.getAttribute('aria-expanded') === 'true') await toggle.click();
+  await toggle.click();
+  await page.locator('#full-diagram').waitFor({ state: 'visible' });
+  if (await page.locator('#annotation-json').textContent() !== before
+    || await page.evaluate(() => window.__annotationsExample.changes) !== changes) {
+    throw new Error('Opening the full diagram mutated authored inputs or history');
+  }
+}
+
+// Shared real-Playwright scenario, exercised by the mandatory test:browser gate.
+export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }) {
   const check = (condition, message) => { if (!condition) throw new Error(message); };
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -31,7 +73,7 @@ export async function verifyResponsiveAuthoring(page, { origin, evidenceDirector
     width === 390 ? 'false' : 'true');
     check(await page.locator('.note-list li').count() === 4, 'Every initial note has a list row');
     await noOverflow(`initial ${width}`);
-    await page.screenshot({ path: `${evidenceDirectory}/${width}-default.png`, fullPage: true });
+    await page.screenshot({ path: `${screenshotsDir}/${width}-default.png`, fullPage: true });
 
     if (width === 1200) {
       const original = await inputs();
@@ -94,7 +136,7 @@ export async function verifyResponsiveAuthoring(page, { origin, evidenceDirector
     await page.waitForFunction(() => window.__annotationsExample?.action === 'Edited signal by dragging');
     await noOverflow(`full-detail ${width}`);
     await page.locator('.stage-scroll').evaluate(el => { el.scrollLeft = 0; });
-    await page.locator('#full-diagram').screenshot({ path: `${evidenceDirectory}/${width}-diagram.png` });
+    await page.locator('#full-diagram').screenshot({ path: `${screenshotsDir}/${width}-diagram.png` });
 
     const stable = await inputs();
     await page.locator('.annotation-source summary').click();
@@ -120,8 +162,11 @@ export async function verifyResponsiveAuthoring(page, { origin, evidenceDirector
     check(JSON.stringify(JSON.parse(await inputs())) === JSON.stringify(dense), 'Dense presentation preserves all authored inputs');
     const bodies = await page.locator('.note-list li p').allTextContents();
     check(JSON.stringify(bodies) === JSON.stringify(dense.map(note => note.note.body)), 'Every full body remains readable in authored order');
+    check(await page.locator('.note-list li p').evaluateAll(elements => elements.every(element =>
+      element.getClientRects().length > 0 && element.scrollHeight <= element.clientHeight + 1
+        && element.scrollWidth <= element.clientWidth + 1)), 'Crowded note bodies must remain visible and unclipped');
     await noOverflow(`crowded ${width}`);
-    await page.locator('.note-list').screenshot({ path: `${evidenceDirectory}/${width}-crowded.png` });
+    await page.locator('.note-list').screenshot({ path: `${screenshotsDir}/${width}-crowded.png` });
     await page.locator('#remove-note').click();
     await page.waitForFunction(() => document.querySelector('#text-editor-note')?.value === '__proto__');
     check(await page.locator('.note-list button[aria-pressed="true"]').getAttribute('data-note-id') === '__proto__', 'Removal recovers list and editor selection');
@@ -137,14 +182,4 @@ export async function verifyResponsiveAuthoring(page, { origin, evidenceDirector
   check(errors.length === 0, `Browser errors: ${errors.join('\n')}`);
   return { passed: true, widths: [1200, 390], checks: 'full text, crowded fallback, selection, keyboard edit/undo/redo, drag, invalid import, recovery, overflow',
     acceptance: 'Automated Chromium viewport checks; screen reader and physical device acceptance remain unperformed.' };
-}
-
-
-/** Existing geometry tests explicitly enter the optional full-detail view. */
-export async function openEditorDiagram(page) {
-  await page.locator('.note-list').waitFor({ state: 'visible' });
-  const control = page.locator('#diagram-disclosure');
-  await control.waitFor({ state: 'visible' });
-  if (await control.getAttribute('aria-expanded') !== 'true') await control.click();
-  await page.locator('#full-diagram').waitFor({ state: 'visible' });
 }
