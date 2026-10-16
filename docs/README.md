@@ -16,6 +16,11 @@ example. Then use the [adapter chooser](context-quickstart.md) to connect the
 engine to the surface you already render. Start with a few notes; Workers and
 incremental sessions are advanced, optional paths.
 
+Already have a surface? Start with one note on an
+[SVG figure](context-quickstart.md#first-note-on-a-figure),
+[DOM report](context-quickstart.md#first-note-on-a-report), or
+[React Flow graph](context-quickstart.md#first-note-on-a-graph).
+
 ## Current consumer guides
 
 | Question | Guide |

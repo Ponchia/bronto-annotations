@@ -3,9 +3,13 @@
 New to the package? Start with [your first annotation](getting-started.md) for
 a complete runnable example. This page helps choose the host-specific path.
 
-Use this page when choosing the first integration path. Every example below
-uses public package imports and keeps host rendering, state, persistence, and
-layout ownership outside this package.
+Pick a path for [SVG](#first-note-on-a-figure), [DOM report](#first-note-on-a-report),
+or [React Flow](#first-note-on-a-graph). Get one note on screen before adding
+diagnostics, editing, or a Worker. All snippets use public package imports.
+These guides track `main`; use the [version and install choices](getting-started.md#choose-your-version)
+to match the package you are testing.
+Run demo commands from the repository root after the
+[example setup](getting-started.md#try-the-existing-examples).
 
 ## Choose The Adapter
 
@@ -21,9 +25,150 @@ layout ownership outside this package.
 | React Flow graph | `@ponchia/annotations/react-flow` | Public node, handle, edge, and viewport state | `prepareReactFlowAnnotations` |
 | Bronto-styled output | `@ponchia/annotations/bronto.css` | CSS classes emitted by SVG/React renderers or legacy `ui-annotation*` SVG | CSS import only |
 
-## Shared Layout Shape
+## First note on a figure
 
-Most integrations end with the same layout call:
+If your chart already supplies `viewBox` coordinates, use the
+[complete browser snippet](getting-started.md#use-it-in-a-browser-application).
+Start with a single point and the default placement. Then run the host-rendered
+[SVG example](../examples/svg-basic/) with:
+
+```bash
+npm run example -- examples/svg-basic
+```
+
+You should see a teal chart line and separate annotation connectors. The host
+renders the chart; the package renders the note layer. Keep both layers in the
+same `viewBox`. No DOM adapter or generated-surface defaults are needed here.
+
+## First note on a report
+
+Run `npm run example -- examples/dom-basic` for a complete measured report.
+For your own report, give a positioned surface a target and an overlay. This
+small fixture reserves room for one note:
+
+```html
+<section id="report" style="position:relative;width:420px;height:260px">
+  <article id="metric-card"
+    style="position:absolute;left:64px;top:96px;width:90px;height:44px">
+    42 requests
+  </article>
+  <div id="report-notes"
+    style="position:absolute;inset:0;pointer-events:none"></div>
+</section>
+```
+
+In your browser module:
+
+```ts
+import {
+  renderAnnotationsSvg,
+  resolvePreparedAnnotationLayout
+} from '@ponchia/annotations';
+import { prepareDomAnnotations } from '@ponchia/annotations/dom';
+import '@ponchia/annotations/bronto.css';
+
+export function annotateReport(surface: HTMLElement, overlay: HTMLElement) {
+  const prepared = prepareDomAnnotations(surface, [{
+    id: 'report-metric',
+    selector: '#metric-card',
+    coordinateSpace: surface,
+    note: { title: 'Measured metric' }
+  }], { assert: { label: 'Report targets' } });
+
+  const resolved = resolvePreparedAnnotationLayout(prepared, {
+    bounds: {
+      x: 0, y: 0, width: surface.clientWidth, height: surface.clientHeight
+    },
+    padding: 16
+  });
+  overlay.innerHTML = renderAnnotationsSvg(resolved.layout, {
+    title: 'Report annotations',
+    markerIdPrefix: 'report-notes'
+  });
+  return resolved;
+}
+```
+
+After the report is rendered and its fonts are ready, call
+`annotateReport(document.querySelector<HTMLElement>('#report')!,
+document.querySelector<HTMLElement>('#report-notes')!)`.
+You should see **Measured metric** connected to the card. Inspect the returned
+`validationSummary` and `qualitySummary` if a target is missing or a note does
+not fit. Missing selectors throw instead of silently placing at the origin.
+
+The target, bounds, and overlay use coordinates relative to the same surface.
+Rerun the function after the report changes size or content; observe the surface
+with a host-owned `ResizeObserver` when needed. Use the
+[DOM adapter guide](adapter-guide.md#dom-and-svg-utilities) for transformed SVG
+and other coordinate spaces. This 420 × 260 fixture is a coordinate example;
+your report owns responsive sizing and enough room for its notes.
+
+## First note on a graph
+
+Run `npm run example -- examples/react-flow-basic` to see the complete host.
+In an existing React Flow app, start by annotating one node:
+
+```tsx
+import { AnnotationLayer } from '@ponchia/annotations/react';
+import { prepareReactFlowAnnotations } from '@ponchia/annotations/react-flow';
+import { useNodes, useViewport } from '@xyflow/react';
+import '@ponchia/annotations/bronto.css';
+
+export function FlowNotes({ width, height }: {
+  width: number;
+  height: number;
+}) {
+  const nodes = useNodes();
+  const viewport = useViewport();
+  const review = nodes.find((node) => node.id === 'review');
+  if (!(review?.measured?.width && review.measured.height)) return null;
+
+  const prepared = prepareReactFlowAnnotations({ nodes, viewport }, [{
+    id: 'review-note',
+    nodeId: 'review',
+    note: { title: 'Review this step' }
+  }], { assert: { label: 'Flow targets' } });
+
+  return (
+    <AnnotationLayer
+      annotations={prepared.annotations}
+      obstacles={prepared.obstacles}
+      bounds={{ x: 0, y: 0, width, height }}
+      label="Graph annotations"
+      markerIdPrefix="flow-notes"
+    />
+  );
+}
+```
+
+Mount `<FlowNotes width={640} height={420} />` as a child of your existing
+`<ReactFlow>` component, in a positioned overlay at the top-left of the graph
+container. Give that overlay
+`position: absolute; inset: 0; pointer-events: none`.
+Use the actual container dimensions for `width` and `height`. Its provider
+supplies the hooks; React Flow still owns node rendering, graph layout, and
+pan/zoom state.
+
+You should see **Review this step** beside the node whose ID is `review`.
+The component waits for that node's measured dimensions. The adapter applies
+the viewport transform, so keep this overlay outside React Flow's transformed
+node group; applying the transform again shifts the notes. Add edge or handle
+anchors and editing only after this works. The
+[full React Flow example](../examples/react-flow-basic/) includes container
+measurement, edge geometry, handle geometry, and host-owned edits.
+
+## Add diagnostics when the first note works
+
+DOM and generated-surface adapters return
+`{ annotations, obstacles, validation }`.
+`resolvePreparedAnnotationLayout` combines that geometry with your bounds and
+returns the layout plus validation and quality summaries. React apps
+can pass prepared annotations and obstacles directly to `AnnotationLayer`.
+
+For a larger generated surface, add shared placement defaults and assertions.
+Target-alignment checks need independently expected geometry from your host;
+they are optional verification, not a requirement for displaying the first note.
+The following extends an existing `prepared`, `bounds`, and `overlay`:
 
 ```ts
 import {
@@ -66,9 +211,6 @@ overlay.innerHTML = renderAnnotationsSvg(layout, {
   preserveAspectRatio: 'xMidYMid meet'
 });
 ```
-
-`prepared` comes from a DOM or generated-surface adapter. For static SVG data,
-pass `annotations` and `obstacles` directly.
 
 ## Manual Placement
 

@@ -1,15 +1,30 @@
 # Your first annotation
 
-> **Version boundary:** this guide follows the 0.7 source API. The confirmed
-> stable release is 0.6.10; its [versioned guide](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/getting-started.md)
-> matches a stable npm install. Check the public page's version notice or the
-> [release-readiness guide](release-readiness.md) before testing a candidate.
+> This guide follows `main`. [Choose your version](#choose-your-version) before
+> installing: stable, published candidate, and source are separate choices.
 
 [Documentation index](README.md) · [Choose an adapter](context-quickstart.md)
 
 The smallest integration has three parts: your host supplies an anchor, the
 engine places a note, and a renderer displays the resolved geometry. Begin with
 one or two notes before adding measurements, editable state, or a Worker.
+
+## Choose your version
+
+| You want | Install and matching guidance |
+| --- | --- |
+| The stable release | `npm install @ponchia/annotations@0.6.10` and the [0.6.10 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/getting-started.md) |
+| The published 0.7 candidate | `npm install @ponchia/annotations@0.7.0-rc.1` and the [RC1 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0-rc.1/docs/getting-started.md) |
+| The exact source shown here | Clone `main` and run the examples below |
+
+Source version `0.7.0-dev.1` is newer than RC1; its npm publication is
+unconfirmed.
+The standalone setup below pins the published candidate. Its first-point API
+also exists in this checkout, but newer source features may differ. Use the
+[migration guide](migration-0.7.md) when upgrading and
+[release readiness](release-readiness.md) when building and packing source for
+an isolated consumer. A `next` tag or Git tag does not establish publication
+of later source versions.
 
 ## Try the existing examples
 
@@ -42,7 +57,7 @@ repository and a Node version from the [compatibility matrix](compatibility.md):
 mkdir annotation-demo
 cd annotation-demo
 npm init -y
-npm install @ponchia/annotations
+npm install @ponchia/annotations@0.7.0-rc.1
 npm install --save-dev vite@8
 ```
 
@@ -80,7 +95,7 @@ TypeScript typecheck in your application's CI.
 In an existing TypeScript application whose bundler handles CSS imports:
 
 ```bash
-npm install @ponchia/annotations
+npm install @ponchia/annotations@0.7.0-rc.1
 ```
 
 Put this in a browser entry point that runs after the document body exists:
@@ -135,7 +150,7 @@ Keep the same `viewBox` coordinate system and `preserveAspectRatio` as the host.
 In an existing React application, install the annotation package:
 
 ```bash
-npm install @ponchia/annotations
+npm install @ponchia/annotations@0.7.0-rc.1
 ```
 
 React and React DOM remain peer dependencies: keep the application's existing
@@ -172,6 +187,10 @@ on an existing chart, align its bounds and transform with the host; the [React e
 Start without editing or custom measurements. When you need them, read
 [React rendering and editing](react-guide.md). The application owns the note
 state; it decides when an edit becomes a persisted change.
+
+To attach this first note to your existing surface, continue with the
+[SVG, DOM report, or React Flow quickstart](context-quickstart.md). Each starts
+with one target before introducing advanced diagnostics or editing.
 
 ## Coordinate and layout basics
 

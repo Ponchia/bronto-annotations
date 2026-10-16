@@ -94,6 +94,23 @@ for (const rel of pages) {
   assert.equal(notices[0].getAttribute('data-source-version'), published.sourceVersion);
   assert.equal(notices[0].getAttribute('data-stable-version'), published.stableVersion);
   assert(notices[0].textContent.includes(published.stableVersion));
+  const identity = notices[0].querySelector('[data-release-identity]');
+  const disclosure = notices[0].querySelector('details');
+  assert(identity && disclosure, 'Version identity and install disclosure required: ' + rel);
+  assert(!disclosure.contains(identity), 'Source/stable identity must stay visible when collapsed: ' + rel);
+  assert(!disclosure.hasAttribute('open'), 'Version guidance must start collapsed: ' + rel);
+  assert.equal(disclosure.firstElementChild?.tagName, 'SUMMARY');
+  assert.equal(identity.querySelector('a')?.getAttribute('href'), published.stableDocs);
+  assert(disclosure.textContent.includes(published.stableInstall), 'Exact stable install missing: ' + rel);
+  if (published.previewVersion) {
+    assert(disclosure.textContent.includes('npm install @ponchia/annotations@' + published.previewVersion));
+    assert.equal(disclosure.querySelector('[data-candidate-docs]')?.getAttribute('href'),
+      `https://github.com/Ponchia/bronto-annotations/blob/v${published.previewVersion}/docs/README.md`);
+  }
+  if (!published.sourcePublished) {
+    assert(disclosure.textContent.includes('Publication of this source is not confirmed'));
+    assert(!disclosure.textContent.includes('npm install @ponchia/annotations@' + published.sourceVersion));
+  }
   // Only the public editorial site is instrumented; package and independent
   // interactive example fixtures must not inherit website analytics.
   const editorial = rel === 'index.html' || rel.startsWith('docs/') || rel === 'examples/index.html';
