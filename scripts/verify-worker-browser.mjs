@@ -15,9 +15,16 @@ import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { build, createServer, preview } from 'vite';
 import { writeLine } from './log.mjs';
+import { createWorkerAllocationProfiler } from './worker-allocation-profile.mjs';
 import { workerBenchmarkCases, summarizeWorkerBenchmarks } from './worker-benchmark-summary.mjs';
 
 const production = process.argv.includes('--production');
+const allocationMode = process.argv.includes('--allocations');
+assert(!allocationMode || (production && process.argv.includes('--benchmark')), '--allocations requires --production --benchmark');
+const cycleArgs = process.argv.filter((arg) => arg.startsWith('--allocation-cycles='));
+assert(cycleArgs.length <= 1 && (!cycleArgs.length || allocationMode), '--allocation-cycles requires --allocations and may occur once');
+const allocationCycles = cycleArgs.length ? Number(cycleArgs[0].split('=')[1]) : 2;
+assert(Number.isSafeInteger(allocationCycles) && allocationCycles >= 1 && allocationCycles <= 5, 'Allocation cycles must be1..5');
 const cases = workerBenchmarkCases(process.argv.slice(2));
 const reportFlags = process.argv.filter((arg) => arg.startsWith('--benchmark-output='));
 assert(reportFlags.length <= 1, 'Duplicate benchmark output');
@@ -34,7 +41,7 @@ try {
     await build({
       configFile: false,
       root: fixtureRoot,
-      build: { outDir: output, emptyOutDir: true },
+      build: { outDir: output, emptyOutDir: true, ...(allocationMode ? { minify: false } : {}) },
       logLevel: 'error'
     });
     const assets = await readdir(join(output, 'assets'));
@@ -66,6 +73,8 @@ try {
     const context = await browser.newContext({ viewport: { width: config.width, height: config.height } });
     const page = await context.newPage();
     const errors = [];
+    let profiler;
+    const allocationRecords = [];
     page.on('pageerror', (error) => errors.push(error.message));
     page.on('console', (message) => {
       if (message.type() === 'error') errors.push(message.text());
@@ -74,6 +83,8 @@ try {
 
     async function clickAndConfirm(button, action, expectedCount = null) {
       const previousId = await page.evaluate(() => window.__workerProof?.events.at(-1)?.id ?? 0);
+      const heapBeforeAllocation = profiler ? await profiler.start() : null;
+      if (profiler) await page.evaluate(() => { window.__allocationLongTasks = []; window.__allocationStarted = performance.now(); });
       await page.locator(`#${button}`).click();
       await page.waitForFunction((expected) => {
         const proof = window.__workerProof;
@@ -106,6 +117,12 @@ try {
       `${config.name}/${action}: React commit timing missing`);
       assert.ok(event.jsonWireBytes > 0 && event.jsonFullBytes > 0);
       assert.ok(event.changed >= 0 && event.changed <= config.count);
+      if (profiler) {
+        const sampled = await profiler.finish();
+        const longTasks = await page.evaluate(() => window.__allocationLongTasks);
+        allocationRecords.push({ action, cycle: Math.floor(allocationRecords.length / 6) + 1,
+          event, before: heapBeforeAllocation, ...sampled, longTasks });
+      }
       const parity = await page.evaluate(() => window.__workerProof?.checkParity());
       assert.equal(parity, true, `${config.name}/${action}: worker layout must match full main-thread solver`);
       const lean = await page.evaluate(() => {
@@ -128,6 +145,18 @@ try {
       const initial = await page.evaluate(() => window.__workerProof?.checkParity());
       assert.equal(initial, true, 'Initial worker fixture must match full geometry');
 
+      let collectedBefore;
+      if (allocationMode && config.sampled) {
+        profiler = await createWorkerAllocationProfiler(browser, context, page);
+        await page.evaluate(() => {
+          window.__allocationLongTasks = [];
+          window.__allocationObserver = new PerformanceObserver((list) => {
+            window.__allocationLongTasks.push(...list.getEntries().filter((entry) => entry.startTime >= window.__allocationStarted).map((entry) => ({ startTime: entry.startTime, duration: entry.duration })));
+          });
+          window.__allocationObserver.observe({ type: 'longtask', buffered: false });
+        });
+        collectedBefore = await profiler.afterCollection();
+      }
       // Real full resolution happens in the worker; result is installed as a
       // controlled React layout without re-invoking the resolver in render.
       const cdp = config.sampled ? await context.newCDPSession(page) : null;
@@ -203,6 +232,33 @@ try {
       const heapAfter = cdp ? await cdp.send('Runtime.getHeapUsage') : null;
       await cdp?.detach();
 
+      let allocationEvidence = null;
+      if (profiler) {
+        // Longer warm sequences without changing the ordinary timing harness.
+        for (let cycle = 1; cycle < allocationCycles; cycle++) {
+          for (const [button, action] of [['worker-anchor', 'anchor'], ['worker-obstacle', 'obstacle'],
+            ['worker-early', 'early-note'], ['worker-bounds', 'bounds-change'],
+            ['worker-refinement', 'refinement'], ['worker-routes', 'routed-obstacles']]) {
+            await clickAndConfirm(button, action);
+          }
+        }
+        const committedBeforeEcho = await page.evaluate(() => window.__workerProof.events.length);
+        const echoBefore = await profiler.start();
+        await page.locator('#worker-clone-control').click();
+        await page.waitForFunction(() => window.__workerProof.cloneControl?.id === 1);
+        const echo = await page.evaluate(() => window.__workerProof.cloneControl);
+        const echoProfile = await profiler.finish();
+        assert.equal(echo.parity, true, 'Clone-only control must return the same exact layout');
+        assert.equal(await page.evaluate(() => window.__workerProof.events.length), committedBeforeEcho, 'Echo must not commit state');
+        const cloneControl = { before: echoBefore, ...echoProfile, ...echo,
+          interpretation: 'Same layout round trip without solver or encoder; includes message dispatch, cloning and host equality validation. Not exact native-clone bytes and not subtracted from production measurements.' };
+        const collectedAfter = await profiler.afterCollection();
+        await page.evaluate(() => window.__allocationObserver.disconnect());
+        allocationEvidence = { identity: profiler.identity, collectedBefore, collectedAfter,
+          records: allocationRecords, cycles: allocationCycles, cloneControl,
+          interpretation: 'Separate Worker and document V8 isolates, allocation sampling includes collected objects. Forced-GC endpoints are outside measurement windows, not a leak verdict. Sampling perturbs timing. Stack buckets cannot identify all native structured-clone allocation; unknown/native work remains unattributed.' };
+        assert(allocationRecords.length === 6 * allocationCycles, 'All sequential workloads require allocation evidence');
+      }
       // The host's real Worker-generated React DOM stays keyboard-usable and
       // semantically named in both desktop/mobile viewports.
       const accessibility = await new AxeBuilder({ page })
@@ -220,6 +276,7 @@ try {
         height: config.height,
         count: config.count,
         sampled: config.sampled,
+        allocationEvidence,
         workloads,
         mainThreadHeap: heapBefore && heapAfter ? {
           before: heapBefore, after: heapAfter,
@@ -233,6 +290,7 @@ try {
         errors
       });
     } finally {
+      await profiler?.close();
       await context.close();
     }
   }
@@ -243,7 +301,8 @@ try {
     runtime: { node: process.version, platform: process.platform, arch: process.arch, browser: browser.version() },
     recordedAt: new Date().toISOString(),
     proof: 'host-owned-off-main-thread-annotation-layout',
-    buildMode: production ? 'production-bundled-worker' : 'vite-development-worker',
+    buildMode: allocationMode ? 'production-unminified-allocation-profile' : production ? 'production-bundled-worker' : 'vite-development-worker',
+    allocationMode,
         interpretation: 'Chromium/Vite Worker and React SVG. JSON reply/full sizes approximate bytes, not structured-clone bytes. Epoch-relative requestDelivery/responseDelivery include cloning, event-loop scheduling and cross-context clock skew; workerQueue includes deliberate fixture delays. postMessage measures only the synchronous caller interval; React useLayoutEffect timestamps a commit in dev and production; Profiler render duration is development-only, neither measures paint. rAF is not compositor paint, and cancellation does not interrupt Worker CPU.',
     protocol: 'Independent browser contexts; initial unmeasured layout then sequential anchor, distant-obstacle, early-note, bounds, refinement and routed-obstacle transitions. UI input is proved while a computed reply is held, not assumed concurrent with solver CPU. Memory endpoints are not allocation profiles.',
     observations,

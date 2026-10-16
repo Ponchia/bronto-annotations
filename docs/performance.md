@@ -695,3 +695,44 @@ every compact response) together with cloning, patch-admission, React and next-r
 these measures do not guarantee a frame-rate improvement. See [the Worker integration
 recipe](worker-layout.md) for limitations around CPU cancellation, structured
 cloning, React identity, and end-to-end timings.
+
+## Worker-isolate allocation attribution
+
+The existing production-browser harness accepts an opt-in profiling mode:
+
+```sh
+npm run build
+node scripts/verify-worker-browser.mjs --production --benchmark \
+  --benchmark-samples=2 --allocations --allocation-cycles=3 \
+  --benchmark-output=browser-evidence/worker-allocations.json
+```
+
+This run owns its Chromium instance and requires exactly one loopback Worker in
+that page's browser context. It verifies different `Runtime.getIsolateId` values
+before sampling either VM. A missing or ambiguous target fails; the main-thread
+heap is never relabelled as Worker memory. The unminified production bundle keeps
+stack names readable and is recorded separately from normal minified timing runs.
+
+For each transition, both isolates use `HeapProfiler.startSampling`, including
+objects later collected by minor/major GC. Reports retain sanitized frames and
+samples (including parent links for stack reconstruction), per-cycle timings,
+descriptive layout/host-codec/other/unattributed buckets, isolate heap
+and backing-store observations, and main-thread long tasks overlapping that
+window. Independent fresh-layout parity is checked **after** stopping sampling.
+The default two cycles can be increased to five. Forced-GC endpoints occur only
+outside sampling and remain endpoints, not a retained-graph or leak proof.
+
+A clone-only diagnostic sends the same committed layout through the Worker and
+back without solving, encoding, acknowledging or committing a revision. Its
+separate samples include dispatch, cloning and host equality validation. They
+are not exact native clone allocations and are never subtracted from unrelated
+runs. Statistical samples are not total allocated bytes, peak memory or retained
+heap. Runtime/internal frames without reliable ownership remain unattributed.
+Profiler overhead means these timings cannot replace normal performance runs.
+
+These methods follow the upstream [HeapProfiler protocol](https://chromedevtools.github.io/devtools-protocol/tot/HeapProfiler/),
+[Runtime isolate/heap protocol](https://chromedevtools.github.io/devtools-protocol/tot/Runtime/)
+and [Chrome memory guidance](https://developer.chrome.com/docs/devtools/memory-problems).
+A narrow Chromium viewport remains emulation, not a physical target device or
+assistive-technology acceptance. Worker scheduling, lifetime and persistence
+remain host-owned; this profiler adds no public package API.

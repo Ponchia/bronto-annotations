@@ -1,7 +1,36 @@
 import { describe, expect, it } from 'vitest';
 import { connectorPath, connectorPathD, nearestPointOnBox } from '../../src/index.js';
+import type { Point, Box } from '../../src/index.js';
+
+// Independent pre-optimization oracle: retain object allocation and stable sort.
+function nearestPointReference(point: Point, box: Box): Point {
+  const x = Math.min(box.x + box.width, Math.max(box.x, point.x));
+  const y = Math.min(box.y + box.height, Math.max(box.y, point.y));
+  return [{x,y:box.y},{x:box.x+box.width,y},{x,y:box.y+box.height},{x:box.x,y}]
+    .map(candidate=>({point:candidate,distance:Math.hypot(point.x-candidate.x,point.y-candidate.y)}))
+    .sort((a,b)=>a.distance-b.distance)[0]!.point;
+}
 
 describe('connector helpers', () => {
+  it('preserves the stable-sort oracle for finite, degenerate, tied and nonfinite endpoints', () => {
+    let seed = 724;
+    const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
+    for (let index = 0; index < 3000; index++) {
+      const box = { x: random() * 2000 - 1000, y: random() * 2000 - 1000,
+        width: random() * 300, height: random() * 200 };
+      const point = { x: random() * 2000 - 1000, y: random() * 2000 - 1000 };
+      expect(nearestPointOnBox(point, box)).toEqual(nearestPointReference(point, box));
+    }
+    for (const size of [0, 1, 1e-200, 1e200, 1e308, -1, NaN, Infinity]) {
+      const box = { x: -size, y: -size, width: 2 * size, height: 2 * size };
+      for (const value of [0, size, -size, 1, -Infinity, Infinity, NaN]) {
+        const point = { x: value, y: value };
+        expect(nearestPointOnBox(point, box)).toEqual(nearestPointReference(point, box));
+      }
+    }
+    expect(nearestPointOnBox({x:5,y:5},{x:0,y:0,width:10,height:10})).toEqual({x:5,y:0});
+  });
+
   it('chooses the nearest note edge point', () => {
     expect(nearestPointOnBox(
       { x: 10, y: 50 },

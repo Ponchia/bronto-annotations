@@ -34,10 +34,12 @@ const initialOptions: LayoutOptions = {
 const initialLayout = resolveAnnotationLayout(initialOptions);
 
 type Request =
+  | { type: 'clone-control'; id: number; layout: ResolvedLayout }
   | { type: 'resolve'; id: number; baseRevision: number; options: LayoutOptions; delayMs?: number; forceSnapshot?: boolean; holdReply?: boolean; hostSentEpochMs: number }
   | { type: 'ack'; revision: number }
   | { type: 'release-held'; id: number };
 type Reply =
+  | { type: 'clone-control'; id: number; layout: ResolvedLayout }
   | { type: 'ready' }
   | { type: 'held'; id: number }
   | {
@@ -73,6 +75,7 @@ type Observation = {
   uiPingsAtCommit: number;
 };
 type Probe = {
+  cloneControl?: { id: number; parity: boolean; roundtripMs: number };
   ready: boolean;
   events: Observation[];
   dropped: number;
@@ -93,6 +96,7 @@ function App() {
   const [pings, setPings] = useState(0);
   const worker = useRef<Worker | null>(null);
   const latestId = useRef(0);
+  const cloneControl = useRef({ id: 0, sentAt: 0 });
   const committedRevision = useRef(0);
   const active = useRef<{
     id: number; action: string; options: LayoutOptions; sentAt: number;
@@ -133,6 +137,13 @@ function App() {
       // Worker is bound to its creator; reject a reported foreign origin.
       if (event.origin !== '' && event.origin !== window.location.origin) return;
       const message = event.data;
+      if (message.type === 'clone-control') {
+        if (message.id !== cloneControl.current.id) return;
+        window.__workerProof!.cloneControl = { id: message.id,
+          parity: canReuseWorkerAnnotation(message.layout, resolved.current),
+          roundtripMs: performance.now() - cloneControl.current.sentAt };
+        return;
+      }
       if (message.type === 'ready') {
         window.__workerProof!.ready = true;
         setStatus('Worker ready');
@@ -318,6 +329,13 @@ function App() {
     // Invalidate host admission BEFORE releasing the held real Worker response.
     if (cancelledId !== undefined) worker.current?.postMessage({ type: 'release-held', id: cancelledId } satisfies Request);
   }
+  function cloneOnlyControl() {
+    if (!worker.current || active.current) return;
+    const id = cloneControl.current.id + 1;
+    cloneControl.current = { id, sentAt: performance.now() };
+    // Diagnostic echo only: never changes the session, ACK or committed layout.
+    worker.current.postMessage({ type: 'clone-control', id, layout: resolved.current } satisfies Request);
+  }
   function ping() {
     pingCount.current += 1;
     window.__workerProof!.pings = pingCount.current;
@@ -352,6 +370,7 @@ function App() {
         <button id="worker-burst" onClick={burst}>Issue superseded requests</button>
         <button id="worker-delay" onClick={delayed}>Start cancellable request</button>
         <button id="worker-cancel" onClick={cancel}>Ignore pending response</button>
+        <button id="worker-clone-control" onClick={cloneOnlyControl}>Clone-only diagnostic round trip</button>
         <button id="worker-ping" onClick={ping}>Check main thread</button>
       </nav>
       <span id="ping-count">UI pings: {pings}</span>
