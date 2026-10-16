@@ -488,6 +488,7 @@ export function timelineEventPath({ size = 10, direction = 'down' }: TimelineEve
     case 'left':
       return `M0,0L${point(-sizeValue, sizeValue / 2)}V${fmt(-sizeValue / 2)}Z`;
   }
+  throw new TypeError('direction must be up, down, left or right');
 }
 
 export function evidenceMarkerPath({ x = 0, y = 0, width = 36, height = 36, padding = 0 }: EvidenceMarkerPathOptions = {}): string {
@@ -742,6 +743,7 @@ export function subjectPath(subject: AnnotationPartsSubject): string {
     case 'evidence':
       return evidenceMarkerPath(subject);
   }
+  throw new TypeError('subject.type is not supported');
 }
 
 function validateOffset(options: ConnectorOffsetOptions): AnnotationOffset {
@@ -790,7 +792,8 @@ function connectorStart(dx: number, dy: number, subject: ConnectorSubjectGeometr
     return trimForCircle(dx, dy, subject);
   }
 
-  return trimForRect(dx, dy, subject);
+  if (subject.type === 'rect') return trimForRect(dx, dy, subject);
+  throw new TypeError('subject.type must be circle or rect');
 }
 
 function trimForCircle(dx: number, dy: number, subject: CircleSubjectGeometry): Point | undefined {
@@ -1119,5 +1122,8 @@ function roundNumber(value: number): number {
 }
 
 function clamp(value: number, min: number, max: number): number {
+  // Impossible note bounds keep the leading edge inside the padded surface.
+  // The excess remains visible as overflow; do not shift the start off-canvas.
+  if (max < min) return min;
   return Math.min(Math.max(value, min), max);
 }

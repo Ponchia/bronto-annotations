@@ -270,3 +270,15 @@ function signatures or every generated SVG path. Those require a consumer's
 rendering, typing and interaction checks. Negative tests cover absent source,
 strict mode, partial removal and unexpected additions to the old UI contract;
 optional local source is inspected as text, never executed.
+
+
+### Historical UI geometry behavior
+
+`test/fixtures/legacy-ui-geometry` retains the unmodified 20-test geometry
+contract from UI v0.16.3, its immutable revision, SHA-256 and MIT notice.
+`test/scripts/legacy-ui-geometry.test.ts` changes only the import specifier and
+executes those assertions against this package's built exports. The published
+Annotations 0.6.10 package failed the oversized-note and invalid-input groups;
+those behaviors are corrected in the current source, not retroactively in the
+immutable published version. This test is stronger than checking export names,
+but covers only that historical test set, not all rendering or human usability.

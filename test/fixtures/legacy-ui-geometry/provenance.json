@@ -1,0 +1,10 @@
+{
+  "repository": "Ponchia/bronto-ui",
+  "revision": "bc90494436109e0831e2be9241706d3e7a4d4fde",
+  "tag": "v0.16.3",
+  "path": "test/annotations.test.mjs",
+  "sha256": "b0f729ea5df2334419ae135b6558a7fabc96e622482444cb181a01cc320cd957",
+  "license": "MIT",
+  "testCount": 20,
+  "adaptation": "The test runner changes only the module import specifier to the built standalone package."
+}

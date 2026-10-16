@@ -9,6 +9,19 @@ This guide is for consumers moving existing annotation work into
 The package keeps migration helpers DOM-free. It does not import D3, mutate D3
 selections, own chart scales, parse diagram source, or depend on `@ponchia/ui`.
 
+## UI helper migration and package versions
+
+For a complete UI-helper migration, use a release containing the 20-test legacy
+geometry contract added for 0.7.0-rc.2. The published 0.6.10 package differs on
+oversized-note fallback placement and invalid timeline/subject handling.
+The corrected RC2 source preserves those historical expectations; do not treat
+source preparation as confirmation that the RC2 tarball is published.
+
+UI's 0.17 `analytical.css` and `report-kit.css` roll-ups still include legacy
+annotation CSS. Migrated applications should import only the UI leaves they
+need plus this package's `bronto.css`, avoiding two competing annotation style
+owners. The annotation package remains independently usable without UI.
+
 ## From d3-annotation
 
 This package's d3-style migration path exists because Susie Lu's

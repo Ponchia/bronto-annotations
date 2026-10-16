@@ -8,7 +8,7 @@ it the default npm version or prove every host integration.
 
 The confirmed stable release is **0.6.10**. Its versioned documentation is at
 [the stable guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/README.md).
-The first candidate tag is **0.7.0-rc.1**; current development is **0.7.0-dev.1**.
+The first candidate tag is **0.7.0-rc.1**; current development is **0.7.0-rc.2**.
 RC1 is now published under `next`: its actual npm tarball (318,782 bytes) was
 retrieved and checked against the registry SHA-512 on October 15, 2026.
 `latest` remains **0.6.10**. Install the candidate explicitly:
@@ -17,7 +17,7 @@ retrieved and checked against the registry SHA-512 on October 15, 2026.
 npm install @ponchia/annotations@0.7.0-rc.1
 ```
 
-The source's `0.7.0-dev.1` changes are not included in that immutable candidate.
+The source's `0.7.0-rc.2` changes are not included in that immutable candidate.
 [Protected RC1 release](https://github.com/Ponchia/bronto-annotations/actions/runs/38771033258). Public pages read their build version from `package.json` and
 confirmed registry versions from `site/release-status.json`; the banner is
 present on the homepage, every guide, and every directly linked example.
