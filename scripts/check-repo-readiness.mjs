@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
 import { writeLine } from './log.mjs';
+import { assertImmutableAction } from './workflow-action-pin.mjs';
 
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const lock = JSON.parse(await readFile(new URL('../package-lock.json', import.meta.url), 'utf8'));
@@ -19,6 +20,7 @@ const codeql = await read('.github/workflows/codeql.yml');
 const codeqlConfig = await read('.github/codeql/codeql-config.yml');
 const dependencyReview = await read('.github/workflows/dependency-review.yml');
 const scorecard = await read('.github/workflows/scorecard.yml');
+assertImmutableAction(scorecard, 'ossf/scorecard-action', '.github/workflows/scorecard.yml');
 const dependabot = await read('.github/dependabot.yml');
 const prTemplate = await read('.github/pull_request_template.md');
 const bugTemplate = await read('.github/ISSUE_TEMPLATE/bug_report.yml');
@@ -187,7 +189,6 @@ for (const term of [
   'schedule:',
   'id-token: write',
   'security-events: write',
-  'ossf/scorecard-action@2d1146689b8cda280b9bc96326124645441f03bc',
   'results_format: sarif',
   'github/codeql-action/upload-sarif@v4'
 ]) {
