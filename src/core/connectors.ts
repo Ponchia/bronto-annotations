@@ -17,20 +17,39 @@ export type ConnectorRoutingContext = {
 export function nearestPointOnBox(point: Point, box: Box): Point {
   const x = clamp(point.x, box.x, box.x + box.width);
   const y = clamp(point.y, box.y, box.y + box.height);
+  const right = box.x + box.width;
+  const bottom = box.y + box.height;
+  const topDistance = Math.hypot(point.x - x, point.y - box.y);
+  const rightDistance = Math.hypot(point.x - right, point.y - y);
+  const bottomDistance = Math.hypot(point.x - x, point.y - bottom);
+  const leftDistance = Math.hypot(point.x - box.x, point.y - y);
+  if (!Number.isFinite(topDistance) || !Number.isFinite(rightDistance)
+    || !Number.isFinite(bottomDistance) || !Number.isFinite(leftDistance)) {
+    // Preserve the historical stable-sort semantics for nonfinite arithmetic,
+    // including finite inputs whose differences overflow. Ordinary geometry
+    // allocates just the returned point, not arrays and distance wrappers.
+    return nearestPointNonfinite(point, box, x, y);
+  }
+  let distance = topDistance;
+  let chosenX = x;
+  let chosenY = box.y;
+  // Strict comparisons preserve the original top/right/bottom/left tie order.
+  // Keep hypot rather than squared distances: squaring changes large-number
+  // behavior and can change which connector endpoint wins.
+  if (rightDistance < distance) { distance = rightDistance; chosenX = right; chosenY = y; }
+  if (bottomDistance < distance) { distance = bottomDistance; chosenX = x; chosenY = bottom; }
+  if (leftDistance < distance) { chosenX = box.x; chosenY = y; }
+  return { x: chosenX, y: chosenY };
+}
 
+function nearestPointNonfinite(point: Point, box: Box, x: number, y: number): Point {
   const candidates: Point[] = [
-    { x, y: box.y },
-    { x: box.x + box.width, y },
-    { x, y: box.y + box.height },
-    { x: box.x, y }
+    { x, y: box.y }, { x: box.x + box.width, y },
+    { x, y: box.y + box.height }, { x: box.x, y }
   ];
-
-  return candidates
-    .map((candidate) => ({
-      point: candidate,
-      distance: Math.hypot(point.x - candidate.x, point.y - candidate.y)
-    }))
-    .sort((a, b) => a.distance - b.distance)[0]?.point ?? { x, y };
+  return candidates.map((candidate) => ({ point: candidate,
+    distance: Math.hypot(point.x - candidate.x, point.y - candidate.y) }))
+    .sort((a, b) => a.distance - b.distance)[0]!.point;
 }
 
 export function connectorPath(
