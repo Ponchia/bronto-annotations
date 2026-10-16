@@ -661,11 +661,11 @@
         {
           "file": "scripts/check-bronto-upstream-parity.mjs",
           "terms": [
-            "Upstream Bronto UI parity verified",
-            "legacy CSS declarations",
+            "Historical Bronto UI",
+            "CSS declarations",
             "PONCHIA_UI_ROOT",
-            "root package export is missing upstream annotation helper functions",
-            "src/styles/bronto.css is missing upstream legacy annotation CSS declarations"
+            "root package must preserve historical Bronto UI annotation helper exports",
+            "annotation CSS must retain the published legacy declaration contract"
           ]
         },
         {
