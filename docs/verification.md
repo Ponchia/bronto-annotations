@@ -250,3 +250,16 @@ establish broader API or browser guarantees for a newer release.
   stress layouts against the real engine.
 - `scripts/check-pre-release-goals.mjs` keeps these hardening docs and gates
   wired into `npm run check`.
+
+
+## Exact CI candidate for application acceptance
+
+The Node 22 CI artifact includes `package/pack.json`, `package/source.json`
+and the npm-packed `.tgz` after the complete gate passes. The verified compiled
+output, Git source/tree identity and npm archive integrity allow an isolated
+application to install those exact bytes without publishing an npm prerelease.
+Do not substitute a Git dependency that lacks compiled exports, label this as
+registry provenance, or update a live consuming application merely to inspect it.
+Keep the application's source, lockfile and real browser acceptance results
+beside the exact package identity. A passing isolated module fixture is not a
+substitute for the consuming application's full browser and persistence paths.

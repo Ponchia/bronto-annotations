@@ -5,6 +5,8 @@ on:
     paths:
       - '.github/workflows/worker-benchmarks.yml'
       - 'scripts/verify-worker-browser.mjs'
+      - 'scripts/worker-allocation-profile.mjs'
+      - 'test/scripts/worker-allocation-profile.test.ts'
       - 'scripts/benchmark-worker-transport.mjs'
       - 'scripts/worker-benchmark-summary.*'
       - 'test/fixtures/worker-browser/**'
@@ -42,6 +44,8 @@ jobs:
       - run: npm run build
       - name: Repeated production browser workloads
         run: node scripts/verify-worker-browser.mjs --production --benchmark --benchmark-samples=3 --benchmark-output=browser-evidence/worker-browser.json
+      - name: Separate document and Worker allocation profiles
+        run: node scripts/verify-worker-browser.mjs --production --benchmark --benchmark-samples=2 --allocations --benchmark-output=browser-evidence/worker-allocations.json
       - name: Node transport and repeated codec costs
         run: |
           mkdir -p browser-evidence

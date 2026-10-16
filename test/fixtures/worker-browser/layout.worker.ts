@@ -10,10 +10,12 @@ import { encodeWorkerLayout } from './layout-patch.js';
 import type { LayoutResponse, LayoutRevision } from './layout-patch.js';
 
 type Request =
+  | { type: 'clone-control'; id: number; layout: ResolvedLayout }
   | { type: 'resolve'; id: number; baseRevision: number; options: LayoutOptions; delayMs?: number; forceSnapshot?: boolean; holdReply?: boolean; hostSentEpochMs: number }
   | { type: 'ack'; revision: number }
   | { type: 'release-held'; id: number };
 type Reply =
+  | { type: 'clone-control'; id: number; layout: ResolvedLayout }
   | { type: 'ready' }
   | { type: 'held'; id: number }
   | {
@@ -57,6 +59,11 @@ self.addEventListener('message', (event: MessageEvent<Request>) => {
   // MessageEvent.origin for Worker.postMessage; reject foreign origins.
   if (event.origin !== '' && event.origin !== self.origin) return;
   const data = event.data;
+  if (data?.type === 'clone-control') {
+    if (Number.isSafeInteger(data.id) && data.id > 0 && Array.isArray(data.layout?.annotations)
+      && data.layout.annotations.length <= 2000) publish(data);
+    return;
+  }
   if (data?.type === 'release-held') {
     const reply = heldReplies.get(data.id);
     if (reply) {

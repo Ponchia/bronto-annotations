@@ -87,6 +87,16 @@ jobs:
         if: matrix.node-version == 22
         run: npm run test:compatibility:test-runners-next
 
+      # A whole consuming application can test these exact compiled bytes
+      # without an npm publication or a dependency on an unbuilt Git checkout.
+      - name: Retain exact candidate package for isolated consumers
+        if: matrix.node-version == 22
+        run: |
+          node scripts/build-package.mjs --verify
+          mkdir -p browser-evidence/package
+          npm pack --ignore-scripts --json --pack-destination browser-evidence/package > browser-evidence/package/pack.json
+          node -e 'const cp=require("node:child_process"); const fs=require("node:fs"); fs.writeFileSync("browser-evidence/package/source.json", JSON.stringify({sourceRevision:cp.execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),tree:cp.execFileSync("git",["rev-parse","HEAD^{tree}"],{encoding:"utf8"}).trim(),publication:"unpublished CI candidate; verify archive integrity from pack.json"},null,2)+"\n")'
+
       - name: Upload browser evidence
         if: always()
         uses: actions/upload-artifact@v7
