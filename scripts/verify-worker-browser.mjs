@@ -120,7 +120,8 @@ try {
       if (profiler) {
         const sampled = await profiler.finish();
         const longTasks = await page.evaluate(() => window.__allocationLongTasks);
-        allocationRecords.push({ action, before: heapBeforeAllocation, ...sampled, longTasks });
+        allocationRecords.push({ action, cycle: Math.floor(allocationRecords.length / 6) + 1,
+          event, before: heapBeforeAllocation, ...sampled, longTasks });
       }
       const parity = await page.evaluate(() => window.__workerProof?.checkParity());
       assert.equal(parity, true, `${config.name}/${action}: worker layout must match full main-thread solver`);

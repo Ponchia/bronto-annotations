@@ -715,7 +715,8 @@ stack names readable and is recorded separately from normal minified timing runs
 
 For each transition, both isolates use `HeapProfiler.startSampling`, including
 objects later collected by minor/major GC. Reports retain sanitized frames and
-samples, descriptive layout/host-codec/other/unattributed buckets, isolate heap
+samples (including parent links for stack reconstruction), per-cycle timings,
+descriptive layout/host-codec/other/unattributed buckets, isolate heap
 and backing-store observations, and main-thread long tasks overlapping that
 window. Independent fresh-layout parity is checked **after** stopping sampling.
 The default two cycles can be increased to five. Forced-GC endpoints occur only

@@ -48,6 +48,8 @@ export function nestedTargetSession(root, sessionId, timeoutMs = 15000) {
 }
 
 export function selectOwnedWorker(targets, pageInfo, workerUrl) {
+  assert(typeof pageInfo?.targetId === 'string' && pageInfo.targetId
+    && typeof pageInfo.browserContextId === 'string' && pageInfo.browserContextId, 'Owned page/context identity is required');
   const url = new URL(workerUrl);
   assert(['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname), 'Only an owned loopback Worker can be profiled');
   const selected = targets.filter((target) => target.type === 'worker'
@@ -60,10 +62,10 @@ export function selectOwnedWorker(targets, pageInfo, workerUrl) {
 export function summarizeAllocationProfile(profile) {
   assert(profile?.head && Array.isArray(profile.samples), 'Missing allocation sampling profile');
   const rows = [];
-  const stack = [{ node: profile.head, ancestry: [] }];
+  const stack = [{ node: profile.head, ancestry: [], parentId: null }];
   const byId = new Map();
   while (stack.length) {
-    const { node, ancestry } = stack.pop();
+    const { node, ancestry, parentId } = stack.pop();
     assert(Number.isFinite(node.selfSize) && node.selfSize >= 0, 'Invalid allocation node size');
     assert(!byId.has(node.id), 'Duplicate allocation profile node');
     const frame = node.callFrame ?? {};
@@ -77,11 +79,11 @@ export function summarizeAllocationProfile(profile) {
       try { const u = new URL(frame.url); source = ['127.0.0.1', 'localhost', '[::1]'].includes(u.hostname) ? u.pathname : '[external-source]'; }
       catch { source = '[non-url-source]'; }
     }
-    const row = { id: node.id, function: frame.functionName || '(anonymous)', source,
+    const row = { id: node.id, parentId, function: frame.functionName || '(anonymous)', source,
       line: frame.lineNumber ?? -1, column: frame.columnNumber ?? -1,
       scope, sampledBytes: node.selfSize };
     rows.push(row); byId.set(node.id, row);
-    for (const child of node.children ?? []) stack.push({ node: child, ancestry: lineage });
+    for (const child of node.children ?? []) stack.push({ node: child, ancestry: lineage, parentId: node.id });
   }
   const totals = { layout: 0, 'host-codec': 0, 'other-javascript': 0, 'unattributed-runtime': 0 };
   for (const row of rows) totals[row.scope] += row.sampledBytes;

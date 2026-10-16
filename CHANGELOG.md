@@ -54,6 +54,16 @@ reasonable.
 
 ### Performance and internal boundaries
 
+- Profile actual document and Worker V8 isolates separately in the maintained
+  production-browser harness. Keep collected-object samples, reconstructable
+  stacks, per-cycle timings, GC-separated heap endpoints and a clone-only
+  control distinct from normal timing runs and native allocation claims.
+- Avoid transient candidate arrays and wrappers when choosing a finite
+  connector endpoint. Preserve exact hypot arithmetic, stable tie order and
+  nonfinite fallback; compare against the independent old-algorithm oracle.
+- Retain integrity-checked CI package artifacts for full-application acceptance
+  without publishing or replacing a live dependency.
+
 - Investigate exact refinement scoring with at most 1 MiB of per-call scratch.
   Cache unchanged geometric contributions, but sum areas in the same order as
   the public evaluator. Candidate trials restore their base; large inputs fall

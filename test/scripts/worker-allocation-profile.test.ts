@@ -15,6 +15,7 @@ describe('Worker isolate allocation evidence', () => {
     for (const values of [[], [target, { ...target }], [{ ...target, browserContextId: 'foreign' }], [{ ...target, openerId: 'other-page' }]])
       expect(() => selectOwnedWorker(values, page, target.url)).toThrow();
     expect(() => selectOwnedWorker([], page, 'https://example.com/worker.js')).toThrow();
+    expect(() => selectOwnedWorker([target], { targetId: 'page' }, target.url)).toThrow('identity');
   });
   it('correlates only its own nested responses and frees listeners on close', async () => {
     const root = new Root();
@@ -54,6 +55,9 @@ describe('Worker isolate allocation evidence', () => {
     expect(result.totals).toEqual({ layout: 80, 'host-codec': 20, 'other-javascript': 0, 'unattributed-runtime': 50 });
     expect(JSON.stringify(result)).not.toContain('secret');
     expect(result.frames.find((row: any) => row.id === 3).source).toBe('/assets/lib.js');
+    expect(result.frames.find((row: any) => row.id === 1).parentId).toBeNull();
+    expect(result.frames.find((row: any) => row.id === 3).parentId).toBe(2);
+    expect(result.frames.find((row: any) => row.id === 2).parentId).toBe(1);
     expect(() => summarizeAllocationProfile({ head: profile.head, samples: [{ nodeId: 99, size: 10 }] })).toThrow();
   });
 });
