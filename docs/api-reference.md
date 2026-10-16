@@ -307,6 +307,15 @@ the host surface or own application state.
 
 ## `@ponchia/annotations/vega`
 
+`vegaViewOrigin(view)` returns the plot origin plus padding, without requiring
+fake data or scales. `vegaScaleCoordinate(scale, value, { band, coerce })` resolves
+one axis with `start` (default), `center`, or `end` band alignment. Set `coerce`
+explicitly for JSON date strings or numeric categories; exact values take priority.
+`vegaScaleInterval(scale, from, to, { coerce })` covers both entire bands even
+when endpoints or the scale range are reversed. Unresolvable coordinates return
+`undefined`. These structural helpers do not import Vega or own chart state.
+
+
 Use the Vega subpath after a Vega View has data/scales/scenegraph output, or
 after the host has rendered/exported Vega SVG. Vega-Lite consumers compile or
 render through public Vega-Lite/Vega APIs first, then use this adapter against
