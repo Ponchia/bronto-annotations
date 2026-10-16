@@ -94,9 +94,18 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
     await page.locator('#full-diagram').waitFor({ state: 'visible' });
     check(await page.locator('.stage-scroll').evaluate(el => el === document.activeElement),
       'Keyboard shortcut opens and focuses the existing diagram stage');
-    const stagePosition = await page.locator('.stage-scroll').boundingBox();
-    check(stagePosition && stagePosition.y >= -1 && stagePosition.y < 100,
-      'Go to diagram scrolls the stage into view');
+    // At the document end, block:start is clamped by the available scroll
+    // range. Assert the reachable aligned position and full available visibility,
+    // rather than demanding an impossible <100px top margin in every viewport.
+    await page.waitForFunction(() => {
+      const stage = document.querySelector('.stage-scroll').getBoundingClientRect();
+      const scrolling = document.scrollingElement;
+      const target = Math.min(stage.top + scrolling.scrollTop,
+        Math.max(0, scrolling.scrollHeight - window.innerHeight));
+      const visible = Math.max(0, Math.min(stage.bottom, window.innerHeight) - Math.max(0, stage.top));
+      return Math.abs(scrolling.scrollTop - target) <= 1
+        && visible >= Math.min(stage.height, window.innerHeight) - 1;
+    }, null, { timeout: 5000 });
     await page.keyboard.press('Shift+Tab');
     check(await page.locator('#diagram-return').evaluate(el => el === document.activeElement),
       'The stage has an immediate keyboard return path');

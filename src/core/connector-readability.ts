@@ -37,14 +37,46 @@ function prepareRoute(connector: ConnectorPath): Route | undefined {
     if (index > 0) length += Math.hypot(point.x - points[index - 1]!.x, point.y - points[index - 1]!.y);
     if (index > 1) {
       const a = points[index - 2]!, b = points[index - 1]!;
-      const ax = b.x - a.x, ay = b.y - a.y, bx = point.x - b.x, by = point.y - b.y;
-      const scale = Math.max(Math.abs(ax), Math.abs(ay), Math.abs(bx), Math.abs(by));
-      // Normalization avoids overflowing the cross/dot products of finite routes.
-      if ((ax / scale) * (by / scale) !== (ay / scale) * (bx / scale)
-        || (ax / scale) * (bx / scale) + (ay / scale) * (by / scale) < 0) bends++;
+      if (orientation(a, b, point) !== 0 || !withinSegment(b, a, point)) bends++;
     }
   }
   return Number.isFinite(length) ? { points, length, bends, bounds: { left, top, right, bottom } } : undefined;
+}
+
+// Every finite double is an exact integer multiple of 2^-1074. Use a
+// fixed dyadic lattice only for uncertain determinants: normal scenes take the
+// cheap floating-point/axis-aligned path. A common vector scale can erase a
+// short perpendicular segment next to a long one and falsely report no crossing.
+const doubleBits = new DataView(new ArrayBuffer(8));
+function latticeInteger(value: number): bigint {
+  doubleBits.setFloat64(0, value);
+  const bits = doubleBits.getBigUint64(0);
+  const exponent = Number((bits >> 52n) & 0x7ffn);
+  const fraction = bits & 0xfffffffffffffn;
+  const magnitude = exponent === 0 ? fraction : (fraction | (1n << 52n)) << BigInt(exponent - 1);
+  return bits >> 63n ? -magnitude : magnitude;
+}
+function sign(value: number): number { return value > 0 ? 1 : value < 0 ? -1 : 0; }
+function compare(a: number, b: number): number { return a > b ? 1 : a < b ? -1 : 0; }
+function withinSegment(point: Point, a: Point, b: Point): boolean {
+  return point.x >= Math.min(a.x, b.x) && point.x <= Math.max(a.x, b.x)
+    && point.y >= Math.min(a.y, b.y) && point.y <= Math.max(a.y, b.y);
+}
+function orientation(a: Point, b: Point, c: Point): number {
+  if (a.x === b.x) return -compare(b.y, a.y) * compare(c.x, a.x);
+  if (a.y === b.y) return compare(b.x, a.x) * compare(c.y, a.y);
+  const left = (b.x - a.x) * (c.y - a.y);
+  const right = (b.y - a.y) * (c.x - a.x);
+  const determinant = left - right;
+  const magnitude = Math.abs(left) + Math.abs(right);
+  // Exclude subnormal/overflow arithmetic from the error-bound shortcut.
+  if (Number.isFinite(magnitude) && magnitude >= 2 ** -1022
+    && Math.abs(determinant) > magnitude * (4 * Number.EPSILON)) return sign(determinant);
+  const ax = latticeInteger(a.x), ay = latticeInteger(a.y);
+  const bx = latticeInteger(b.x), by = latticeInteger(b.y);
+  const cx = latticeInteger(c.x), cy = latticeInteger(c.y);
+  const exact = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
+  return exact > 0n ? 1 : exact < 0n ? -1 : 0;
 }
 
 function routesCross(first: Route | undefined, second: Route | undefined): boolean {
@@ -59,21 +91,19 @@ function routesCross(first: Route | undefined, second: Route | undefined): boole
         || Math.min(start.x, end.x) > Math.max(otherStart.x, otherEnd.x)
         || Math.max(start.y, end.y) < Math.min(otherStart.y, otherEnd.y)
         || Math.min(start.y, end.y) > Math.max(otherStart.y, otherEnd.y)) continue;
-      const rx = end.x - start.x, ry = end.y - start.y;
-      const sx = otherEnd.x - otherStart.x, sy = otherEnd.y - otherStart.y;
-      const qx = otherStart.x - start.x, qy = otherStart.y - start.y;
-      const scale = Math.max(Math.abs(rx), Math.abs(ry), Math.abs(sx), Math.abs(sy), Math.abs(qx), Math.abs(qy));
-      const rX = rx / scale, rY = ry / scale, sX = sx / scale, sY = sy / scale;
-      const qX = qx / scale, qY = qy / scale;
-      const denominator = rX * sY - rY * sX;
-      if (denominator === 0 || !Number.isFinite(denominator)) continue;
-      const t = (qX * sY - qY * sX) / denominator;
-      const u = (qX * rY - qY * rX) / denominator;
-      if (!(t >= 0 && t <= 1 && u >= 0 && u <= 1)) continue;
-      // Source/target contacts are not crossings. Internal elbow vertices are:
-      // several segment hits still count as one unordered connector pair.
-      if ((i === 1 && t === 0) || (i === first.points.length - 1 && t === 1)
-        || (j === 1 && u === 0) || (j === second.points.length - 1 && u === 1)) continue;
+      const a = orientation(start, end, otherStart);
+      const b = orientation(start, end, otherEnd);
+      const c = orientation(otherStart, otherEnd, start);
+      const d = orientation(otherStart, otherEnd, end);
+      // Fully collinear contact is deliberately outside the crossing metric.
+      if ((a === 0 && b === 0 && c === 0 && d === 0) || a * b > 0 || c * d > 0) continue;
+      // No division/interpolated intersection is needed. Global source/target
+      // contacts are excluded; a shared internal elbow still counts once.
+      const endpoints = [first.points[0]!, first.points.at(-1)!, second.points[0]!, second.points.at(-1)!];
+      if (endpoints.some((point) => withinSegment(point, start, end)
+        && withinSegment(point, otherStart, otherEnd)
+        && orientation(start, end, point) === 0
+        && orientation(otherStart, otherEnd, point) === 0)) continue;
       return true;
     }
   }
@@ -113,7 +143,7 @@ export function connectorReadability(
 export type ReadabilityScore = Pick<ConnectorReadabilityReport,
   'connectorCrossingPairs' | 'totalConnectorLength' | 'connectorBendCount'>;
 
-/** Private O(n) retained workspace. Trials compare only one changed route; no
+/** Private workspace linear in routes and polyline points. Trials compare only one changed route; no
  * candidate graph or pair matrix is retained in a returned layout/session.
  */
 export function createReadabilityWorkspace(annotations: readonly ResolvedAnnotation[]) {

@@ -102,8 +102,8 @@ report its raw samples and unchanged quality independently.
 ## Optional readability cost
 
 The experimental `refinement.readability` pass is disabled by default. Its
-private route workspace retains O(n) route summaries rather than another
-quadratic matrix; a trial checks only the proposed connector against the other
+private route workspace is linear in routes and their polyline points rather
+than retaining another quadratic matrix; a trial checks only the proposed connector against the other
 routes. Promising readability improvements are still admitted through a complete
 geometry-quality check, so dense or long routed inputs can be expensive.
 The same existing bounded pass/candidate limits apply. Measure this opt-in work

@@ -63,6 +63,18 @@ describe('opt-in polyline readability evidence', () => {
     expect(connectorReadability([item('a', route([-1e150, -1e150], [1e150, 1e150])),
       item('b', route([-1e150, 1e150], [1e150, -1e150]))]).connectorCrossingPairs).toBe(1);
   });
+  it('retains crossings and bends at mixed finite scales instead of normalizing a direction to zero', () => {
+    expect(connectorReadability([item('long', route([0, 0], [1e200, 0])),
+      item('tiny', route([1, -1e-200], [1, 1e-200]))])).toMatchObject({
+      connectorCrossingPairs: 1, complete: true });
+    expect(connectorReadability([item('bend', route([0, 0], [1e200, 0], [1e200, 1e-200]))]))
+      .toMatchObject({ connectorBendCount: 1, complete: true });
+  });
+  it('resolves nearly collinear finite determinants without manufacturing a parallel route', () => {
+    const e = Number.EPSILON;
+    expect(connectorReadability([item('a', route([0, 0], [1, 1])),
+      item('b', route([0.5, 0.5 + e], [0.5 + e, 0.5]))]).connectorCrossingPairs).toBe(1);
+  });
   it('only extends a quality report when requested and does not redefine geometric validity or score', () => {
     const { source } = crossingFixture();
     const plain = evaluateAnnotationLayout(source);
