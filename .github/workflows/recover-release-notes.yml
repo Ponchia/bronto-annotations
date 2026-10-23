@@ -68,9 +68,11 @@ jobs:
             exit 1
           fi
           git show "$commit:CHANGELOG.md" > "${RUNNER_TEMP}/tagged-CHANGELOG.md"
-          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          {
+            echo "tag=$RELEASE_TAG"
+            echo "version=$version"
+            echo "commit=$commit"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Install npm signature verifier
         run: npm install --global --ignore-scripts npm@11.21.1
