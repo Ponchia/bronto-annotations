@@ -114,7 +114,7 @@ stylus usability guarantees.
   change the publicly supported Node `>=20.19.0` runtime. Vitest 5 requires
   Node >=22.12 and jsdom 30 requires >=22.22.2; they therefore run only in
   the Node 22 protected CI lane. Only this disposable install invokes a pinned
-  npm 11.19.1 CLI, avoiding an npm 10 Arborist peer-graph crash without
+  npm 11.21.1 CLI, avoiding an npm 10 Arborist peer-graph crash without
   disabling peer checks; the primary package-manager installation is unchanged.
   The normal `npm run check` continues to use
   Vitest 4 and jsdom 29 on both Node 20 and 22. Keep their Dependabot major

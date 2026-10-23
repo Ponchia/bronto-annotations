@@ -1,0 +1,43 @@
+name: Dependency Audit
+
+on:
+  push:
+    branches: [main]
+    paths: [package.json, package-lock.json, .github/workflows/dependency-audit.yml]
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Audit the complete locked dependency graph
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          check-latest: true
+      - name: Install supported npm
+        run: npm install --global --ignore-scripts npm@11.21.1
+      # No dependency code or install hooks execute. Include dev dependencies:
+      # they are part of the build and release supply chain.
+      - name: Fail on high or critical advisories anywhere in the lockfile
+        run: npm audit --package-lock-only --ignore-scripts --include=dev --audit-level=high --json > npm-audit.json
+      - name: Retain all advisory severities and registry errors
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: npm-audit-${{ github.run_id }}
+          path: npm-audit.json
+          retention-days: 14

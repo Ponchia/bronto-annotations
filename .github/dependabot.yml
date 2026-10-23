@@ -33,6 +33,10 @@ updates:
     # the default dev dependencies still needs an explicit support decision.
     # This filters routine version updates, not Dependabot security alerts.
     ignore:
+      # Axe 4.14 raised its Node floor to 22.12. Keep the full Node 20
+      # verification contract until the support transition tracked in #66.
+      - dependency-name: "@axe-core/playwright"
+        versions: [">=4.14.0"]
       - dependency-name: mermaid
         update-types: ["version-update:semver-major"]
       - dependency-name: typescript

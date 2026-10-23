@@ -93,7 +93,7 @@ const domResolved = resolvePreparedAnnotationLayout(domPrepared, {
 });
 void domResolved.validationSummary;
 void domResolved.qualitySummary;
-const mermaidFrame = annotationFrameFromSvg(mermaidSvg, {
+annotationFrameFromSvg(mermaidSvg, {
   padding: { top: 24, right: 48, bottom: 24, left: 48 }
 });
 

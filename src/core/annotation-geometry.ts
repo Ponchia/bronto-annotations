@@ -948,7 +948,6 @@ function elbowPath(start: Point, end: Point, mid = 0.5): string {
 
 function curveBetween(start: Point, end: Point, curvature: number): string {
   const dx = end.x - start.x;
-  const dy = end.y - start.y;
   const controlA = { x: start.x + dx * curvature, y: start.y };
   const controlB = { x: end.x - dx * curvature, y: end.y };
 

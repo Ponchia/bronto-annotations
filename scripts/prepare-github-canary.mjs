@@ -12,7 +12,7 @@ const version = process.env.CANARY_VERSION ?? `${baseVersion}-canary.${runNumber
 
 assert.equal(pkg.name, '@ponchia/annotations', 'GitHub Packages canary expects the @ponchia/annotations scoped package name.');
 assert.equal(pkg.private, false, 'GitHub Packages canary package must remain publishable.');
-assert.match(pkg.repository?.url ?? '', /github\.com\/Ponchia\/bronto-annotations/, 'GitHub Packages canary must keep repository linkage.');
+assert.equal(pkg.repository?.url, 'git+https://github.com/Ponchia/bronto-annotations.git', 'GitHub Packages canary must keep the exact canonical repository linkage.');
 assert.match(version, /^\d+\.\d+\.\d+-canary\.[0-9a-z-]+(\.[0-9a-z-]+)*$/, `Invalid canary version: ${version}`);
 
 if (!checkOnly) {

@@ -4,7 +4,6 @@ import { dirname } from 'node:path';
 import ts from 'typescript';
 import { writeLine } from './log.mjs';
 
-const root = new URL('..', import.meta.url);
 const manifestUrl = new URL('../docs/api-stability.manifest.json', import.meta.url);
 const writeManifest = process.argv.includes('--write-manifest');
 const publicSubpaths = {
