@@ -81,6 +81,13 @@ The Release workflow:
 Do not create the GitHub Release by hand before the workflow publishes. The
 workflow creates the GitHub Release only after npm accepts the package.
 
+Publishing and signed notes recovery use the private npm 11.21.1 tooling lock
+in `.github/tooling/npm`, with lifecycle scripts disabled during installation
+and no restored npm cache. Each bootstrap verifies the selected CLI's path and
+version. The existing `npm-publish` approval and trusted-publishing identity
+remain the release gates. See [the tooling notes](https://github.com/Ponchia/bronto-annotations/blob/main/.github/tooling/README.md)
+before updating this CLI or its canary manifest hashes.
+
 ### Registry Propagation
 
 A successful trusted `npm publish` may precede public registry visibility by

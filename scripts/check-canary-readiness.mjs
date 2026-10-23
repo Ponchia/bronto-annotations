@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { access, readFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
 import { writeLine } from './log.mjs';
@@ -39,6 +40,30 @@ for (const term of [
 ]) {
   assertIncludes(workflow, term, '.github/workflows/canary.yml');
 }
+
+// Only the two committed tooling manifests may cross from the code-running
+// read-only build into the publisher, which deliberately has no checkout.
+const canaryBuild = workflowJob(workflow, 'github-packages');
+const canaryPublish = workflowJob(workflow, 'publish');
+assert.ok(!canaryPublish.includes('actions/checkout@'), 'Canary publisher must not check out source');
+assert.ok(!/npm (?:run|install)\b/.test(canaryPublish), 'Canary publisher must not build or install a registry consumer');
+assertIncludes(canaryBuild, 'name: github-packages-canary-npm-${{ github.run_id }}-${{ steps.canary.outputs.version }}', 'Canary tooling upload');
+assertIncludes(canaryBuild, 'path: |\n            .github/tooling/npm/package.json\n            .github/tooling/npm/package-lock.json', 'Canary tooling allowlist');
+assertIncludes(canaryBuild, 'include-hidden-files: true', 'Canary tooling upload');
+assertIncludes(canaryBuild, 'if-no-files-found: error', 'Canary tooling upload');
+assertIncludes(canaryPublish, 'name: github-packages-canary-npm-${{ github.run_id }}-${{ needs.github-packages.outputs.version }}', 'Canary tooling download');
+assertIncludes(canaryPublish, 'path: ${{ runner.temp }}/canary-npm-tooling', 'Canary tooling download');
+assertIncludes(canaryPublish, 'entries.map((entry) => entry.name).sort(), Object.keys(expected).sort()', 'Canary tooling contents verification');
+assertIncludes(canaryPublish, 'entries.every((entry) => entry.isFile())', 'Canary tooling regular-file verification');
+assertIncludes(canaryPublish, "createHash('sha256').update(readFileSync(join(directory, file))).digest('hex'), digest", 'Canary tooling integrity verification');
+for (const file of ['package.json', 'package-lock.json']) {
+  const digest = createHash('sha256').update(await read(`.github/tooling/npm/${file}`)).digest('hex');
+  assertIncludes(canaryPublish, `'${file}': '${digest}'`, `Canary committed ${file} hash`);
+}
+assert.ok(
+  canaryPublish.indexOf('const expected = {') < canaryPublish.indexOf('npm ci --prefix'),
+  'Canary tooling hashes must be verified before installation'
+);
 
 for (const term of [
   'GitHub Packages Canary',
@@ -121,4 +146,13 @@ function assertIncludes(text, term, label) {
 
 function pathUrl(path) {
   return new URL(`../${path}`, import.meta.url);
+}
+
+function workflowJob(text, name) {
+  const lines = text.split('\n');
+  const start = lines.indexOf(`  ${name}:`);
+  assert.ok(start >= 0, `Expected workflow job ${name}`);
+  const remaining = lines.slice(start + 1);
+  const end = remaining.findIndex((line) => /^  [\w-]+:$/.test(line));
+  return [lines[start], ...(end < 0 ? remaining : remaining.slice(0, end))].join('\n');
 }
