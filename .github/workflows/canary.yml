@@ -64,6 +64,17 @@ jobs:
           name: github-packages-canary-${{ steps.canary.outputs.version }}
           path: "*.tgz"
 
+      - name: Upload committed npm tooling manifests
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: github-packages-canary-npm-${{ github.run_id }}-${{ steps.canary.outputs.version }}
+          path: |
+            .github/tooling/npm/package.json
+            .github/tooling/npm/package-lock.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
   publish:
     name: Publish verified canary archive
     needs: github-packages
@@ -79,11 +90,46 @@ jobs:
         with:
           node-version: 22
           check-latest: true
+          package-manager-cache: false
           registry-url: https://npm.pkg.github.com
           scope: '@ponchia'
           always-auth: true
-      - name: Install supported npm
-        run: npm install --global --ignore-scripts npm@11.21.1
+      - name: Download committed npm tooling from this workflow run
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: github-packages-canary-npm-${{ github.run_id }}-${{ needs.github-packages.outputs.version }}
+          path: ${{ runner.temp }}/canary-npm-tooling
+      - name: Verify tooling manifests and install integrity-locked npm
+        shell: bash
+        run: |
+          set -euo pipefail
+          tooling="${RUNNER_TEMP}/canary-npm-tooling"
+          # These hashes come from the reviewed files, never from build outputs.
+          # Reject extra files (including .npmrc), directories and symlinks.
+          node --input-type=module - "$tooling" <<'NODE'
+          import assert from 'node:assert/strict';
+          import { createHash } from 'node:crypto';
+          import { readdirSync, readFileSync } from 'node:fs';
+          import { join } from 'node:path';
+          const directory = process.argv[2];
+          const expected = {
+            'package.json': 'f3da4c6a5ca38a06b39af2cdbcd25c83bfe55af0b24474410b77f8f44b3ff0f5',
+            'package-lock.json': 'e58fffd9ee3b11355cea0a5bc227fdb4547aff233384f7e9c7ece9f00e6a3adf'
+          };
+          const entries = readdirSync(directory, { withFileTypes: true });
+          assert.deepEqual(entries.map((entry) => entry.name).sort(), Object.keys(expected).sort(), 'Unexpected tooling artifact contents');
+          assert.ok(entries.every((entry) => entry.isFile()), 'Tooling manifests must be regular files');
+          for (const [file, digest] of Object.entries(expected)) {
+            assert.equal(createHash('sha256').update(readFileSync(join(directory, file))).digest('hex'), digest, `${file}: tooling integrity mismatch`);
+          }
+          NODE
+          npm ci --prefix "$tooling" --ignore-scripts --no-audit --no-fund
+          export PATH="$tooling/node_modules/.bin:$PATH"
+          hash -r
+          test "$(command -v npm)" = "$tooling/node_modules/.bin/npm"
+          test "$(realpath "$(command -v npm)")" = "$(realpath "$tooling/node_modules/npm/bin/npm-cli.js")"
+          test "$(npm --version)" = "11.21.1"
+          printf '%s\n' "$tooling/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Download verified archive from this workflow run
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
