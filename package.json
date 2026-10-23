@@ -182,7 +182,7 @@
     }
   },
   "devDependencies": {
-    "@axe-core/playwright": "4.13.0",
+    "@axe-core/playwright": "4.14.0",
     "@terrastruct/d2": "^0.1.33",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^26.0.0",
