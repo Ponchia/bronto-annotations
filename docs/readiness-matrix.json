@@ -1473,7 +1473,7 @@
           "terms": [
             "npm run check",
             "node-version:",
-            "actions/upload-artifact@v7"
+            "actions/upload-artifact@"
           ]
         },
         {
@@ -1501,7 +1501,7 @@
           "terms": [
             "name: CodeQL",
             "security-events: write",
-            "github/codeql-action/init@v4",
+            "github/codeql-action/init@",
             "config-file: ./.github/codeql/codeql-config.yml",
             "languages: javascript-typescript",
             "security-extended,security-and-quality"
@@ -1520,7 +1520,7 @@
           "file": ".github/workflows/dependency-review.yml",
           "terms": [
             "name: Dependency Review",
-            "actions/dependency-review-action@v5",
+            "actions/dependency-review-action@",
             "fail-on-severity: high",
             "warn-only: false"
           ]
@@ -1531,7 +1531,7 @@
             "name: Scorecard",
             "ossf/scorecard-action@",
             "results_format: sarif",
-            "github/codeql-action/upload-sarif@v4"
+            "github/codeql-action/upload-sarif@"
           ]
         },
         {

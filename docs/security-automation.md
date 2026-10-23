@@ -7,7 +7,7 @@ require consumer credentials or a long-lived npm token.
 
 - CodeQL runs JavaScript/TypeScript code scanning on pull requests, pushes to
   `main`, a weekly schedule, and manual dispatch. The workflow uses
-  `github/codeql-action/init@v4` with `security-extended` and
+  `github/codeql-action/init` pinned to a reviewed v4 commit with `security-extended` and
   `security-and-quality` queries, then uploads results through code scanning.
   `.github/codeql/codeql-config.yml` excludes only
   `js/html-constructed-from-input`: this package intentionally exposes escaped
@@ -106,3 +106,27 @@ The override is validated by the Mermaid generated-SVG adapter, packed
 consumer, browser screenshot, compatibility and full repository test suites.
 Revisit it when Mermaid itself raises its KaTeX range; do not downgrade Mermaid
 or silently suppress an advisory to make the audit green.
+
+## Lockfile and publishing safeguards
+
+Dependency Audit checks the entire committed npm lockfile daily, when it changes
+on `main`, and on manual dispatch. It includes development tools, preserves all
+advisory severities in an artifact, and fails on high/critical advisories or an
+audit service error. It does not install dependency code. A failed update job or
+an empty Dependabot PR queue is not evidence that the lockfile is safe.
+
+All external workflow actions use full reviewed commit SHAs. The existing
+security gate validates every executable `uses` entry, including nested action
+paths. Token write permissions belong to the jobs that actually publish or
+upload security results. Canary checks and builds have read access; a separate
+job publishes the verified archive only from this repository's main branch,
+with lifecycle scripts disabled, followed by a read-only registry smoke.
+
+Node 22 execution jobs resolve the latest available patch with `check-latest`.
+Privileged npm commands use npm 11.21.1, as does the existing isolated Node 22
+next-test-runner lane. Normal CI keeps its bundled npm, including the full Node
+20 verification lane. The published engine range stays intact.
+`@axe-core/playwright` 4.14 requires Node 22.12; its routine updates are deferred
+at 4.13 until the support decision in issue #66. This is a tooling compatibility
+deferral, not a suppressed vulnerability. Revisit the version filter when that
+support transition is decided.

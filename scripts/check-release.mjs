@@ -41,7 +41,7 @@ for (const term of [
   'npm pack --dry-run --json --ignore-scripts',
   'environment: npm-publish',
   'id-token: write',
-  'npm install -g npm@^11.5.1',
+  'npm install --global --ignore-scripts npm@11.21.1',
   'npm publish --ignore-scripts --provenance --access public --tag "$dist_tag"',
   'dist_tag=next',
   'dist_tag=latest',

@@ -22,7 +22,7 @@ const jsdomVersion = '30.1.2';
 // npm 10 can crash in Arborist peer-set resolution with newer Vitest optional
 // peers (npm/cli#9787). Use a pinned newer npm only for this disposable
 // experiment; the normal Node 20/22 project install remains unchanged.
-const installNpmVersion = '11.19.1';
+const installNpmVersion = '11.21.1';
 
 const nodeParts = process.versions.node.split('.').map(Number);
 const supported = (nodeParts[0] === 22 && (nodeParts[1] > 22 || nodeParts[1] === 22 && nodeParts[2] >= 2))

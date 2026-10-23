@@ -90,7 +90,6 @@ declare global { interface Window { __workerProof?: Probe; } }
 
 function App() {
   const [annotations, setAnnotations] = useState(initialAnnotations);
-  const [obstacles, setObstacles] = useState<Box[]>([farObstacle]);
   const [layout, setLayout] = useState(initialLayout);
   const [status, setStatus] = useState('Starting worker');
   const [pings, setPings] = useState(0);
@@ -205,7 +204,6 @@ function App() {
       worker.current?.postMessage({ type: 'ack', revision: message.id } satisfies Request);
       committed.current = pending.options;
       setAnnotations(pending.options.annotations);
-      setObstacles(pending.options.obstacles ?? []);
       setLayout(assembled);
       setStatus(`${pending.action}: ${reused}/${assembled.annotations.length} notes retained`);
       const recorded: Observation = {

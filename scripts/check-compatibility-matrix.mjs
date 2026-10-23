@@ -67,7 +67,7 @@ for (const [content, term, label] of [
   [compatibility, 'Node >=22.22.2', 'docs/compatibility.md'],
   [nextRunnerLane, "vitestVersion = '5.0.3'", 'scripts/smoke-next-test-runners.mjs'],
   [nextRunnerLane, "jsdomVersion = '30.1.2'", 'scripts/smoke-next-test-runners.mjs'],
-  [nextRunnerLane, "installNpmVersion = '11.19.1'", 'scripts/smoke-next-test-runners.mjs'],
+  [nextRunnerLane, "installNpmVersion = '11.21.1'", 'scripts/smoke-next-test-runners.mjs'],
   [compatibility, 'TypeScript 7.0.2', 'docs/compatibility.md'],
   [typescript7Lane, 'typescript@7.0.2', 'scripts/smoke-typescript7.mjs'],
   [typescript7Lane, 'skipLibCheck: false', 'scripts/smoke-typescript7.mjs'],

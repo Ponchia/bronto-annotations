@@ -32,18 +32,40 @@ jobs:
   verify:
     name: Firefox and WebKit editing
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:47b510dd9230bf0b9bfc9b20102241e577ea7a99334ab4c3ca19f19770e9b8ea
+      options: --user 1001
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 25
     env:
       ANNOTATIONS_CROSS_BROWSER_EVIDENCE_DIR: browser-evidence
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
+          check-latest: true
           cache: npm
       - run: npm ci
-      - name: Install Firefox and WebKit
-        run: npx playwright install --with-deps firefox webkit
+      - name: Verify Playwright package and preinstalled image agree
+        run: |
+          node --input-type=commonjs <<'NODE'
+          const assert = require('node:assert/strict');
+          const { readFileSync } = require('node:fs');
+          const lock = JSON.parse(readFileSync('package-lock.json', 'utf8'));
+          const version = require('playwright/package.json').version;
+          assert.equal(version, lock.packages['node_modules/playwright'].version);
+          assert.equal(require('playwright-core/package.json').version, version);
+          assert.equal(lock.packages['node_modules/playwright-core'].version, version);
+          const image = JSON.parse(readFileSync('/ms-playwright/.docker-info', 'utf8'));
+          assert.equal(image.driverVersion, version, 'Update the pinned image with Playwright');
+          assert.equal(image.dockerImageName, `mcr.microsoft.com/playwright:v${version}-noble`);
+          console.log(`Verified Playwright ${version} against ${image.dockerImageName}`);
+          NODE
       - name: Verify real interactive editing and Worker revisions
         run: npm run test:browser:cross
       - name: Verify packed upstream consumers in Firefox
@@ -52,7 +74,7 @@ jobs:
         run: npm run test:upstream -- --browser webkit --output-dir browser-evidence/upstream-webkit
       - name: Retain browser screenshots and structured regression results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: annotations-cross-browser-${{ github.run_id }}-${{ github.run_attempt }}
           path: browser-evidence/

@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { writeLine } from './log.mjs';
 import { assertImmutableAction } from './workflow-action-pin.mjs';
+
+for (const file of await readdir(new URL('../.github/workflows/', import.meta.url))) {
+  if (!/\.ya?ml$/.test(file)) continue;
+  const workflow = await read(`.github/workflows/${file}`);
+  for (const match of workflow.matchAll(/^\s*(?:-\s+)?uses:\s*([^\s]+)/gm)) {
+    const action = match[1].replace(/^["']/, '').split('@')[0];
+    if (!action.startsWith('./')) assertImmutableAction(workflow, action, file);
+  }
+}
 
 const pkg = JSON.parse(await read('package.json'));
 const ci = await read('.github/workflows/ci.yml');
@@ -35,11 +44,11 @@ for (const term of [
   'workflow_dispatch:',
   'security-events: write',
   'pull-requests: read',
-  'github/codeql-action/init@v4',
+  'github/codeql-action/init@',
   'languages: javascript-typescript',
   'config-file: ./.github/codeql/codeql-config.yml',
   'queries: security-extended,security-and-quality',
-  'github/codeql-action/analyze@v4'
+  'github/codeql-action/analyze@'
 ]) {
   assertIncludes(codeql, term, '.github/workflows/codeql.yml');
 }
@@ -59,7 +68,7 @@ for (const term of [
   'pull_request:',
   'contents: read',
   'pull-requests: read',
-  'actions/dependency-review-action@v5',
+  'actions/dependency-review-action@',
   'fail-on-severity: high',
   'warn-only: false'
 ]) {
@@ -88,7 +97,7 @@ for (const term of [
   'persist-credentials: false',
   'results_format: sarif',
   'publish_results: true',
-  'github/codeql-action/upload-sarif@v4'
+  'github/codeql-action/upload-sarif@'
 ]) {
   assertIncludes(scorecard, term, '.github/workflows/scorecard.yml');
 }

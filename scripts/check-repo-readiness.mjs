@@ -64,7 +64,7 @@ assert.ok(pkg.scripts?.check?.includes('npm run test:repo'), 'npm run check must
 assert.ok(pkg.scripts?.check?.includes('npm run test:site'), 'npm run check must verify the published Pages build');
 for (const marker of [
   'workflow_run:', "workflows: ['CI']", 'ref: main',
-  'enablement: true', 'upload-pages-artifact', 'deploy-pages',
+  'upload-pages-artifact', 'deploy-pages',
   // Mutable Pages deployments must never leave obsolete environment-gated
   // builds blocking current protected-main publication.
   'group: annotations-pages', 'cancel-in-progress: true',
@@ -72,6 +72,40 @@ for (const marker of [
 ]) {
   assertIncludes(pagesWorkflow, marker, '.github/workflows/pages.yml');
 }
+// Pages is already enabled. Only the deployment job may mutate it; the
+// source build must never request repository/bootstrap write permission.
+assert.ok(!/^\s*enablement:\s*true\s*$/m.test(pagesWorkflow), 'Pages must not bootstrap site enablement during a build');
+assertReadOnly(pagesWorkflow.split('\njobs:')[0], 'Pages defaults');
+const pagesBuild = workflowJob(pagesWorkflow, 'build');
+const pagesDeploy = workflowJob(pagesWorkflow, 'deploy');
+assertIncludes(pagesBuild, '      pages: read', 'Pages build permissions');
+assertIncludes(pagesBuild, '      contents: read', 'Pages build permissions');
+assertReadOnly(pagesBuild, 'Pages build');
+assertIncludes(pagesDeploy, '      pages: write', 'Pages deployment permissions');
+assertIncludes(pagesDeploy, '      id-token: write', 'Pages deployment permissions');
+
+// Canary verification/packing and registry smoke cannot publish. Only the
+// protected-main archive publisher gets package-write permission.
+assertReadOnly(canary.split('\njobs:')[0], 'Canary defaults');
+assertReadOnly(workflowJob(canary, 'github-packages'), 'Canary verification');
+const canaryPublish = workflowJob(canary, 'publish');
+const canarySmoke = workflowJob(canary, 'smoke');
+assertIncludes(canaryPublish, '    needs: github-packages', 'Canary publisher');
+assertIncludes(canaryPublish, "github.repository == 'Ponchia/bronto-annotations'", 'Canary publisher');
+assertIncludes(canaryPublish, "github.ref == 'refs/heads/main'", 'Canary publisher');
+assertIncludes(canaryPublish, '      packages: write', 'Canary publisher permissions');
+assertIncludes(canaryPublish, '--ignore-scripts', 'Canary archive publisher');
+assertIncludes(canarySmoke, '      packages: read', 'Canary smoke permissions');
+assertReadOnly(canarySmoke, 'Canary registry smoke');
+
+for (const [workflow, action, label] of [
+  [ci, 'actions/upload-artifact', 'CI'],
+  [codeql, 'github/codeql-action/init', 'CodeQL initialization'],
+  [codeql, 'github/codeql-action/analyze', 'CodeQL analysis'],
+  [dependencyReview, 'actions/dependency-review-action', 'Dependency Review'],
+  [scorecard, 'github/codeql-action/upload-sarif', 'Scorecard upload']
+]) assertImmutableAction(workflow, action, label);
+
 assert.ok(pkg.scripts?.check?.includes('npm run test:release'), 'npm run check must include test:release');
 assert.ok(pkg.scripts?.check?.includes('npm run test:security-automation'), 'npm run check must include test:security-automation');
 
@@ -112,7 +146,7 @@ for (const term of [
   'npm ci',
   'npx playwright install --with-deps chromium',
   'npm run check',
-  'actions/upload-artifact@v7',
+  'actions/upload-artifact@',
   '.tmp/screenshots',
   '.tmp-packed-screenshots'
 ]) {
@@ -154,11 +188,11 @@ for (const term of [
   'schedule:',
   'workflow_dispatch:',
   'security-events: write',
-  'github/codeql-action/init@v4',
+  'github/codeql-action/init@',
   'languages: javascript-typescript',
   'config-file: ./.github/codeql/codeql-config.yml',
   'queries: security-extended,security-and-quality',
-  'github/codeql-action/analyze@v4'
+  'github/codeql-action/analyze@'
 ]) {
   assertIncludes(codeql, term, '.github/workflows/codeql.yml');
 }
@@ -176,7 +210,7 @@ for (const term of [
   'name: Dependency Review',
   'pull_request:',
   'pull-requests: read',
-  'actions/dependency-review-action@v5',
+  'actions/dependency-review-action@',
   'fail-on-severity: high',
   'warn-only: false'
 ]) {
@@ -190,7 +224,7 @@ for (const term of [
   'id-token: write',
   'security-events: write',
   'results_format: sarif',
-  'github/codeql-action/upload-sarif@v4'
+  'github/codeql-action/upload-sarif@'
 ]) {
   assertIncludes(scorecard, term, '.github/workflows/scorecard.yml');
 }
@@ -355,4 +389,17 @@ function assertIncludes(text, term, label) {
 
 function pathUrl(path) {
   return new URL(`../${path}`, import.meta.url);
+}
+
+function assertReadOnly(workflow, label) {
+  assert.ok(!/^\s+[\w-]+:\s*write\s*$/m.test(workflow), `${label} must not grant token write permissions`);
+}
+
+function workflowJob(workflow, name) {
+  const lines = workflow.split('\n');
+  const start = lines.indexOf(`  ${name}:`);
+  assert.ok(start >= 0, `Expected workflow job ${name}`);
+  const remaining = lines.slice(start + 1);
+  const end = remaining.findIndex((line) => /^  [\w-]+:$/.test(line));
+  return [lines[start], ...(end < 0 ? remaining : remaining.slice(0, end))].join('\n');
 }
