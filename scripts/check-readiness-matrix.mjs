@@ -3,7 +3,6 @@ import { access, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { writeLine } from './log.mjs';
 
-const root = new URL('..', import.meta.url);
 const matrix = JSON.parse(await readFile(new URL('../docs/readiness-matrix.json', import.meta.url), 'utf8'));
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const browserScript = await readFile(new URL('../scripts/verify-examples-browser.mjs', import.meta.url), 'utf8');

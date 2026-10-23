@@ -6,7 +6,6 @@ import { promisify } from 'node:util';
 import { writeLine } from './log.mjs';
 
 const exec = promisify(execFile);
-const root = new URL('..', import.meta.url);
 const workdir = new URL('../.tmp/registry-consumer/', import.meta.url).pathname;
 const version = valueAfter('--version');
 const registry = valueAfter('--registry') ?? 'https://npm.pkg.github.com';

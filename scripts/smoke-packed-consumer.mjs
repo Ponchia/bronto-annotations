@@ -1713,7 +1713,7 @@ async function smokeBrowserAdapters(tarball) {
       }
 
       function cssStringEscape(value) {
-        return String(value).replace(/["\\\\]/g, '\\\\$&');
+        return Array.from(String(value), (char) => char === '"' || char.charCodeAt(0) === 92 ? String.fromCharCode(92) + char : char).join('');
       }
     });
 

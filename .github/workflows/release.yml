@@ -31,12 +31,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
+          check-latest: true
           cache: npm
 
       - name: Verify tag commit is on main
@@ -81,11 +83,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
+          check-latest: true
           cache: npm
 
       - name: Install
@@ -128,19 +133,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 22.14.0
+          node-version: 22
+          check-latest: true
           registry-url: https://registry.npmjs.org
 
       - name: Install npm with OIDC publish support
-        # npm 11.5+ carries OIDC trusted publishing; @latest crossed to npm 12,
-        # which refuses the node 22.14.0 this job pins (requires ^22.22.2), and
-        # the v0.2.1 publish died on exactly that. Pin the major that supports
-        # both OIDC and this job's node.
-        run: npm install -g npm@^11.5.1
+        # Keep OIDC publishing on the reviewed npm version for Node 22.
+        run: npm install --global --ignore-scripts npm@11.21.1
 
       - name: Install
         run: npm ci --ignore-scripts
@@ -277,6 +282,12 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          check-latest: true
 
       - name: Extract the CHANGELOG section for this tag
         env:
