@@ -1,7 +1,7 @@
 # Your first annotation
 
 > This guide follows `main`. [Choose your version](#choose-your-version) before
-> installing: stable, published candidate, and source are separate choices.
+> installing: stable, previous stable, and source are separate choices.
 
 [Documentation index](README.md) · [Choose an adapter](context-quickstart.md)
 
@@ -13,18 +13,17 @@ one or two notes before adding measurements, editable state, or a Worker.
 
 | You want | Install and matching guidance |
 | --- | --- |
-| The stable release | `npm install @ponchia/annotations@0.6.10` and the [0.6.10 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/getting-started.md) |
-| The published 0.7 candidate | `npm install @ponchia/annotations@0.7.0-rc.3` and the [RC3 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0-rc.3/docs/getting-started.md) |
+| The stable release | `npm install @ponchia/annotations@0.7.0` and the [0.7.0 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/getting-started.md) |
+| The previous stable line | `npm install @ponchia/annotations@0.6.10` and the [0.6.10 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/getting-started.md) |
 | The exact source shown here | Clone `main` and run the examples below |
 
-The RC3 candidate is published and its actual npm bytes were verified.
-The stable release remains on the 0.6 line; select the candidate deliberately.
-The standalone setup below pins the published candidate. Its first-point API
-also exists in this checkout, but newer source features may differ. Use the
+0.7.0 is the stable release on `latest`, and its actual npm bytes were verified.
+The standalone setup below pins it. Its first-point API also exists in this
+checkout, but newer source features may differ. Use the
 [migration guide](migration-0.7.md) when upgrading and
 [release readiness](release-readiness.md) when building and packing source for
-an isolated consumer. A `next` tag or Git tag does not establish publication
-of later source versions.
+an isolated consumer. A Git tag does not establish publication of later source
+versions.
 
 ## Try the existing examples
 
@@ -57,7 +56,7 @@ repository and a Node version from the [compatibility matrix](compatibility.md):
 mkdir annotation-demo
 cd annotation-demo
 npm init -y
-npm install @ponchia/annotations@0.7.0-rc.3
+npm install @ponchia/annotations@0.7.0
 npm install --save-dev vite@8
 ```
 
@@ -95,7 +94,7 @@ TypeScript typecheck in your application's CI.
 In an existing TypeScript application whose bundler handles CSS imports:
 
 ```bash
-npm install @ponchia/annotations@0.7.0-rc.3
+npm install @ponchia/annotations@0.7.0
 ```
 
 Put this in a browser entry point that runs after the document body exists:
@@ -150,7 +149,7 @@ Keep the same `viewBox` coordinate system and `preserveAspectRatio` as the host.
 In an existing React application, install the annotation package:
 
 ```bash
-npm install @ponchia/annotations@0.7.0-rc.3
+npm install @ponchia/annotations@0.7.0
 ```
 
 React and React DOM remain peer dependencies: keep the application's existing
