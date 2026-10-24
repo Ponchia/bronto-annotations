@@ -7,9 +7,10 @@ package reaches `1.0.0`.
 
 ## Reporting a Vulnerability
 
-Report suspected vulnerabilities privately through GitHub private vulnerability
-reporting. If that is unavailable, contact the repository owner directly and
-avoid filing public issues with exploit details.
+Report suspected vulnerabilities privately through
+[GitHub private vulnerability reporting](https://github.com/Ponchia/bronto-annotations/security/advisories/new).
+If that is unavailable, contact the repository owner directly and avoid filing
+public issues with exploit details.
 
 Include:
 
