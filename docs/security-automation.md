@@ -139,7 +139,8 @@ It also supports manual audit-only dispatch. It has no publishing permission,
 registry credentials, root dependency install or restored cache. The canary
 publisher keeps its existing checkout-free archive boundary. The protected
 `npm-publish` environment, `release.yml` trusted-publisher identity, provenance,
-immutable-tag checks and script-disabled publication remain required.
+immutable-tag checks and publication with lifecycle scripts turned off remain
+required.
 
 The job installs the exact npm candidate into a disposable prefix with
 `--ignore-scripts`. `scripts/audit-publishing-tooling.mjs` verifies the expected
@@ -156,22 +157,22 @@ The candidate is **not currently safe to publish with**. On 24 October 2026,
 all 34 stable OIDC-capable npm 11/12 archives from 11.5.1 onward were downloaded
 and checked against their registry SHA-512 metadata. The complete actual
 bundled inventories were matched against the registry advisory service; none
-was free of high findings. Releases through 11.12.1 have no bundled Undici,
+was free of high findings. Releases through 11.12.1 have no bundled `undici`,
 but retain other high advisories, including
 [brace-expansion](https://github.com/advisories/GHSA-mh99-v99m-4gvg).
-Later candidates bundle Undici 6.25.0 through 6.29.0, all within
+Later candidates bundle `undici` 6.25.0 through 6.29.0, all within
 [GHSA-xjj6-f33q-929c](https://github.com/advisories/GHSA-xjj6-f33q-929c)'s
 `>=6.23.0 <6.29.1` affected range. Latest npm 11.21.1 and 12.2.1 both
-bundle Undici 6.29.0 and ip-address 10.7.2. The former also has the moderate
+bundle `undici@6.29.0` and `ip-address@10.7.2`. The former also has the moderate
 [EventSource advisory](https://github.com/advisories/GHSA-4qv8-2p9j-2685);
 the latter requires ip-address 10.7.4 for
-[GHSA-rxp7-6hxx-x8q5](https://github.com/advisories/GHSA-rxp7-6hxx-x8q5).
+[the address parser advisory](https://github.com/advisories/GHSA-rxp7-6hxx-x8q5).
 
 Resume publication only after an official npm distribution fixes the actual
-bundle and passes the complete audit. Undici's reviewed fixed releases are
+bundle and passes the complete audit. The reviewed fixed `undici` releases are
 6.29.1, 7.30.1 and 8.12.2; replacing that package alone is insufficient if
 other high findings remain. Update the exact install version in all workflows
-and the candidate version, URL and SHA-512 together, then run the offline
+and the candidate version, URL, and SHA-512 together, then run the offline
 regressions, live audit and full CI. Do not repack npm, edit bundled version
 metadata, waive advisories or weaken the gate. The separate integrity-lock
 proposal in [PR #185](https://github.com/Ponchia/bronto-annotations/pull/185)
