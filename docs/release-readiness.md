@@ -1,28 +1,29 @@
 # 0.7 release readiness
 
 This document separates implementation, publication, automated compatibility,
-and human usability. The 0.7 API is implemented on `main`; that does not make
-it the default npm version or prove every host integration.
+and human usability. The 0.7 API is the stable npm release; that does not prove
+every host integration.
 
 ## Choose the matching package
 
-The confirmed stable release is **0.6.10**. Its versioned documentation is at
-[the stable guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/README.md).
-The confirmed candidate is **0.7.0-rc.3**, published under `next` on
-October 16, 2026. Its actual npm tarball (**341,170 bytes**) was independently
-downloaded and verified against registry SHA-512. A fresh consumer installed
-that exact version without UI, React or Vega; the headless root and new
-structural Vega helpers passed runtime checks. Registry signature and provenance
-attestation verification passed. `latest` remains **0.6.10**.
+The confirmed stable release is **0.7.0**, published under `latest` on
+October 24, 2026. Its versioned documentation is at
+[the 0.7.0 guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/README.md).
+Its actual npm tarball (**341,861 bytes**) was independently downloaded and
+verified against registry SHA-512. A fresh consumer installed that exact version
+from the public registry and passed `scripts/smoke-registry-consumer.mjs`.
+Registry signature and provenance attestation verification passed. Package
+behavior is unchanged from **0.7.0-rc.3**, which stays on `next`; the previous
+stable line is **0.6.10** ([its guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/README.md)).
 
 ```sh
-npm install @ponchia/annotations@0.7.0-rc.3
+npm install @ponchia/annotations@0.7.0
 ```
 
-[Protected RC3 release](https://github.com/Ponchia/bronto-annotations/actions/runs/38950698578).
-RC3 adds per-axis coordinate, inclusive interval and view-origin helpers. Earlier
-candidate archives stay immutable: RC1 does not contain RC2's oversized-note
-and invalid-input fixes, and RC2 does not contain these new Vega helpers.
+[Protected 0.7.0 release](https://github.com/Ponchia/bronto-annotations/actions/runs/40085949162).
+Earlier candidate archives stay immutable: RC1 does not contain RC2's
+oversized-note and invalid-input fixes, and RC2 does not contain RC3's Vega
+helpers.
 Public pages read their build version from `package.json` and confirmed registry
 versions from `site/release-status.json`. The notice is present on the homepage,
 every guide and directly linked example; there is no runtime registry request
@@ -31,7 +32,7 @@ or analytics in the notice.
 Verified archive SHA-512:
 
 ```text
-sha512-wQwogErquMvH8y8yViQ8/LVY0O20ZXnt+0jkaEgiEH0ENKakXxhNqSzhU5DDyz4U+NvaybTX3afSWj7oyxRnYA==
+sha512-aFzPefUhK/y8hzcsqTjrbpBX9wyWGMQAQRjkIHUuzBSsYmPnNxzM9BvRR1ZUU4uJ/KPQ0ngrJB/jJlhlyIAdJA==
 ```
 
 These are package and automated integration results, not a claim of human
@@ -39,10 +40,9 @@ accessibility acceptance or a production application deployment.
 
 Before publication, build and pack a clean checkout, then install its tarball
 in a separate disposable consumer. After the protected release succeeds and
-the real registry tarball is verified, install the exact candidate version
-rather than silently replacing a live application's dependency. Candidate
-publication uses `next`; `latest` remains the stable 0.6 line until a deliberate
-stable release. Follow [the release runbook](release.md).
+the real registry tarball is verified, install the exact version rather than
+silently replacing a live application's dependency. Candidates publish under
+`next` and stable releases under `latest`. Follow [the release runbook](release.md).
 
 ## Automated acceptance
 
