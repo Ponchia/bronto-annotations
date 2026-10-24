@@ -1,0 +1,11 @@
+{
+  "name": "annotations-release-tooling",
+  "private": true,
+  "description": "Integrity-locked npm CLI for publishing, signature verification and dependency audits.",
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "dependencies": {
+    "npm": "11.21.1"
+  }
+}

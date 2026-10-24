@@ -3,7 +3,12 @@ name: Dependency Audit
 on:
   push:
     branches: [main]
-    paths: [package.json, package-lock.json, .github/workflows/dependency-audit.yml]
+    paths:
+      - package.json
+      - package-lock.json
+      - .github/tooling/npm/package.json
+      - .github/tooling/npm/package-lock.json
+      - .github/workflows/dependency-audit.yml
   schedule:
     - cron: '23 5 * * *'
   workflow_dispatch:
@@ -28,16 +33,48 @@ jobs:
         with:
           node-version: 22
           check-latest: true
-      - name: Install supported npm
-        run: npm install --global --ignore-scripts npm@11.21.1
-      # No dependency code or install hooks execute. Include dev dependencies:
-      # they are part of the build and release supply chain.
-      - name: Fail on high or critical advisories anywhere in the lockfile
-        run: npm audit --package-lock-only --ignore-scripts --include=dev --audit-level=high --json > npm-audit.json
+          package-manager-cache: false
+      - name: Install integrity-locked npm
+        run: |
+          set -euo pipefail
+          tooling="${GITHUB_WORKSPACE}/.github/tooling/npm"
+          npm ci --prefix "$tooling" --ignore-scripts --no-audit --no-fund
+          export PATH="$tooling/node_modules/.bin:$PATH"
+          hash -r
+          test "$(command -v npm)" = "$tooling/node_modules/.bin/npm"
+          test "$(realpath "$(command -v npm)")" = "$(realpath "$tooling/node_modules/npm/bin/npm-cli.js")"
+          test "$(npm --version)" = "11.21.1"
+          printf '%s\n' "$tooling/node_modules/.bin" >> "$GITHUB_PATH"
+      # Audit both committed graphs without installing project dependencies.
+      # The isolated CLI is integrity-locked; its install hooks are disabled.
+      - name: Fail on high or critical advisories in either complete lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=0
+          npm audit --package-lock-only --ignore-scripts --include=dev --audit-level=high --json > npm-audit.json || status=1
+          npm audit --prefix .github/tooling/npm --package-lock-only --ignore-scripts --include=dev --audit-level=high --json > npm-tooling-audit.json || status=1
+          node --input-type=module <<'NODE' || status=1
+          import assert from 'node:assert/strict';
+          import { readFileSync } from 'node:fs';
+          for (const file of ['npm-audit.json', 'npm-tooling-audit.json']) {
+            const report = JSON.parse(readFileSync(file, 'utf8'));
+            assert.ok(report && typeof report === 'object' && !Array.isArray(report), `${file}: invalid audit response`);
+            assert.equal(report.error, undefined, `${file}: audit service error`);
+            for (const severity of ['high', 'critical']) {
+              const count = report.metadata?.vulnerabilities?.[severity];
+              assert.ok(Number.isInteger(count) && count >= 0, `${file}: missing ${severity} advisory count`);
+              assert.equal(count, 0, `${file}: ${severity} advisories require review`);
+            }
+          }
+          NODE
+          exit "$status"
       - name: Retain all advisory severities and registry errors
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: npm-audit-${{ github.run_id }}
-          path: npm-audit.json
+          path: |
+            npm-audit.json
+            npm-tooling-audit.json
           retention-days: 14
