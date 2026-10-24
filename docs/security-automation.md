@@ -130,3 +130,31 @@ next-test-runner lane. Normal CI keeps its bundled npm, including the full Node
 at 4.13 until the support decision in issue #66. This is a tooling compatibility
 deferral, not a suppressed vulnerability. Revisit the version filter when that
 support transition is decided.
+
+## Interpreting Scorecard findings
+
+Treat each alert as a specific control or dependency finding, not as a count of
+exploitable defects. Keep the source revision and scanner run with the review.
+The private-reporting link is explicit in `SECURITY.md`; a successful workflow
+run does not itself prove its SARIF findings have been resolved.
+
+Workflow CLI pinning includes the executable dependency graph, not only an npm
+version string. The integrity-locking follow-up is tracked in
+[PR #185](https://github.com/Ponchia/bronto-annotations/pull/185). A high advisory
+in the upstream npm bundle blocks that change under Dependency Review; retain
+the gate and the raw finding until a reviewed upstream fix is available.
+
+The signed release-notes recovery workflow deliberately resolves the requested
+immutable registry version before verifying its bytes and signed provenance.
+That operation is not a source build and cannot be replaced by a single fixed
+consumer version without breaking recovery for other releases. Its remaining
+pinning warning needs contextual review, not an exclusion for all installs.
+
+Code Review checks require a second human reviewer. Automated review and
+maintainer-authored commits do not satisfy that condition; do not fabricate
+approvals or contributor identities to increase the score. OpenSSF Best
+Practices enrollment is a separate maintainer attestation, not a badge that a
+CI change can award. A Fuzzing warning means no recognized integration was
+detected; ordinary unit and browser tests are not a substitute for a dedicated
+fuzzing campaign. Keep these limitations visible rather than dismissing them
+as fixed dependencies.
