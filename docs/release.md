@@ -11,6 +11,8 @@ later.
 
 ## Preconditions
 
+- The read-only publishing-tooling preflight passes before any publish or
+  signed notes-recovery job can start. A failed or unavailable audit blocks it.
 - `main` is clean and pushed.
 - `npm run check` passes locally or in CI.
 - `CHANGELOG.md` has an entry for the target version.
@@ -59,6 +61,15 @@ ownership, repository visibility policy, npm access, README positioning, and
 examples hosting decision for the `0.1.x` lane.
 
 ## Tag-Driven Public Release
+
+Publication is currently blocked by an upstream npm bundle advisory. The
+preflight installs npm 11.21.1 in a disposable prefix with scripts turned off,
+checks its SHA-512 lock entry and actual bundled manifests, then audits the
+complete graph against the public npm registry. Reports survive failed audits.
+The current bundle contains `undici@6.29.0`; the high-severity excessive
+content-encodings advisory requires 6.29.1. Do not approve around this failure.
+See [the security guide](security-automation.md#publishing-tooling-preflight)
+for the reviewed replacement prerequisite and separate library support policy.
 
 ```bash
 git tag vX.Y.Z

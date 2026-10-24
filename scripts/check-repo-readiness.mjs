@@ -90,7 +90,7 @@ assertReadOnly(canary.split('\njobs:')[0], 'Canary defaults');
 assertReadOnly(workflowJob(canary, 'github-packages'), 'Canary verification');
 const canaryPublish = workflowJob(canary, 'publish');
 const canarySmoke = workflowJob(canary, 'smoke');
-assertIncludes(canaryPublish, '    needs: github-packages', 'Canary publisher');
+assertIncludes(canaryPublish, '    needs: [github-packages, publishing-tooling]', 'Canary publisher must wait for both the verified build and tooling audit');
 assertIncludes(canaryPublish, "github.repository == 'Ponchia/bronto-annotations'", 'Canary publisher');
 assertIncludes(canaryPublish, "github.ref == 'refs/heads/main'", 'Canary publisher');
 assertIncludes(canaryPublish, '      packages: write', 'Canary publisher permissions');
