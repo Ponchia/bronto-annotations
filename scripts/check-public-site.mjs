@@ -7,6 +7,7 @@ import { readFile, stat, readdir } from 'node:fs/promises';
 import { resolve, dirname, relative, join, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { JSDOM } from 'jsdom';
+import { offersInstall } from './site-release.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const target = join(root, '_site');
@@ -103,13 +104,13 @@ for (const rel of pages) {
   assert.equal(identity.querySelector('a')?.getAttribute('href'), published.stableDocs);
   assert(disclosure.textContent.includes(published.stableInstall), 'Exact stable install missing: ' + rel);
   if (published.previewVersion) {
-    assert(disclosure.textContent.includes('npm install @ponchia/annotations@' + published.previewVersion));
+    assert(offersInstall(disclosure.textContent, published.previewVersion));
     assert.equal(disclosure.querySelector('[data-candidate-docs]')?.getAttribute('href'),
       `https://github.com/Ponchia/bronto-annotations/blob/v${published.previewVersion}/docs/README.md`);
   }
   if (!published.sourcePublished) {
     assert(disclosure.textContent.includes('Publication of this source is not confirmed'));
-    assert(!disclosure.textContent.includes('npm install @ponchia/annotations@' + published.sourceVersion));
+    assert(!offersInstall(disclosure.textContent, published.sourceVersion));
   }
   // Only the public editorial site is instrumented; package and independent
   // interactive example fixtures must not inherit website analytics.
