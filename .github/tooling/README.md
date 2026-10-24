@@ -66,12 +66,23 @@ node .github/tooling/npm/node_modules/npm/bin/npm-cli.js audit --prefix .github/
 
 The job fails on high or critical findings, CLI errors, malformed JSON or audit
 service errors. Moderate findings remain visible in the retained report.
-The reused npm 11.21.1 bundle contains `ip-address@10.7.2`;
+The reviewed bundle still contains `ip-address@10.7.2`, affected by
 [GHSA-rxp7-6hxx-x8q5](https://github.com/advisories/GHSA-rxp7-6hxx-x8q5)
-names 10.7.4 as patched. The remaining moderate upstream bundle finding is
-tracked in [bronto-ui #234](https://github.com/Ponchia/bronto-ui/issues/234).
-Integrity locking does not remediate that advisory, and this CLI is not a
-runtime dependency of `@ponchia/annotations`.
+(moderate; fixed in 10.7.4), and `undici@6.29.0`, affected by
+[GHSA-4qv8-2p9j-2685](https://github.com/advisories/GHSA-4qv8-2p9j-2685)
+(moderate) and
+[GHSA-xjj6-f33q-929c](https://github.com/advisories/GHSA-xjj6-f33q-929c)
+(high), both fixed in 6.29.1. The Undici findings were indexed after the
+original 23 October review. On 24 October, the integrity-verified npm 12.2.1
+archive contained the same affected versions, so an npm major upgrade is not
+remediation.
+
+The high finding blocks Dependency Review for this proposed tooling lock.
+Keep that gate, the complete reports and the unmodified upstream bundle.
+Track the upstream correction in
+[bronto-ui #234](https://github.com/Ponchia/bronto-ui/issues/234). Integrity
+locking and disabled lifecycle scripts do not remediate the advisories.
+This CLI is not a runtime dependency of `@ponchia/annotations`.
 
 Signed notes recovery still installs the requested immutable registry version
 in its isolated consumer, disables lifecycle scripts, verifies npm signatures
