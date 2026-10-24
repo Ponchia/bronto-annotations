@@ -6,31 +6,12 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
-## 0.7.0-rc.3 - 2026-10-16
+## 0.7.0 - 2026-10-24
 
-- Add structural Vega coordinate, inclusive interval and view-origin helpers.
-  Resolve mixed band/continuous axes independently, preserve exact domain values,
-  and make JSON date/category coercion explicit. Reversed categorical intervals
-  retain both complete endpoint bands; invalid geometry returns no coordinate.
-- Preserve existing bulk adapter contracts and the DOM-free core. No Vega runtime
-  dependency, host state, Worker ownership or persistence is added.
-- This is a testing candidate for `next`, not promotion of the 0.7 line to stable.
-  Registry availability is recorded only after the protected release completes.
-
-## 0.7.0-rc.2 - 2026-10-16
-
-- Restore legacy UI geometry behavior for oversized note placement and invalid
-  timeline/subject input. Verify all 20 unchanged UI v0.16.3 geometry tests
-  against standalone exports, with source hash and MIT attribution retained.
-- Preserve historical UI CSS/export checks without a sibling UI checkout;
-  reject partial removals and undocumented legacy additions.
-- Include the post-RC1 readability, responsive authoring and Worker allocation
-  improvements described below. Editing and Worker APIs remain experimental;
-  physical-input and screen-reader acceptance is still outstanding.
-- Publish this candidate only under `next`; `latest` stays on the stable 0.6
-  line. Source preparation does not itself establish registry availability.
-
-## Unreleased - 0.7.0
+- Promote the 0.7 line to stable on `latest`. This release contains everything
+  in 0.7.0-rc.1, rc.2 and rc.3 (their sections below). Since rc.3 only an
+  unused local was removed and test tooling was refreshed; package behavior is
+  unchanged. Upgrade from 0.6 with `docs/migration-0.7.md`.
 
 ### Readability and authoring refinement
 
@@ -123,6 +104,30 @@ reasonable.
 - Route quality and upstream proof guides, add a fast contributor check, and
   distinguish current guidance from historical release/readiness records.
 
+
+## 0.7.0-rc.3 - 2026-10-16
+
+- Add structural Vega coordinate, inclusive interval and view-origin helpers.
+  Resolve mixed band/continuous axes independently, preserve exact domain values,
+  and make JSON date/category coercion explicit. Reversed categorical intervals
+  retain both complete endpoint bands; invalid geometry returns no coordinate.
+- Preserve existing bulk adapter contracts and the DOM-free core. No Vega runtime
+  dependency, host state, Worker ownership or persistence is added.
+- This is a testing candidate for `next`, not promotion of the 0.7 line to stable.
+  Registry availability is recorded only after the protected release completes.
+
+## 0.7.0-rc.2 - 2026-10-16
+
+- Restore legacy UI geometry behavior for oversized note placement and invalid
+  timeline/subject input. Verify all 20 unchanged UI v0.16.3 geometry tests
+  against standalone exports, with source hash and MIT attribution retained.
+- Preserve historical UI CSS/export checks without a sibling UI checkout;
+  reject partial removals and undocumented legacy additions.
+- Include the post-RC1 readability, responsive authoring and Worker allocation
+  improvements described below. Editing and Worker APIs remain experimental;
+  physical-input and screen-reader acceptance is still outstanding.
+- Publish this candidate only under `next`; `latest` stays on the stable 0.6
+  line. Source preparation does not itself establish registry availability.
 
 ## 0.7.0-rc.1 - 2026-10-15
 

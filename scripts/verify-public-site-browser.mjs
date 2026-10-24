@@ -6,6 +6,7 @@ import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 import { resolve } from 'node:path';
 import { verifyAuthoringDefault, openAuthoringDiagram } from './responsive-authoring-scenario.mjs';
+import { offersInstall } from './site-release.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const publication = JSON.parse(await readFile(resolve(root, '_site/release-status.json'), 'utf8'));
@@ -100,13 +101,13 @@ async function verifyVersionDisclosure(page, width) {
   assert(await guidance.isVisible(), 'Keyboard Enter must reveal install guidance');
   assert((await guidance.innerText()).includes(publication.stableInstall));
   if (publication.previewVersion) {
-    assert((await guidance.innerText()).includes('npm install @ponchia/annotations@' + publication.previewVersion));
+    assert(offersInstall(await guidance.innerText(), publication.previewVersion));
     assert.equal(await guidance.locator('[data-candidate-docs]').getAttribute('href'),
       `https://github.com/Ponchia/bronto-annotations/blob/v${publication.previewVersion}/docs/README.md`);
   }
   if (!publication.sourcePublished) {
     assert((await guidance.innerText()).includes('Publication of this source is not confirmed'));
-    assert(!(await guidance.innerText()).includes('npm install @ponchia/annotations@' + publication.sourceVersion));
+    assert(!offersInstall(await guidance.innerText(), publication.sourceVersion));
   }
   const expanded = await notice.boundingBox();
   assert(expanded && expanded.height > collapsed.height,
