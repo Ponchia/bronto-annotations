@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { injectReleaseNotice, siteReleaseStatus } from '../../scripts/site-release.mjs';
+import { injectReleaseNotice, offersInstall, siteReleaseStatus } from '../../scripts/site-release.mjs';
 const record = { schemaVersion: 1 as const, stableVersion: '0.6.10', previewVersion: null };
 describe('versioned public documentation', () => {
   it('distinguishes an unpublished source from the actually published stable package', () => {
@@ -48,6 +48,15 @@ describe('versioned public documentation', () => {
     document.body.innerHTML = injectReleaseNotice('<body></body>', confirmed);
     expect(document.querySelector('[data-release-identity]')?.textContent).toContain('published candidate');
     expect(document.querySelector('[data-release-identity]')?.textContent).not.toContain('development source');
+  });
+  it('does not mistake a stable source for its own published candidate when promoting', () => {
+    const status = siteReleaseStatus('0.7.0', { ...record, previewVersion: '0.7.0-rc.3' });
+    expect(status.sourcePublished).toBe(false);
+    const notice = injectReleaseNotice('<main></main>', status);
+    expect(offersInstall(notice, '0.7.0-rc.3')).toBe(true);
+    expect(offersInstall(notice, '0.7.0')).toBe(false);
+    expect(offersInstall('npm install @ponchia/annotations@0.7.0.', '0.7.0')).toBe(true);
+    expect(offersInstall('<code>npm install @ponchia/annotations@0.7.0</code>', '0.7.0')).toBe(true);
   });
   it('preserves client roots and does not inject scripts into standalone examples', () => {
     const output = injectReleaseNotice('<html><body><div id="root"></div></body></html>', siteReleaseStatus('0.7.0-dev.0', record), '../../');

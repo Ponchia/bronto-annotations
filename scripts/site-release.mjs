@@ -3,6 +3,19 @@ const versionPattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z]
 const escape = (value) => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;')
   .replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 
+/**
+ * Whether text offers the exact install command for one version. A command for a
+ * longer version that starts with it (0.7.0 inside 0.7.0-rc.3) does not count.
+ */
+export function offersInstall(text, version) {
+  const command = `npm install @ponchia/annotations@${version}`;
+  for (let at = text.indexOf(command); at !== -1; at = text.indexOf(command, at + 1)) {
+    const rest = text.slice(at + command.length, at + command.length + 2);
+    if (!/^(?:[0-9A-Za-z+-]|\.[0-9A-Za-z])/.test(rest)) return true;
+  }
+  return false;
+}
+
 export function siteReleaseStatus(sourceVersion, record) {
   if (!versionPattern.test(sourceVersion) || !record || record.schemaVersion !== 1
     || !versionPattern.test(record.stableVersion) || record.stableVersion.includes('-')
