@@ -142,6 +142,58 @@ at 4.13 until the support decision in issue #66. This is a tooling compatibility
 deferral, not a suppressed vulnerability. Revisit the version filter when that
 support transition is decided.
 
+## Publishing tooling preflight
+
+`publishing-tooling.yml` is a reusable read-only job required by the npm
+publisher, GitHub Packages canary publisher and signed release-notes recovery.
+It also supports manual audit-only dispatch. It has no publishing permission,
+registry credentials, root dependency install or restored cache. The canary
+publisher keeps its existing checkout-free archive boundary. The protected
+`npm-publish` environment, `release.yml` trusted-publisher identity, provenance,
+immutable-tag checks and publication with lifecycle scripts turned off remain
+required.
+
+The job installs the exact npm candidate into a disposable prefix with
+`--ignore-scripts`. `scripts/audit-publishing-tooling.mjs` verifies the expected
+registry URL and SHA-512 integrity, then compares every installed dependency
+manifest with the generated complete lock, including nested and scoped bundled
+packages. Symlinks, missing packages, unexpected packages and metadata-only
+version edits fail. The runner's npm audits that complete lock with development
+dependencies included; the candidate CLI is never selected or executed.
+The generated lock and raw advisory response are retained even when the audit
+fails. High/critical findings, nonzero CLI exits, invalid counts, malformed
+responses and audit-service failures block the dependent write job.
+
+The candidate is **not currently safe to publish with**. On 24 October 2026,
+all 34 stable OIDC-capable npm 11/12 archives from 11.5.1 onward were downloaded
+and checked against their registry SHA-512 metadata. The complete actual
+bundled inventories were matched against the registry advisory service; none
+was free of high findings. Releases through 11.12.1 have no bundled `undici`,
+but retain other high advisories, including
+[brace-expansion](https://github.com/advisories/GHSA-mh99-v99m-4gvg).
+Later candidates bundle `undici` 6.25.0 through 6.29.0, all within
+[GHSA-xjj6-f33q-929c](https://github.com/advisories/GHSA-xjj6-f33q-929c)'s
+`>=6.23.0 <6.29.1` affected range. Latest npm 11.21.1 and 12.2.1 both
+bundle `undici@6.29.0` and `ip-address@10.7.2`. The former also has the moderate
+[EventSource advisory](https://github.com/advisories/GHSA-4qv8-2p9j-2685);
+the latter requires ip-address 10.7.4 for
+[the address parser advisory](https://github.com/advisories/GHSA-rxp7-6hxx-x8q5).
+
+Resume publication only after an official npm distribution fixes the actual
+bundle and passes the complete audit. The reviewed fixed `undici` releases are
+6.29.1, 7.30.1 and 8.12.2; replacing that package alone is insufficient if
+other high findings remain. Update the exact install version in all workflows
+and the candidate version, URL, and SHA-512 together, then run the offline
+regressions, live audit and full CI. Do not repack npm, edit bundled version
+metadata, waive advisories or weaken the gate. The separate integrity-lock
+proposal in [PR #185](https://github.com/Ponchia/bronto-annotations/pull/185)
+remains blocked; this guard introduces no vulnerable tooling lock into main.
+The library's Node 20 support remains separate from the publishing runtime.
+
+`npm run test:security-pins` includes offline failure and workflow-boundary
+regressions for this guard. Normal CI does not require a successful live audit
+of the known-vulnerable candidate; publication does.
+
 ## Interpreting Scorecard findings
 
 Treat each alert as a specific control or dependency finding, not as a count of

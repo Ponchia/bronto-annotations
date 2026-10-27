@@ -19,7 +19,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  publishing-tooling:
+    if: github.repository == 'Ponchia/bronto-annotations' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/publishing-tooling.yml
+
   recover-notes:
+    needs: publishing-tooling
     name: Verify signed npm artifact and recover release notes
     # Only run this trusted write-permission workflow from protected main.
     if: github.repository == 'Ponchia/bronto-annotations' && github.ref == 'refs/heads/main'
