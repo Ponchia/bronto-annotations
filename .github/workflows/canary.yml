@@ -16,6 +16,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  publishing-tooling:
+    if: github.event.inputs.publish == 'true' && github.repository == 'Ponchia/bronto-annotations' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/publishing-tooling.yml
+
   github-packages:
     name: Verify and pack GitHub Packages canary
     outputs:
@@ -77,7 +81,7 @@ jobs:
 
   publish:
     name: Publish verified canary archive
-    needs: github-packages
+    needs: [github-packages, publishing-tooling]
     if: github.event.inputs.publish == 'true' && github.repository == 'Ponchia/bronto-annotations' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
