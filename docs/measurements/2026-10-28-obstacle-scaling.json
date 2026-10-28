@@ -1,0 +1,55 @@
+{
+  "environment": {
+    "node": "v24.22.1",
+    "platform": "linux",
+    "arch": "arm64"
+  },
+  "rounds": 3,
+  "workload": "synthetic many-obstacle host; not browser input latency",
+  "results": [
+    {
+      "obstacles": 200,
+      "notes": 24,
+      "samplesMs": {
+        "candidate": [
+          29.232325999999944,
+          23.74057300000004,
+          21.421375000000126
+        ],
+        "reference": [
+          269.00037,
+          249.56427199999996,
+          248.55567300000007
+        ]
+      },
+      "medianMs": {
+        "candidate": 23.74057300000004,
+        "reference": 249.56427199999996
+      },
+      "exactParity": true
+    },
+    {
+      "obstacles": 1000,
+      "notes": 24,
+      "samplesMs": {
+        "candidate": [
+          65.14916499999981,
+          44.24066900000071,
+          40.10319399999935
+        ],
+        "reference": [
+          1462.860713,
+          1715.753581,
+          1198.741457
+        ]
+      },
+      "medianMs": {
+        "candidate": 44.24066900000071,
+        "reference": 1462.860713
+      },
+      "exactParity": true
+    }
+  ],
+  "reference": "@ponchia/annotations@0.7.0",
+  "candidate": "unpublished source change; solve-local broad phase and endpoint-owner preflight"
+}

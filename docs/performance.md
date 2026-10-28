@@ -1,5 +1,49 @@
 # Performance And Stress Testing
 
+## Many-obstacle host scoring
+
+The ordinary solver builds a private, solve-local bounding-volume index for
+large obstacle collections. Candidate overlap and exact segment-hit scoring
+query that index, preserving input order, duplicates, boundary contact and
+floating-point summation order. Unusual low-level geometry keeps the unindexed
+path. Caller arrays are never cached across solves.
+
+Routing still receives the complete obstacle topology. Its conservative
+preflight now excludes obstacles containing either endpoint, as the existing
+routing selector already does. The subject's own box therefore cannot force a
+nearest-obstacle sort for an otherwise clear connector. When routing is needed,
+obstacle distance is computed once per item before the same stable ordering.
+
+The maintained benchmark compares 24 notes against 200 and 1,000 obstacles:
+
+```sh
+npm run build
+node scripts/benchmark-obstacle-scaling.mjs --rounds=3
+```
+
+Pass `--reference=/absolute/path/to/an/inspected/dist/index.js` to compare an
+already-installed baseline, and `--output=/absolute/path/to/results.json` to
+retain samples. The optional import is local and explicit; the command never
+installs or downloads a reference package. Every compared layout must be exactly
+equal, including authored sources, selected positions, routes and scores.
+
+An ARM64 Linux / Node 24.22.1 run compared this source candidate with published
+0.7.0. Three warmed alternating samples after one warm-up per mode produced:
+
+| Obstacles | Notes | Reference median | Candidate median |
+| --- | ---: | ---: | ---: |
+| 200 | 24 | 249.56 ms | 23.74 ms |
+| 1,000 | 24 | 1,462.86 ms | 44.24 ms |
+
+Raw samples are retained in
+[the measurement record](measurements/2026-10-28-obstacle-scaling.json).
+This is a synthetic, mostly clear-routing workload on a shared development
+host, not browser input latency, sustained frame rate or a dense-routing promise.
+The initial scoring-only index yielded modest gains; the endpoint-owner
+preflight removed the dominant unnecessary routing work. Existing route,
+incremental, eager-scoring and geometric-quality checks remain authoritative.
+
+
 Annotation layout should stay deterministic and fast enough for report
 generation and interactive authoring surfaces.
 

@@ -270,3 +270,12 @@ export {
 } from './presets/basic.js';
 export type { SvgRenderOptions } from './svg/render.js';
 export { renderAnnotationsSvg, renderAnnotationSubjectsSvg } from './svg/render.js';
+
+/** @experimental Bounded pin placement; the host owns visibility and discussion state. */
+export { layoutAnnotationPins } from './core/pin-layout.js';
+export type {
+  AnnotationPinInput,
+  AnnotationPinLayout,
+  AnnotationPinLayoutOptions,
+  AnnotationPinPlacement
+} from './core/pin-layout.js';
