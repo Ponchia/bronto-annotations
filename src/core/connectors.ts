@@ -258,9 +258,13 @@ function routingObstacles(
   return obstacles
     .filter((box) => isFiniteBox(box) && box.width > 0 && box.height > 0)
     .filter((box) => !pointInsideBox(start, box) && !pointInsideBox(end, box))
-    .sort((a, b) => distanceToSegment(a, start, end) - distanceToSegment(b, start, end))
+    // Distance is pure for this route. Compute it once per eligible obstacle,
+    // rather than twice for every sort comparison. Preserve the original
+    // subtraction comparator (including nonfinite behavior) and stable ties.
+    .map((box) => ({ box, distance: distanceToSegment(box, start, end) }))
+    .sort((a, b) => a.distance - b.distance)
     .slice(0, options.maxObstacles)
-    .map((box) => expandBox(box, options.padding));
+    .map(({ box }) => expandBox(box, options.padding));
 }
 
 function orthogonalRoute(

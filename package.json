@@ -151,7 +151,8 @@
     "test:upstream": "npm run build && node scripts/verify-upstream-consumers.mjs",
     "benchmark:placement": "npm run build && node scripts/benchmark-bounded-placement.mjs",
     "benchmark:refinement": "npm run build && node scripts/benchmark-refinement.mjs",
-    "test:security-pins": "node --test scripts/tests/workflow-action-pin.test.mjs scripts/tests/canary-repository.test.mjs scripts/tests/publishing-tooling.test.mjs"
+    "test:security-pins": "node --test scripts/tests/workflow-action-pin.test.mjs scripts/tests/canary-repository.test.mjs scripts/tests/publishing-tooling.test.mjs",
+    "benchmark:obstacles": "npm run build && node scripts/benchmark-obstacles.mjs"
   },
   "peerDependencies": {
     "@terrastruct/d2": ">=0.1.0",

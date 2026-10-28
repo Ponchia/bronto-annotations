@@ -270,3 +270,7 @@ export {
 } from './presets/basic.js';
 export type { SvgRenderOptions } from './svg/render.js';
 export { renderAnnotationsSvg, renderAnnotationSubjectsSvg } from './svg/render.js';
+
+/** @experimental Bounded pin placement; hosts retain selection and overflow reading. */
+export { layoutAnnotationPins } from './core/pins.js';
+export type { AnnotationPinInput, AnnotationPinLayoutOptions, AnnotationPinLayout } from './core/pins.js';

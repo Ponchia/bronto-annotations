@@ -6,6 +6,15 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## Unreleased
+
+- Reduce large-obstacle placement work with a per-solve conservative spatial
+  query and cached route-sort distances, retaining exact scoring and routing.
+- Add experimental, source-only screen-space pin placement with bounded probes,
+  deterministic priority, explicit omission reasons and no application state.
+- Add exact-parity consumer benchmarks and input/geometry regression coverage.
+  These changes are not in the published 0.7.0 package.
+
 ## 0.7.0 - 2026-10-24
 
 - Promote the 0.7 line to stable on `latest`. This release contains everything

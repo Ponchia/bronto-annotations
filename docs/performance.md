@@ -5,6 +5,29 @@ generation and interactive authoring surfaces.
 
 <a id="start-with-the-common-workload"></a>
 
+## Many obstacles with a bounded number of notes
+
+The current source builds a private bounding hierarchy once per full/suffix
+solve when there are at least 64 finite nonnegative obstacle rectangles. Note
+scoring and connector-hit counting query conservative local candidates, then
+retain the original narrow-phase predicates and summation order. The complete
+obstacle array still reaches connector routing and the returned layout. No
+caller-array-identity cache can conceal an in-place obstacle edit.
+
+`npm run benchmark:obstacles` compares the identical scorer with indexed and
+linear broad phases at 24 notes and 200/1,000 obstacles. It warms both lanes,
+alternates five samples each, includes index construction, and asserts exact
+candidate geometry, connector and score equality for every sample. Its output
+is synthetic headless timing, not browser latency or a frame-rate guarantee.
+For a before/after package comparison, run
+`node scripts/benchmark-consumer-comparison.mjs /reviewed/baseline/dist/index.js`.
+It compares complete public-API layouts and quality reports, retaining every
+alternating sample. Routing now computes each obstacle's segment distance once
+before its stable sort; nearest-obstacle selection and tie behavior are unchanged.
+
+Nonfinite endpoints and small arrays retain linear scans. The optimization does
+not silently remove obstacles, cap note content or alter routing quality.
+
 ## Current 0.7 default
 
 `resolveAnnotationLayout({ annotations, bounds, noteSizes })` returns a lean

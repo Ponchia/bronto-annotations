@@ -1075,3 +1075,11 @@ void (undefined as unknown as VegaAnchorResult | undefined);
 void (undefined as unknown as MermaidAnchorResult | undefined);
 void (undefined as unknown as D2AnchorResult | undefined);
 void (undefined as unknown as ReactFlowAnchorResult | undefined);
+
+
+import { layoutAnnotationPins, type AnnotationPinLayout } from '@ponchia/annotations';
+const pinLayout: AnnotationPinLayout = layoutAnnotationPins({
+  pins: [{ id: 'pin', anchor: { x: 80, y: 80 }, size: { width: 44, height: 44 } }],
+  bounds: { x: 0, y: 0, width: 300, height: 200 }
+});
+void pinLayout;

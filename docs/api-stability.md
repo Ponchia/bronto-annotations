@@ -87,3 +87,13 @@ turn these formats into a compatibility promise for consumers.
 lane. They are opt-in; existing geometry validity, default solver selection and
 quality scores remain unchanged. The report describes polylines only and records
 unmeasured curves/invalid routes explicitly. See the [core guide](core-guide.md#optional-connector-readability).
+
+
+## Screen-space pin placement
+
+The source-only `layoutAnnotationPins` API and `AnnotationPinInput`,
+`AnnotationPinLayoutOptions`, and `AnnotationPinLayout` types are
+**@experimental**. Their finite-input, deterministic-order and explicit-omission
+contracts are tested, but real-device and assistive-technology acceptance remain
+host work. They are not part of the published 0.7.0 bytes. Scheduling,
+persistence and Worker lifecycle remain outside this API.

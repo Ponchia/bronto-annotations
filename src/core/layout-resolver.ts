@@ -1,6 +1,7 @@
 import { orderAnnotations, assertUniqueAnnotationIds, compareAnnotationIds } from './layout-order.js';
 import { anchorSubject, insetBox, isFiniteBox, normalizeBox, resolvePadding } from './anchors.js';
-import { allPlacementCandidates, assertPlacementPreference } from './placement.js';
+import { searchPlacementCandidates, assertPlacementPreference } from './placement.js';
+import { createObstacleQuery } from './obstacle-query.js';
 import { DEFAULT_NOTE_SIZE, DEFAULT_NOTE_PADDING } from './model.js';
 import { evaluateAnnotationLayout } from './quality.js';
 import { createRefinementScoreWorkspace } from './refinement-score.js';
@@ -36,6 +37,7 @@ export function resolveAnnotationLayoutFrom(
   const obstacles = (options.obstacles ?? [])
     .map(normalizeBox)
     .filter(isFiniteBox);
+  const queryObstacles = createObstacleQuery(obstacles);
   const placedNotes: ResolvedAnnotation[] = [...reused];
   // Reuse the existing prefix's original winners and avoid recomputing their
   // connector routing / placement scores when later annotations change.
@@ -48,12 +50,12 @@ export function resolveAnnotationLayoutFrom(
       const candidates = retained?.id === item.id
         ? diagnosticLimit === 'all' || retained.candidates.length <= diagnosticLimit
           ? retained.candidates : retained.candidates.slice(0, diagnosticLimit)
-        : allPlacementCandidates({
+        : searchPlacementCandidates({
           annotation: ordered[index]!, bounds: placementBounds,
           noteSize: noteSizeFor(ordered[index]!, options), obstacles,
           placedNotes: placedNoteBoxes,
           placement: mergePlacement(options.placement, ordered[index]!.placement)
-        }, diagnosticLimit === 'all' ? {} : { limit: diagnosticLimit });
+        }, diagnosticLimit === 'all' ? {} : { limit: diagnosticLimit }, queryObstacles);
       diagnostics.annotations.push({ id: item.id, candidates });
     }
     placedNoteBoxes.push(item.noteBox);
@@ -62,14 +64,14 @@ export function resolveAnnotationLayoutFrom(
   for (const annotation of ordered.slice(reused.length)) {
     const placement = mergePlacement(options.placement, annotation.placement);
     const noteSize = noteSizeFor(annotation, options);
-    const candidates = allPlacementCandidates({
+    const candidates = searchPlacementCandidates({
       annotation,
       bounds: placementBounds,
       noteSize,
       obstacles,
       placedNotes: placedNoteBoxes,
       placement
-    }, { limit });
+    }, { limit }, queryObstacles);
     const winner = candidates[0];
     const subject = anchorSubject(annotation.anchor, winner?.side);
 

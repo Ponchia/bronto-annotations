@@ -141,6 +141,47 @@ import { annotationFromD3Style, createD3StyleAnnotationBuilder }
   `annotationData` when migrated d3-style annotations need rendered
   annotation-layer `data-*` attributes.
 
+### Bounded screen-space pins (experimental, source-only)
+
+`layoutAnnotationPins` and its `AnnotationPinInput`,
+`AnnotationPinLayoutOptions`, and `AnnotationPinLayout` types are available in
+this source revision, **not in the published 0.7.0 archive**. Qualify a packed
+candidate before adoption; a package release is a separate operation.
+
+The host supplies anchor centres, measured control dimensions and a safe
+viewport rectangle. The helper preserves input reading order, gives higher
+`priority` first choice of space, and breaks priority ties by id. It probes at
+most 17 positions per pin. `maxDisplacement` bounds movement on each axis;
+zero admits only the anchored position. It returns placed pins with their
+original anchors and boxes, plus every omitted id and its `outside`,
+`collision`, or `limit` reason. It never clamps offscreen anchors to invented
+edge targets, shrinks controls, or deletes the host's content. Draw a leader
+when displacement would make the subject ambiguous, and offer omitted items
+through a keyboard-accessible reader.
+
+```ts
+import { layoutAnnotationPins } from '@ponchia/annotations';
+
+const result = layoutAnnotationPins({
+  pins: [
+    { id: 'first', anchor: { x: 120, y: 90 }, size: { width: 44, height: 44 } },
+    { id: 'selected', anchor: { x: 120, y: 90 }, size: { width: 44, height: 44 }, priority: 1 }
+  ],
+  bounds: { x: 8, y: 8, width: 384, height: 284 },
+  maxVisible: 24,
+  maxDisplacement: 48,
+  gap: 4
+});
+// React AnnotationPin accepts result.pins[i].point, a centre in the host space.
+// result.omitted must remain discoverable in the host's full list.
+```
+
+All dimensions, priorities and endpoints must be finite; dimensions and gap
+are nonnegative. Duplicate ids and invalid limits are rejected. Callers own
+measurement, view transforms, revisions, selection, DOM observation and any
+interaction with persisted content. This is bounded greedy placement, not a
+guarantee that every feasible arrangement will be found.
+
 ## `@ponchia/annotations/react`
 
 Use the React subpath for SVG/HTML overlays that should measure notes, render
