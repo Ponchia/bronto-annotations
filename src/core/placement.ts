@@ -1,6 +1,7 @@
 import { anchorSubject, overlapArea } from './anchors.js';
 import { connectorPath } from './connectors.js';
 import { segmentIntersectsBox } from './segment-intersection.js';
+import { createObstacleQuery, type ObstacleQuery } from './obstacle-query.js';
 import {
   DEFAULT_PLACEMENT,
   DEFAULT_SIDES
@@ -91,18 +92,23 @@ export function candidateNoteBox(
 }
 
 export function scorePlacementCandidate(input: CandidateInput): PlacementCandidate {
+  return scoreCandidate(input);
+}
+
+function scoreCandidate(input: CandidateInput, query?: ObstacleQuery): PlacementCandidate {
   assertPlacementPreference(input.placement);
   assertPlacementPreference(input.annotation.placement);
   const subject = anchorSubject(input.annotation.anchor, input.side);
-  return routePlacementCandidate(input, candidateGeometry(input, subject), subject.point,
-    [...input.obstacles, ...input.placedNotes]);
+  return routePlacementCandidate(input, candidateGeometry(input, subject, query), subject.point,
+    [...input.obstacles, ...input.placedNotes], query);
 }
 
 type CandidateGeometry = Omit<PlacementCandidate, 'connector' | 'score'>;
 
 function candidateGeometry(
   input: CandidateInput,
-  subject: ReturnType<typeof anchorSubject>
+  subject: ReturnType<typeof anchorSubject>,
+  query?: ObstacleQuery
 ): CandidateGeometry {
   const align = input.align ?? firstAlign(input.placement?.align) ?? DEFAULT_PLACEMENT.align;
   const offset = input.offset ?? firstNumber(input.placement?.offset) ?? DEFAULT_PLACEMENT.offset;
@@ -117,7 +123,7 @@ function candidateGeometry(
   );
   const noteBox = fitBoxWithin(rawNoteBox, input.bounds);
   const overflow = overflowArea(rawNoteBox, input.bounds);
-  const obstacleOverlap = input.obstacles.reduce((total, obstacle) => total + overlapArea(noteBox, obstacle), 0);
+  const obstacleOverlap = (query?.(noteBox) ?? input.obstacles).reduce((total, obstacle) => total + overlapArea(noteBox, obstacle), 0);
   const placedOverlap = input.placedNotes.reduce((total, placed) => total + overlapArea(noteBox, placed), 0);
   const breakdown = {
     preferredSide: input.sideIndex * 150,
@@ -146,14 +152,15 @@ function routePlacementCandidate(
   input: CandidateInput,
   geometry: CandidateGeometry,
   anchorPoint: Point,
-  routingObstacles: Box[]
+  routingObstacles: Box[],
+  query?: ObstacleQuery
 ): PlacementCandidate {
   const connector = connectorPath(anchorPoint, geometry.noteBox, input.annotation.connector, {
     obstacles: routingObstacles,
     bounds: input.bounds
   });
   const breakdown = geometry.scoreBreakdown;
-  breakdown.connectors = connectorObstaclePenalty(connector.points, input.obstacles) * 90;
+  breakdown.connectors = connectorObstaclePenalty(connector.points, input.obstacles, query) * 90;
 
   return {
     side: geometry.side,
@@ -183,6 +190,21 @@ export function allPlacementCandidates(
   input: Omit<CandidateInput, 'side' | 'sideIndex'>,
   options: PlacementSearchOptions = {}
 ): PlacementCandidate[] {
+  return searchPlacementCandidates(input, options, createObstacleQuery(input.obstacles));
+}
+
+/** One index per normalized host snapshot, shared by all notes in the solve. */
+export function createPlacementResolver(obstacles: Box[]) {
+  const query = createObstacleQuery(obstacles);
+  return (input: Omit<CandidateInput, 'side' | 'sideIndex'>, options: PlacementSearchOptions = {}) =>
+    searchPlacementCandidates(input, options, query);
+}
+
+function searchPlacementCandidates(
+  input: Omit<CandidateInput, 'side' | 'sideIndex'>,
+  options: PlacementSearchOptions,
+  query?: ObstacleQuery
+): PlacementCandidate[] {
   assertPlacementPreference(input.placement);
   assertPlacementPreference(input.annotation.placement);
   const limit = options.limit;
@@ -190,17 +212,17 @@ export function allPlacementCandidates(
     throw new TypeError('PlacementSearchOptions.limit must be a positive safe integer');
   }
   if (input.placement?.manual) {
-    return [manualPlacementCandidate(input, input.placement.manual)];
+    return [manualPlacementCandidate(input, input.placement.manual, query)];
   }
 
   const searchSpace = placementSearchSpace(input.placement);
   if (limit !== undefined && limit < searchSpace.length) {
-    const bounded = boundedPlacementCandidates(input, searchSpace, limit);
+    const bounded = boundedPlacementCandidates(input, searchSpace, limit, query);
     if (bounded) return bounded;
   }
 
   const candidates = searchSpace
-    .map((candidate) => scorePlacementCandidate({ ...input, ...candidate }))
+    .map((candidate) => scoreCandidate({ ...input, ...candidate }, query))
     .sort((a, b) => a.score - b.score || sideSort(a.side) - sideSort(b.side));
 
   return limit !== undefined
@@ -218,7 +240,8 @@ export function assertPlacementPreference(preference?: PlacementPreference): voi
 function boundedPlacementCandidates(
   input: Omit<CandidateInput, 'side' | 'sideIndex'>,
   searchSpace: ReturnType<typeof placementSearchSpace>,
-  limit: number
+  limit: number,
+  query?: ObstacleQuery
 ): PlacementCandidate[] | undefined {
   // These subjects only supply numeric geometry. Routing gets a fresh subject
   // so computed box/path points do not become shared between public candidates.
@@ -230,7 +253,7 @@ function boundedPlacementCandidates(
       subjects.set(candidate.side, subject);
     }
     const candidateInput = { ...input, ...candidate };
-    const geometry = candidateGeometry(candidateInput, subject);
+    const geometry = candidateGeometry(candidateInput, subject, query);
     const score = Object.values(geometry.scoreBreakdown).reduce((total, value) => total + value, 0);
     return { input: candidateInput, geometry: { ...geometry, score }, index };
   });
@@ -248,7 +271,7 @@ function boundedPlacementCandidates(
     // Route equal bounds too; score ties use side and original insertion order.
     if (retained.length === limit && entry.geometry.score > retained.at(-1)!.candidate.score) break;
     const point = anchorSubject(input.annotation.anchor, entry.input.side).point;
-    const candidate = routePlacementCandidate(entry.input, entry.geometry, point, routingObstacles);
+    const candidate = routePlacementCandidate(entry.input, entry.geometry, point, routingObstacles, query);
     if (!Number.isFinite(candidate.score)) return undefined;
 
     const value = { candidate, index: entry.index };
@@ -282,7 +305,8 @@ function compareCandidates(
 
 function manualPlacementCandidate(
   input: Omit<CandidateInput, 'side' | 'sideIndex'>,
-  manual: ManualPlacement
+  manual: ManualPlacement,
+  query?: ObstacleQuery
 ): PlacementCandidate {
   const subject = anchorSubject(input.annotation.anchor, manual.side);
   const rawNoteBox = {
@@ -301,9 +325,9 @@ function manualPlacementCandidate(
     bounds: input.bounds
   });
   const overflow = overflowArea(rawNoteBox, input.bounds);
-  const obstacleOverlap = input.obstacles.reduce((total, obstacle) => total + overlapArea(noteBox, obstacle), 0);
+  const obstacleOverlap = (query?.(noteBox) ?? input.obstacles).reduce((total, obstacle) => total + overlapArea(noteBox, obstacle), 0);
   const placedOverlap = input.placedNotes.reduce((total, placed) => total + overlapArea(noteBox, placed), 0);
-  const connectorObstacleHits = connectorObstaclePenalty(connector.points, input.obstacles);
+  const connectorObstacleHits = connectorObstaclePenalty(connector.points, input.obstacles, query);
   const breakdown = {
     preferredSide: 0,
     overflow: overflow * 8,
@@ -544,7 +568,7 @@ function tieBreak(side: PlacementSide): number {
   return sideSort(side) + 1;
 }
 
-function connectorObstaclePenalty(points: Array<{ x: number; y: number }>, obstacles: Box[]): number {
+function connectorObstaclePenalty(points: Array<{ x: number; y: number }>, obstacles: Box[], query?: ObstacleQuery): number {
   if (points.length < 2 || obstacles.length === 0) {
     return 0;
   }
@@ -555,7 +579,11 @@ function connectorObstaclePenalty(points: Array<{ x: number; y: number }>, obsta
     const start = points[pointIndex - 1]!;
     const end = points[pointIndex]!;
 
-    for (const obstacle of obstacles) {
+    const candidates = query?.({
+      x: Math.min(start.x, end.x), y: Math.min(start.y, end.y),
+      width: Math.abs(end.x - start.x), height: Math.abs(end.y - start.y)
+    }) ?? obstacles;
+    for (const obstacle of candidates) {
       if (segmentIntersectsBox(start, end, obstacle)) {
         hits += 1;
       }

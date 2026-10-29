@@ -204,6 +204,11 @@ function rootExperimental(name) {
     || name.includes('Edit')
     || [
       'AnnotationLayoutSession',
+      'AnnotationPinInput',
+      'AnnotationPinLayout',
+      'AnnotationPinLayoutOptions',
+      'AnnotationPinPlacement',
+      'layoutAnnotationPins',
       'LayoutReadabilityReport',
       'createIncrementalAnnotationLayoutSession',
       'allPlacementCandidates',

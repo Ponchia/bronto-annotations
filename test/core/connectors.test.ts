@@ -233,3 +233,17 @@ describe('connector helpers', () => {
     )).toBe('M 0 50 L 100 50');
   });
 });
+
+it('endpoint-owned obstacles do not force a detour while eligible padded contacts still route', () => {
+  const start = { x: 100, y: 100 };
+  const note = { x: 250, y: 75, width: 80, height: 50 };
+  const own = { x: 80, y: 80, width: 40, height: 40 };
+  const distant = Array.from({ length: 1000 }, (_, i) => ({ x: 1000 + i * 10, y: 500, width: 5, height: 5 }));
+  const options = { type: 'straight' as const, routing: 'orthogonal' as const };
+  const clear = connectorPath(start, note, { ...options, routing: 'none' });
+  expect(connectorPath(start, note, options, { obstacles: [own, ...distant] })).toEqual(clear);
+  const crossing = { x: 170, y: 95, width: 10, height: 10 };
+  const route = connectorPath(start, note, options, { obstacles: [own, crossing, ...distant] });
+  expect(route.d).not.toBe(clear.d);
+  expect(route).toEqual(connectorPath(start, note, options, { obstacles: [crossing, ...distant] }));
+});

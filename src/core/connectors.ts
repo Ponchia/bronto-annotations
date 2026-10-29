@@ -155,7 +155,7 @@ function routedConnectorPoints(
 
   // A connector can only hit a padded obstacle when the segment's bounding
   // box overlaps it. Avoid building a routing graph for clear segments.
-  if (!mayIntersectPaddedObstacle(base, context.obstacles, routing.padding)) {
+  if (!mayIntersectPaddedObstacle(base, context.obstacles, routing.padding, start, end)) {
     return base;
   }
 
@@ -224,7 +224,7 @@ function resolveRoutingOptions(
   };
 }
 
-function mayIntersectPaddedObstacle(points: Point[], obstacles: Box[], padding: number): boolean {
+function mayIntersectPaddedObstacle(points: Point[], obstacles: Box[], padding: number, routeStart: Point, routeEnd: Point): boolean {
   for (let index = 1; index < points.length; index += 1) {
     const start = points[index - 1]!;
     const end = points[index]!;
@@ -234,7 +234,11 @@ function mayIntersectPaddedObstacle(points: Point[], obstacles: Box[], padding: 
     const bottom = Math.max(start.y, end.y);
 
     for (const box of obstacles) {
-      if (!isFiniteBox(box) || box.width <= 0 || box.height <= 0) {
+      // Routing excludes an obstacle containing either endpoint. In particular,
+      // the subject's own box must not force a full nearest-obstacle sort for
+      // every otherwise-clear connector on a large host.
+      if (!isFiniteBox(box) || box.width <= 0 || box.height <= 0
+        || pointInsideBox(routeStart, box) || pointInsideBox(routeEnd, box)) {
         continue;
       }
 
@@ -258,9 +262,10 @@ function routingObstacles(
   return obstacles
     .filter((box) => isFiniteBox(box) && box.width > 0 && box.height > 0)
     .filter((box) => !pointInsideBox(start, box) && !pointInsideBox(end, box))
-    .sort((a, b) => distanceToSegment(a, start, end) - distanceToSegment(b, start, end))
+    .map((box) => ({ box, distance: distanceToSegment(box, start, end) }))
+    .sort((a, b) => a.distance - b.distance)
     .slice(0, options.maxObstacles)
-    .map((box) => expandBox(box, options.padding));
+    .map(({ box }) => expandBox(box, options.padding));
 }
 
 function orthogonalRoute(

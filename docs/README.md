@@ -73,3 +73,5 @@ material changes through its generator or verifier. **Archive** material is
 historical evidence, not current instructions. **Proposals** describe open work,
 not missing functionality. A retired path should retain a **tombstone** link to
 its replacement instead of silently breaking existing references.
+
+For experimental small-target geometry, see [pin placement](pin-placement.md). Its omissions and optional leaders stay separate from explanatory-note layout and host discussion state.

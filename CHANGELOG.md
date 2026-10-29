@@ -6,6 +6,13 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## Unreleased
+
+- Preserve exact placement while reducing many-obstacle scoring and unnecessary
+  endpoint-owned routing work; retain an alternating reference benchmark.
+- Add experimental `layoutAnnotationPins` with priority, bounded displacement,
+  explicit leaders and omission reasons. Hosts retain visibility and state.
+
 ## 0.7.0 - 2026-10-24
 
 - Promote the 0.7 line to stable on `latest`. This release contains everything

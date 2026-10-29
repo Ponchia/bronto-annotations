@@ -253,3 +253,33 @@ describe('exact bounded placement search', () => {
     expect(spy.mock.calls.length).toBeLessThan(eagerCalls / 2);
   });
 });
+
+it.each([0, 1, 2, 4, 7])('indexed obstacles preserve exhaustive candidates and winners for seed %i', (index) => {
+  const input = searchFixture(index);
+  input.annotation.connector = index % 2 ? { type: 'elbow', routing: 'none' } : { type: 'straight', routing: 'none' };
+  input.obstacles.push(...Array.from({ length: 200 }, (_, i) => ({
+    x: (i % 20) * 160.125, y: Math.floor(i / 20) * 121.5, width: 35.25, height: 23.75
+  })));
+  const eager = eagerCandidates(input);
+  expect(allPlacementCandidates(input)).toStrictEqual(eager);
+  expect(allPlacementCandidates(input, { limit: 8 })).toStrictEqual(eager.slice(0, 8));
+  expect(allPlacementCandidates(input, { limit: 1 })).toStrictEqual(eager.slice(0, 1));
+  // Reusing and mutating the caller array cannot reuse a stale spatial index.
+  input.obstacles[2] = { x: 0, y: 0, width: 500, height: 350 };
+  expect(allPlacementCandidates(input, { limit: 1 })).toStrictEqual(eagerCandidates(input).slice(0, 1));
+});
+
+it('indexed scoring keeps obstacle-aware routes and manual candidates identical to the public scorer', () => {
+  const input = searchFixture(5);
+  input.obstacles = Array.from({ length: 35 }, (_, i) => ({ x: 180 + (i % 7) * 70, y: 80 + Math.floor(i / 7) * 60, width: 12, height: 18 }));
+  input.placement = { allowedSides: ['right'], allowedAligns: ['center'], offset: 16, crossOffset: [0] };
+  const expected = eagerCandidates(input);
+  expect(allPlacementCandidates(input, { limit: 1 })).toStrictEqual(expected.slice(0, 1));
+  input.placement = { manual: { x: 120, y: 240 } };
+  const manual = allPlacementCandidates(input)[0]!;
+  // Removing only distant boxes cannot change manual geometry; both scoring
+  // contributions are independently checked against original obstacle order.
+  const area = input.obstacles.reduce((sum, box) => sum + Math.max(0, Math.min(manual.noteBox.x + manual.noteBox.width, box.x + box.width) - Math.max(manual.noteBox.x, box.x))
+    * Math.max(0, Math.min(manual.noteBox.y + manual.noteBox.height, box.y + box.height) - Math.max(manual.noteBox.y, box.y)), 0);
+  expect(manual.scoreBreakdown.obstacles).toBe(area * 4);
+});

@@ -87,3 +87,5 @@ turn these formats into a compatibility promise for consumers.
 lane. They are opt-in; existing geometry validity, default solver selection and
 quality scores remain unchanged. The report describes polylines only and records
 unmeasured curves/invalid routes explicitly. See the [core guide](core-guide.md#optional-connector-readability).
+
+The root `layoutAnnotationPins` helper and its `AnnotationPinInput`, `AnnotationPinLayout`, `AnnotationPinLayoutOptions` and `AnnotationPinPlacement` types are experimental. Bounded placement and explicit omission are not an optimal-packing guarantee.

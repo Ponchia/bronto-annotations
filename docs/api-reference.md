@@ -7,6 +7,25 @@ consumer should reach for first. See `README.md` for narrative examples,
 
 ## `@ponchia/annotations`
 
+### Small pin and direct-label targets (experimental)
+
+`layoutAnnotationPins(items, options)` accepts `AnnotationPinInput` values with
+an ID, centre point, measured width/height and optional priority. All geometry
+uses one host-selected coordinate space. `AnnotationPinLayoutOptions` supplies
+bounds, protected obstacles, clearance, a capacity limit and optional bounded
+displacement. `AnnotationPinLayout` accounts for every input in `placements` or
+`omitted` (`bounds`, `collision`, `limit`). Each `AnnotationPinPlacement` retains
+its original anchor. A displaced placement supplies a leader that the host must
+draw; default zero displacement never invents a new precise target location.
+
+Priority decides admission, while output preserves authored DOM order. Pass the
+selected target a higher priority. An impossible scene reports omitted targets;
+the host must expose them through a reader/list. This is a bounded deterministic
+search, not optimal packing, clustering, visibility detection or a thread store.
+Keep sizes in screen pixels for fixed-size controls on a zoomed surface; project
+anchors to that same space before calling. See [pin placement](pin-placement.md).
+
+
 The root import is DOM-free and has no required React, Vega, Mermaid, D2,
 React Flow, or `@ponchia/ui` dependency.
 
