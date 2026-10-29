@@ -446,7 +446,7 @@ svg rect.pa-annotation__note-box {
     --pa-annotation-border: CanvasText !important;
     --pa-annotation-ink: CanvasText !important;
     --pa-annotation-muted: CanvasText !important;
-    --pa-annotation-subject-fill: Canvas !important;
+    --pa-annotation-subject-fill: transparent !important;
   }
 
   .pa-annotation__note-box {
@@ -462,8 +462,10 @@ svg rect.pa-annotation__note-box {
     stroke: CanvasText !important;
   }
 
+  /* Subjects sit above the chart. An opaque Canvas fill would hide the data a
+     region or point marks, so forced colors keep only the CanvasText outline. */
   .pa-annotation__subject {
-    fill: Canvas !important;
+    fill: none !important;
   }
 
   .pa-annotation__title,
