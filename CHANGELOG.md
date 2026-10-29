@@ -8,10 +8,17 @@ reasonable.
 
 ## Unreleased
 
+## 0.8.0 - 2026-10-29
+
 - Preserve exact placement while reducing many-obstacle scoring and unnecessary
   endpoint-owned routing work; retain an alternating reference benchmark.
 - Add experimental `layoutAnnotationPins` with priority, bounded displacement,
   explicit leaders and omission reasons. Hosts retain visibility and state.
+- Publish with npm built from its pinned upstream source and a separately
+  locked, patched dependency graph, audited before every publish; the registry
+  npm bundle carries a high-severity `undici` advisory. Package contents and
+  provenance are unchanged.
+- Patch test-tool dependencies and clarify how to report a vulnerability.
 
 ## 0.7.0 - 2026-10-24
 
