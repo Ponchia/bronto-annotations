@@ -162,7 +162,7 @@ for (const term of [
   'npm run check',
   'npm pack --dry-run --json --ignore-scripts',
   'environment: npm-publish',
-  'npm publish --ignore-scripts --provenance --access public --tag "$dist_tag"',
+  'publish --ignore-scripts --provenance --access public --tag "$dist_tag"',
   'dist_tag=next',
   'dist_tag=latest',
   'node scripts/changelog-section.mjs "$REF_NAME"'
@@ -174,7 +174,7 @@ for (const term of [
   'workflow_dispatch:',
   'packages: write',
   'registry-url: https://npm.pkg.github.com',
-  'npm publish --tag canary --registry https://npm.pkg.github.com',
+  'publish --tag canary --registry https://npm.pkg.github.com',
   'node scripts/smoke-registry-consumer.mjs',
   'NODE_AUTH_TOKEN'
 ]) {
@@ -322,7 +322,7 @@ for (const term of [
   'make the repository public',
   'do not rename before `0.1.0`',
   '`publishConfig.access` is `public`',
-  'npm publish --ignore-scripts --provenance --access public --tag "$dist_tag"',
+  'publish --ignore-scripts --provenance --access public --tag "$dist_tag"',
   'npm Trusted Publishing',
   'README headline stays `# @ponchia/annotations`',
   'No separate hosted examples site is required before `0.1.0`'

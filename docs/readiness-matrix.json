@@ -1102,7 +1102,7 @@
             "workflow_dispatch:",
             "packages: write",
             "registry-url: https://npm.pkg.github.com",
-            "npm publish --tag canary --registry https://npm.pkg.github.com",
+            "publish --tag canary --registry https://npm.pkg.github.com",
             "node scripts/smoke-registry-consumer.mjs"
           ]
         },
@@ -1483,7 +1483,7 @@
             "Verify tag commit is on main",
             "Verify tag matches package.json version",
             "npm pack --dry-run --json --ignore-scripts",
-            "npm publish --ignore-scripts --provenance --access public --tag \"$dist_tag\"",
+            "publish --ignore-scripts --provenance --access public --tag \"$dist_tag\"",
             "environment: npm-publish"
           ]
         },
@@ -1492,7 +1492,7 @@
           "terms": [
             "packages: write",
             "registry-url: https://npm.pkg.github.com",
-            "npm publish --tag canary --registry https://npm.pkg.github.com",
+            "publish --tag canary --registry https://npm.pkg.github.com",
             "node scripts/smoke-registry-consumer.mjs"
           ]
         },
@@ -1550,7 +1550,7 @@
             "GitHub owner: `Ponchia`",
             "Repository for `0.1.x`: `Ponchia/bronto-annotations`",
             "`publishConfig.access` is `public`",
-            "npm publish --ignore-scripts --provenance --access public --tag \"$dist_tag\"",
+            "publish --ignore-scripts --provenance --access public --tag \"$dist_tag\"",
             "README headline stays `# @ponchia/annotations`",
             "No separate hosted examples site is required before `0.1.0`"
           ]
@@ -1560,7 +1560,7 @@
           "terms": [
             "Repository readiness verified",
             "package-lock root version must match package.json",
-            "npm publish --ignore-scripts --provenance --access public --tag \"$dist_tag\"",
+            "publish --ignore-scripts --provenance --access public --tag \"$dist_tag\"",
             "CodeQL",
             "Dependency Review",
             "OpenSSF Scorecard",

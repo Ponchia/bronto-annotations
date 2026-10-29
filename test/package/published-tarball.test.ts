@@ -92,7 +92,8 @@ describe('real npm tarball byte verification', () => {
     expect(workflow).toContain('archive_verified=false');
     expect(workflow).toContain('Public npm archive was downloaded');
     expect(workflow).toContain('Do not republish the immutable version');
-    expect(workflow.match(/npm publish --ignore-scripts/g)).toHaveLength(1);
+    expect(workflow.match(/npm-cli\.js" publish --ignore-scripts/g)).toHaveLength(1);
+    expect(workflow).not.toMatch(/\bnpm publish --/);
   });
 });
 
