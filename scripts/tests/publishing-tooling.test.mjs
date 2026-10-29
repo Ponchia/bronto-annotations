@@ -157,8 +157,13 @@ test('every write job waits for the read-only tooling audit; canary publisher st
     assert.match(job, /needs:.*\bpublishing-tooling\b/);
     assert.ok(!job.includes('continue-on-error: true\n    steps:'));
     assert.match(text, /uses: \.\/\.github\/workflows\/publishing-tooling.yml/);
-    assert.ok(job.includes(`npm@${candidate.version}`));
-    assert.ok(job.includes('--ignore-scripts'));
+    // A bare npm version argument would allow unaudited global installation.
+    // Every publisher must execute the CLI from the audited, integrity-locked tree.
+    assert.ok(job.includes('npm ci --prefix "$tooling" --ignore-scripts --no-audit --no-fund'));
+    assert.ok(job.includes('test "$(command -v npm)" = "$tooling/node_modules/.bin/npm"'));
+    assert.ok(job.includes('test "$(realpath "$(command -v npm)")" = "$(realpath "$tooling/node_modules/npm/bin/npm-cli.js")"'));
+    assert.ok(job.includes(`test "$(npm --version)" = "${candidate.version}"`));
+    assert.ok(!job.includes('npm install --global'));
     assert.ok(job.includes('package-manager-cache: false'));
     if (file === 'canary.yml') assert.ok(!job.includes('actions/checkout@'));
   }

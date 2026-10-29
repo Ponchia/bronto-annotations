@@ -147,9 +147,18 @@ jobs:
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
-      - name: Install npm with OIDC publish support
-        # Keep OIDC publishing on the reviewed npm version for Node 22.
-        run: npm install --global --ignore-scripts npm@11.21.1
+      - name: Install integrity-locked npm with OIDC publish support
+        # The private tooling lock fixes the reviewed CLI and bundled bytes.
+        run: |
+          set -euo pipefail
+          tooling="${GITHUB_WORKSPACE}/.github/tooling/npm"
+          npm ci --prefix "$tooling" --ignore-scripts --no-audit --no-fund
+          export PATH="$tooling/node_modules/.bin:$PATH"
+          hash -r
+          test "$(command -v npm)" = "$tooling/node_modules/.bin/npm"
+          test "$(realpath "$(command -v npm)")" = "$(realpath "$tooling/node_modules/npm/bin/npm-cli.js")"
+          test "$(npm --version)" = "11.21.1"
+          printf '%s\n' "$tooling/node_modules/.bin" >> "$GITHUB_PATH"
 
       - name: Install
         run: npm ci --ignore-scripts

@@ -109,11 +109,15 @@ or silently suppress an advisory to make the audit green.
 
 ## Lockfile and publishing safeguards
 
-Dependency Audit checks the entire committed npm lockfile daily, when it changes
-on `main`, and on manual dispatch. It includes development tools, preserves all
-advisory severities in an artifact, and fails on high/critical advisories or an
-audit service error. It does not install dependency code. A failed update job or
-an empty Dependabot PR queue is not evidence that the lockfile is safe.
+Dependency Audit checks both complete committed npm lockfiles daily, when either
+changes on `main`, and on manual dispatch: the root development graph and the
+isolated CLI graph under `.github/tooling/npm`. It preserves both JSON reports,
+including all severities and registry errors, even if one audit fails. High or
+critical advisories, CLI failures, malformed responses and audit service errors
+fail the job. Auditing does not install the root project's dependencies; only
+the integrity-locked CLI is installed, with its lifecycle scripts disabled.
+A failed update job or an empty Dependabot PR queue is not evidence that a
+lockfile is safe.
 
 All external workflow actions use full reviewed commit SHAs. The existing
 security gate validates every executable `uses` entry, including nested action
@@ -123,8 +127,15 @@ job publishes the verified archive only from this repository's main branch,
 with lifecycle scripts disabled, followed by a read-only registry smoke.
 
 Node 22 execution jobs resolve the latest available patch with `check-latest`.
-Privileged npm commands use npm 11.21.1, as does the existing isolated Node 22
-next-test-runner lane. Normal CI keeps its bundled npm, including the full Node
+Publishing, recovery signature verification and Dependency Audit install npm
+11.21.1 from the private integrity-bearing tooling lock with lifecycle scripts
+and restored caches disabled, then verify the selected CLI path and version.
+The canary publisher has no source checkout: its two-file tooling artifact is
+bound to the same run and version, checked against hashes committed in the
+workflow, and rejected if it contains additional files or symlinks. See
+[the tooling notes](https://github.com/Ponchia/bronto-annotations/blob/main/.github/tooling/README.md) for update and audit steps.
+The existing isolated Node 22 next-test-runner lane also uses npm 11.21.1.
+Normal CI keeps its bundled npm, including the full Node
 20 verification lane. The published engine range stays intact.
 `@axe-core/playwright` 4.14 requires Node 22.12; its routine updates are deferred
 at 4.13 until the support decision in issue #66. This is a tooling compatibility
