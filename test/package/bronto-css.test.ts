@@ -65,6 +65,15 @@ describe('Bronto CSS bridge', () => {
     expect(css).toContain('uiAnnotationPulse');
   });
 
+  it('never paints an opaque forced-colors subject over the chart it marks', () => {
+    const block = /@media \(forced-colors: active\) \{\n  \.pa-annotation \{.*?\n\}\n/s.exec(css)?.[0];
+    expect(block).toBeDefined();
+    expect(block).toMatch(/--pa-annotation-subject-fill: transparent !important;/);
+    expect(block).toMatch(/\.pa-annotation__subject \{\s*fill: none !important;\s*\}/);
+    expect(block).toMatch(/\.pa-annotation__subject \{\s*stroke: CanvasText !important;\s*\}/);
+    expect(block).not.toMatch(/\.pa-annotation__subject \{\s*fill: Canvas/);
+  });
+
   it('keeps annotation overlays passive while edit handles remain interactive', () => {
     expect(css).toContain('.pa-annotation-layer-wrap');
     expect(css).toContain('.pa-annotation-layer');

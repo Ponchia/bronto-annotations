@@ -1492,7 +1492,9 @@ async function verifyForcedColors(page, label) {
     && forced.borderVar === 'CanvasText'
     && (visible(forced.noteFill) || visible(forced.noteBackground))
     && visible(forced.connectorStroke)
-    && (visible(forced.subjectStroke) || visible(forced.subjectFill))
+    && visible(forced.subjectStroke)
+    // An opaque subject would hide the chart data it marks.
+    && !visible(forced.subjectFill)
     && (visible(forced.titleFill) || visible(forced.titleColor));
 
   if (!ok) {
