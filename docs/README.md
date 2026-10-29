@@ -5,9 +5,9 @@
 
 ## Start here
 
-This branch targets development after the 0.8.0 release. Users upgrading from 0.6 should read the
+This branch targets development after the 0.8.1 release. Users upgrading from 0.6 should read the
 [0.7 migration guide](migration-0.7.md) and [release readiness](release-readiness.md);
-0.8 only adds to the 0.7 API. The [0.8.0 guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.8.0/docs/README.md)
+0.8 only adds to the 0.7 API. The [0.8.1 guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.8.1/docs/README.md)
 is the version-matched entry for the confirmed stable npm release.
 
 
