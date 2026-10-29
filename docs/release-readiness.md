@@ -1,26 +1,29 @@
-# 0.7 release readiness
+# Release readiness
 
 This document separates implementation, publication, automated compatibility,
-and human usability. The 0.7 API is the stable npm release; that does not prove
+and human usability. The 0.8 API (the 0.7 API plus experimental pin layout) is
+the stable npm release; that does not prove
 every host integration.
 
 ## Choose the matching package
 
-The confirmed stable release is **0.7.0**, published under `latest` on
-October 24, 2026. Its versioned documentation is at
-[the 0.7.0 guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/README.md).
-Its actual npm tarball (**341,861 bytes**) was independently downloaded and
+The confirmed stable release is **0.8.0**, published under `latest` on
+October 29, 2026. Its versioned documentation is at
+[the 0.8.0 guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.8.0/docs/README.md).
+Its actual npm tarball (**352,041 bytes**) was independently downloaded and
 verified against registry SHA-512. A fresh consumer installed that exact version
 from the public registry and passed `scripts/smoke-registry-consumer.mjs`.
-Registry signature and provenance attestation verification passed. Package
-behavior is unchanged from **0.7.0-rc.3**, which stays on `next`; the previous
-stable line is **0.6.10** ([its guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/README.md)).
+Registry signature and provenance attestation verification passed, and the
+signed source matches the `v0.8.0` tag commit and `release.yml`. It is the first
+release published with the source-locked npm ([release runbook](release.md)).
+0.8.0 only adds to the 0.7 API; the previous stable line is **0.7.0**
+([its guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/README.md)).
 
 ```sh
-npm install @ponchia/annotations@0.7.0
+npm install @ponchia/annotations@0.8.0
 ```
 
-[Protected 0.7.0 release](https://github.com/Ponchia/bronto-annotations/actions/runs/40085949162).
+[Protected 0.8.0 release](https://github.com/Ponchia/bronto-annotations/actions/runs/40874901803).
 Earlier candidate archives stay immutable: RC1 does not contain RC2's
 oversized-note and invalid-input fixes, and RC2 does not contain RC3's Vega
 helpers.
@@ -32,7 +35,7 @@ or analytics in the notice.
 Verified archive SHA-512:
 
 ```text
-sha512-aFzPefUhK/y8hzcsqTjrbpBX9wyWGMQAQRjkIHUuzBSsYmPnNxzM9BvRR1ZUU4uJ/KPQ0ngrJB/jJlhlyIAdJA==
+sha512-R70T9q1R96sAwQOEomC72DnpLVZj5F+wI6RwgmqlxCaYuXBPlXumO/L8FbJfpnBSdvky+6/eMRhOdVsFGAjyUQ==
 ```
 
 These are package and automated integration results, not a claim of human

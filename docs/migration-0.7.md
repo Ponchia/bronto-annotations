@@ -1,11 +1,12 @@
 # Migrating to the 0.7 API
 
-The stable npm release is **0.7.0** on `latest`. Its npm tarball was retrieved
-and integrity-checked; see [release readiness](release-readiness.md) for
+This guide moves 0.6 code to the 0.7 API, which 0.8 keeps unchanged and only
+adds to. The stable npm release is **0.8.0** on `latest`. Its npm tarball was
+retrieved and integrity-checked; see [release readiness](release-readiness.md) for
 publication and consumer proof. A future source commit or tag is not evidence of registry publication.
 
 ```sh
-npm install @ponchia/annotations@0.7.0
+npm install @ponchia/annotations@0.8.0
 ```
 
 ## Why change the contract?

@@ -1,6 +1,6 @@
 # Bronto Annotations
 
-> Docs and demos track **main (`0.7.0`)**. Stable npm: **0.7.0**.
+> Docs and demos track **main (`0.8.0`)**. Stable npm: **0.8.0**.
 > [Choose your version](#install).
 
 **Explain an existing chart, diagram, or interface without rebuilding it.**
@@ -32,13 +32,14 @@ application state or persistence, or provide a design system.
 ## Install
 
 ```bash
-npm install @ponchia/annotations@0.7.0
+npm install @ponchia/annotations@0.8.0
 ```
 
-Use the [0.7.0 documentation](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/README.md)
-with this stable install. Read the [0.7 migration guide](docs/migration-0.7.md)
-before upgrading from 0.6; the [0.6.10 documentation](https://github.com/Ponchia/bronto-annotations/blob/v0.6.10/docs/README.md)
-still matches the previous stable line. This README and the website follow `main`;
+Use the [0.8.0 documentation](https://github.com/Ponchia/bronto-annotations/blob/v0.8.0/docs/README.md)
+with this stable install. 0.8 only adds to the 0.7 API, so upgrading from 0.7 needs
+no code change; the [0.7.0 documentation](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/README.md) still
+matches the previous stable line. Read the [0.7 migration guide](docs/migration-0.7.md)
+before upgrading from 0.6. This README and the website follow `main`;
 use the tagged guide when matching documentation to installed package bytes. See
 [release readiness](docs/release-readiness.md) for source-testing instructions.
 
