@@ -62,14 +62,13 @@ examples hosting decision for the `0.1.x` lane.
 
 ## Tag-Driven Public Release
 
-Publication is currently blocked by an upstream npm bundle advisory. The
-preflight installs npm 11.21.1 in a disposable prefix with scripts turned off,
-checks its SHA-512 lock entry and actual bundled manifests, then audits the
-complete graph against the public npm registry. Reports survive failed audits.
-The current bundle contains `undici@6.29.0`; the high-severity excessive
-content-encodings advisory requires 6.29.1. Do not approve around this failure.
-See [the security guide](security-automation.md#publishing-tooling-preflight)
-for the reviewed replacement prerequisite and separate library support policy.
+Publishing uses npm built from its unchanged upstream source, with a
+separately locked and patched dependency graph, because the registry npm
+bundle still ships a high-severity `undici` advisory. Every publishing job
+prepares and audits that publisher before it runs. Check it before tagging
+with `npm run publisher:readiness`. A failed audit blocks publication: do not
+approve around it. See [the security guide](security-automation.md#publishing-tooling-preflight)
+for the design, the update procedure and the separate library support policy.
 
 ```bash
 git tag vX.Y.Z
@@ -83,8 +82,9 @@ The Release workflow:
 3. Runs `npm run check`.
 4. Builds `dist` and records an `npm pack --dry-run` manifest.
 5. Pauses at the protected `npm-publish` GitHub Environment for approval.
-6. Publishes with npm provenance via
-   `npm publish --ignore-scripts --provenance --access public`.
+6. Prepares and audits the source-locked publisher, then publishes with
+   npm provenance via its
+   `npm-cli.js publish --ignore-scripts --provenance --access public`.
 7. Routes stable versions to `latest` and prereleases to `next`.
 8. Records npm registry state and creates GitHub Release notes from
    `CHANGELOG.md`.

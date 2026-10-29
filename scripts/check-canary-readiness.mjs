@@ -33,7 +33,7 @@ for (const term of [
   'registry-url: https://npm.pkg.github.com',
   "scope: '@ponchia'",
   'node scripts/prepare-github-canary.mjs',
-  'npm publish --tag canary --registry https://npm.pkg.github.com',
+  'publish --tag canary --registry https://npm.pkg.github.com',
   'node scripts/smoke-registry-consumer.mjs',
   'NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}'
 ]) {

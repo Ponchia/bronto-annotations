@@ -23,16 +23,17 @@ jobs:
           node-version: 22
           check-latest: true
           package-manager-cache: false
-      - name: Install and audit isolated publisher candidate
+      # Unchanged upstream npm source plus its separately locked, patched
+      # dependency graph (tooling/publisher). The registry npm bundle cannot
+      # take a dependency fix, so it is never installed. See
+      # docs/security-automation.md#publishing-tooling-preflight.
+      - name: Prepare and audit the source-locked publisher
         env:
           npm_config_cache: ${{ runner.temp }}/publisher-audit-cache
         run: |
           set -euo pipefail
-          tooling="${RUNNER_TEMP}/publisher-audit"
-          mkdir -p "$tooling"
-          printf '%s\n' '{"name":"publisher-audit","private":true}' > "$tooling/package.json"
-          npm install --prefix "$tooling" --ignore-scripts --no-audit --no-fund --save-exact --registry=https://registry.npmjs.org npm@11.21.1
-          node scripts/audit-publishing-tooling.mjs "$tooling" "${RUNNER_TEMP}/publisher-audit.json"
+          node scripts/source-publisher.mjs prepare "${RUNNER_TEMP}/annotations-publisher"
+          node scripts/source-publisher.mjs audit "${RUNNER_TEMP}/annotations-publisher" "${RUNNER_TEMP}/publisher-audit.json"
       - name: Retain publisher audit even on failure
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -40,6 +41,6 @@ jobs:
           name: publisher-audit-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/publisher-audit.json*
-            ${{ runner.temp }}/publisher-audit/package-lock.json
+            ${{ runner.temp }}/annotations-publisher/package-lock.json
           if-no-files-found: warn
           retention-days: 14

@@ -9,3 +9,5 @@ dist/
 *.tgz
 .DS_Store
 _site/
+/tooling/publisher/source/
+/tooling/publisher/.source-*/

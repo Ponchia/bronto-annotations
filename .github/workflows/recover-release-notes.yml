@@ -80,8 +80,11 @@ jobs:
             echo "commit=$commit"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Install npm signature verifier
-        run: npm install --global --ignore-scripts npm@11.21.1
+      - name: Prepare and audit the source-locked npm signature verifier
+        run: |
+          set -euo pipefail
+          node scripts/source-publisher.mjs prepare "${RUNNER_TEMP}/annotations-publisher"
+          node scripts/source-publisher.mjs audit "${RUNNER_TEMP}/annotations-publisher" "${RUNNER_TEMP}/publisher-audit.json"
 
       - name: Verify immutable public registry tarball bytes
         env:
@@ -117,11 +120,12 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/signature-consumer"
           cd "${RUNNER_TEMP}/signature-consumer"
           echo '{"name":"annotations-recovery-signature-check","private":true,"type":"module"}' > package.json
-          npm install --ignore-scripts --no-audit --no-fund \
+          npm_cli="${RUNNER_TEMP}/annotations-publisher/source/bin/npm-cli.js"
+          node "$npm_cli" install --ignore-scripts --no-audit --no-fund \
             "@ponchia/annotations@$RELEASE_VERSION"
           # npm audit checks cryptographic registry, publish and Sigstore
           # attestations. The helper then checks the signed source identity.
-          npm audit signatures --json --include-attestations \
+          node "$npm_cli" audit signatures --json --include-attestations \
             > "${RUNNER_TEMP}/npm-verified-attestations.json"
           cd "$GITHUB_WORKSPACE"
           node scripts/verify-published-provenance.mjs \
