@@ -8,6 +8,8 @@ reasonable.
 
 ## Unreleased
 
+## 0.8.1 - 2026-10-29
+
 - In forced-colors mode, callout subjects keep their CanvasText outline but
   are no longer filled with opaque Canvas. A region or point subject drawn
   over a chart used to hide the data it marked. The frozen legacy
