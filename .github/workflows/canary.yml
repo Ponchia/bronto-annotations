@@ -87,8 +87,24 @@ jobs:
           scope: '@ponchia'
           always-auth: true
           package-manager-cache: false
-      - name: Install supported npm
-        run: npm install --global --ignore-scripts npm@11.21.1
+      # Only the publisher's own files are checked out; no package code,
+      # manifest or lifecycle script of this repository reaches this job.
+      - name: Check out the source-locked publisher only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          path: publisher
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/source-publisher.mjs
+            /scripts/extract-publisher-source.py
+            /scripts/audit-publishing-tooling.mjs
+            /tooling/publisher/
+      - name: Prepare and audit the source-locked publisher
+        run: |
+          set -euo pipefail
+          node publisher/scripts/source-publisher.mjs prepare "${RUNNER_TEMP}/annotations-publisher"
+          node publisher/scripts/source-publisher.mjs audit "${RUNNER_TEMP}/annotations-publisher" "${RUNNER_TEMP}/publisher-audit.json"
       - name: Download verified archive from this workflow run
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
@@ -99,7 +115,7 @@ jobs:
           set -euo pipefail
           archives=(canary-package/*.tgz)
           test "${#archives[@]}" -eq 1
-          npm publish --tag canary --registry https://npm.pkg.github.com --ignore-scripts "${archives[0]}"
+          node "${RUNNER_TEMP}/annotations-publisher/source/bin/npm-cli.js" publish --tag canary --registry https://npm.pkg.github.com --ignore-scripts "${archives[0]}"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

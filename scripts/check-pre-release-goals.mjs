@@ -188,7 +188,7 @@ for (const term of [
 for (const term of [
   'workflow_dispatch:',
   'packages: write',
-  'npm publish --tag canary --registry https://npm.pkg.github.com',
+  'publish --tag canary --registry https://npm.pkg.github.com',
   'node scripts/smoke-registry-consumer.mjs'
 ]) {
   assertIncludes(canaryWorkflow, term, '.github/workflows/canary.yml');

@@ -167,12 +167,13 @@ describe('signed npm artifact release-notes recovery', () => {
     expect(workflow).toContain('contents: write');
     expect(workflow).toContain("github.repository == 'Ponchia/bronto-annotations' && github.ref == 'refs/heads/main'");
     expect(workflow).toContain('git merge-base --is-ancestor');
-    expect(workflow).toContain('npm audit signatures --json --include-attestations');
+    expect(workflow).toContain('node "$npm_cli" audit signatures --json --include-attestations');
     expect(workflow).toContain('node scripts/verify-published-provenance.mjs');
     expect(workflow).toContain('gh release view');
     expect(workflow).toContain('gh release create');
     expect(workflow).toContain('--verify-tag');
-    expect(workflow).not.toContain('npm publish --');
+    // Neither a bare npm nor the source-locked publisher CLI may publish here.
+    expect(workflow).not.toMatch(/ publish --/);
     expect(workflow).not.toContain('id-token: write');
     expect(workflow).not.toContain('secrets.NPM_TOKEN');
   });

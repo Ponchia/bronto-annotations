@@ -147,9 +147,14 @@ jobs:
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
-      - name: Install npm with OIDC publish support
-        # Keep OIDC publishing on the reviewed npm version for Node 22.
-        run: npm install --global --ignore-scripts npm@11.21.1
+      # OIDC publishing needs npm 11.5.1+. Install only the private
+      # source-publisher project from its committed integrity lock and the
+      # unchanged upstream CLI source: no global install, no lifecycle scripts.
+      - name: Prepare and audit the source-locked publisher
+        run: |
+          set -euo pipefail
+          node scripts/source-publisher.mjs prepare "${RUNNER_TEMP}/annotations-publisher"
+          node scripts/source-publisher.mjs audit "${RUNNER_TEMP}/annotations-publisher" "${RUNNER_TEMP}/publisher-audit.json"
 
       - name: Install
         run: npm ci --ignore-scripts
@@ -167,7 +172,7 @@ jobs:
             dist_tag=latest
           fi
           echo "Publishing $version to dist-tag '$dist_tag'"
-          npm publish --ignore-scripts --provenance --access public --tag "$dist_tag"
+          node "${RUNNER_TEMP}/annotations-publisher/source/bin/npm-cli.js" publish --ignore-scripts --provenance --access public --tag "$dist_tag"
 
       - name: Record npm registry state
         continue-on-error: true

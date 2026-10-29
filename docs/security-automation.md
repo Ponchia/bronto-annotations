@@ -142,42 +142,46 @@ publisher keeps its existing checkout-free archive boundary. The protected
 immutable-tag checks and publication with lifecycle scripts turned off remain
 required.
 
-The job installs the exact npm candidate into a disposable prefix with
-`--ignore-scripts`. `scripts/audit-publishing-tooling.mjs` verifies the expected
-registry URL and SHA-512 integrity, then compares every installed dependency
-manifest with the generated complete lock, including nested and scoped bundled
-packages. Symlinks, missing packages, unexpected packages and metadata-only
-version edits fail. The runner's npm audits that complete lock with development
-dependencies included; the candidate CLI is never selected or executed.
-The generated lock and raw advisory response are retained even when the audit
-fails. High/critical findings, nonzero CLI exits, invalid counts, malformed
-responses and audit-service failures block the dependent write job.
-
-The candidate is **not currently safe to publish with**. On 24 October 2026,
-all 34 stable OIDC-capable npm 11/12 archives from 11.5.1 onward were downloaded
-and checked against their registry SHA-512 metadata. The complete actual
-bundled inventories were matched against the registry advisory service; none
-was free of high findings. Releases through 11.12.1 have no bundled `undici`,
-but retain other high advisories, including
-[brace-expansion](https://github.com/advisories/GHSA-mh99-v99m-4gvg).
-Later candidates bundle `undici` 6.25.0 through 6.29.0, all within
+The publisher is npm built from source. The registry npm bundle cannot take a
+dependency fix: on 24 October 2026 every stable OIDC-capable npm 11/12 archive
+from 11.5.1 onward bundled a high finding. Latest 11.21.1 and 12.2.1 bundle
+`undici@6.29.0`, inside
 [GHSA-xjj6-f33q-929c](https://github.com/advisories/GHSA-xjj6-f33q-929c)'s
-`>=6.23.0 <6.29.1` affected range. Latest npm 11.21.1 and 12.2.1 both
-bundle `undici@6.29.0` and `ip-address@10.7.2`. The former also has the moderate
-[EventSource advisory](https://github.com/advisories/GHSA-4qv8-2p9j-2685);
-the latter requires ip-address 10.7.4 for
+`>=6.23.0 <6.29.1` range, and `ip-address@10.7.2`, which needs 10.7.4 for
 [the address parser advisory](https://github.com/advisories/GHSA-rxp7-6hxx-x8q5).
 
-Resume publication only after an official npm distribution fixes the actual
-bundle and passes the complete audit. The reviewed fixed `undici` releases are
-6.29.1, 7.30.1 and 8.12.2; replacing that package alone is insufficient if
-other high findings remain. Update the exact install version in all workflows
-and the candidate version, URL, and SHA-512 together, then run the offline
-regressions, live audit and full CI. Do not repack npm, edit bundled version
-metadata, waive advisories or weaken the gate. The separate integrity-lock
-proposal in [PR #185](https://github.com/Ponchia/bronto-annotations/pull/185)
-remains blocked; this guard introduces no vulnerable tooling lock into main.
-The library's Node 20 support remains separate from the publishing runtime.
+`scripts/source-publisher.mjs` (shared with `@ponchia/ui`) therefore does not
+install the registry bundle. `prepare` downloads the unchanged npm 11.21.1
+source archive pinned by commit, byte count and SHA-512 in
+`tooling/publisher/source.json`. `scripts/extract-publisher-source.py` extracts
+exactly the listed files and refuses links or anything unexpected. It installs
+the CLI's production dependencies with lifecycle scripts off, from the
+separately committed `tooling/publisher/package-lock.json`, which overrides
+only `undici` 6.29.1 and `ip-address` 10.7.4. `audit` checks each installed
+manifest against that lock and audits the complete graph, development
+dependencies included, through `scripts/audit-publishing-tooling.mjs`. Nothing
+is repacked, no bundled metadata is edited, and no advisory is waived. On
+29 October 2026 the audit reported zero findings of any severity across 147
+packages.
+
+The read-only preflight, the npm publisher, the canary publisher and
+release-notes recovery all prepare and audit this publisher in
+`$RUNNER_TEMP/annotations-publisher`, then run its `source/bin/npm-cli.js`.
+None installs npm globally. The canary publisher still runs no package code:
+a non-cone sparse checkout brings in the four publisher paths and nothing
+else. Retained reports include the prefix's `package-lock.json` and the raw
+audit even when the audit fails. High/critical findings, nonzero CLI exits,
+invalid counts, malformed responses and audit-service failures block the
+dependent write job.
+
+To update the publisher, change `source.json` (commit, URL, byte count,
+SHA-512, file inventory) and the publisher lock together, then run
+`npm run publisher:readiness` and full CI. Keep `scripts/source-publisher.mjs`,
+`scripts/extract-publisher-source.py` and `tooling/publisher/` in step with
+`@ponchia/ui`. The library's Node 20 support remains separate from the
+publishing runtime. The integrity-locked registry-bundle proposal in
+[PR #185](https://github.com/Ponchia/bronto-annotations/pull/185) is superseded
+for publishing.
 
 `npm run test:security-pins` includes offline failure and workflow-boundary
 regressions for this guard. Normal CI does not require a successful live audit

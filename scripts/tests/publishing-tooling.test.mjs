@@ -148,7 +148,7 @@ test('preserves the full high finding when refusing publication', async (t) => {
   assert.equal(await readFile(output, 'utf8'), raw);
 });
 
-test('every write job waits for the read-only tooling audit; canary publisher stays checkout-free', async () => {
+test('every write job waits for the read-only tooling audit and uses only the audited source publisher', async () => {
   const root = new URL('../../', import.meta.url);
   const read = (file) => readFile(new URL(file, root), 'utf8');
   for (const [file, id] of [['release.yml', 'publish-npm'], ['canary.yml', 'publish'], ['recover-release-notes.yml', 'recover-notes']]) {
@@ -157,10 +157,25 @@ test('every write job waits for the read-only tooling audit; canary publisher st
     assert.match(job, /needs:.*\bpublishing-tooling\b/);
     assert.ok(!job.includes('continue-on-error: true\n    steps:'));
     assert.match(text, /uses: \.\/\.github\/workflows\/publishing-tooling.yml/);
-    assert.ok(job.includes(`npm@${candidate.version}`));
+    // The registry npm bundle cannot take a dependency fix; never install it.
+    assert.ok(!job.includes('npm install --global'));
+    assert.ok(job.includes('source-publisher.mjs prepare "${RUNNER_TEMP}/annotations-publisher"'));
+    assert.ok(job.includes('source-publisher.mjs audit "${RUNNER_TEMP}/annotations-publisher"'));
     assert.ok(job.includes('--ignore-scripts'));
     assert.ok(job.includes('package-manager-cache: false'));
-    if (file === 'canary.yml') assert.ok(!job.includes('actions/checkout@'));
+    if (file === 'canary.yml') {
+      // Still no package code: a sparse, non-cone checkout of the publisher files only.
+      const checkouts = job.split('actions/checkout@').length - 1;
+      assert.equal(checkouts, 1);
+      const sparse = job.split('sparse-checkout: |\n')[1].split(/\n {6}- /)[0].trim().split(/\s+/);
+      assert.deepEqual(sparse, [
+        '/scripts/source-publisher.mjs',
+        '/scripts/extract-publisher-source.py',
+        '/scripts/audit-publishing-tooling.mjs',
+        '/tooling/publisher/'
+      ]);
+      assert.ok(job.includes('sparse-checkout-cone-mode: false'));
+    }
   }
   const workflow = await read('.github/workflows/publishing-tooling.yml');
   assert.match(workflow, /permissions:\n  contents: read/);
@@ -168,7 +183,8 @@ test('every write job waits for the read-only tooling audit; canary publisher st
   assert.ok(!workflow.includes('secrets.'));
   assert.ok(!workflow.includes('continue-on-error'));
   assert.ok(workflow.includes('if: always()'));
-  assert.ok(workflow.includes(`--registry=https://registry.npmjs.org npm@${candidate.version}`));
+  assert.ok(!workflow.includes(`npm@${candidate.version}`));
   assert.ok(workflow.includes('package-manager-cache: false'));
-  assert.ok(workflow.includes('node scripts/audit-publishing-tooling.mjs'));
+  assert.ok(workflow.includes('node scripts/source-publisher.mjs prepare "${RUNNER_TEMP}/annotations-publisher"'));
+  assert.ok(workflow.includes('node scripts/source-publisher.mjs audit "${RUNNER_TEMP}/annotations-publisher"'));
 });
