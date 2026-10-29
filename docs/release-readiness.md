@@ -7,23 +7,24 @@ every host integration.
 
 ## Choose the matching package
 
-The confirmed stable release is **0.8.0**, published under `latest` on
+The confirmed stable release is **0.8.1**, published under `latest` on
 October 29, 2026. Its versioned documentation is at
-[the 0.8.0 guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.8.0/docs/README.md).
-Its actual npm tarball (**352,041 bytes**) was independently downloaded and
+[the 0.8.1 guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.8.1/docs/README.md).
+Its actual npm tarball (**352,202 bytes**) was independently downloaded and
 verified against registry SHA-512. A fresh consumer installed that exact version
 from the public registry and passed `scripts/smoke-registry-consumer.mjs`.
 Registry signature and provenance attestation verification passed, and the
-signed source matches the `v0.8.0` tag commit and `release.yml`. It is the first
-release published with the source-locked npm ([release runbook](release.md)).
-0.8.0 only adds to the 0.7 API; the previous stable line is **0.7.0**
+signed source matches the `v0.8.1` tag commit and `release.yml`. 0.8.1 is a
+patch release: in forced-colors mode a callout subject is no longer filled with
+opaque Canvas over the chart it marks. 0.8 only adds to the 0.7 API; the
+previous stable line is **0.7.0**
 ([its guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/README.md)).
 
 ```sh
-npm install @ponchia/annotations@0.8.0
+npm install @ponchia/annotations@0.8.1
 ```
 
-[Protected 0.8.0 release](https://github.com/Ponchia/bronto-annotations/actions/runs/40874901803).
+[Protected 0.8.1 release](https://github.com/Ponchia/bronto-annotations/actions/runs/40943672445).
 Earlier candidate archives stay immutable: RC1 does not contain RC2's
 oversized-note and invalid-input fixes, and RC2 does not contain RC3's Vega
 helpers.

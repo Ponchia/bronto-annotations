@@ -13,11 +13,11 @@ one or two notes before adding measurements, editable state, or a Worker.
 
 | You want | Install and matching guidance |
 | --- | --- |
-| The stable release | `npm install @ponchia/annotations@0.8.0` and the [0.8.0 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.8.0/docs/getting-started.md) |
+| The stable release | `npm install @ponchia/annotations@0.8.1` and the [0.8.1 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.8.1/docs/getting-started.md) |
 | The previous stable line | `npm install @ponchia/annotations@0.7.0` and the [0.7.0 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/getting-started.md) |
 | The exact source shown here | Clone `main` and run the examples below |
 
-0.8.0 is the stable release on `latest`, and its actual npm bytes were verified.
+0.8.1 is the stable release on `latest`, and its actual npm bytes were verified.
 The standalone setup below pins it. Its first-point API also exists in this
 checkout, but newer source features may differ. Use the
 [migration guide](migration-0.7.md) when upgrading and
@@ -56,7 +56,7 @@ repository and a Node version from the [compatibility matrix](compatibility.md):
 mkdir annotation-demo
 cd annotation-demo
 npm init -y
-npm install @ponchia/annotations@0.8.0
+npm install @ponchia/annotations@0.8.1
 npm install --save-dev vite@8
 ```
 
@@ -94,7 +94,7 @@ TypeScript typecheck in your application's CI.
 In an existing TypeScript application whose bundler handles CSS imports:
 
 ```bash
-npm install @ponchia/annotations@0.8.0
+npm install @ponchia/annotations@0.8.1
 ```
 
 Put this in a browser entry point that runs after the document body exists:
@@ -149,7 +149,7 @@ Keep the same `viewBox` coordinate system and `preserveAspectRatio` as the host.
 In an existing React application, install the annotation package:
 
 ```bash
-npm install @ponchia/annotations@0.8.0
+npm install @ponchia/annotations@0.8.1
 ```
 
 React and React DOM remain peer dependencies: keep the application's existing
