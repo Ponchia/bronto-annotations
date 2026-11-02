@@ -178,6 +178,9 @@ test('every write job waits for the read-only tooling audit and uses only the au
     }
   }
   const workflow = await read('.github/workflows/publishing-tooling.yml');
+  // The read-only publisher gate must validate untrusted PRs and main,
+  // not only privileged release and manually dispatched calls.
+  assert.match(workflow, /on:\n  pull_request:\n  push:\n    branches: \[main\]\n  workflow_call:\n  workflow_dispatch:/);
   assert.match(workflow, /permissions:\n  contents: read/);
   assert.ok(!workflow.includes(': write'));
   assert.ok(!workflow.includes('secrets.'));

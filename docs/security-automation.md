@@ -135,7 +135,12 @@ support transition is decided.
 
 `publishing-tooling.yml` is a reusable read-only job required by the npm
 publisher, GitHub Packages canary publisher and signed release-notes recovery.
-It also supports manual audit-only dispatch. It has no publishing permission,
+It also runs on every pull request and protected-main push; a manual
+audit-only dispatch remains available. Protect the main branch with the
+`Audit actual publisher bundle` required check alongside the existing
+Node 20/22, Dependency Review and CodeQL gates. This prevents a publisher-only
+dependency update from being accepted with a green library CI while its source
+identity is broken. It has no publishing permission,
 registry credentials, root dependency install or restored cache. The canary
 publisher keeps its existing checkout-free archive boundary. The protected
 `npm-publish` environment, `release.yml` trusted-publisher identity, provenance,
@@ -184,8 +189,35 @@ publishing runtime. The integrity-locked registry-bundle proposal in
 for publishing.
 
 `npm run test:security-pins` includes offline failure and workflow-boundary
-regressions for this guard. Normal CI does not require a successful live audit
-of the known-vulnerable candidate; publication does.
+regressions for this guard. Normal PR and main CI now require the **actual read-only source-publisher
+audit**, while publication retains independent review, identity and provenance
+gates. The high-advisory registry bundle is still rejected.
+
+### Publisher dependency advisories — 2 November 2026
+
+GitHub reports medium-severity `glob` and `minimatch` findings in
+`tooling/publisher`. The exact upstream npm 11.21.1 source declares
+`glob@^13.0.6` and `minimatch@^10.2.5`; the inspected npm 12.2.1
+upstream source still declares those ranges. Its pinned source checks therefore
+correctly block independently bumping the direct dependencies to 14.0.2 and
+11.0.1. Do not suppress security findings, repack an unknown CLI source, edit
+the manifest without reviewed source, or bypass dependency resolution. These
+are release-tool dependencies, not shipped Annotations runtime code. A source
+upgrade requires a new verified upstream commit, byte inventory, full SHA-512
+and lock regeneration plus guarded version/pack/publish qualification.
+
+### CodeQL alert 88 triage
+
+The `js/http-to-file-access` alert identifies the source-archive file write
+in `scripts/source-publisher.mjs`. That write follows an exact expected
+codeload URL derived from the pinned commit, redirect refusal, capped size,
+a byte-count assertion, and committed SHA-512 verification. The extractor
+then verifies every allowlisted file SHA-256 and refuses traversal, symlinks,
+oversized members and unreviewed content. These controls constrain the
+network-to-file boundary; static taint analysis may not infer them. Retain
+alert 88 for independent review of policy-file trust and extraction rather
+than automatically dismissing it or claiming that runtime assertions alone
+prove comprehensive security.
 
 ## Interpreting Scorecard findings
 
