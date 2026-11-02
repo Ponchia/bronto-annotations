@@ -3,7 +3,13 @@ name: Dependency Audit
 on:
   push:
     branches: [main]
-    paths: [package.json, package-lock.json, .github/workflows/dependency-audit.yml]
+    paths:
+      - package.json
+      - package-lock.json
+      - tooling/publisher/package.json
+      - tooling/publisher/package-lock.json
+      - tooling/publisher/source.json
+      - .github/workflows/dependency-audit.yml
   schedule:
     - cron: '23 5 * * *'
   workflow_dispatch:
@@ -28,16 +34,18 @@ jobs:
         with:
           node-version: 22
           check-latest: true
-      - name: Install supported npm
-        run: npm install --global --ignore-scripts npm@11.21.1
-      # No dependency code or install hooks execute. Include dev dependencies:
-      # they are part of the build and release supply chain.
-      - name: Fail on high or critical advisories anywhere in the lockfile
+      # Use npm bundled with the reviewed Node distribution, not the globally
+      # installed registry npm CLI with independently reported advisories.
+      - name: Audit root library and development lock
         run: npm audit --package-lock-only --ignore-scripts --include=dev --audit-level=high --json > npm-audit.json
+      - name: Audit source publisher dependency lock
+        run: npm audit --prefix tooling/publisher --package-lock-only --ignore-scripts --include=dev --audit-level=high --json > publisher-npm-audit.json
       - name: Retain all advisory severities and registry errors
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: npm-audit-${{ github.run_id }}
-          path: npm-audit.json
+          path: |
+            npm-audit.json
+            publisher-npm-audit.json
           retention-days: 14
