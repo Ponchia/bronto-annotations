@@ -17,6 +17,7 @@ const ci = await read('.github/workflows/ci.yml');
 const codeql = await read('.github/workflows/codeql.yml');
 const codeqlConfig = await read('.github/codeql/codeql-config.yml');
 const dependencyReview = await read('.github/workflows/dependency-review.yml');
+const dependencyAudit = await read('.github/workflows/dependency-audit.yml');
 const scorecard = await read('.github/workflows/scorecard.yml');
 assertImmutableAction(scorecard, 'ossf/scorecard-action', '.github/workflows/scorecard.yml');
 const dependabot = await read('.github/dependabot.yml');
@@ -76,6 +77,15 @@ for (const term of [
 }
 
 assert.ok(!dependencyReview.includes('workflow_dispatch:'), 'Dependency Review should run only with pull request base/head context');
+
+for (const marker of [
+  'tooling/publisher/package-lock.json',
+  'publisher-npm-audit.json',
+  'npm audit --prefix tooling/publisher',
+  'npm audit --package-lock-only --ignore-scripts --include=dev',
+]) assertIncludes(dependencyAudit, marker, '.github/workflows/dependency-audit.yml');
+assert.ok(!dependencyAudit.includes('npm install --global'), 'Read-only audit must not install registry npm CLI globally');
+
 
 for (const [workflow, label] of [
   [ci, '.github/workflows/ci.yml'],

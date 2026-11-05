@@ -109,11 +109,20 @@ or silently suppress an advisory to make the audit green.
 
 ## Lockfile and publishing safeguards
 
-Dependency Audit checks the entire committed npm lockfile daily, when it changes
-on `main`, and on manual dispatch. It includes development tools, preserves all
-advisory severities in an artifact, and fails on high/critical advisories or an
-audit service error. It does not install dependency code. A failed update job or
-an empty Dependabot PR queue is not evidence that the lockfile is safe.
+Dependency Audit checks both the root dependency lock and the separate
+`tooling/publisher/package-lock.json` daily, on relevant `main` changes and
+on manual dispatch. Both reports preserve every advisory severity and fail on
+high/critical findings or registry errors. Scanning only the root lock omitted
+the source-locked publisher's separate dependency graph. The read-only job
+uses npm already included in the reviewed Node distribution, rather than a
+globally installed registry bundle with known advisories. Privileged publishing
+still uses the independently pinned source-locked CLI and audit gates.
+
+A 2 November 2026 read-only audit of the publisher lock under Node 22/npm 10
+found 31 moderately affected package entries and zero high/critical findings.
+These are mostly transitive consequences of the two glob/minimatch advisories,
+not 31 separate advisories. Keep the reports and blocked PRs until the audited
+upstream source has a compatible fix.
 
 All external workflow actions use full reviewed commit SHAs. The existing
 security gate validates every executable `uses` entry, including nested action
