@@ -8,6 +8,13 @@ reasonable.
 
 ## Unreleased
 
+- The release workflow now owns the npm dist-tags. A separately approved
+  `sync-dist-tags` job runs after publication, through the trusted publisher's
+  new "Allow npm dist-tag" permission and the same audited publisher. A `next`,
+  `beta`, `rc`, `alpha` or `canary` tag below `latest` is removed, so a stable
+  release clears a `next` left on an older release candidate; `latest` never
+  moves backwards. Rerunning the job reapplies the policy.
+
 ## 0.8.1 - 2026-10-29
 
 - In forced-colors mode, callout subjects keep their CanvasText outline but

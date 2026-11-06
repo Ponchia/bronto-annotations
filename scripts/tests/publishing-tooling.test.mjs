@@ -177,6 +177,27 @@ test('every write job waits for the read-only tooling audit and uses only the au
       assert.ok(job.includes('sparse-checkout-cone-mode: false'));
     }
   }
+  // The dist-tag job has OIDC but never publishes and checks out no package code.
+  const release = await read('.github/workflows/release.yml');
+  const sync = release.split('\n  sync-dist-tags:\n')[1].split(/\n  [a-z][\w-]*:\n/)[0];
+  assert.match(sync, /needs: \[publish-npm, publishing-tooling\]/);
+  assert.match(sync, /environment: npm-publish\n/);
+  assert.match(sync, /permissions:\n {6}contents: read\n {6}id-token: write\n/);
+  assert.equal(sync.split('actions/checkout@').length - 1, 1);
+  assert.deepEqual(sync.split('sparse-checkout: |\n')[1].split(/\n {6}- /)[0].trim().split(/\s+/), [
+    '/scripts/source-publisher.mjs',
+    '/scripts/extract-publisher-source.py',
+    '/scripts/audit-publishing-tooling.mjs',
+    '/tooling/publisher/',
+    '/scripts/sync-dist-tags.mjs'
+  ]);
+  assert.ok(sync.includes('sparse-checkout-cone-mode: false'));
+  assert.ok(sync.includes('package-manager-cache: false'));
+  const audit = sync.indexOf('source-publisher.mjs audit "${RUNNER_TEMP}/annotations-publisher"');
+  assert.ok(audit >= 0 && audit < sync.indexOf('sync-dist-tags.mjs --package @ponchia/annotations'), 'audit before OIDC');
+  assert.ok(sync.includes('--npm-cli "${RUNNER_TEMP}/annotations-publisher/source/bin/npm-cli.js"'));
+  assert.doesNotMatch(sync, /npm-cli\.js" publish|\bnpm (?:publish|install|ci)\b|continue-on-error|if: always\(\)|contents: write|secrets\./);
+
   const workflow = await read('.github/workflows/publishing-tooling.yml');
   // The read-only publisher gate must validate untrusted PRs and main,
   // not only privileged release and manually dispatched calls.

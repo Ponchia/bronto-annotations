@@ -88,6 +88,28 @@ The Release workflow:
 7. Routes stable versions to `latest` and prereleases to `next`.
 8. Records npm registry state and creates GitHub Release notes from
    `CHANGELOG.md`.
+9. Pauses again at `npm-publish` for the `sync-dist-tags` job, which applies the
+   [dist-tag policy](#dist-tags). It never publishes.
+
+### Dist-tags
+
+The maintainer decided on 6 November 2026 that the release workflow owns the
+dist-tags, so nobody moves them by hand. After publication, the separately
+approved `sync-dist-tags` job runs `scripts/sync-dist-tags.mjs` with the same
+audited publisher, authenticated by the trusted publisher's
+**Allow npm dist-tag** permission (`release.yml`, environment `npm-publish`).
+It applies one policy:
+
+- A prerelease channel tag (`next`, `beta`, `rc`, `alpha`, `canary`) that points
+  below `latest` is removed, so a stable release clears a `next` left on an
+  older release candidate. Other tags are never touched.
+- `latest` never moves backwards, and never to a prerelease once a stable
+  version exists. Publishing a stable version sets `latest` itself.
+
+The job waits until the registry includes the released version, refuses older
+registry state and confirms the resulting tags before it succeeds. Rerun it
+alone to reapply the policy; with nothing to change it is a no-op. `--dry-run`
+prints the plan without changing anything.
 
 Do not create the GitHub Release by hand before the workflow publishes. The
 workflow creates the GitHub Release only after npm accepts the package.

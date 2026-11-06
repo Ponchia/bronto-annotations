@@ -278,6 +278,59 @@ jobs:
             echo '::warning::npm metadata is visible but published tarball bytes are not yet installable/verified.'
           fi
 
+  # Owns the dist-tags once publication is accepted: a stable release removes a
+  # prerelease channel tag left below `latest` (for example `next` on an old
+  # release candidate), and `latest` never moves backwards or to a prerelease
+  # (scripts/sync-dist-tags.mjs). The trusted publisher allows npm dist-tag for
+  # release.yml and npm-publish. It is a separate approval so a tag failure never
+  # hides the publication; rerun this job alone to reapply the policy. It never
+  # publishes and checks out no package code.
+  sync-dist-tags:
+    name: Apply the npm dist-tag policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [publish-npm, publishing-tooling]
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out only the reviewed publisher tooling and tag policy
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/source-publisher.mjs
+            /scripts/extract-publisher-source.py
+            /scripts/audit-publishing-tooling.mjs
+            /tooling/publisher/
+            /scripts/sync-dist-tags.mjs
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          check-latest: true
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Prepare and audit the source-locked publisher
+        run: |
+          set -euo pipefail
+          node scripts/source-publisher.mjs prepare "${RUNNER_TEMP}/annotations-publisher"
+          node scripts/source-publisher.mjs audit "${RUNNER_TEMP}/annotations-publisher" "${RUNNER_TEMP}/publisher-audit.json"
+
+      - name: Apply the dist-tag policy (npm OIDC)
+        env:
+          npm_config_cache: ${{ runner.temp }}/dist-tag-cache
+        run: |
+          set -euo pipefail
+          node scripts/sync-dist-tags.mjs --package @ponchia/annotations --version "${GITHUB_REF_NAME#v}" \
+            --npm-cli "${RUNNER_TEMP}/annotations-publisher/source/bin/npm-cli.js" | tee "${RUNNER_TEMP}/dist-tags.txt"
+          { echo '## npm dist-tags'; echo '```'; cat "${RUNNER_TEMP}/dist-tags.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
   release-notes:
     name: Publish GitHub release notes
     runs-on: ubuntu-latest
