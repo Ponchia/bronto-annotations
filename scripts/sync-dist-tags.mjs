@@ -38,29 +38,35 @@ export function parseVersion(version) {
 
 export const isPrerelease = (version) => (parseVersion(version)?.pre.length ?? 0) > 0;
 
+const sign = (a, b) => (a === b ? 0 : a < b ? -1 : 1);
+
+function compareIdentifiers(p, q) {
+  const pn = /^\d+$/.test(p);
+  const qn = /^\d+$/.test(q);
+  if (pn && qn) return sign(Number(p), Number(q));
+  if (pn !== qn) return pn ? -1 : 1;
+  return sign(p, q);
+}
+
+// A version without prerelease identifiers ranks above any prerelease of it,
+// and a shorter identifier list ranks below a longer one that it prefixes.
+function comparePrerelease(x, y) {
+  if (!x.length || !y.length) return sign(y.length, x.length);
+  const common = Math.min(x.length, y.length);
+  for (let i = 0; i < common; i++) {
+    const order = compareIdentifiers(x[i], y[i]);
+    if (order) return order;
+  }
+  return sign(x.length, y.length);
+}
+
 // Semantic Versioning 2.0.0 precedence; build metadata is ignored.
 export function compareVersions(a, b) {
   const x = parseVersion(a);
   const y = parseVersion(b);
   if (!x || !y) throw Error(`Not a semantic version: ${x ? b : a}`);
-  for (let i = 0; i < 3; i++) if (x.core[i] !== y.core[i]) return x.core[i] < y.core[i] ? -1 : 1;
-  if (!x.pre.length && !y.pre.length) return 0;
-  if (!x.pre.length) return 1;
-  if (!y.pre.length) return -1;
-  for (let i = 0; ; i++) {
-    const p = x.pre[i];
-    const q = y.pre[i];
-    if (p === undefined || q === undefined) return p === q ? 0 : p === undefined ? -1 : 1;
-    const pn = /^\d+$/.test(p);
-    const qn = /^\d+$/.test(q);
-    if (pn && qn) {
-      if (Number(p) !== Number(q)) return Number(p) < Number(q) ? -1 : 1;
-    } else if (pn !== qn) {
-      return pn ? -1 : 1;
-    } else if (p !== q) {
-      return p < q ? -1 : 1;
-    }
-  }
+  const core = x.core.findIndex((part, i) => part !== y.core[i]);
+  return core >= 0 ? sign(x.core[core], y.core[core]) : comparePrerelease(x.pre, y.pre);
 }
 
 /**
@@ -123,42 +129,56 @@ function readState(npmCli, packageName) {
   return { tags: view['dist-tags'] ?? {}, versions: view.versions ?? [] };
 }
 
-async function main() {
-  const { packageName, version, npmCli, dryRun } = parseArgs(process.argv.slice(2));
-  let before;
+async function readReleasedState(npmCli, packageName, version) {
   for (let attempt = 1; ; attempt++) {
-    before = readState(npmCli, packageName);
-    if (before.versions.includes(version)) break;
-    if (attempt === ATTEMPTS) throw Error(`${packageName}@${version} is not visible in the registry yet; rerun this job`);
+    const state = readState(npmCli, packageName);
+    if (state.versions.includes(version)) return state;
+    if (attempt === ATTEMPTS)
+      throw Error(`${packageName}@${version} is not visible in the registry yet; rerun this job`);
     await pause();
   }
-  const changes = planDistTags({ ...before, released: version });
-  const lines = [`dist-tags before: ${JSON.stringify(before.tags)}`];
-  if (!changes.length) lines.push('Policy already satisfied; no dist-tag change.');
+}
+
+function expectedTags(tags, changes) {
+  const expected = { ...tags };
   for (const change of changes) {
-    lines.push(change.action === 'add' ? `+${change.tag}: ${change.version}` : `-${change.tag} (was ${change.version})`);
-    if (dryRun) continue;
-    if (change.action === 'add') npm(npmCli, ['dist-tag', 'add', `${packageName}@${change.version}`, change.tag]);
-    else npm(npmCli, ['dist-tag', 'rm', packageName, change.tag]);
+    if (change.action === 'add') expected[change.tag] = change.version;
+    else delete expected[change.tag];
   }
-  if (!dryRun && changes.length) {
-    const expected = { ...before.tags };
-    for (const change of changes) {
-      if (change.action === 'add') expected[change.tag] = change.version;
-      else delete expected[change.tag];
-    }
-    for (let attempt = 1; ; attempt++) {
-      const { tags } = readState(npmCli, packageName);
-      const settled = Object.keys({ ...expected, ...tags }).every((tag) => tags[tag] === expected[tag]);
-      if (settled) {
-        lines.push(`dist-tags after: ${JSON.stringify(tags)}`);
-        break;
-      }
-      if (attempt === ATTEMPTS) throw Error(`Registry still reports ${JSON.stringify(tags)}; expected ${JSON.stringify(expected)}`);
-      await pause();
-    }
+  return expected;
+}
+
+async function confirmTags(npmCli, packageName, expected) {
+  for (let attempt = 1; ; attempt++) {
+    const { tags } = readState(npmCli, packageName);
+    if (Object.keys({ ...expected, ...tags }).every((tag) => tags[tag] === expected[tag])) return tags;
+    if (attempt === ATTEMPTS)
+      throw Error(`Registry still reports ${JSON.stringify(tags)}; expected ${JSON.stringify(expected)}`);
+    await pause();
   }
-  if (dryRun) lines.push('Dry run: nothing changed.');
+}
+
+function applyChange(npmCli, packageName, change) {
+  if (change.action === 'add') npm(npmCli, ['dist-tag', 'add', `${packageName}@${change.version}`, change.tag]);
+  else npm(npmCli, ['dist-tag', 'rm', packageName, change.tag]);
+}
+
+const describeChange = (change) =>
+  change.action === 'add' ? `+${change.tag}: ${change.version}` : `-${change.tag} (was ${change.version})`;
+
+async function main() {
+  const { packageName, version, npmCli, dryRun } = parseArgs(process.argv.slice(2));
+  const before = await readReleasedState(npmCli, packageName, version);
+  const changes = planDistTags({ ...before, released: version });
+  const lines = [`dist-tags before: ${JSON.stringify(before.tags)}`, ...changes.map(describeChange)];
+  if (!changes.length) lines.push('Policy already satisfied; no dist-tag change.');
+  if (dryRun) {
+    lines.push('Dry run: nothing changed.');
+  } else if (changes.length) {
+    for (const change of changes) applyChange(npmCli, packageName, change);
+    const after = await confirmTags(npmCli, packageName, expectedTags(before.tags, changes));
+    lines.push(`dist-tags after: ${JSON.stringify(after)}`);
+  }
   console.log(lines.join('\n'));
 }
 
