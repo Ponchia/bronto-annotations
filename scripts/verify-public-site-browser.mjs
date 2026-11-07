@@ -7,6 +7,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { resolve } from 'node:path';
 import { verifyAuthoringDefault, openAuthoringDiagram } from './responsive-authoring-scenario.mjs';
 import { offersInstall } from './site-release.mjs';
+import { verifyPlaygroundCopy } from './verify-playground-copy.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const publication = JSON.parse(await readFile(resolve(root, '_site/release-status.json'), 'utf8'));
@@ -360,6 +361,20 @@ try {
         'Mobile chart must actually scroll horizontally without moving the whole page');
       await chart.evaluate((element) => { element.scrollLeft = 0; });
     }
+    const inspector = home.locator('#layout-inspector-details');
+    await inspector.locator('summary').click();
+    assert.equal(await home.locator('#scene-note-list > li').count(), 3);
+    assert.match(await home.locator('#layout-result-summary').innerText(), /Collision-aware: 3 notes/);
+    const noteBodyFontSize = await home.locator('#scene-note-list p').first()
+      .evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+    assert(noteBodyFontSize >= 16, 'Text alternative must be readable without magnifying the SVG');
+    await mode.selectOption('fixed');
+    assert.match(await home.locator('#layout-result-summary').innerText(), /Fixed offsets: 3 notes/);
+    assert((await home.locator('#layout-findings li').count()) > 0,
+      'Inspector must expose the actual fixed-offset conflicts');
+    assert.equal(await home.locator('#layout-findings-empty').isVisible(), false);
+    await mode.selectOption('automatic');
+    assert.equal(await inspector.getAttribute('open'), '', 'Layout updates preserve the open text alternative');
     const audit = await new AxeBuilder({ page: home })
       .withTags(wcagTags)
       .analyze();
@@ -583,6 +598,7 @@ try {
     variants++;
     await flow.context().close();
   }
+  await verifyPlaygroundCopy({ browser, siteUrl: url + '/', root });
   console.log(
     'Public browser verified: ' +
       variants +
