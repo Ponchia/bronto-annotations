@@ -6,7 +6,10 @@ import type { CSSProperties } from 'react';
 import { annotationStyleVariables } from '../core/style.js';
 import type { Annotation } from '../core/model.js';
 
-export function dataAttributes(data: Record<string, string | number | boolean | null | undefined> | undefined) {
+export function dataAttributes(
+  data: Record<string, string | number | boolean | null | undefined> | undefined,
+  reserved: readonly string[] = []
+) {
   if (!data) {
     return {};
   }
@@ -15,6 +18,7 @@ export function dataAttributes(data: Record<string, string | number | boolean | 
     Object.entries(data)
       .filter(([, value]) => value !== undefined && value !== null)
       .map(([key, value]) => [`data-${dataKey(key)}`, String(value)])
+      .filter(([name]) => !reserved.includes(name!))
   );
 }
 

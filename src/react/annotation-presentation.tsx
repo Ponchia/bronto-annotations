@@ -47,7 +47,7 @@ export const PaintedAnnotation = memo(function PaintedAnnotation({
       role="group"
       aria-label={item.annotation.note.ariaLabel ?? item.annotation.note.title ?? item.id}
       style={annotationStyle(item.annotation.style)}
-      {...dataAttributes(item.annotation.data)}
+      {...dataAttributes(item.annotation.data, ['data-annotation-id', 'data-annotation-side'])}
     >
       {renderSubject(item, prefix)}
       {renderConnector(item, prefix, markerPrefix)}
