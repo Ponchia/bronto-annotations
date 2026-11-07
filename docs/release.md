@@ -221,3 +221,12 @@ section, with an explicit unreleased-base fallback only for development notes.
 - Confirm adapter docs still point to the released version's APIs.
 - For deeper proof, run `node scripts/smoke-registry-consumer.mjs --version
   X.Y.Z --registry https://registry.npmjs.org --scope @ponchia`.
+
+### Mirror the verified package as GitHub release downloads
+
+The [verified release download guide](release-assets.md) describes the separate
+maintainer-dispatched mirror. It downloads and verifies an existing npm package,
+retains its original Sigstore provenance, and adds only missing matching assets
+to the existing GitHub Release. It never rebuilds, republishes, re-signs, changes
+a tag, or overwrites a conflicting asset. Use verification-only mode before
+approving an upload; the existing protected review and publisher audit apply.

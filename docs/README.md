@@ -59,3 +59,7 @@ Plans and roadmaps are proposals, not installation instructions.
 Update current guides with the implementation and generated/reference material
 through its owning command. Retain historical evidence and label proposals.
 When retiring a path, leave a tombstone link to its replacement.
+
+For portable downloads outside npm, see [verified release assets](release-assets.md).
+This maintainer workflow mirrors original signed package bytes; it does not publish
+a new package or replace an existing release.
