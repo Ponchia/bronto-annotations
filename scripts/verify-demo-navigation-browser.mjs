@@ -35,11 +35,6 @@ await new Promise((done) => server.listen(0, '127.0.0.1', done));
 const origin = `http://127.0.0.1:${server.address().port}`;
 let browser;
 let variants = 0;
-const runtimeLimitations = [];
-// Quality summaries may count different informational observations after a
-// header shifts the host. Compare the actual errors, not those info counts.
-const errorSignatures = (errors) => [...new Set(errors.map((message) => message.split('\n')
-  .filter((line) => !line.includes(': failed (score ')).join('\n')))].sort();
 try {
   browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ reducedMotion: 'reduce' });
@@ -59,35 +54,12 @@ try {
         assert.equal(await nav.count(), 1, path);
         assert(await nav.isVisible(), path);
         assert.equal(await nav.locator('.demo-navigation-title').innerText(), example.title);
-        // Some existing hosts reject overlapping notes at narrow widths. Do
-        // not call that a runtime pass: compare every error to the same HTML
-        // without this chrome, report it, and still test all navigation below.
-        // A new error caused by navigation fails this baseline comparison.
-        if (errors.length) {
-          const mainCount = await page.locator('main').count();
-          assert(mainCount <= 1, 'No duplicate main landmarks: ' + path);
-          const baseline = await context.newPage();
-          const baselineErrors = [];
-          baseline.on('pageerror', (error) => baselineErrors.push(error.message));
-          await baseline.setViewportSize({ width, height: 900 });
-          await baseline.route(origin + path, async (route) => {
-            const response = await route.fetch();
-            const body = (await response.text()).replace(/<nav class="demo-navigation"[\s\S]*?<\/nav>/, '')
-              .replace(/<link rel="stylesheet" href="\.\.\/\.\.\/demo-navigation\.css">/, '');
-            await route.fulfill({ response, body });
-          });
-          await baseline.goto(origin + path, { waitUntil: 'networkidle' });
-          assert.equal(await baseline.locator('[data-demo-navigation]').count(), 0);
-          assert.equal(await baseline.locator('main').count(), mainCount, 'Preserve host landmarks');
-          assert.deepEqual(errorSignatures(baselineErrors), errorSignatures(errors),
-            `Runtime errors must also exist without navigation: ${path} @ ${width}`);
-          await baseline.close();
-          runtimeLimitations.push({ path, width, errors: errorSignatures(errors) });
-        } else {
-          await page.locator('main').first().waitFor({ state: 'visible' });
-          assert.deepEqual(errors, [], `Demo runtime: ${path} @ ${width}`);
-          assert.equal(await page.locator('main').count(), 1, 'Preserve a single app main: ' + path);
-        }
+        // Every compiled demo must render successfully, including 320px.
+        // Comparing with a failing baseline must never turn a boot error into a pass.
+        assert.deepEqual(errors, [], `Demo runtime: ${path} @ ${width}`);
+        await page.locator('main').first().waitFor({ state: 'visible' });
+        assert.deepEqual(errors, [], `Demo runtime after mount: ${path} @ ${width}`);
+        assert.equal(await page.locator('main').count(), 1, 'Preserve a single app main: ' + path);
         assert.equal(await page.locator('link[href$="/site.css"]').count(), 0, 'No full site CSS in demo');
         const labels = await page.locator('nav').evaluateAll((nodes) => nodes.map((node) =>
           node.getAttribute('aria-label') ?? node.getAttribute('aria-labelledby')));
@@ -153,7 +125,6 @@ try {
   assert(!pack.files.some(({ path }) => /^(?:_site|site|scripts|examples|test|browser-evidence)\//.test(path)
     || path.includes('demo-navigation')), 'Navigation and its evidence stay out of the npm package');
   console.log(`Demo navigation passed: ${variants} browser variants, 12 catalog guides, keyboard destinations, accessibility and package exclusion.`);
-  console.log('Host runtime limitations (not navigation failures): ' + JSON.stringify(runtimeLimitations));
 } finally {
   await browser?.close();
   await new Promise((done) => server.close(done));

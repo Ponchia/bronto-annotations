@@ -1,6 +1,6 @@
 # Bronto Annotations
 
-> Docs and demos track **main (`0.8.1`)**. Stable npm: **0.8.1**.
+> Docs and demos track **main (`0.8.2`)**. Stable npm: **0.8.1**.
 > [Choose your version](#install).
 
 **Explain an existing chart, diagram, or interface without rebuilding it.**
