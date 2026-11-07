@@ -172,7 +172,10 @@ data attributes deliberately.
   or rendered SVG selectors, shape ids, connection ids, labels, classes, and data
   attributes. Exact and contains label matching are supported for compiled and
   rendered D2 labels. Requested rendered connection path anchors prefer the child
-  route `<path>` over the wrapper group. Compiled diagram helpers and rendered
+  route `<path>` over the wrapper group. Compiled connection results use the
+  core path anchor's half-length point for `result.point`, rather than the middle
+  route-array entry. This keeps extracted points consistent with resolved
+  annotation geometry even when route segments have unequal lengths. Compiled diagram helpers and rendered
   SVG helpers can both derive obstacle boxes for placement. Compiled and SVG
   annotations expose generated shape ids, connection ids, route endpoints, and
   whether the anchor is a shape or connection route when the host geometry
