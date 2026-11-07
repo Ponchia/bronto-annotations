@@ -11,13 +11,22 @@ selections, own chart scales, parse diagram source, or depend on `@ponchia/ui`.
 
 ## UI helper migration and package versions
 
-For a complete UI-helper migration, use a release containing the 20-test legacy
-geometry contract added for 0.7.0-rc.2. The published 0.6.10 package differs on
-oversized-note fallback placement and invalid timeline/subject handling.
-The published RC2 tarball preserves those historical expectations: all 20
-unchanged UI geometry tests passed against its verified npm bytes. Install
-`@ponchia/annotations@0.7.0-rc.2` explicitly and read the separate 0.7 API
-migration guide before upgrading an application.
+Use the confirmed stable package and its version-matched guide:
+
+```sh
+npm install @ponchia/annotations@0.8.2
+```
+
+The [0.8.2 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.8.2/docs/migration-guide.md)
+contains this migration API. Read the separate [0.7 API migration](migration-0.7.md)
+when moving from 0.6; 0.8 carries that contract forward. Current publication
+and consumer checks are recorded in [release readiness](release-readiness.md).
+
+**Historical RC2 evidence:** the 20-test legacy UI geometry contract was added
+for 0.7.0-rc.2. Its verified npm archive passed all 20 unchanged tests. The older
+0.6.10 package differs on oversized-note fallback placement and invalid
+timeline/subject handling. This evidence describes those immutable versions;
+it is not a recommendation to install the old release candidate.
 
 UI's 0.17 `analytical.css` and `report-kit.css` roll-ups still include legacy
 annotation CSS. Migrated applications should import only the UI leaves they

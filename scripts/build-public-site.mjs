@@ -52,7 +52,8 @@ const titles = {
   'upstream-consumers': 'Upstream consumer validation',
   'security-automation': 'Security and development',
   release: 'Releases and publishing',
-  'release-readiness': '0.7 release readiness',
+  'release-readiness': 'Release readiness',
+  'e2e-plan': 'Historical end-to-end verification plan',
 };
 const maintainerDocs = new Set(['security-automation', 'release']);
 const primaryDocs = Object.keys(titles).filter((name) => !maintainerDocs.has(name));
