@@ -7,6 +7,7 @@ import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
+import { verifyDemoDestination } from './verify-demo-destination.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const site = resolve(root, '_site');
@@ -85,11 +86,7 @@ try {
           assert.equal(href, origin + destinations[index], 'Catalog destination: ' + path);
           // Check every distinct link, including actual guide content and fragment.
           if (width === 320) {
-            const target = await page.request.get(href);
-            assert.equal(target.status(), 200, href);
-            const html = await target.text();
-            assert.match(html, /<h1\b/);
-            if (index === 0) assert.match(html, /id="playground"/);
+            await verifyDemoDestination(page.request, href, index === 0);
           }
           await page.keyboard.press('Tab');
         }
