@@ -498,6 +498,15 @@ Default edge anchors use measured `sourceHandle` and `targetHandle` centers when
 available. Supply `edgePoints` in `ReactFlowAnchorInput` when the host wants
 annotations to follow a custom routed edge path.
 
+Node geometry uses `internals.positionAbsolute`, then `positionAbsolute`, then
+`position`. Absolute positions are already top-left flow coordinates, including
+any parent offset; the adapter applies only the viewport pan/zoom to them.
+For `position`, it first subtracts the measured node size multiplied by
+`node.origin` (when present) or the input `nodeOrigin` (default `[0, 0]`).
+Supply resolved absolute positions for nested nodes: the adapter does not
+traverse parents. Node anchors, measured handles, default edge endpoints, and
+obstacles all use this same coordinate conversion.
+
 Boundary: the adapter does not own graph layout, React Flow interaction policy,
 application state, or persistence.
 

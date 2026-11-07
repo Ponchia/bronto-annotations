@@ -98,6 +98,7 @@ export type ReactFlowHandleBoundsLike = {
 export type ReactFlowNodeLike = {
   id: string;
   position?: Point;
+  origin?: [number, number];
   positionAbsolute?: Point;
   width?: number;
   height?: number;
@@ -397,9 +398,13 @@ export function nodeBox(
 ): Box {
   const width = node.measured?.width ?? node.width ?? 0;
   const height = node.measured?.height ?? node.height ?? 0;
-  const position = node.internals?.positionAbsolute ?? node.positionAbsolute ?? node.position ?? { x: 0, y: 0 };
-  const x = (position.x - width * nodeOrigin[0]) * viewport.zoom + viewport.x;
-  const y = (position.y - height * nodeOrigin[1]) * viewport.zoom + viewport.y;
+  // React Flow's absolute positions already include the origin adjustment
+  // and parent offset. Only public positions still need origin resolution.
+  const absolute = node.internals?.positionAbsolute ?? node.positionAbsolute;
+  const position = absolute ?? node.position ?? { x: 0, y: 0 };
+  const origin = node.origin ?? nodeOrigin;
+  const x = (position.x - (absolute ? 0 : width * origin[0])) * viewport.zoom + viewport.x;
+  const y = (position.y - (absolute ? 0 : height * origin[1])) * viewport.zoom + viewport.y;
 
   return {
     x,
