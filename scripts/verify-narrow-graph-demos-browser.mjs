@@ -131,6 +131,11 @@ export async function verifyNarrowGraphDemos(page, baseUrl, output) {
         await inspect(name, 'scrolled', width);
         if (width === 320) {
           const scroller = page.locator('.graph-scroll');
+          const help = page.locator('#graph-scroll-help');
+          check(await help.isVisible(), `${name}: horizontal exploration must have a visible hint`);
+          check(await scroller.getAttribute('aria-describedby') === 'graph-scroll-help',
+            `${name}: keyboard scroll region must expose the same instruction`);
+          check((await help.innerText()).includes('arrow keys'), `${name}: explain keyboard navigation`);
           await scroller.evaluate(element => { element.scrollLeft = 0; });
           await scroller.focus();
           await page.keyboard.press('ArrowRight');
