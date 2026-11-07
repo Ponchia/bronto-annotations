@@ -104,17 +104,19 @@ function none(value: string): boolean { return !value || value === 'none'; }
 function components(value: string): string[] {
   const result: string[] = [];
   let depth = 0, start = 0;
-  for (let index = 0; index <= value.length; index++) {
+  for (let index = 0; index < value.length; index++) {
     const character = value[index];
     if (character === '(') depth++;
     else if (character === ')') depth--;
     if (depth < 0) return [];
-    if (index === value.length || (depth === 0 && /\s/.test(character ?? ''))) {
+    if (depth === 0 && /\s/.test(character!)) {
       if (index > start) result.push(value.slice(start, index));
       start = index + 1;
     }
   }
-  return depth === 0 ? result : [];
+  if (depth !== 0) return [];
+  if (start < value.length) result.push(value.slice(start));
+  return result;
 }
 
 function identityRotation(value: string): boolean {
