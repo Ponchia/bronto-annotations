@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createServer } from 'node:http';
-import { readFile, stat, mkdir } from 'node:fs/promises';
+import { readFile, mkdir } from 'node:fs/promises';
 import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -22,9 +22,8 @@ const server = createServer(async (request, response) => {
   try {
     const path = decodeURIComponent(new URL(request.url, 'http://localhost').pathname)
       .replace(/^\/bronto-annotations\//, '/');
-    let file = resolve(site, '.' + path);
+    const file = resolve(site, '.' + path + (path.endsWith('/') ? 'index.html' : ''));
     if (file !== site && !file.startsWith(site + sep)) throw new Error('Outside site');
-    if ((await stat(file)).isDirectory()) file = resolve(file, 'index.html');
     const body = await readFile(file);
     response.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream' });
     response.end(body);
