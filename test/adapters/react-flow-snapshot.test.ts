@@ -50,6 +50,66 @@ describe('React Flow preparation route snapshot', () => {
     expect(data.edgePoints).toHaveBeenCalledTimes(2);
   });
 
+  it('accepts structural inputs whose nodes and edges are prototype getters', () => {
+    const data = input();
+    class FlowState {
+      get nodes() { return data.nodes; }
+      get edges() { return data.edges!; }
+    }
+
+    const prepared = prepareReactFlowAnnotations(new FlowState(), [spec], { assert: true, obstacles: edgeObstacles });
+
+    expect(prepared.annotations[0]?.anchor).toEqual({ type: 'path', points: route() });
+    expect(prepared.obstacles).toEqual([{ x: 100, y: 25, width: 100, height: 0 }]);
+  });
+
+  it('preserves non-enumerable viewport and node origin for node, handle and edge geometry', () => {
+    const data = input();
+    Object.defineProperties(data, {
+      viewport: { value: { x: 100, y: 100, zoom: 2 } },
+      nodeOrigin: { value: [0.5, 0.5] }
+    });
+
+    const prepared = prepareReactFlowAnnotations(data, [
+      { id: 'node-note', nodeId: 'a' }, { id: 'handle-note', handle: { nodeId: 'a' } }, spec
+    ]);
+
+    expect(prepared.validation.ok).toBe(true);
+    expect(prepared.annotations.map(({ anchor }) => anchor)).toEqual([
+      { type: 'box', box: { x: 0, y: 50, width: 200, height: 100 } },
+      { type: 'point', point: { x: 200, y: 100 } },
+      { type: 'path', points: [{ x: 200, y: 100 }, { x: 400, y: 100 }] }
+    ]);
+    expect(prepared.obstacles).toEqual([
+      { x: 0, y: 50, width: 200, height: 100 },
+      { x: 400, y: 50, width: 200, height: 100 },
+      { x: 200, y: 100, width: 200, height: 0 }
+    ]);
+  });
+
+  it('calls prototype route methods with the original input receiver and arguments', () => {
+    const data = input();
+    const callback = vi.fn(function (this: ReactFlowAnchorInput, edge, nodes) {
+      expect(this).toBe(state);
+      expect(edge).toBe(data.edges![0]);
+      expect(nodes).toBe(data.nodes);
+      return route();
+    });
+    class FlowState {
+      nodes = data.nodes;
+      edges = data.edges!;
+      edgePoints(edge: NonNullable<ReactFlowAnchorInput['edges']>[number], nodes: ReactFlowAnchorInput['nodes']) {
+        return callback.call(this, edge, nodes);
+      }
+    }
+    const state = new FlowState();
+
+    const prepared = prepareReactFlowAnnotations(state, [spec], { assert: true, obstacles: edgeObstacles });
+
+    expect(prepared.annotations[0]?.anchor).toEqual({ type: 'path', points: route() });
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
+
   it('copies route arrays and points before another callback or obstacle filter mutates them', () => {
     const data = input();
     const shared = route();

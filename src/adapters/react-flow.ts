@@ -368,14 +368,20 @@ export function prepareReactFlowAnnotations<TNode extends ReactFlowNodeLike, TEd
   // Resolve lazily by object identity: duplicate ids still select the first
   // edge for anchors, while obstacle collection can visit every edge object.
   const routes = new Map<TEdge, Point[]>();
+  // Structural inputs may expose these properties through prototype getters
+  // or non-enumerable fields, so an object spread would lose their geometry.
+  const { nodes, edges, viewport, nodeOrigin } = input;
   const snapshot: ReactFlowAnchorInput<TNode, TEdge> = {
-    ...input,
+    nodes,
+    ...(edges === undefined ? {} : { edges }),
+    ...(viewport === undefined ? {} : { viewport }),
+    ...(nodeOrigin === undefined ? {} : { nodeOrigin }),
     edgePoints: (edge, nodes) => {
       let points = routes.get(edge);
 
       if (!points) {
         const resolved = input.edgePoints?.(edge, nodes)
-          ?? edgePoints(edge, nodes, input.viewport, input.nodeOrigin);
+          ?? edgePoints(edge, nodes, viewport, nodeOrigin);
         // Cache the fallback too, and detach both the array and its points
         // before another callback can mutate a host-owned route.
         points = resolved.map(({ x, y }) => ({ x, y }));
