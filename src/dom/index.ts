@@ -7,6 +7,7 @@
  * contract; keep this note so new exports must be classified intentionally.
  */
 import {
+  anchorPoint,
   boxCenter,
   expandBox,
   isFiniteBox,
@@ -275,7 +276,7 @@ export function extractedAnchorFromElement(
   const box = boxFromElement(element, options);
   const anchor = anchorFromElement(element, options);
   const point = anchor.type === 'path'
-    ? anchor.points[Math.floor(anchor.points.length / 2)] ?? boxCenter(box)
+    ? anchorPoint(anchor)
     : boxCenter(box);
   const id = options.id ?? elementId(element) ?? options.source ?? 'anchor';
 

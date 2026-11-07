@@ -20,6 +20,7 @@ import { marked } from 'marked';
 import { JSDOM } from 'jsdom';
 import createDOMPurify from 'dompurify';
 import { injectReleaseNotice, siteReleaseStatus } from './site-release.mjs';
+import { injectDemoNavigation } from './demo-navigation.mjs';
 
 const exec = promisify(execFile);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -289,6 +290,7 @@ await copyFile(join(root, 'site/site.css'), join(out, 'site.css'));
 await copyFile(join(root, 'site/favicon.svg'), join(out, 'favicon.svg'));
 await cp(join(root, 'site/media'), join(out, 'media'), { recursive: true });
 await copyFile(join(root, 'site/docs.js'), join(out, 'docs.js'));
+await copyFile(join(root, 'scripts/demo-navigation.css'), join(out, 'demo-navigation.css'));
 
 const pages = [];
 for (const name of exampleNames) {
@@ -582,6 +584,13 @@ async function stampVersions(directory) {
   }
 }
 await stampVersions(out);
+// Add navigation last so every demo starts with the same return links, even
+// when its version notice lives inside a static main or beside a React root.
+for (const name of exampleNames) {
+  const demoPath = join(out, 'examples', name, 'index.html');
+  const demoHtml = await readFile(demoPath, 'utf8');
+  await writeFile(demoPath, injectDemoNavigation(demoHtml, exampleCatalog[name]));
+}
 await writeFile(join(out, 'release-status.json'), JSON.stringify(releaseStatus, null, 2) + '\n');
 console.log(
   'Public site built: ' +

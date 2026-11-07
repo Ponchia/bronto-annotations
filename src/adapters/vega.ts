@@ -27,13 +27,13 @@ import type {
 } from '../core/model.js';
 import {
   assertAnchorValidationReportIfRequested,
-  anchorDiagnostic,
   validationReport,
   type AnchorSpecDiagnostic,
   type AdapterAnnotationLayerInput,
   type AnchorValidationAssertInput,
   type AnchorSpecValidationReport
 } from './diagnostics.js';
+import { validateExtractedAnchor } from './geometry-validation.js';
 
 export {
   assertAnchorAlignmentReport,
@@ -347,7 +347,7 @@ export function validateVegaViewAnchors<TDatum>(
     spec.id,
     'vega-view',
     vegaViewSpecExpectation(spec),
-    () => anchorsFromVegaView(view, [spec]).length > 0
+    () => anchorsFromVegaView(view, [spec])[0]
   )));
 }
 
@@ -442,7 +442,7 @@ export function validateVegaScaleAnchors<TDatum>(
     spec.id,
     'vega-scale',
     vegaScaleSpecExpectation(spec),
-    () => anchorsFromVegaScales(view, [spec]).length > 0
+    () => anchorsFromVegaScales(view, [spec])[0]
   )));
 }
 
@@ -534,7 +534,7 @@ export function validateVegaScenegraphAnchors<TDatum>(
     spec.id,
     'vega-scenegraph',
     vegaScenegraphSpecExpectation(spec),
-    () => anchorsFromVegaScenegraph(view, [spec]).length > 0
+    () => anchorsFromVegaScenegraph(view, [spec])[0]
   )));
 }
 
@@ -607,16 +607,14 @@ export function anchorsFromVegaSvg(root: ParentNode, specs: VegaSvgAnchorSpec[])
 
 export function validateVegaSvgAnchors(root: ParentNode, specs: VegaSvgAnchorSpec[]): VegaAnchorValidationReport {
   return validationReport(specs.map((spec) => {
-    const element = findVegaSvgElement(root, spec);
     const expected = vegaSvgSpecExpectation(spec);
 
-    return anchorDiagnostic({
+    return validateExtractedAnchor({
       id: spec.id,
       source: 'vega-svg',
-      status: element ? 'found' : 'missing',
       expected,
-      ...(element ? {} : { reason: `No rendered Vega SVG element matched ${expected}.` })
-    });
+      missingReason: `No rendered Vega SVG element matched ${expected}.`
+    }, () => anchorsFromVegaSvg(root, [spec])[0]);
   }));
 }
 
@@ -898,27 +896,11 @@ function validateVegaSpec(
   id: string,
   source: string,
   expected: string,
-  resolve: () => boolean
+  resolve: () => ExtractedAnchor | undefined
 ): VegaAnchorDiagnostic {
-  try {
-    const found = resolve();
-
-    return anchorDiagnostic({
-      id,
-      source,
-      status: found ? 'found' : 'missing',
-      expected,
-      ...(found ? {} : { reason: `No ${source} anchor matched ${expected}.` })
-    });
-  } catch (error) {
-    return anchorDiagnostic({
-      id,
-      source,
-      status: 'invalid',
-      expected,
-      reason: error instanceof Error ? error.message : String(error)
-    });
-  }
+  return validateExtractedAnchor({
+    id, source, expected, missingReason: `No ${source} anchor matched ${expected}.`
+  }, resolve);
 }
 
 function vegaViewSpecExpectation<TDatum>(spec: VegaViewAnchorSpec<TDatum>): string {

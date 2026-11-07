@@ -24,7 +24,9 @@ import type {
   PlacementPreference,
   Point
 } from '../core/model.js';
+import { anchorPoint } from '../core/anchors.js';
 import { findElementByText } from './mermaid.js';
+import { validateExtractedAnchor } from './geometry-validation.js';
 import {
   assertAnchorValidationReportIfRequested,
   anchorDiagnostic,
@@ -201,13 +203,15 @@ export function anchorsFromD2Diagram(diagram: D2DiagramLike, specs: D2DiagramAnc
 
     if (connection?.route?.length) {
       const points = connection.route;
+      const anchor: Anchor = { type: 'path', points };
       const box = boxFromPoints(points);
 
       results.push({
         id: spec.id,
-        anchor: { type: 'path', points },
+        anchor,
         box,
-        point: points[Math.floor(points.length / 2)] ?? { x: box.x, y: box.y },
+        // Match the point the core uses when resolving this same path anchor.
+        point: anchorPoint(anchor),
         source: 'd2-diagram',
         d2Kind: 'connection',
         connectionId: connection.id,
@@ -230,8 +234,24 @@ export function validateD2DiagramAnchors(diagram: D2DiagramLike, specs: D2Diagra
     const shape = findD2Shape(shapes, spec);
     const connection = findD2Connection(connections, spec);
     const expected = d2DiagramSpecExpectation(spec);
-    const status = shape || connection?.route?.length ? 'found' : 'missing';
-    const reason = connection && !connection.route?.length
+    const found = Boolean(shape || connection?.route?.length);
+    // Validate the same selected geometry as extraction: a shape takes precedence
+    // over a matching connection. Do not impose a new sign policy on dimensions.
+    const box = shape
+      ? { x: shape.pos.x, y: shape.pos.y, width: shape.width, height: shape.height }
+      : connection?.route?.length ? boxFromPoints(connection.route) : undefined;
+    const point = shape && box
+      ? { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+      : connection?.route?.length ? anchorPoint({ type: 'path', points: connection.route }) : undefined;
+    const validGeometry = box && point && [
+      box.x, box.y, box.width, box.height,
+      box.x + box.width, box.y + box.height,
+      point.x, point.y
+    ].every(Number.isFinite);
+    const status = !found ? 'missing' : validGeometry ? 'found' : 'invalid';
+    const reason = status === 'invalid'
+      ? `Compiled D2 geometry matched ${expected}, but its resolved coordinates or bounds are nonfinite.`
+      : connection && !connection.route?.length
       ? `D2 connection matched ${expected}, but it has no route points.`
       : `No compiled D2 shape or connection matched ${expected}.`;
 
@@ -300,16 +320,14 @@ export function anchorsFromD2Svg(root: ParentNode, specs: D2SvgAnchorSpec[]): D2
 
 export function validateD2SvgAnchors(root: ParentNode, specs: D2SvgAnchorSpec[]): D2AnchorValidationReport {
   return validationReport(specs.map((spec) => {
-    const element = findD2SvgElement(root, spec);
     const expected = d2SvgSpecExpectation(spec);
 
-    return anchorDiagnostic({
+    return validateExtractedAnchor({
       id: spec.id,
       source: 'd2-svg',
-      status: element ? 'found' : 'missing',
       expected,
-      ...(element ? {} : { reason: `No rendered D2 SVG element matched ${expected}.` })
-    });
+      missingReason: `No rendered D2 SVG element matched ${expected}.`
+    }, () => anchorsFromD2Svg(root, [spec])[0]);
   }));
 }
 

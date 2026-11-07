@@ -22,13 +22,13 @@ import type {
 } from '../core/model.js';
 import {
   assertAnchorValidationReportIfRequested,
-  anchorDiagnostic,
   validationReport,
   type AnchorSpecDiagnostic,
   type AdapterAnnotationLayerInput,
   type AnchorValidationAssertInput,
   type AnchorSpecValidationReport
 } from './diagnostics.js';
+import { validateExtractedAnchor } from './geometry-validation.js';
 
 export {
   assertAnchorAlignmentReport,
@@ -134,16 +134,14 @@ export function anchorsFromMermaidSvg(root: ParentNode, specs: MermaidAnchorSpec
 
 export function validateMermaidSvgAnchors(root: ParentNode, specs: MermaidAnchorSpec[]): MermaidAnchorValidationReport {
   return validationReport(specs.map((spec) => {
-    const element = findMermaidElement(root, spec);
     const expected = mermaidSpecExpectation(spec);
 
-    return anchorDiagnostic({
+    return validateExtractedAnchor({
       id: spec.id,
       source: 'mermaid-svg',
-      status: element ? 'found' : 'missing',
       expected,
-      ...(element ? {} : { reason: `No rendered Mermaid SVG element matched ${expected}.` })
-    });
+      missingReason: `No rendered Mermaid SVG element matched ${expected}.`
+    }, () => anchorsFromMermaidSvg(root, [spec])[0]);
   }));
 }
 
