@@ -43,8 +43,16 @@ payload, signatures, certificate and transparency-log evidence.
 Only use an existing published tag reachable from protected `main`, whose
 `package.json` version matches the tag and whose GitHub Release already exists.
 The current source-locked publication tooling audit must pass. The workflow runs
-from `main` and uses the existing protected `npm-publish` review environment,
-even though it performs no npm mutation and requests no signing identity token.
+from `main` and uses a separate **release-assets** review environment. Before a
+job references that environment, a read-only preflight verifies it already exists,
+permits only the `main` branch, and requires the configured Ponchia maintainer's
+approval. A missing or broader policy fails closed; the workflow never creates or
+configures environments. It needs Actions read permission only for that check.
+
+The maintainer must explicitly configure this separate boundary before first use.
+The tag-only `npm-publish` environment stays unchanged. Asset mirroring performs
+no npm mutation and requests no signing identity token. The review is a real
+maintainer gate, not a claim of an independent reviewer or disabled admin bypass.
 
 First verify and inspect the plan without uploading:
 
@@ -62,7 +70,10 @@ The workflow obtains fresh registry metadata and actual archive bytes. It checks
 the SHA-512, installs the exact version into a clean consumer, and runs the
 source-locked npm signature audit with attestations. The existing identity
 verifier checks the signed package digest, repository, release workflow, tag and
-commit. Only then does `scripts/mirror-release-assets.mjs` inspect GitHub assets.
+commit. The audited publisher's patched Sigstore verifier additionally enforces
+an exact GitHub Actions issuer, the original release workflow/tag certificate
+identity, and its issuer-certified source-commit OID. Payload fields alone are
+not a signer identity policy. Only then does `scripts/mirror-release-assets.mjs` inspect GitHub assets.
 An arbitrary saved audit JSON file is not a substitute for that successful
 cryptographic audit; the script's local fixture interface assumes this boundary.
 
@@ -72,7 +83,9 @@ Every expected existing asset is downloaded and compared byte-for-byte by digest
 before any upload. A matching set is a no-op; a partial matching set can be
 completed. An asset with a matching name but different bytes, an incomplete
 upload, a moved tag, a missing release or unverifiable npm evidence fails closed.
-The script never uses an overwrite flag or deletes an existing asset.
+The script never uses an overwrite flag or deletes an existing asset. Uploads
+address the inspected numeric release ID, not a tag that could resolve to a
+replacement release between checking and writing.
 
 A lost upload response is inspected rather than blindly retried. The operation
 accepts a now-visible exact match; otherwise it fails with an unconfirmed outcome.

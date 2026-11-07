@@ -8,9 +8,10 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { verifyPublishedTarballFile } from './verify-published-tarball.mjs';
@@ -26,8 +27,39 @@ const validateIdentity = ({ tag, commit }) => {
   assert.match(commit, /^[a-f0-9]{40}$/, 'Expected a full source commit');
 };
 
+/** Exact identity policy for the ORIGINAL tag-driven release certificate. */
+export function releaseCertificatePolicy(tag, commit) {
+  validateIdentity({ tag, commit });
+  const identity = `https://github.com/${REPOSITORY}/.github/workflows/release.yml@refs/tags/${tag}`;
+  const escaped = identity.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return {
+    certificateIdentityURI: `^${escaped}$`,
+    certificateIssuer: 'https://token.actions.githubusercontent.com',
+    certificateOIDs: { '1.3.6.1.4.1.57264.1.3': commit },
+  };
+}
+
+/** Use only the separately source-locked, audited publisher prepared by CI. */
+export async function loadCertificateVerifier(npmCli) {
+  assert.ok(typeof npmCli === 'string' && isAbsolute(npmCli),
+    'Set ANNOTATIONS_PUBLISHER_NPM_CLI to the audited publisher npm-cli.js');
+  const require = createRequire(npmCli);
+  const lock = JSON.parse(await readFile(new URL('../tooling/publisher/package-lock.json', import.meta.url), 'utf8'));
+  const expected = lock.packages['node_modules/sigstore'].version;
+  const actual = require('sigstore/package.json').version;
+  assert.equal(actual, expected, 'Certificate verifier differs from the audited publisher lock');
+  // 4.1.1 fixed ignored certificateOIDs; a lower version cannot enforce SHA.
+  const [major, minor, patch] = actual.split('.').map(Number);
+  assert.ok(major > 4 || (major === 4 && (minor > 1 || (minor === 1 && patch >= 1))),
+    'Certificate verifier must enforce the source-commit OID policy');
+  const { verify } = require('sigstore');
+  // DSSE's options are the SECOND argument. Passing undefined as a second
+  // data argument would silently discard the third-argument policy.
+  return (bundle, policy) => verify(bundle, policy);
+}
+
 /** Pure preparation from previously signature-verified npm evidence. */
-export async function prepareReleaseAssets({ metadata, audit, archiveFile, tag, commit }) {
+export async function prepareReleaseAssets({ metadata, audit, archiveFile, tag, commit }, verifySignature) {
   validateIdentity({ tag, commit });
   const archive = await verifyPublishedTarballFile(metadata, archiveFile);
   const source = verifyPublishedProvenance(audit, metadata, tag, commit);
@@ -35,6 +67,10 @@ export async function prepareReleaseAssets({ metadata, audit, archiveFile, tag, 
     .attestationBundles.filter((entry) => entry.predicateType === SLSA);
   assert.equal(entries.length, 1, 'Expected one verified original SLSA bundle');
   const bundle = entries[0].bundle;
+  assert.equal(typeof verifySignature, 'function', 'A cryptographic certificate-policy verifier is required');
+  // The signed payload's repository fields are not the certificate's identity.
+  // Verify both, including the issuer-certified immutable workflow source SHA.
+  await verifySignature(bundle, releaseCertificatePolicy(tag, commit));
   assert.match(bundle.mediaType, /^application\/vnd\.dev\.sigstore\.bundle(?:\+json;version=0\.[123]|\.v0\.3\+json)$/,
     'Unsupported original Sigstore bundle format');
   assert.ok(bundle.verificationMaterial && bundle.dsseEnvelope?.signatures?.length,
@@ -150,7 +186,7 @@ export async function mirrorReleaseAssets(prepared, api, { dryRun = false } = {}
     // Recheck before each write: another verified run might have uploaded it.
     if (await inspect(asset, await api.list(release.id))) continue;
     let uploadError;
-    try { await api.upload(tag, asset); } catch (error) { uploadError = error; }
+    try { await api.upload(release.id, asset); } catch (error) { uploadError = error; }
     const now = await api.list(release.id);
     const found = await inspect(asset, now);
     if (!found) {
@@ -199,11 +235,15 @@ async function githubClient() {
       throw new Error('Release asset listing exceeds the bounded scan; no upload is safe');
     },
     download: (id) => gh(['api', `${endpoint}/releases/assets/${id}`, '-H', 'Accept: application/octet-stream'], true),
-    upload: async (tag, asset) => {
+    upload: async (releaseId, asset) => {
+      assert.ok(Number.isSafeInteger(releaseId) && releaseId > 0, 'Invalid target release ID');
       const file = join(scratch, asset.name);
       await writeFile(file, asset.bytes, { flag: 'wx', mode: 0o600 });
-      // Deliberately no --clobber, deletion, update, release creation or retry.
-      await exec('gh', ['release', 'upload', tag, file, '--repo', REPOSITORY], {
+      // The immutable numeric release ID is the one inspected above. A tag
+      // or release replacement cannot redirect this write to another release.
+      const endpoint = `https://uploads.github.com/repos/${REPOSITORY}/releases/${releaseId}/assets?name=${encodeURIComponent(asset.name)}`;
+      await exec('gh', ['api', '--method', 'POST', endpoint,
+        '-H', 'Content-Type: application/octet-stream', '--input', file], {
         timeout: 60_000, maxBuffer: 1024 * 1024,
       });
     },
@@ -219,7 +259,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const [metadataFile, archiveFile, auditFile, tag, commit] = args;
   const metadata = JSON.parse(await readFile(metadataFile, 'utf8'));
   const audit = JSON.parse(await readFile(auditFile, 'utf8'));
-  const prepared = await prepareReleaseAssets({ metadata, audit, archiveFile, tag, commit });
+  const verifySignature = await loadCertificateVerifier(process.env.ANNOTATIONS_PUBLISHER_NPM_CLI);
+  const prepared = await prepareReleaseAssets({ metadata, audit, archiveFile, tag, commit }, verifySignature);
   const api = await githubClient();
   try { console.log(JSON.stringify(await mirrorReleaseAssets(prepared, api, { dryRun }), null, 2)); }
   finally { await api.close(); }

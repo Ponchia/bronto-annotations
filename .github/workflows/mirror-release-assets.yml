@@ -27,15 +27,36 @@ jobs:
     if: github.repository == 'Ponchia/bronto-annotations' && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/publishing-tooling.yml
 
+  approval-preflight:
+    name: Verify existing protected main-only asset environment
+    if: github.repository == 'Ponchia/bronto-annotations' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - name: Refuse a missing or incompatible approval environment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-release-assets-environment.mjs
+
   mirror-assets:
     name: Verify original provenance and mirror release assets
-    needs: publishing-tooling
+    needs: [publishing-tooling, approval-preflight]
     if: github.repository == 'Ponchia/bronto-annotations' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # Reuse the existing required-maintainer-review boundary. This grants no
-    # npm access: the only write here is to this repository's release assets.
-    environment: npm-publish
+    # Separate, preflight-verified main-only required-review boundary. The
+    # existing tag-only npm-publish environment and its permissions are intact.
+    environment: release-assets
     permissions:
       contents: write
 
@@ -145,6 +166,7 @@ jobs:
           RELEASE_TAG: ${{ steps.source.outputs.tag }}
           RELEASE_COMMIT: ${{ steps.source.outputs.commit }}
           UPLOAD_ASSETS: ${{ inputs.upload }}
+          ANNOTATIONS_PUBLISHER_NPM_CLI: ${{ runner.temp }}/annotations-publisher/source/bin/npm-cli.js
         run: |
           set -euo pipefail
           args=("${RUNNER_TEMP}/confirmed-metadata.json"

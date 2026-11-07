@@ -1,11 +1,17 @@
 import { createHash } from 'node:crypto';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { afterEach, describe, expect, it } from 'vitest';
-import { prepareReleaseAssets, mirrorReleaseAssets, type PreparedReleaseAssets,
+import { prepareReleaseAssets as prepareVerifiedReleaseAssets, releaseCertificatePolicy, loadCertificateVerifier, mirrorReleaseAssets, type PreparedReleaseAssets,
   type ReleaseAsset, type ReleaseAssetApi, type ListedReleaseAsset } from '../../scripts/mirror-release-assets.mjs';
+
+import { assertReleaseAssetsEnvironment } from '../../scripts/check-release-assets-environment.mjs';
+
+// Synthetic post-audit fixtures exercise structural binding, not cryptography.
+const prepareReleaseAssets = (input: Parameters<typeof prepareVerifiedReleaseAssets>[0]) =>
+  prepareVerifiedReleaseAssets(input, async () => {});
 
 const tag = 'v1.2.3';
 const commit = 'a'.repeat(40);
@@ -245,8 +251,13 @@ describe('guarded workflow boundary', () => {
     expect(workflow).toContain('workflow_dispatch:');
     expect(workflow).not.toMatch(/^  (?:push|pull_request|pull_request_target|schedule):/m);
     expect(workflow).toContain("github.ref == 'refs/heads/main'");
-    expect(workflow).toContain('environment: npm-publish');
-    expect(workflow).toContain('needs: publishing-tooling');
+    expect(workflow).toContain('environment: release-assets');
+    expect(workflow).not.toContain('environment: npm-publish');
+    expect(workflow).toContain('needs: [publishing-tooling, approval-preflight]');
+    expect(workflow).toContain('run: node scripts/check-release-assets-environment.mjs');
+    expect(workflow).toContain('actions: read');
+    expect(workflow).toContain('ANNOTATIONS_PUBLISHER_NPM_CLI: ${{ runner.temp }}/annotations-publisher/source/bin/npm-cli.js');
+    expect(workflow).toContain('needs: [publishing-tooling, approval-preflight]');
     expect(workflow).toContain('persist-credentials: false');
     expect(workflow).toContain('git merge-base --is-ancestor');
     expect(workflow).toContain('audit signatures --json --include-attestations');
@@ -261,5 +272,111 @@ describe('guarded workflow boundary', () => {
     for (const use of workflow.matchAll(/uses:\s*([^\s#]+)/g)) {
       if (!use[1]!.startsWith('./')) expect(use[1]).toMatch(/@[a-f0-9]{40}$/);
     }
+  });
+});
+
+
+describe('expected original certificate identity before asset preparation', () => {
+  it('requires the certificate verifier instead of trusting a saved audit JSON', async () => {
+    const { input } = await fixture();
+    await expect(prepareVerifiedReleaseAssets(input,
+      undefined as unknown as Parameters<typeof prepareVerifiedReleaseAssets>[1])).rejects.toThrow(/verifier is required/);
+  });
+  it('uses exact issuer, anchored workflow/tag identity and source-commit OID', async () => {
+    const { input } = await fixture();
+    let calls = 0;
+    await prepareVerifiedReleaseAssets(input, async (bundle, policy) => {
+      calls++;
+      expect(bundle).toEqual(input.audit.verified[0]!.attestationBundles[1]!.bundle);
+      expect(policy.certificateIssuer).toBe('https://token.actions.githubusercontent.com');
+      expect(policy.certificateOIDs).toEqual({ '1.3.6.1.4.1.57264.1.3': commit });
+      const identity = `${repository}/.github/workflows/release.yml@refs/tags/${tag}`;
+      const pattern = new RegExp(policy.certificateIdentityURI);
+      expect(pattern.test(identity)).toBe(true);
+      expect(pattern.test(`${identity}-wrong`)).toBe(false);
+      expect(pattern.test(`wrong-${identity}`)).toBe(false);
+      expect(pattern.test(identity.replace('github.com', 'githubXcom'))).toBe(false);
+      expect(pattern.test(identity.replace('v1.2.3', 'v1X2X3'))).toBe(false);
+    });
+    expect(calls).toBe(1);
+  });
+  it.each(['issuer', 'workflow identity', 'source commit'])('propagates an actual verifier rejection of %s', async (field) => {
+    const { input } = await fixture();
+    await expect(prepareVerifiedReleaseAssets(input, async () => { throw new Error(`Certificate ${field} mismatch`); }))
+      .rejects.toThrow(`Certificate ${field} mismatch`);
+  });
+  it('passes DSSE identity options as the second argument, never a discarded third argument', async () => {
+    const { directory } = await fixture();
+    const module = join(directory, 'node_modules/sigstore');
+    await mkdir(module, { recursive: true });
+    const lock = JSON.parse(await readFile(new URL('../../tooling/publisher/package-lock.json', import.meta.url), 'utf8'));
+    await writeFile(join(module, 'package.json'), JSON.stringify({ name: 'sigstore', version: lock.packages['node_modules/sigstore'].version }));
+    await writeFile(join(module, 'index.js'), `exports.verify = function(bundle, options) {
+      if (arguments.length !== 2 || !options.certificateIdentityURI || !options.certificateOIDs) throw new Error('policy discarded');
+      return Promise.resolve({ options, bundle });
+    };`);
+    const verifier = await loadCertificateVerifier(join(directory, 'npm-cli.js'));
+    const policy = releaseCertificatePolicy(tag, commit);
+    expect(await verifier({ test: true }, policy)).toEqual({ bundle: { test: true }, options: policy });
+  });
+  it('rejects an absent or relative verifier path', async () => {
+    await expect(loadCertificateVerifier(undefined)).rejects.toThrow(/audited publisher/);
+    await expect(loadCertificateVerifier('./node_modules/sigstore')).rejects.toThrow(/audited publisher/);
+  });
+});
+
+describe('immutable upload target', () => {
+  it('cannot redirect an upload when a release is replaced after the last identity check', async () => {
+    const { prepared } = await preparedFixture();
+    const c = client(prepared);
+    let lists = 0;
+    const list = c.api.list;
+    c.api.list = async (id) => {
+      if (++lists === 2) c.replaceRelease();
+      return list(id);
+    };
+    const targets: number[] = [];
+    c.api.upload = async (releaseId) => { targets.push(releaseId); throw new Error('Original release no longer exists'); };
+    await expect(mirrorReleaseAssets(prepared, c.api)).rejects.toThrow(/Original release/);
+    expect(targets).toEqual([7]);
+    expect(targets).not.toContain(8);
+  });
+});
+
+const environmentFixture = () => ({
+  environment: { id: 12, name: 'release-assets', deployment_branch_policy: { custom_branch_policies: true, protected_branches: false },
+    protection_rules: [{ type: 'required_reviewers', reviewers: [{ type: 'User', reviewer: { id: 4352894, login: 'Ponchia' } }] }] },
+  branches: { total_count: 1, branch_policies: [{ name: 'main', type: 'branch' }] },
+});
+
+describe('existing main-only protected environment prerequisite', () => {
+  it('accepts the explicitly configured maintainer-reviewed main-only boundary', () => {
+    const f = environmentFixture();
+    expect(assertReleaseAssetsEnvironment(f.environment, f.branches)).toEqual({
+      environment: 'release-assets', id: 12, branch: 'main', requiredReviewer: 'Ponchia', verified: true,
+    });
+  });
+  it('refuses a missing environment, the npm publishing environment, or a tag policy', () => {
+    const f = environmentFixture();
+    expect(() => assertReleaseAssetsEnvironment(undefined, f.branches)).toThrow();
+    expect(() => assertReleaseAssetsEnvironment({ ...f.environment, name: 'npm-publish' }, f.branches)).toThrow();
+    expect(() => assertReleaseAssetsEnvironment(f.environment, { total_count: 1, branch_policies: [{ name: 'v*', type: 'tag' }] })).toThrow();
+  });
+  it('refuses broad/extra branches, wildcard main matches and missing review', () => {
+    const f = environmentFixture();
+    expect(() => assertReleaseAssetsEnvironment(f.environment, { total_count: 2, branch_policies: [...f.branches.branch_policies, { name: 'dev', type: 'branch' }] })).toThrow();
+    expect(() => assertReleaseAssetsEnvironment(f.environment, { total_count: 1, branch_policies: [{ name: 'main*', type: 'branch' }] })).toThrow();
+    expect(() => assertReleaseAssetsEnvironment({ ...f.environment, protection_rules: [] }, f.branches)).toThrow();
+    expect(() => assertReleaseAssetsEnvironment({ ...f.environment, deployment_branch_policy: { custom_branch_policies: false, protected_branches: true } }, f.branches)).toThrow();
+  });
+  it('refuses another identity, a team alias, or an alternative reviewer', () => {
+    for (const reviewer of [{ type: 'User', reviewer: { id: 1, login: 'Ponchia' } },
+      { type: 'Team', reviewer: { id: 4352894, login: 'Ponchia' } },
+      { type: 'User', reviewer: { id: 4352894, login: 'other' } }]) {
+      const f = environmentFixture(); f.environment.protection_rules[0]!.reviewers = [reviewer];
+      expect(() => assertReleaseAssetsEnvironment(f.environment, f.branches)).toThrow();
+    }
+    const f = environmentFixture(); f.environment.protection_rules[0]!.reviewers.push({ type: 'User', reviewer: { id: 1, login: 'other' } });
+    expect(() => assertReleaseAssetsEnvironment(f.environment, f.branches)).toThrow();
   });
 });
