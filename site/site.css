@@ -306,6 +306,19 @@ select:focus-visible {
 .plot-header span:last-child {
   text-align: right;
 }
+.chart-viewport {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+}
+.chart-viewport:focus-visible {
+  outline: 3px solid var(--accent-dark);
+  outline-offset: -3px;
+}
+.chart-scroll-hint {
+  display: none;
+}
 .chart-stage {
   position: relative;
   background: #fff;
@@ -408,6 +421,122 @@ select:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+}
+.scene-presets {
+  border: 0;
+  padding: 0;
+  margin: 0 0 24px;
+  min-width: 0;
+}
+.scene-presets legend {
+  font-size: 0.8rem;
+  font-weight: 720;
+  margin-bottom: 11px;
+}
+.scene-preset-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.scene-preset-options button {
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border: 1px solid #c9d3d5;
+  background: #fff;
+  color: var(--ink);
+  border-radius: 4px;
+  padding: 10px 5px;
+  min-height: 44px;
+}
+.scene-preset-options button[aria-pressed='true'] {
+  border-color: var(--accent-dark);
+  background: #e9f3f1;
+  color: #245452;
+}
+.scene-preset-options button:hover {
+  background: #f1f5f5;
+}
+.scene-presets > p {
+  font-size: 0.74rem;
+  color: #52676a;
+  line-height: 1.5;
+  margin: 10px 0 0;
+}
+.comparison-panel {
+  border-top: 1px solid #e5eaea;
+  padding: 19px 24px 23px;
+  background: #fbfcfc;
+}
+.comparison-panel .eyebrow {
+  font-size: 0.6rem;
+  margin: 0 0 7px;
+}
+.comparison-result {
+  font-weight: 700;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ink);
+  margin: 0;
+}
+.comparison-panel #comparison-method {
+  color: var(--muted);
+  font-size: 0.71rem;
+  line-height: 1.55;
+  margin: 8px 0 0;
+}
+.scene-source {
+  border: 1px solid #d8e1e1;
+  border-radius: 5px;
+  background: #fbfcfc;
+  margin-top: 22px;
+}
+.scene-source summary {
+  cursor: pointer;
+  padding: 12px 14px;
+  font-weight: 700;
+  font-size: 0.79rem;
+}
+.scene-source > p {
+  padding: 0 14px;
+  color: var(--muted);
+  font-size: 0.73rem;
+  line-height: 1.55;
+}
+.scene-source-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 14px;
+  gap: 10px;
+  font-size: 0.67rem;
+  color: var(--muted);
+}
+.scene-source-toolbar button {
+  background: #fff;
+  border: 1px solid #c9d3d5;
+  padding: 7px 10px;
+}
+.scene-source pre {
+  border-top: 1px solid #e4eaea;
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  overflow: auto;
+  max-width: 100%;
+  max-height: 320px;
+  color: #25414b;
+}
+.scene-source pre code {
+  white-space: pre;
+}
+.scene-source summary:focus-visible,
+.scene-preset-options button:focus-visible,
+.scene-source-toolbar button:focus-visible {
+  outline: 3px solid var(--accent-dark);
+  outline-offset: 3px;
 }
 .controls-panel h3 {
   font-size: clamp(1.45rem, 2vw, 1.96rem);
@@ -1046,7 +1175,7 @@ select:focus-visible {
     border-left: 0;
     border-top: 1px solid var(--line);
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 18px 26px;
   }
   .controls-panel > .eyebrow,
@@ -1058,8 +1187,11 @@ select:focus-visible {
   .controls-panel > p:not(.eyebrow) {
     margin: 0;
   }
-  .controls-panel .fine-print {
+  .controls-panel .fine-print,
+  .controls-panel > .scene-presets,
+  .controls-panel > .scene-source {
     grid-column: 1/-1;
+    min-width: 0;
   }
   .section-heading {
     align-items: start;
@@ -1153,6 +1285,16 @@ select:focus-visible {
   }
   .chart-stage {
     margin-block: 16px;
+    min-width: 760px;
+  }
+  .chart-scroll-hint {
+    display: block;
+    border-top: 1px solid #e6ebec;
+    padding: 10px 16px;
+    margin: 0;
+    color: #52676a;
+    font-size: 0.74rem;
+    line-height: 1.5;
   }
   .plot-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1169,6 +1311,9 @@ select:focus-visible {
   .controls-panel > .placement-mode-note {
     margin-top: -16px;
     margin-bottom: 12px;
+  }
+  .comparison-panel {
+    padding: 18px 16px;
   }
   .plot-metrics span {
     font-size: 0.52rem;

@@ -218,6 +218,23 @@ assert(strategyControl?.tagName === 'SELECT'
   'Published playground must expose a labeled automatic/fixed baseline comparison');
 assert(home.window.document.querySelector('#obstacle-overlap-count'),
   'Published placement comparison must report real obstacle overlap');
+assert.equal(home.window.document.querySelectorAll('[data-scene]').length, 3,
+  'Playground needs three real, keyboard-operable scenario presets');
+assert(home.window.document.querySelector('#comparison-result[role="status"]'),
+  'Playground must communicate a real cross-strategy comparison');
+assert(home.window.document.querySelector('details.scene-source #scene-source-code'),
+  'Current layout parameters must be reproducible from the playground');
+assert(home.window.document.querySelector('.chart-viewport[tabindex="0"][role="region"] .chart-stage'),
+  'Narrow screens need a keyboard-navigable chart viewport');
+assert(home.window.document.querySelector('.chart-scroll-hint'),
+  'The chart must explain horizontal navigation on small screens');
+assert(home.window.document.querySelector('.quick-links a[href="./docs/context-quickstart.html"]'),
+  'Host chooser must lead directly to its actual guide');
+const starter = home.window.document.querySelector('#starter-code')?.textContent ?? '';
+assert(starter.includes("@ponchia/annotations/bronto.css") && starter.includes("chart-annotations"),
+  'The published copyable quick start must style and mount the rendered SVG');
+assert(home.window.document.querySelector('[id="comparison-method"]')?.textContent.includes('chart coordinates'),
+  'Document geometry units rather than incorrectly labeling SVG coordinates as CSS pixels');
 for (const [path, action] of [
   ['react-incremental', 'Try the editor'],
   ['react-worker', 'Try the Worker demo'],
