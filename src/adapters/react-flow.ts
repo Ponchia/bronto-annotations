@@ -296,8 +296,7 @@ export function validateReactFlowAnchors<TNode extends ReactFlowNodeLike, TEdge 
       const resolved = resolveHandleAnchor(node, spec.handle, input.viewport, input.nodeOrigin);
       const box = resolved?.box ?? nodeBox(node, input.viewport, input.nodeOrigin);
       const point = resolved?.point ?? handlePoint(box, spec.handle.side ?? 'right');
-      const validGeometry = finiteViewport && isFiniteBox(box) && box.width >= 0 && box.height >= 0
-        && isFinitePoint(point);
+      const validGeometry = finiteViewport && isFiniteBox(box) && isFinitePoint(point);
 
       return anchorDiagnostic({
         id: spec.id,
@@ -305,7 +304,7 @@ export function validateReactFlowAnchors<TNode extends ReactFlowNodeLike, TEdge 
         status: !validGeometry ? 'invalid' : resolved ? 'found' : 'fallback',
         expected,
         ...(!validGeometry
-          ? { reason: `React Flow handle matched ${expected}, but its geometry or viewport is nonfinite or its dimensions are negative.` }
+          ? { reason: `React Flow handle matched ${expected}, but its geometry or viewport is nonfinite.` }
           : resolved ? {} : { reason: `React Flow handle matched ${expected} was not measured; the adapter will fall back to the node side midpoint.` })
       });
     }
@@ -315,7 +314,8 @@ export function validateReactFlowAnchors<TNode extends ReactFlowNodeLike, TEdge 
       const points = edge
         ? input.edgePoints?.(edge, input.nodes) ?? edgePoints(edge, input.nodes, input.viewport, input.nodeOrigin)
         : [];
-      const validGeometry = finiteViewport && points.length > 0 && points.every(isFinitePoint)
+      // Custom routes are already in overlay coordinates and do not use the viewport.
+      const validGeometry = points.length > 0 && points.every(isFinitePoint)
         && isFiniteBox(boxFromPoints(points));
 
       return anchorDiagnostic({
@@ -326,7 +326,7 @@ export function validateReactFlowAnchors<TNode extends ReactFlowNodeLike, TEdge 
         ...(!edge ? { reason: `No React Flow edge matched ${expected}.` } : {}),
         ...(edge && points.length === 0
           ? { reason: `React Flow edge matched ${expected}, but its endpoint nodes or route points were unavailable.` }
-          : edge && !validGeometry ? { reason: `React Flow edge matched ${expected}, but its route geometry or viewport is nonfinite.` } : {})
+          : edge && !validGeometry ? { reason: `React Flow edge matched ${expected}, but its route geometry is nonfinite.` } : {})
       });
     }
 

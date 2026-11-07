@@ -71,11 +71,14 @@ describe('React Flow finite geometry validation', () => {
       expectInvalid(data, [edgeSpec]);
     });
 
-    it.each(['x', 'y', 'zoom'] as const)('rejects viewport %s even with a custom route', (field) => {
+    it.each(['x', 'y', 'zoom'] as const)('rejects viewport %s only for geometry derived from it', (field) => {
       const data = input();
       data.viewport = { x: 0, y: 0, zoom: 1, [field]: value };
       expectInvalid(data, [nodeSpec, handleSpec, edgeSpec]);
       data.edgePoints = () => [{ x: 0, y: 0 }];
+      expect(validateReactFlowAnchors(data, [edgeSpec]).ok).toBe(true);
+      expect(prepareReactFlowAnnotations(data, [edgeSpec], { assert: true, obstacles: false }).validation.ok).toBe(true);
+      data.edgePoints = () => undefined;
       expectInvalid(data, [edgeSpec]);
     });
 
@@ -121,10 +124,10 @@ describe('React Flow finite geometry validation', () => {
     expectInvalid(data, [nodeSpec]);
   });
 
-  it('rejects negative measured handle dimensions', () => {
+  it('preserves the existing policy for finite negative handle dimensions', () => {
     const data = input();
     data.nodes[0]!.handles![0]!.width = -1;
-    expectInvalid(data, [handleSpec]);
+    expect(validateReactFlowAnchors(data, [handleSpec]).ok).toBe(true);
   });
 
   it('keeps missing targets missing despite nonfinite viewport input', () => {
