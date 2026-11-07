@@ -7,7 +7,53 @@ every host integration.
 
 ## Choose the matching package
 
-The confirmed stable release is **0.8.2**, published under `latest` on
+The confirmed stable release is **0.8.3**. Install its verified npm archive:
+
+```bash
+npm install @ponchia/annotations@0.8.3
+```
+
+Use the [0.8.3 guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.8.3/docs/README.md)
+for the immutable source matching those package bytes. The
+[release run](https://github.com/Ponchia/bronto-annotations/actions/runs/42401260630)
+published the package from `v0.8.3` at
+`b7c65bedb20ed517eb6f2168be1fcce7e89b2dcd`. On November 7, 2026:
+
+- The official **363,251-byte** archive matched its registry SHA-512:
+  `sha512-qk4uhVBf4y6RCSAykMZP3rAsJkbSJE2CrocPBXFKnvu0pN6jvrET/2S4vC05bmre4ZEKp7BpG4C1cheST4rAGA==`.
+- Independent fresh-cache registry consumers passed the DOM-free root, SVG/CSS,
+  original-obstacle quality, single-call copied-route, structural host-input and
+  path-midpoint checks without installing optional peers.
+- npm verified the package signatures and both publication/provenance
+  attestations. The [canonical asset verification run](https://github.com/Ponchia/bronto-annotations/actions/runs/42402503593)
+  additionally enforced the original certificate identity, issuer and source
+  commit policy before producing its dry-run plan.
+
+The new release does not claim arbitrary-precision geometry or a transaction
+across all mutable host state. [Placement quality](placement-quality.md) and
+[adapter guidance](adapter-guide.md) state the supported validation and snapshot
+boundaries. Physical-input/screen-reader and independent human-consumer
+acceptance remain separate from automated checks.
+
+The old preview channel is still a distinct
+[permission decision](https://github.com/Ponchia/bronto-annotations/issues/231).
+The successful immutable publication and `latest=0.8.3` do not depend on running
+that denied cleanup. Do not republish the package to repair channel tags.
+
+0.8 adds to the 0.7 API. The previous stable minor line is **0.7.0**
+([its guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/README.md)).
+Public pages read their build version from `package.json` and confirmed registry
+versions from `site/release-status.json`. The notice appears on every guide and
+directly linked example, without a runtime registry request or analytics.
+
+Before publication, build and pack a clean checkout, then install its tarball
+in a separate disposable consumer. After the protected release and actual
+registry bytes are verified, install that exact version. Candidates use `next`
+and stable releases use `latest`; follow [the release runbook](release.md).
+
+## Historical 0.8.2 publication evidence
+
+The earlier stable release **0.8.2** was published under `latest` on
 November 7, 2026. Use the [0.8.2 guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.8.2/docs/README.md)
 with this install:
 
@@ -39,17 +85,6 @@ published the package. Its separate stale-channel cleanup was denied permission;
 [issue #231](https://github.com/Ponchia/bronto-annotations/issues/231) tracks that
 operation. The stable package is available; a stale `next` tag is not a
 recommendation to use an older candidate. Do not republish 0.8.2 to fix cleanup.
-
-0.8 adds to the 0.7 API. The previous stable minor line is **0.7.0**
-([its guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/README.md)).
-Public pages read their build version from `package.json` and confirmed registry
-versions from `site/release-status.json`. The notice appears on every guide and
-directly linked example, without a runtime registry request or analytics.
-
-Before publication, build and pack a clean checkout, then install its tarball
-in a separate disposable consumer. After the protected release and actual
-registry bytes are verified, install that exact version. Candidates use `next`
-and stable releases use `latest`; follow [the release runbook](release.md).
 
 ## Historical 0.8.1 publication evidence
 

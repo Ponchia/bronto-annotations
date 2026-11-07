@@ -14,10 +14,10 @@ selections, own chart scales, parse diagram source, or depend on `@ponchia/ui`.
 Use the confirmed stable package and its version-matched guide:
 
 ```sh
-npm install @ponchia/annotations@0.8.2
+npm install @ponchia/annotations@0.8.3
 ```
 
-The [0.8.2 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.8.2/docs/migration-guide.md)
+The [0.8.3 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.8.3/docs/migration-guide.md)
 contains this migration API. Read the separate [0.7 API migration](migration-0.7.md)
 when moving from 0.6; 0.8 carries that contract forward. Current publication
 and consumer checks are recorded in [release readiness](release-readiness.md).
