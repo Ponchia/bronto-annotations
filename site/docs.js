@@ -1,10 +1,11 @@
 const search = document.querySelector('#docs-filter');
 const cards = [...document.querySelectorAll('[data-doc-card]')];
 const groups = [...document.querySelectorAll('[data-doc-group]')];
-const empty = document.querySelector('#docs-filter-empty');
+const status = document.querySelector('#docs-filter-status');
 
 function filterGuides() {
-  const words = search.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const query = search.value.trim();
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   let visible = 0;
   for (const card of cards) {
     const match = words.every((word) => card.dataset.search.includes(word));
@@ -14,7 +15,16 @@ function filterGuides() {
   for (const group of groups) {
     group.hidden = ![...group.querySelectorAll('[data-doc-card]')].some((card) => !card.hidden);
   }
-  if (empty) empty.classList.toggle('visible', visible === 0);
+  if (status) {
+    const message = !query
+      ? `Showing all ${visible} guides.`
+      : visible === 0
+        ? `No guides match “${query}”. Try another title or topic, or clear the search.`
+        : `${visible} ${visible === 1 ? 'guide matches' : 'guides match'} “${query}”.`;
+    // Keep the live region mounted and change its text, including when two
+    // different queries have the same result count. Never interpret query HTML.
+    if (status.textContent !== message) status.textContent = message;
+  }
 }
 
 if (search) {

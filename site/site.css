@@ -1252,12 +1252,9 @@ select:focus-visible {
   font-size: 0.83rem;
   font-weight: 700;
 }
-.docs-filter-empty {
-  display: none;
+.docs-filter-status {
   color: var(--muted);
-}
-.docs-filter-empty.visible {
-  display: block;
+  overflow-wrap: anywhere;
 }
 @media (max-width: 900px) {
   .container,
