@@ -86,8 +86,17 @@ export async function verifyPlaygroundSharing(home) {
   } finally {
     await restored.close();
   }
+  await home.bringToFront();
   await home.locator('.scene-share input').focus();
   await home.locator('#annotation-controls > button[type="reset"]').click();
-  await home.waitForFunction(() => document.querySelector('#notes-count')?.value === '3');
+  // Native input values reset before the scheduled animation-frame render.
+  // Wait for the actual output instead of racing it with the restored control.
+  await home.waitForFunction((expected) => {
+    const overlay = document.querySelector('#annotation-overlay');
+    return overlay?.dataset.mode === 'automatic'
+      && overlay.dataset.route === 'orthogonal'
+      && overlay.dataset.score === expected.score
+      && document.querySelector('#scene-source-code')?.textContent === expected.source;
+  }, before, { timeout: 10000 });
   assert.deepEqual(await read(home), before, 'Reset must restore the scene and copied source after sharing');
 }
