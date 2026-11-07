@@ -1,8 +1,5 @@
 # Bronto Annotations
 
-> Docs and demos track **main (`0.8.2`)**. Stable npm: **0.8.2**.
-> [Choose your version](#install).
-
 **Explain an existing chart, diagram, or interface without rebuilding it.**
 
 [Website](https://ponchia.github.io/bronto-annotations/) ·
@@ -22,12 +19,9 @@ Your application supplies points, boxes, paths, or rendered host geometry;
 the engine places notes and connectors around it. Render the result as SVG
 or through the optional React layer.
 
-Use it for persistent callouts on technical diagrams, explanatory chart notes,
-and annotated reports. For one fixed label or a tooltip that already fits your
-charting library, a built-in label is often simpler.
-
-It does not render charts, parse diagram languages, lay out graphs, own
-application state or persistence, or provide a design system.
+It does not render charts or provide a design system. Your app owns graph
+layout, state, and persistence.
+For a single fixed label or tooltip, your chart library may already be enough.
 
 ## Install
 
@@ -35,28 +29,43 @@ application state or persistence, or provide a design system.
 npm install @ponchia/annotations@0.8.2
 ```
 
-Use the [0.8.2 documentation](https://github.com/Ponchia/bronto-annotations/blob/v0.8.2/docs/README.md)
-with this stable install. 0.8 only adds to the 0.7 API, so upgrading from 0.7 needs
-no code change; the [0.7.0 documentation](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/README.md) still
-matches the previous stable line. Read the [0.7 migration guide](docs/migration-0.7.md)
-before upgrading from 0.6. This README and the website follow `main`;
-use the tagged guide when matching documentation to installed package bytes. See
-[release readiness](docs/release-readiness.md) for source-testing instructions.
-
-ES modules only. The root import has no runtime dependencies and is DOM-free;
-React and adapter peer packages are optional. React applications also need
-`react` and `react-dom`. See [compatibility](docs/compatibility.md) for tested
-versions rather than interpreting an open-ended peer range as a support promise.
-
-The website and this README follow `main`; npm follows published releases.
-Use the [release notes](https://github.com/Ponchia/bronto-annotations/releases)
-when matching a guide to the package version installed in your application.
+ES modules only; the root import is DOM-free with no runtime dependencies.
+React and adapter peer packages are optional. See [compatibility](docs/compatibility.md)
+for tested versions. These docs and demos follow `main`; the
+[0.8.2 guides](https://github.com/Ponchia/bronto-annotations/blob/v0.8.2/docs/README.md)
+match this install. [Upgrading from 0.6?](docs/migration-0.7.md)
 
 ## Core Usage
 
-This complete browser example uses a bundler with TypeScript and CSS imports.
-It draws a note attached to a point, not a chart. A chart or diagram remains
-owned by your application.
+In a TypeScript browser app with CSS imports, put the code below in `main.ts`.
+To try it in a new project, use Node 22.12.0 or newer:
+
+```bash
+mkdir annotation-demo
+cd annotation-demo
+npm init -y
+npm install @ponchia/annotations@0.8.2
+npm install --save-dev vite@8
+```
+
+Create `index.html`:
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>My first annotation</title>
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>
+```
+
+Create `main.ts` beside it:
 
 ```ts
 import {
@@ -90,23 +99,18 @@ container.innerHTML = renderAnnotationsSvg(layout, {
 document.body.append(container);
 ```
 
-Start with the [first-annotation guide](docs/getting-started.md) for local setup,
-React, and coordinate-space basics. The [SVG example](examples/svg-basic/)
-shows annotations together with an actual host-rendered figure.
-For an existing surface, choose a first-success path for
-[SVG](docs/context-quickstart.md#first-note-on-a-figure),
-[DOM report](docs/context-quickstart.md#first-note-on-a-report), or
-[React Flow](docs/context-quickstart.md#first-note-on-a-graph).
+Run `npx vite --host 127.0.0.1` and open the printed URL. You should see a
+**Peak response** note and connector. The point coordinates stand in for the
+geometry your chart would supply. Continue with [coordinate basics](docs/getting-started.md#coordinate-and-layout-basics)
+or attach a note to an [existing surface](docs/context-quickstart.md).
 
 ## React
 
-Use `AnnotationLayer` from `@ponchia/annotations/react`. The host owns annotation
-state and decides which edit callbacks to commit. The [React guide](docs/react-guide.md)
-covers rendering, measurements, keyboard editing, and drag previews.
-
-The [interactive example](https://ponchia.github.io/bronto-annotations/examples/react-incremental/)
-demonstrates text editing, bounded undo/redo, and JSON import/export. Those are
-host-owned example features, not a built-in persistence or editor framework.
+Use `AnnotationLayer` from `@ponchia/annotations/react` with your application's
+`react` and `react-dom`. Start with the [complete component](docs/getting-started.md#use-it-in-react)
+or the [rendering and editing guide](docs/react-guide.md). The
+[interactive demo](https://ponchia.github.io/bronto-annotations/examples/react-incremental/)
+shows host-owned editing, undo/redo, and JSON import/export.
 
 ## Adapters
 
@@ -134,49 +138,26 @@ gets its geometry and when to measure it.
 <a id="dom-and-svg-utilities"></a>
 <a id="styling"></a>
 
-| Task | Guide |
-| --- | --- |
-| Place notes, preserve manual positions, inspect layout quality | [Core layout and geometry](docs/core-guide.md) |
-| Use callout types or migrate d3-style annotations | [Presets and migration](docs/presets-guide.md) |
-| Render and edit in React | [React rendering and editing](docs/react-guide.md) |
-| Attach to real DOM, chart, and diagram targets | [Adapter guide](docs/adapter-guide.md) |
-| Change the appearance without adopting BrontoUI | [Styling](docs/styling-guide.md) |
-| Debug missing notes, offsets, wrapping, or slow edits | [Troubleshooting](docs/troubleshooting.md) |
-| Look up a public API | [API reference](docs/api-reference.md) |
-
-The [documentation index](docs/README.md) separates current guides from historical
-audits and proposals. Detailed examples formerly on this page are in the guides
-above; they have not been removed from the project.
+[Layout and geometry](docs/core-guide.md) · [Presets](docs/presets-guide.md) ·
+[Styling](docs/styling-guide.md) · [Troubleshooting](docs/troubleshooting.md) ·
+[API reference](docs/api-reference.md) · [All guides](docs/README.md)
 
 ## Run the examples
 
 <a id="examples-and-checks"></a>
 
-```bash
-git clone https://github.com/Ponchia/bronto-annotations.git
-cd bronto-annotations
-npm ci
-npm run example -- examples/svg-basic
-```
-
-Open the local URL printed by Vite. Run commands from the repository root.
-The [example catalog](examples/README.md) lists every demo, what to try, and
-which code belongs to the host. No account, API key, or backend is needed.
+The [example catalog](examples/README.md) has clone-and-run instructions and
+every demo's source. No account, API key, or backend is needed.
 
 ## Known Limits
 
-Placement is deterministic candidate scoring with optional bounded refinement,
-not a global constraint solver. Crowded notes may still overlap; inspect quality
-diagnostics and reduce or manually place notes when the surface cannot fit them.
-
-Dense full layouts can be expensive. Incremental layout is experimental and
-reuses only provably unchanged work; a global change may need a full solve.
-The [Worker recipe](docs/worker-layout.md) keeps scheduling and cancellation in
-the host. It is not a package-owned Worker API or a frame-rate guarantee.
-
-SVG coordinates, host transforms, and measured text sizes must agree.
-See [accessibility](docs/accessibility.md), [performance](docs/performance.md),
-and [API stability](docs/api-stability.md) before adopting an experimental path.
+- Placement scores candidates; crowded notes can still overlap. Reduce notes
+  or position them manually when the surface cannot fit them.
+- Dense layouts can be expensive. [Incremental layout](docs/performance.md) is
+  experimental; [Worker scheduling](docs/worker-layout.md) belongs to the host.
+- Anchors, host transforms, and measured text must share a coordinate system.
+  Check [accessibility](docs/accessibility.md) and [API stability](docs/api-stability.md)
+  before shipping.
 
 ## Contributing and support
 
@@ -184,20 +165,15 @@ and [API stability](docs/api-stability.md) before adopting an experimental path.
 <a id="pre-release-hardening"></a>
 <a id="future-work"></a>
 
-Bug reproductions, integration feedback, and clearer examples are especially
-welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup and checks, or
-[SUPPORT.md](SUPPORT.md) for help and reporting guidelines.
-
-Maintainers use `npm run check`; the [verification guide](docs/verification.md)
-explains the checks and release process. The [completion audit](docs/completion-audit.json)
-records evidence, not a guarantee for every consumer. Security issues follow
-[SECURITY.md](SECURITY.md), not public bug reports.
+[Contributing](CONTRIBUTING.md) covers setup and pull requests;
+[verification](docs/verification.md) and the [completion audit](docs/completion-audit.json)
+describe checks and their evidence. Use [Support](SUPPORT.md)
+for questions and [Security](SECURITY.md) for private vulnerability reports.
 
 ## Funding
 
-Development is maintained by [Zeno Trevisan / Ponchia](https://brontolotto.observer/).
-Support it on [Ko-fi](https://ko-fi.com/ponchia), or help by reporting integration
-friction and contributing documentation. See [FUNDING.md](FUNDING.md).
+Maintained by [Zeno Trevisan / Ponchia](https://brontolotto.observer/).
+Support development on [Ko-fi](https://ko-fi.com/ponchia); see [Funding](FUNDING.md).
 
 ## Prior Art And Inspiration
 
@@ -210,14 +186,8 @@ vendor copy, or drop-in replacement for either library.
 BrontoUI is an optional visual companion, not a runtime dependency.
 [MIT licensed](LICENSE).
 
-
 ### Public website analytics
 
-The [GitHub Pages documentation and playground](https://ponchia.github.io/bronto-annotations/)
-use Cloudflare Web Analytics for anonymous, aggregate pageview and performance
-measurement. Only generated editorial pages at `ponchia.github.io/bronto-annotations/`
-load the consent-free, cookie-free beacon; no script is added to the npm package,
-its runtime, standalone examples, local development, or other GitHub Pages
-projects. This is manual installation: do not enable zone-wide injection.
-Cloudflare's [privacy policy](https://www.cloudflare.com/privacypolicy/)
-provides further information about its data processing.
+The documentation website uses cookie-free Cloudflare Web Analytics for aggregate
+page views and performance. The npm package, standalone examples, and local
+development contain no analytics. See [Cloudflare's privacy policy](https://www.cloudflare.com/privacypolicy/).
