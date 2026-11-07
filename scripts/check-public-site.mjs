@@ -131,6 +131,8 @@ for (const rel of pages) {
   // must never ship active HTML (inline script/event handlers). Search UI JS
   // is independently authored and allowed only on the docs index.
   if (rel.startsWith('docs/') && rel !== 'docs/index.html') {
+    assert.equal(html.querySelectorAll('.docs-sidebar a[href$="/e2e-plan.html"]').length, 0,
+      'Historical scope must not enter current guide navigation: ' + rel);
     assert.equal(
       html.querySelectorAll('script').length, 1,
       'Generated Markdown must not add scripts beyond the approved analytics loader: ' + rel,
@@ -193,6 +195,19 @@ for (const link of fragmentLinks) {
   assert(anchors.get(link.target)?.has(link.id),
     `Broken published section link from ${link.source}: ${link.raw}`);
 }
+const docsIndex = new JSDOM(await readFile(join(target, 'docs/index.html'), 'utf8'));
+const docsHtml = docsIndex.window.document;
+assert.equal(docsHtml.querySelectorAll(
+  '[aria-label="Current package guides"] a[href="./e2e-plan.html"]').length, 0,
+  'Historical scope must not be promoted into current package guides');
+assert.equal(docsHtml.querySelectorAll(
+  '[aria-label="Reference and historical evidence"] a[href="./e2e-plan.html"]').length, 1,
+  'Historical scope must remain discoverable in its own reference group');
+docsIndex.window.close();
+const historicalPlan = new JSDOM(await readFile(join(target, 'docs/e2e-plan.html'), 'utf8'));
+assert(historicalPlan.window.document.querySelector('.docs-prose > blockquote')?.textContent
+  .includes('Historical verification record'), 'Direct entry needs its historical scope notice');
+historicalPlan.window.close();
 const firstGuide = new JSDOM(await readFile(join(target, 'docs/getting-started.html'), 'utf8'));
 const sectionLinks = firstGuide.window.document.querySelectorAll('details.docs-contents nav a[href^="#"]');
 assert(sectionLinks.length >= 5, 'First-use guide must offer derived in-page section links');

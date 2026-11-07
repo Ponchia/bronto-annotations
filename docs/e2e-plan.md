@@ -1,10 +1,16 @@
 # End-To-End Scope And Verification
 
-Status: implemented for the current public package surface.
+> **Historical verification record.** This retained plan describes the package
+> surface and fixtures at the time of its original hardening work. Its example
+> counts and export inventory are not a current support matrix. Use the
+> [API reference](api-reference.md), [example catalog](../examples/README.md) and
+> [verification guide](verification.md) for current behavior and checks.
+
+Status: implementation evidence retained for the scope described below.
 
 ## Completed Scope
 
-The package now ships:
+The recorded scope included:
 
 - TypeScript ESM build, declarations, package exports, tests, examples, and an
   umbrella `npm run check`.
