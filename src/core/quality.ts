@@ -60,6 +60,11 @@ export type LayoutQualityReport = {
   issues: LayoutQualityIssue[];
   /** @experimental Present only when readability is explicitly requested. */
   readability?: LayoutReadabilityReport;
+  /** Present only for nonfinite numeric report fields. Native JSON encodes
+   * those numbers as null; these paths and tags preserve their computed meaning.
+   * This evidence does not change geometry validity or restore parsed numbers.
+   */
+  numericDiagnostics?: Array<{ path: string; value: 'Infinity' | '-Infinity' | 'NaN' }>;
 };
 
 export type LayoutQualityOptions = {
@@ -227,7 +232,7 @@ export function evaluateAnnotationLayout(
 
   const geometryValid = !issues.some((issue) => issue.severity === 'error');
   const hostContentClear = validObstacles.length === obstacles.length && metrics.obstacleOverlapArea === 0;
-  return {
+  const report: LayoutQualityReport = {
     geometryValid,
     hostContentClear,
     ok: geometryValid && hostContentClear,
@@ -236,6 +241,35 @@ export function evaluateAnnotationLayout(
     issues,
     ...(readability ? { readability } : {})
   };
+  recordNumericDiagnostics(report);
+  return report;
+}
+
+// Inspect only fields constructed by this evaluator, never host objects or
+// arbitrary nested layout data. Keep finite reports structurally unchanged.
+const numericMetricFields = ['annotationCount', 'issueCount', 'invalidBoxCount',
+  'boundsOverflowArea', 'noteOverlapArea', 'obstacleOverlapArea',
+  'connectorObstacleHits', 'connectorNoteHits'] as const;
+const numericReadabilityFields = ['connectorCrossingPairs', 'totalConnectorLength',
+  'connectorBendCount', 'evaluatedConnectorCount', 'skippedCurveCount', 'invalidConnectorCount'] as const;
+
+function recordNumericDiagnostics(report: LayoutQualityReport): void {
+  function record(path: string, value: number | undefined): void {
+    if (value === undefined || Number.isFinite(value)) return;
+    (report.numericDiagnostics ??= []).push({ path,
+      value: Number.isNaN(value) ? 'NaN' : value === Infinity ? 'Infinity' : '-Infinity' });
+  }
+  record('score', report.score);
+  for (const field of numericMetricFields) record(`metrics.${field}`, report.metrics[field]);
+  for (const [index, issue] of report.issues.entries()) {
+    // Most issues have finite areas or no amount. Build per-issue paths only
+    // for diagnostics, avoiding these string allocations in ordinary scenes.
+    if (issue.area !== undefined && !Number.isFinite(issue.area)) record(`issues[${index}].area`, issue.area);
+    if (issue.amount !== undefined && !Number.isFinite(issue.amount)) record(`issues[${index}].amount`, issue.amount);
+  }
+  if (report.readability) {
+    for (const field of numericReadabilityFields) record(`readability.${field}`, report.readability[field]);
+  }
 }
 
 export function formatLayoutQualityIssue(issue: LayoutQualityIssue): string {
@@ -275,6 +309,10 @@ export function formatLayoutQualityReport(
 
   if (omitted > 0) {
     lines.push(`- ${omitted} more layout issue${omitted === 1 ? '' : 's'} omitted.`);
+  }
+
+  for (const diagnostic of report.numericDiagnostics ?? []) {
+    lines.push(`- numeric range ${diagnostic.path}=${diagnostic.value}: computed value is not finite.`);
   }
 
   return lines.join('\n');
@@ -342,5 +380,6 @@ function severityCounts(issues: LayoutQualityIssue[]): Record<LayoutQualitySever
 }
 
 function roundMetric(value: number): number {
-  return Math.round(value * 100) / 100;
+  const scaled = value * 100;
+  return Number.isFinite(scaled) ? Math.round(scaled) / 100 : value;
 }

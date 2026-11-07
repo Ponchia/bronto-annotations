@@ -22,6 +22,20 @@ peer lanes.
 optional peers are marked optional in `package.json`. Root imports must work
 without React, Vega, Mermaid, D2, React Flow, or `@ponchia/ui` installed.
 
+### Compatibility is not a security-support promise
+
+Use the latest patched release of a maintained Node.js LTS line for new
+applications and contributor environments. Node 22 is covered by the full CI
+suite. Consult the [upstream release schedule](https://nodejs.org/en/about/previous-releases)
+when choosing a newer runtime.
+
+[Node 20 is end-of-life](https://nodejs.org/en/about/eol). Its CI lane preserves
+compatibility for existing consumers; it does not supply upstream runtime
+security fixes or recommend Node 20 for a new deployment. The package's
+`>=20.19.0` engine floor is unchanged. Minimum versions required by individual
+host tools are compatibility constraints, not recommendations to stay on an
+old patch release.
+
 ### Experimental browser-portability check
 
 `npm run test:browser:cross` exercises the published React incremental-editor,

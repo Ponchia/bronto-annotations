@@ -7,6 +7,7 @@ import {
 } from '@ponchia/annotations';
 import '@ponchia/annotations/bronto.css';
 import { updatePlaygroundInspector } from './playground-inspector.js';
+import { setupPlaygroundExports } from './playground-export.js';
 import './site.css';
 import { DEFAULT_PLAYGROUND_STATE, parseSceneHash, sceneUrl, type PlaygroundState } from './playground-state.js';
 
@@ -31,7 +32,6 @@ const comparisonResult = document.querySelector<HTMLElement>('#comparison-result
 const scenePresetHint = document.querySelector<HTMLElement>('#scene-preset-hint');
 const sceneSourceCode = document.querySelector<HTMLElement>('#scene-source-code code');
 const sceneLink = document.querySelector<HTMLInputElement>('#scene-link');
-const shareButton = document.querySelector<HTMLButtonElement>('#copy-scene-link');
 const shareStatus = document.querySelector<HTMLElement>('#scene-link-status');
 const comparisonToggle = document.querySelector<HTMLButtonElement>('#toggle-placement');
 const scenePresetButtons = [
@@ -279,21 +279,6 @@ comparisonToggle?.addEventListener('click', () => {
   updateLayout();
 });
 
-shareButton?.addEventListener('click', async () => {
-  if (!sceneLink || !shareStatus) return;
-  // Capture the clicked state; changing controls while the permission prompt
-  // is open must not change the link that this copy operation refers to.
-  const link = sceneLink.value;
-  try {
-    await navigator.clipboard.writeText(link);
-    shareStatus.textContent = 'Scene link copied. It restores the settings shown when you clicked.';
-  } catch {
-    sceneLink.focus();
-    sceneLink.select();
-    shareStatus.textContent = 'Clipboard unavailable. The scene link is selected for manual copying.';
-  }
-});
-
 // Enter in the read-only link must not navigate or submit the surrounding form.
 form?.addEventListener('submit', (event) => event.preventDefault());
 window.addEventListener('hashchange', () => {
@@ -312,27 +297,4 @@ if (restoredFromLink) {
   requestAnimationFrame(() => document.getElementById('playground')?.scrollIntoView());
 }
 
-for (const button of document.querySelectorAll<HTMLButtonElement>(
-  '[data-copy],[data-copy-target]',
-)) {
-  button.addEventListener('click', async () => {
-    const targetId = button.dataset.copyTarget;
-    const original = button.textContent;
-    const content = targetId
-      ? (document.getElementById(targetId)?.textContent ?? '')
-      : (button.dataset.copy ?? '');
-    if (!content) return;
-    try {
-      await navigator.clipboard.writeText(content);
-      button.textContent = 'Copied';
-      setTimeout(() => {
-        button.textContent = original;
-      }, 1500);
-    } catch {
-      button.textContent = 'Select and copy';
-      setTimeout(() => {
-        button.textContent = original;
-      }, 1800);
-    }
-  });
-}
+setupPlaygroundExports();

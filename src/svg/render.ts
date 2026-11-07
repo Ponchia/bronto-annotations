@@ -168,7 +168,7 @@ function renderResolvedAnnotationSvg(
   const note = item.annotation.note.visible === false
     ? ''
     : [
-      `<g class="${escapeAttribute(noteClass)}" transform="translate(${item.noteBox.x} ${item.noteBox.y})" role="note" aria-label="${escapeAttribute(item.annotation.note.ariaLabel ?? item.annotation.note.title ?? item.id)}"${dataAttributes(item.annotation.note.data)} data-annotation-id="${escapeAttribute(item.id)}" data-note-align="${item.annotation.note.align ?? 'start'}"${tabIndexAttribute(noteTabIndex)}>`,
+      `<g class="${escapeAttribute(noteClass)}" transform="translate(${item.noteBox.x} ${item.noteBox.y})" role="note" aria-label="${escapeAttribute(item.annotation.note.ariaLabel ?? item.annotation.note.title ?? item.id)}"${dataAttributes(item.annotation.note.data, ['data-annotation-id', 'data-note-align'])} data-annotation-id="${escapeAttribute(item.id)}" data-note-align="${escapeAttribute(item.annotation.note.align ?? 'start')}"${tabIndexAttribute(noteTabIndex)}>`,
       `<rect class="${escapeAttribute(`${prefix}__note-box`)}" width="${item.noteBox.width}" height="${item.noteBox.height}" rx="8" aria-hidden="true" />`,
       noteLine,
       title,
@@ -177,7 +177,7 @@ function renderResolvedAnnotationSvg(
     ].join('');
 
   return [
-    `<g class="${escapeAttribute(annotationClass)}" data-annotation-id="${escapeAttribute(item.id)}" data-annotation-side="${item.placement.side}" role="group" aria-label="${escapeAttribute(item.annotation.note.ariaLabel ?? item.annotation.note.title ?? item.id)}"${styleAttribute(item.annotation.style)}${dataAttributes(item.annotation.data)}>`,
+    `<g class="${escapeAttribute(annotationClass)}" data-annotation-id="${escapeAttribute(item.id)}" data-annotation-side="${escapeAttribute(item.placement.side)}" role="group" aria-label="${escapeAttribute(item.annotation.note.ariaLabel ?? item.annotation.note.title ?? item.id)}"${styleAttribute(item.annotation.style)}${dataAttributes(item.annotation.data, ['data-annotation-id', 'data-annotation-side'])}>`,
     subject,
     connector,
     note,
@@ -326,7 +326,7 @@ function renderCandidateDebugBox(
   index: number,
   prefix: string
 ): string {
-  return `<rect class="${escapeAttribute(`${prefix}__debug-box ${prefix}__debug-box--candidate`)}" x="${candidate.noteBox.x}" y="${candidate.noteBox.y}" width="${candidate.noteBox.width}" height="${candidate.noteBox.height}" aria-hidden="true" data-annotation-id="${escapeAttribute(item.id)}" data-debug-kind="candidate" data-candidate-index="${index}" data-candidate-side="${candidate.side}" data-candidate-score="${round(candidate.score)}" />`;
+  return `<rect class="${escapeAttribute(`${prefix}__debug-box ${prefix}__debug-box--candidate`)}" x="${candidate.noteBox.x}" y="${candidate.noteBox.y}" width="${candidate.noteBox.width}" height="${candidate.noteBox.height}" aria-hidden="true" data-annotation-id="${escapeAttribute(item.id)}" data-debug-kind="candidate" data-candidate-index="${index}" data-candidate-side="${escapeAttribute(candidate.side)}" data-candidate-score="${round(candidate.score)}" />`;
 }
 
 function renderConnectorSvg(item: ResolvedAnnotation, prefix: string, markerPrefix: string): string {
@@ -338,7 +338,7 @@ function renderConnectorSvg(item: ResolvedAnnotation, prefix: string, markerPref
   const marker = end === 'none' ? '' : ` marker-end="url(#${escapeAttribute(markerId(markerPrefix, end))})"`;
   const className = classNames(`${prefix}__connector`, item.annotation.connector?.className);
 
-  return `<path class="${escapeAttribute(className)}" d="${escapeAttribute(item.connector.d)}" data-annotation-id="${escapeAttribute(item.id)}" data-connector-type="${item.connector.type}"${marker}${dataAttributes(item.annotation.connector?.data)} aria-hidden="true" />`;
+  return `<path class="${escapeAttribute(className)}" d="${escapeAttribute(item.connector.d)}" data-annotation-id="${escapeAttribute(item.id)}" data-connector-type="${escapeAttribute(item.connector.type)}"${marker}${dataAttributes(item.annotation.connector?.data, ['data-annotation-id', 'data-connector-type'])} aria-hidden="true" />`;
 }
 
 function renderSubjectSvg(item: ResolvedAnnotation, prefix: string): string {
@@ -556,14 +556,21 @@ function escapeCharacters(value: string, pattern: RegExp, escapes: Record<string
   return value.replace(pattern, (character) => escapes[character] ?? character);
 }
 
-function dataAttributes(data: DataAttributes | undefined): string {
+function dataAttributes(data: DataAttributes | undefined, reserved: readonly string[] = []): string {
   if (!data) {
     return '';
   }
 
-  return Object.entries(data)
-    .filter(([, value]) => value !== undefined && value !== null)
-    .map(([key, value]) => ` data-${dataKey(key)}="${escapeAttribute(String(value))}"`)
+  // Normalize before reserving names: camelCase and hyphenated keys can name
+  // the same attribute. Emit each name once, matching React's last-value rule.
+  const attributes = new Map<string, string>();
+  for (const [key, value] of Object.entries(data)) {
+    if (value === undefined || value === null) continue;
+    const name = `data-${dataKey(key)}`;
+    if (!reserved.includes(name)) attributes.set(name, String(value));
+  }
+  return [...attributes]
+    .map(([name, value]) => ` ${name}="${escapeAttribute(value)}"`)
     .join('');
 }
 

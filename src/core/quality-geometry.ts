@@ -15,7 +15,10 @@ export function overflowArea(box: Box, bounds: Box): number {
   const outsideRight = Math.max(0, box.x + box.width - (bounds.x + bounds.width));
   const outsideBottom = Math.max(0, box.y + box.height - (bounds.y + bounds.height));
 
-  return (outsideLeft + outsideRight) * box.height + (outsideTop + outsideBottom) * box.width;
+  // A zero-area strip remains zero even when its distance overflows. Avoid
+  // Infinity * 0 producing NaN and hiding a nonzero strip on the other axis.
+  return (box.height === 0 ? 0 : (outsideLeft + outsideRight) * box.height)
+    + (box.width === 0 ? 0 : (outsideTop + outsideBottom) * box.width);
 }
 
 export function connectorIntersections(connector: ConnectorPath, box: Box): number[] {

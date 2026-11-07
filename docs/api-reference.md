@@ -68,6 +68,23 @@ locale-independent. `LayoutQualityReport` distinguishes `geometryValid`,
 `hostContentClear`, and `ok`; a note obscuring a declared obstacle causes
 `ok` to fail even when note geometry itself is valid.
 
+The 0.9 source adds optional `numericDiagnostics` to quality reports when a
+computed report number is nonfinite. Each entry records a stable field `path`
+and the string value `"Infinity"`, `"-Infinity"`, or `"NaN"`; finite reports omit
+this property. Preserve these entries when saving a report: native JSON writes
+nonfinite numeric fields as `null`, and the diagnostics retain their meaning.
+They do not change geometry validity, scores or assertion severity, and they do
+not restore a parsed JSON object into a typed report. See
+[numerical range and saved reports](placement-quality.md#numerical-range-and-saved-reports).
+
+```ts
+const quality = evaluateAnnotationLayout(layout, { readability: true });
+const savedEvidence = JSON.stringify(quality); // Keep numericDiagnostics with it.
+for (const diagnostic of quality.numericDiagnostics ?? []) {
+  console.warn(`${diagnostic.path}: ${diagnostic.value}`);
+}
+```
+
 Resolved layouts retain arbitrary source metadata and therefore are not
 guaranteed JSON-serializable or structured-cloneable. See the
 [0.7 migration guide](migration-0.7.md#metadata-and-worker-transport).

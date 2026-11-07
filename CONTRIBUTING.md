@@ -16,7 +16,9 @@ For a new API, changed compatibility promise, or larger refactor, first open an
 issue describing the problem, a small example, and the alternatives considered.
 Keep each pull request focused on one reviewable change.
 
-Use a Node version from the [compatibility matrix](docs/compatibility.md).
+Use the latest patched release of a maintained Node.js LTS line; Node 22 is
+covered by the full CI suite. The [compatibility matrix](docs/compatibility.md)
+distinguishes that recommendation from the retained Node 20 compatibility lane.
 Run commands from your checkout's root:
 
 ```bash

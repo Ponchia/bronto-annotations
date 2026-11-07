@@ -322,7 +322,7 @@
                 </details>
               </section>
               <div class="scene-share">
-                <button id="copy-scene-link" type="button" class="scene-copy-control">Copy scene link</button>
+                <button id="copy-scene-link" type="button" class="scene-copy-control" data-copy-value="scene-link" data-copy-status="scene-link-status" data-copy-success="Scene link copied. It restores the settings shown when you clicked.">Copy scene link</button>
                 <label for="scene-link">Link to these settings</label>
                 <input id="scene-link" type="text" inputmode="url" spellcheck="false" readonly aria-describedby="scene-link-help" />
                 <p id="scene-link-help">Only the demonstration settings are included. No account or server-side save is required.</p>
@@ -330,11 +330,13 @@
               </div>
               <details class="scene-source">
                 <summary>Use this scene in your code</summary>
-                <p>Copy the parameters and annotation objects currently shown. This is the headless layout call; integrate the returned SVG into your own trusted rendering surface.</p>
+                <p>Copy or download the parameters and annotation objects currently shown. This is the headless layout call; integrate the returned SVG into your own trusted rendering surface.</p>
                 <div class="scene-source-toolbar">
                   <span>Current playground settings</span>
                   <button type="button" class="copy-button" data-copy-target="scene-source-code">Copy code</button>
+                  <button id="download-scene-code" type="button" class="copy-button">Download .ts</button>
                 </div>
+                <p id="scene-download-status" role="status" aria-live="polite" aria-atomic="true"></p>
                 <pre id="scene-source-code" tabindex="0" aria-label="TypeScript for the current annotation scene"><code></code></pre>
               </details>
               <p class="fine-print">

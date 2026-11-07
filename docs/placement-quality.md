@@ -45,6 +45,60 @@ obstacles from both placement and inspection; any `additionalObstacles` are
 still inspected. Reports describe the geometry supplied to them, not a fresh
 measurement of host state or an accessibility certification.
 
+### Numerical range and saved reports
+
+Quality measurements use JavaScript numbers. Finite box fields and far edges do
+not guarantee finite area products, distance differences, or accumulated totals.
+For example, the intersection of two identical `1e200` by `1e200` boxes is
+`Infinity`; enough individually finite intersections can also overflow a total.
+Finite results depend on dimensions, intermediate operations, and the number
+of contributions, as well as coordinate magnitude. Use values whose arithmetic and
+reported totals remain finite when you need finite measurements. The evaluator
+does not provide arbitrary precision, detect all precision loss or underflow, or
+repair geometry lost to rounding at extreme translations.
+An overflowing intermediate difference can produce `Infinity` even if multiplying
+the exact difference by a tiny dimension would yield a finite real area. A numeric
+diagnostic describes the computed value, not an arbitrary-precision area bound.
+
+The evaluator retains infinite and NaN results without saturation. When an
+existing report field is not finite, the optional `numericDiagnostics` array
+records its `path` and string `value` (`"Infinity"`, `"-Infinity"`, or `"NaN"`).
+Paths use `score`, `metrics.<field>`, `issues[<index>].area`,
+`issues[<index>].amount`, or `readability.<field>`. Issue indices refer to the
+original report's ordered issue list. Entries follow score, metrics declaration
+order, issue order (area before amount), then readability declaration order.
+Reports with only finite numeric fields omit this property entirely.
+`formatLayoutQualityReport` includes these diagnostics separately from layout
+issues, even when `maxIssues` hides issue details. They do not affect issue counts
+or assertion severity policies.
+
+Native `JSON.stringify` still writes `null` for numbers that are not finite. The
+diagnostics survive serialization and distinguish those values from missing or
+zero measurements. Keep them with the saved report; they do not automatically
+rehydrate `null` into JavaScript numbers. For example, a saved report can contain
+`"obstacleOverlapArea": null` together with
+`{ "path": "metrics.obstacleOverlapArea", "value": "Infinity" }` in
+`numericDiagnostics`. Parsed JSON is encoded evidence, not a restored typed
+`LayoutQualityReport` suitable for passing directly to report helpers.
+
+Numeric diagnostics do not add geometry issues or change `invalidBoxCount`,
+`geometryValid`, `hostContentClear`, `ok`, or scoring. An infinite positive overlap
+still reports its overlap issue and fails the applicable geometry or host-content
+check. An infinite total connector length can coexist with `ok: true`, because
+optional readability evidence is separate from placement validity. Its
+`readability.complete` is false. An individual route whose length cannot be
+represented is already excluded by readability measurement and contributes to
+`invalidConnectorCount`; its omitted length is not a numeric report field and
+does not receive a numeric diagnostic. A missing `numericDiagnostics` property
+therefore does not imply complete readability or numerically exact geometry.
+
+Finite zero-size boxes remain structurally valid. The existing bounds metric
+sums outside edge strips: a zero-width box can still have a positive strip along
+its height, and a zero-height box along its width. A strip with zero area remains
+zero even when its distance would overflow, preventing `Infinity * 0` from hiding
+another nonzero strip. Negative dimensions and far edges that are not finite
+retain their existing `invalid-box` diagnostics.
+
 ## Reproduce
 
 Use the repository's existing dependency and build workflow. From the checkout:

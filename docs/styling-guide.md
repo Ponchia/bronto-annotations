@@ -84,3 +84,17 @@ tabbable edit handles via `editHandleTabIndex` for host-wired navigation or
 authoring. The bridge also keeps migrated `ui-annotation*` report snippets
 legible with the old paint-order text halo, evidence/badge styles, and motion
 names, and respects print, forced-colors, and reduced-motion preferences.
+
+## Custom data attributes
+
+Use annotation, note and connector `data` for host-owned metadata. Keys are
+normalized to `data-*` attribute names; aliases such as `userLabel` and
+`user-label` produce one attribute, with the last custom value taking precedence.
+Null and undefined values are omitted, while `false` and `0` are retained.
+
+Generated identity and geometry attributes are reserved on their respective
+rendered elements: `data-annotation-id`, `data-annotation-side`,
+`data-note-align` and `data-connector-type`. Custom data cannot replace those
+values. SVG strings and React output follow the same precedence. Choose a
+host-specific key such as `data-record-id` rather than relying on an internal
+annotation attribute for your application identifier.

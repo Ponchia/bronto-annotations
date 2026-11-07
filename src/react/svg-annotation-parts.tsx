@@ -189,7 +189,7 @@ export function renderConnector(item: ResolvedAnnotation, prefix: string, marker
       data-annotation-id={item.id}
       data-connector-type={item.connector.type}
       markerEnd={end === 'none' ? undefined : `url(#${markerId(markerPrefix, end)})`}
-      {...dataAttributes(item.annotation.connector?.data)}
+      {...dataAttributes(item.annotation.connector?.data, ['data-annotation-id', 'data-connector-type'])}
     />
   );
 }

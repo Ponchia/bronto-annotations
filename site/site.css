@@ -615,6 +615,7 @@ select:focus-visible {
 }
 .scene-source-toolbar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   padding: 9px 14px;
@@ -626,6 +627,34 @@ select:focus-visible {
   background: #fff;
   border: 1px solid #c9d3d5;
   padding: 7px 10px;
+  min-height: 44px;
+}
+.copy-feedback {
+  margin: 0 14px;
+  color: #25414b;
+  background: #fbfcfc;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+.copy-feedback p:empty, #scene-download-status:empty { margin: 0; }
+.copy-feedback p:not(:empty) { padding: 10px; }
+.copy-feedback label { display: block; padding: 0 10px 8px; }
+.copy-feedback textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  padding: 10px;
+  border: 1px solid #c9d3d5;
+  border-radius: 3px;
+  background: #fff;
+  color: #25414b;
+  font: 16px/1.5 ui-monospace, monospace;
+  resize: vertical;
+}
+.copy-feedback textarea:focus-visible {
+  outline: 3px solid var(--accent-dark);
+  outline-offset: 2px;
 }
 .scene-source pre {
   border-top: 1px solid #e4eaea;
@@ -1252,12 +1281,9 @@ select:focus-visible {
   font-size: 0.83rem;
   font-weight: 700;
 }
-.docs-filter-empty {
-  display: none;
+.docs-filter-status {
   color: var(--muted);
-}
-.docs-filter-empty.visible {
-  display: block;
+  overflow-wrap: anywhere;
 }
 @media (max-width: 900px) {
   .container,

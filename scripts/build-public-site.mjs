@@ -496,16 +496,17 @@ const renderCards = (items) => items
       esc(summary) +
       '</p><a href="./' +
       esc(slug) +
-      '.html">Read guide ↗</a></article>',
+      '.html">Read ' + esc(title) + ' ↗</a></article>',
   )
   .join('');
 const docsHome =
   '<section class="container docs-hero"><p class="eyebrow">DOCUMENTATION / START HERE</p>' +
   '<h1>Add your first annotation.<br/>Then choose your host.</h1>' +
   '<p>Choose the host you already use. Start with a short complete example, then open the API reference and specialized adapter guides as needed.</p>' +
-  '<label for="docs-filter" class="eyebrow">SEARCH THE REFERENCE</label>' +
-  '<input type="search" id="docs-filter" class="docs-search" placeholder="Find a guide, adapter, or integration..." autocomplete="off"/>' +
-  '<p class="docs-filter-empty" id="docs-filter-empty" role="status">No documentation pages match that search.</p>' +
+  '<label for="docs-filter" class="eyebrow">FILTER GUIDES</label>' +
+  '<input type="search" id="docs-filter" class="docs-search" placeholder="Find a guide, adapter, or integration..." autocomplete="off" aria-describedby="docs-filter-help"/>' +
+  '<p id="docs-filter-help">Filter titles, topics, and summaries across current guides and historical references. Page contents are not searched.</p>' +
+  '<p class="docs-filter-status" id="docs-filter-status" role="status" aria-atomic="true"></p>' +
   '</section><section class="container" data-doc-group aria-label="Current package guides"><h2>Using the package</h2>' +
   '<div class="docs-card-grid" id="docs-results">' +
   renderCards(listing.filter(({ slug }) => primaryDocs.includes(slug))) +

@@ -9,6 +9,7 @@ import { verifyAuthoringDefault, openAuthoringDiagram } from './responsive-autho
 import { offersInstall } from './site-release.mjs';
 import { verifyPlaygroundCopy } from './verify-playground-copy.mjs';
 import { verifyPlaygroundSharing } from './playground-sharing-scenario.mjs';
+import { verifyPlaygroundExports } from './playground-export-scenario.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const publication = JSON.parse(await readFile(resolve(root, '_site/release-status.json'), 'utf8'));
@@ -377,6 +378,7 @@ try {
     await mode.selectOption('automatic');
     assert.equal(await inspector.getAttribute('open'), '', 'Layout updates preserve the open text alternative');
     await verifyPlaygroundSharing(home);
+    await verifyPlaygroundExports(home);
     // Sharing, the nearby strategy toggle and the readable inspector must
     // describe one scene after restoration/reset, not independently drift.
     assert.equal(await inspector.getAttribute('open'), '',
@@ -415,7 +417,12 @@ try {
     await docs.locator('#docs-filter').fill('not-found-search-term');
     assert.equal(await docs.locator('[data-doc-card]:visible').count(), 0);
     assert.equal(await docs.locator('[data-doc-group]:visible').count(), 0);
-    assert(await docs.locator('#docs-filter-empty').isVisible());
+    const searchStatus = docs.locator('#docs-filter-status');
+    assert(await searchStatus.isVisible());
+    assert.equal(await searchStatus.getAttribute('role'), 'status');
+    assert.equal(await searchStatus.getAttribute('aria-atomic'), 'true');
+    assert.equal(await searchStatus.innerText(),
+      'No guides match “not-found-search-term”. Try another title or topic, or clear the search.');
     const docAudit = await new AxeBuilder({ page: docs })
       .withTags(wcagTags)
       .analyze();
@@ -426,6 +433,22 @@ try {
         docAudit.violations.map((x) => x.id).join(', '),
     );
     variants++;
+    await docs.locator('#docs-filter').fill('');
+    const guideCount = await docs.locator('[data-doc-card]:visible').count();
+    assert.equal(await searchStatus.innerText(), `Showing all ${guideCount} guides.`);
+    assert.equal(await docs.locator('#docs-filter').getAttribute('aria-describedby'), 'docs-filter-help');
+    await docs.locator('#docs-filter').fill('unknown'.repeat(40));
+    assert.equal(await docs.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0,
+      'Long unmatched queries must wrap inside the result status');
+    await docs.locator('#docs-filter').fill('context quickstart');
+    assert.equal(await searchStatus.innerText(), '1 guide matches “context quickstart”.');
+    await docs.locator('#docs-filter').press('Tab');
+    const guideLink = docs.getByRole('link', { name: 'Read Choose your host ↗', exact: true });
+    assert(await guideLink.evaluate((node) => node === document.activeElement),
+      'Tab from the filter should reach the visible, descriptively named guide link');
+    await guideLink.press('Enter');
+    await docs.waitForURL('**/docs/context-quickstart.html');
+    await docs.goBack();
     await docs.locator('#docs-filter').fill('');
     await docs.screenshot({ path: resolve(onboardingEvidence, `docs-index-${width}.png`), fullPage: false });
     await docs.context().close();

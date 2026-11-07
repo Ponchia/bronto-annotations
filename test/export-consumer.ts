@@ -769,6 +769,15 @@ subjectPath(annotationSubjectGeometry);
 encircleSubjectPath(encirclePathOptions);
 void encircleCircle;
 const qualityReport = evaluateAnnotationLayout(layout);
+const numericDiagnostics: NonNullable<typeof qualityReport.numericDiagnostics> = [
+  { path: 'metrics.obstacleOverlapArea', value: 'Infinity' },
+  { path: 'score', value: 'NaN' }
+];
+// @ts-expect-error Numeric evidence tags are deliberately explicit, not arbitrary strings.
+numericDiagnostics.push({ path: 'score', value: 'overflow' });
+const numericEvidence = JSON.stringify({ ...qualityReport, numericDiagnostics });
+void numericEvidence;
+
 const qualityAssertOptions: LayoutQualityAssertOptions = { label: 'typed layout', minScore: 90 };
 const qualityFormatOptions: LayoutQualityFormatOptions = { includeInfo: true, maxIssues: 4 };
 const targetAlignmentOptions: AnchorAlignmentOptions = { minOverlapRatio: 0.9, tolerance: 1 };

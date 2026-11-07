@@ -6,6 +6,41 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.9.0 - 2026-11-07
+
+### Report evidence and rendering
+
+- Add optional `numericDiagnostics` to layout quality reports. Nonfinite values
+  retain their existing numeric semantics, with deterministic field paths and
+  string tags that preserve their meaning when native JSON writes `null`.
+  Finite reports keep their previous shape; geometry validity and assertion
+  policies remain separate from numerical representability.
+- Prevent zero-area bounds strips from masking perpendicular overflow through
+  `Infinity * 0`, and preserve large finite values in formatted quality output.
+  Keep optimized refinement scoring consistent with the full evaluator.
+- Keep generated annotation identity, side, alignment and connector metadata
+  authoritative in SVG and React output. Normalize custom data aliases once,
+  preserve other metadata, and escape enum-valued SVG attributes consistently.
+
+### Playground and documentation
+
+- Download the exact visible playground recipe as `annotation-scene.ts` without
+  relying on clipboard permission. Failed copies expose a selected, labelled
+  snapshot of the clicked text, including when scene controls change afterward.
+- Keep asynchronous copy feedback tied to the latest request and restore the
+  original button label after repeated clicks; preserve fallback text on reset.
+  Scene-link copying uses the same captured-text recovery without replacing the
+  live current URL after a delayed permission denial.
+- Announce guide-filter results through a persistent status region, provide
+  descriptive guide links, and state that filtering searches guide metadata
+  rather than full page content. Keep long queries within narrow viewports.
+- Repair support links in npm archives, distinguish maintained runtime guidance
+  from the retained Node 20 compatibility lane, and document report evidence
+  and generated metadata boundaries with executable and declaration checks.
+
+No runtime dependencies or public export names are added. Published versions,
+release tags, review requirements and publisher permissions remain unchanged.
+
 ## Unreleased
 
 ## 0.8.3 - 2026-11-07
