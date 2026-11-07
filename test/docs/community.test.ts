@@ -8,7 +8,46 @@ const root = fileURLToPath(new NodeURL('../../', import.meta.url));
 const read = (file: string): string => readFileSync(resolve(root, file), 'utf8');
 const documents = ['CODE_OF_CONDUCT.md', 'GOVERNANCE.md', 'CONTRIBUTING.md', 'SECURITY.md', 'SUPPORT.md'];
 
+function unpackagedSupportLinks(text: string): string[] {
+  const pkg = JSON.parse(read('package.json')) as { files: string[] };
+  const packed = ['package.json', 'README.md', 'LICENSE', ...pkg.files];
+  const missing: string[] = [];
+  marked.walkTokens(marked.lexer(text), (token) => {
+    if (token.type !== 'link' || !('href' in token) || typeof token.href !== 'string') return;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(token.href) || token.href.startsWith('//')) return;
+    const path = decodeURIComponent(token.href.split('#')[0]!.split('?')[0]!);
+    if (!path) return;
+    const target = relative(root, resolve(root, path)).split(sep).join('/');
+    if (!packed.some(entry => target === entry || target.startsWith(`${entry}/`))) missing.push(path);
+  });
+  return missing.sort();
+}
+
 describe('public contribution and community routes', () => {
+  it('keeps shipped support links valid without shipping contributor-only files', () => {
+    expect(unpackagedSupportLinks(read('SUPPORT.md'))).toEqual([]);
+  });
+
+  it('detects a repository-only security link accidentally restored in packaged support', () => {
+    const changed = read('SUPPORT.md').replace(
+      'https://github.com/Ponchia/bronto-annotations/blob/main/SECURITY.md', 'SECURITY.md');
+    expect(unpackagedSupportLinks(changed)).toContain('SECURITY.md');
+  });
+
+  it('distinguishes runtime compatibility from upstream security support', () => {
+    const compatibility = read('docs/compatibility.md');
+    expect(compatibility).toContain('Compatibility is not a security-support promise');
+    expect(compatibility).toContain('Node 20 is end-of-life');
+    expect(compatibility).toContain('https://nodejs.org/en/about/eol');
+    expect(compatibility).toContain('https://nodejs.org/en/about/previous-releases');
+    expect(compatibility).toContain('latest patched release of a maintained Node.js LTS line');
+    expect(read('CONTRIBUTING.md')).toContain('maintained Node.js LTS');
+    const pkg = JSON.parse(read('package.json'));
+    expect(pkg.engines.node).toBe('>=20.19.0');
+    expect(read('.github/workflows/ci.yml')).toContain('- 20');
+  });
+
+
   it.each(documents)('publishes %s without unfinished template contacts', (file) => {
     const text = read(file);
     expect(text).not.toMatch(/\[INSERT[^\]]*\]|\bTODO\b|your[- ]?email|example@/i);

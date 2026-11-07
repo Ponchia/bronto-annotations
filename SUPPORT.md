@@ -1,7 +1,7 @@
 # Help and feedback
 
 Start with the [first-annotation guide](docs/getting-started.md),
-[example catalog](examples/README.md), and [troubleshooting](docs/troubleshooting.md).
+[example catalog](https://github.com/Ponchia/bronto-annotations/blob/main/examples/README.md), and [troubleshooting](docs/troubleshooting.md).
 The [compatibility matrix](docs/compatibility.md) describes tested environments.
 
 ## Report a problem
@@ -14,7 +14,7 @@ obstacles, and any zoom or coordinate transform. A screenshot helps explain a
 visual problem, but runnable input makes it possible to fix it.
 
 Remove credentials, customer information, and private application data before
-posting. Report security vulnerabilities privately using [SECURITY.md](SECURITY.md).
+posting. Report security vulnerabilities privately using [SECURITY.md](https://github.com/Ponchia/bronto-annotations/blob/main/SECURITY.md).
 
 ## Ask an integration question
 
@@ -33,7 +33,7 @@ An issue describing what worked, what needed configuration, and where the
 public guide was unclear is welcome. Include a public link only when you have
 permission to share it. Do not disclose private downstream applications.
 
-Contributions are described in [CONTRIBUTING.md](CONTRIBUTING.md). Optional
+Contributions are described in [CONTRIBUTING.md](https://github.com/Ponchia/bronto-annotations/blob/main/CONTRIBUTING.md). Optional
 financial support is described separately in [FUNDING.md](FUNDING.md).
 
 ## Documentation and community concerns
