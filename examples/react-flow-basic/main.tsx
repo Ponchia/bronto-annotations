@@ -333,7 +333,8 @@ function App() {
 
   return (
     <main className="example-shell">
-      <div className="graph-scroll" role="region" aria-label="Scrollable React Flow diagram" tabIndex={0}>
+      <div className="graph-scroll" role="region" aria-label="Scrollable React Flow diagram" aria-describedby="graph-scroll-help" tabIndex={0}>
+        <p id="graph-scroll-help" className="graph-scroll-hint">Scroll sideways to explore the full diagram. With this area focused, use the left and right arrow keys.</p>
         <section ref={shellRef} className="flow-shell" aria-label="React Flow annotation example">
           <ReactFlow
             nodes={nodes}

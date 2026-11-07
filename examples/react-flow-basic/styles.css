@@ -23,6 +23,13 @@ body {
   width: min(100%, 760px);
 }
 
+.graph-scroll-hint {
+  margin: 0 0 10px;
+  color: #334155;
+  font: 14px/1.5 ui-sans-serif, system-ui, sans-serif;
+  overflow-wrap: anywhere;
+}
+
 .graph-scroll:focus-visible {
   outline: 3px solid #2563eb;
   outline-offset: 3px;
