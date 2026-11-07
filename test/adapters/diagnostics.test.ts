@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from 'vitest';
 import {
+  anchorPoint,
   assertAnchorAlignmentReport,
   assertAnchorValidationReport,
   evaluateAnchorAlignment,
@@ -129,6 +130,84 @@ describe('adapter diagnostics', () => {
     );
     expect(() => assertAnchorAlignmentReport(report, { label: 'Generated target alignment' }))
       .toThrow(/Generated target alignment: failed/);
+  });
+
+  it.each([
+    { name: 'unequal segments', points: [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 20 }] },
+    { name: 'multiple bends', points: [{ x: 0, y: 0 }, { x: 80, y: 0 }, { x: 80, y: 80 }, { x: 20, y: 80 }] },
+    { name: 'straight segment', points: [{ x: 10, y: 20 }, { x: 110, y: 20 }] },
+    { name: 'repeated point', points: [{ x: 10, y: 20 }, { x: 10, y: 20 }] },
+    { name: 'single point', points: [{ x: 10, y: 20 }] }
+  ])('reports zero distance to an identical path and its core anchor point: $name', ({ points }) => {
+    const anchor = { type: 'path' as const, points };
+    const report = evaluateAnchorAlignment([
+      { id: 'path-note', anchor, note: { title: 'Path' } },
+      { id: 'point-note', anchor: { type: 'point', point: anchorPoint(anchor) }, note: { title: 'Midpoint' } }
+    ], [
+      { id: 'path-note', points },
+      { id: 'point-note', points }
+    ]);
+
+    expect(report.ok).toBe(true);
+    expect(report.aligned).toEqual(['path-note', 'point-note']);
+    expect(report.diagnostics.map(({ distance }) => distance)).toEqual([0, 0]);
+  });
+
+  it('measures displaced path targets between their half-length points', () => {
+    const points = [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: 20 }];
+    const report = evaluateAnchorAlignment([
+      { id: 'path-note', anchor: { type: 'path', points }, note: { title: 'Path' } }
+    ], [
+      { id: 'path-note', points: points.map(({ x, y }) => ({ x: x + 30, y: y + 40 })) }
+    ]);
+
+    expect(report.ok).toBe(false);
+    expect(report.diagnostics[0]).toMatchObject({ status: 'misaligned', distance: 50, overlapRatio: 0 });
+  });
+
+  it.each([NaN, Infinity, -Infinity].flatMap((invalid) =>
+    (['x', 'y'] as const).flatMap((axis) =>
+      [0, 1, 2].flatMap((index) =>
+        ['target', 'annotation'].map((side) => ({ invalid, axis, index, side }))
+      )
+    )
+  ))('rejects $invalid at $side path point $index.$axis', ({ invalid, axis, index, side }) => {
+    const points = [{ x: 0, y: 0 }, { x: 50, y: 10 }, { x: 100, y: 20 }];
+    points[index]![axis] = invalid;
+    const invalidTarget = side === 'target';
+    const report = evaluateAnchorAlignment([
+      {
+        id: 'path-note',
+        anchor: invalidTarget
+          ? { type: 'point', point: { x: 100, y: 20 } }
+          : { type: 'path', points },
+        note: { title: 'Path' }
+      }
+    ], [
+      { id: 'path-note', ...(invalidTarget ? { points } : { point: { x: 100, y: 20 } }) }
+    ]);
+
+    expect(report.ok).toBe(false);
+    expect(report.aligned).toEqual([]);
+    expect(report.warnings).toEqual([]);
+    expect(report.missing).toHaveLength(1);
+    expect(report.diagnostics[0]).toMatchObject({ status: 'misaligned', found: false });
+    expect(report.diagnostics[0]?.reason).toContain('non-finite');
+    expect(() => assertAnchorAlignmentReport(report)).toThrow(/non-finite/);
+  });
+
+  it('preserves target precedence and the empty-path origin fallback', () => {
+    const report = evaluateAnchorAlignment([
+      { id: 'box', anchor: { type: 'point', point: { x: 0, y: 0 } }, note: {} },
+      { id: 'empty-path', anchor: { type: 'point', point: { x: 0, y: 0 } }, note: {} }
+    ], [
+      { id: 'box', box: { x: 0, y: 0, width: 10, height: 10 }, points: [{ x: NaN, y: Infinity }] },
+      { id: 'empty-path', points: [], point: { x: NaN, y: Infinity } }
+    ]);
+
+    expect(report.ok).toBe(true);
+    expect(report.aligned).toEqual(['box', 'empty-path']);
+    expect(report.diagnostics[1]?.distance).toBe(0);
   });
 
   it('can fail on near alignment warnings when exact generated target alignment is required', () => {
