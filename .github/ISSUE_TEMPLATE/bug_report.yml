@@ -31,6 +31,14 @@ body:
     validations:
       required: true
   - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include browser or Node version, host library versions, renderer, and relevant zoom or transforms. Use only public information.
+      placeholder: Browser or Node, operating system, host library and version
+    validations:
+      required: true
+  - type: textarea
     id: reproduction
     attributes:
       label: Minimal reproduction

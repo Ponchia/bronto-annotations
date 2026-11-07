@@ -1,0 +1,34 @@
+name: Documentation feedback
+description: Report an unclear, missing, or incorrect guide without needing a code reproduction.
+title: "[Docs]: "
+labels:
+  - documentation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Include only public information. For vulnerabilities, use the private security-report link in the issue chooser instead.
+  - type: input
+    id: page
+    attributes:
+      label: Page or guide
+      description: A link, repository path, or the page you expected to find.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What was unclear or incorrect?
+      description: Describe what you were trying to do and where the guide stopped helping.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Package version or documentation revision
+      description: Optional. This helps distinguish published releases from main.
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested clarification
+      description: Optional. A proposed fix or code sample is welcome but not required.

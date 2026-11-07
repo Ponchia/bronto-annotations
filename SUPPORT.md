@@ -35,3 +35,10 @@ permission to share it. Do not disclose private downstream applications.
 
 Contributions are described in [CONTRIBUTING.md](CONTRIBUTING.md). Optional
 financial support is described separately in [FUNDING.md](FUNDING.md).
+
+## Documentation and community concerns
+
+A [documentation report](https://github.com/Ponchia/bronto-annotations/issues/new?template=documentation.yml)
+only needs the page and what was unclear; code and a proposed fix are optional.
+For conduct concerns and safe reporting routes, read [Code of Conduct](https://github.com/Ponchia/bronto-annotations/blob/main/CODE_OF_CONDUCT.md).
+[Governance](https://github.com/Ponchia/bronto-annotations/blob/main/GOVERNANCE.md) explains who makes project and release decisions.
