@@ -29,9 +29,10 @@ async function geometry(page, selector) {
 /** The owning browser test supplies its browser; all child pages are closed. */
 export async function verifyPlaygroundCopy({ browser, siteUrl, root }) {
   const scratch = await mkdtemp(join(tmpdir(), 'annotations-playground-copy-'));
-  const context = await browser.newContext({ viewport: { width: 1200, height: 900 } });
+  let context;
   let server;
   try {
+    context = await browser.newContext({ viewport: { width: 1200, height: 900 } });
     const page = await context.newPage();
     await page.goto(siteUrl, { waitUntil: 'networkidle' });
     const scenes = [];
@@ -110,21 +111,33 @@ export async function verifyPlaygroundCopy({ browser, siteUrl, root }) {
       assert.equal(await consumer.locator('.pa-annotation').count(), count);
       assert.equal(await consumer.locator('.pa-annotation__note[tabindex="0"]').count(), count);
       assert.equal(await consumer.locator('svg.pa-annotation-layer').getAttribute('role'), 'group');
-      const paint = await consumer.locator('.pa-annotation').first().evaluate(item => ({
+      const paints = await consumer.locator('.pa-annotation').evaluateAll(items => items.map(item => ({
+        id: item.getAttribute('data-annotation-id'),
         paper: getComputedStyle(item.querySelector('.pa-annotation__note-box')).fill,
         text: getComputedStyle(item.querySelector('.pa-annotation__title')).fill,
         stroke: getComputedStyle(item.querySelector('.pa-annotation__connector')).stroke,
-      }));
-      assert.notEqual(paint.paper, paint.text, 'Copied annotation text must differ from its background');
-      assert.notEqual(paint.paper, 'none');
-      assert.notEqual(paint.stroke, 'none', 'Package CSS must give connectors a visible stroke');
+      })));
+      for (const paint of paints) {
+        assert.notEqual(paint.paper, paint.text,
+          `Copied ${scene.name}/${paint.id} text must differ from its background`);
+        assert.notEqual(paint.paper, 'none');
+        assert.notEqual(paint.stroke, 'none',
+          `Package CSS must give ${scene.name}/${paint.id} a visible connector stroke`);
+      }
       assert.deepEqual(errors, [], `Copied ${scene.name} runtime errors`);
       await consumer.close();
     }
     console.log(`Copied recipes verified: ${scenes.length} strict TypeScript consumers; six scene/mode geometries match; package-only CSS and keyboard-focusable notes.`);
   } finally {
-    await context.close();
-    if (server) await server.close();
-    await rm(scratch, { recursive: true, force: true });
+    // Cleanup every owned resource even if context creation or another close fails.
+    try {
+      if (context) await context.close();
+    } finally {
+      try {
+        if (server) await server.close();
+      } finally {
+        await rm(scratch, { recursive: true, force: true });
+      }
+    }
   }
 }
