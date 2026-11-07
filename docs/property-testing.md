@@ -77,7 +77,27 @@ For a larger local or manually scheduled exploration, choose a recorded seed:
 FC_SEED=42 FC_RUNS=2000 npm run test:property
 ```
 
-The repository's normal CI gate executes the default budget. This guide adds
-no nightly workflow. When a property reveals a real defect, retain the shrunk
-input as an example regression test and fix the contract violation; do not
-filter out the counterexample merely to make the property pass.
+The repository's normal CI gate executes the default budget on Node 20 and 22.
+When a property reveals a real defect, retain the shrunk input as an example
+regression test and fix the contract violation. Do not filter out the
+counterexample merely to make the property pass.
+
+## Replay a scheduled campaign
+
+The **Property tests** GitHub Actions workflow runs nightly and supports manual
+runs. It installs locked dependencies on a GitHub-hosted Node 22 runner with
+read-only repository permissions and a 15-minute job limit. Each campaign uses
+a fresh signed 32-bit seed unless you supply one manually. The default budget
+is 5,000 cases per property, or 30,000 cases across the six properties, plus
+the negative controls. Manual runs accept 1–10,000 cases per property.
+
+The run-count cap limits generated cases. Each generator separately bounds
+path length, scene size, coordinates, and text size as described above.
+
+Download the run's `property-tests-<run_id>-<run_attempt>` artifact within its
+30-day retention period. `configuration.json` records the seed, per-property
+budget, commit, and Node version. Vitest's `results.json` records test outcomes
+and failure details, including available minimized counterexamples and replay
+paths. An interrupted run can lack results; configuration alone is not a pass.
+Check out the recorded commit, install its lockfile, and use the seed, budget,
+property name, and failure path with the replay command above.
