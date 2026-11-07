@@ -12,6 +12,7 @@ const { values } = parseArgs({ options: {
   'site-dir': { type: 'string', default: resolve(root, '_site') },
   host: { type: 'string' },
   fault: { type: 'string' },
+  control: { type: 'string' },
 } });
 const site = resolve(values['site-dir']);
 const hosts = {
@@ -31,9 +32,11 @@ const faultStyles = {
   transparent: '.pa-annotation__body { opacity: 0 !important; }',
   clipped: '.pa-annotation__body { max-height: 1px !important; overflow: hidden !important; }',
   scaled: '.pa-annotation__title,.pa-annotation__body { transform: scale(0.5) !important; transform-origin: top left !important; }',
+  'foreign-object-scale': 'foreignObject.pa-annotation__note { transform: scale(0.5) !important; transform-origin: 0 0 !important; }',
 };
 assert(!values.fault || (values.host === 'react-flow-basic' && Object.hasOwn(faultStyles, values.fault)),
   'Fault probes require the React Flow host and a known fault');
+assert(!values.control || (values.control === 'black' && !values.fault), 'Unknown or incompatible positive control');
 for (const name of selected) await access(resolve(site, 'examples', name, 'index.html'));
 const mime = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
   '.json': 'application/json', '.svg': 'image/svg+xml', '.wasm': 'application/wasm' };
@@ -71,6 +74,7 @@ try {
       const response = await page.goto(`${origin}/examples/${name}/`, { waitUntil: 'networkidle' });
       assert.equal(response?.status(), 200, name);
       if (values.fault) await page.addStyleTag({ content: faultStyles[values.fault] });
+      if (values.control === 'black') await page.addStyleTag({ content: '.pa-annotation__title,.pa-annotation__body { color: rgb(0, 0, 0) !important; fill: rgb(0, 0, 0) !important; }' });
       let initialText;
       // No reload between widths: initial rendering must not conceal stale geometry.
       for (const width of [1200, 320, 390, 768, 1200, 320]) {
@@ -101,8 +105,15 @@ try {
             const determinant = matrix.a * matrix.d - matrix.b * matrix.c;
             return Math.sqrt(Math.max(0, (sum - Math.sqrt(Math.max(0, sum * sum - 4 * determinant * determinant))) / 2));
           };
-          const visiblePaint = value => value !== 'none' && value !== 'transparent'
-            && !/rgba?\([^)]*[,/]\s*0(?:\.0+)?\s*\)$/i.test(value);
+          const visiblePaint = value => {
+            if (!value || value === 'none' || value === 'transparent') return false;
+            const content = value.slice(value.indexOf('(') + 1, value.lastIndexOf(')'));
+            // rgb's third component is blue, never alpha. Modern color syntax
+            // uses slash alpha; legacy rgba syntax uses a fourth component.
+            if (content.includes('/')) return parseFloat(content.split('/').at(-1)) > 0;
+            const components = content.split(',');
+            return components.length !== 4 || parseFloat(components[3]) > 0;
+          };
           const inspectText = (element, noteBox) => {
             const style = getComputedStyle(element);
             let visible = element.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
@@ -130,8 +141,12 @@ try {
                 }
               }
             }
-            const matrix = typeof element.getScreenCTM === 'function'
-              ? element.getScreenCTM() : element.closest('svg')?.getScreenCTM();
+            let geometryElement = element;
+            while (geometryElement && typeof geometryElement.getScreenCTM !== 'function')
+              geometryElement = geometryElement.parentElement;
+            // HTML within foreignObject inherits that SVG element's CTM, not
+            // merely the outer svg's. This includes intermediate SVG scaling.
+            const matrix = geometryElement?.getScreenCTM();
             return { visible, unclipped, readable: supportedTransform
               && parseFloat(style.fontSize) * minimumScale(matrix) >= 11 };
           };
@@ -239,7 +254,7 @@ try {
   try { await browser?.close(); }
   finally { if (server.listening) await new Promise(done => server.close(done)); }
 }
-const evidence = resolve(root, 'browser-evidence/graph-resize', values.fault ?? 'normal');
+const evidence = resolve(root, 'browser-evidence/graph-resize', values.fault ?? values.control ?? 'normal');
 await mkdir(evidence, { recursive: true });
 await writeFile(resolve(evidence, 'results.json'), JSON.stringify({ observations, failures }, null, 2) + '\n');
 assert.deepEqual(failures, [], 'Graph resize regressions: ' + JSON.stringify(failures));
