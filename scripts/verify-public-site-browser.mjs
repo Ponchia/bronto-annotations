@@ -377,6 +377,17 @@ try {
     await mode.selectOption('automatic');
     assert.equal(await inspector.getAttribute('open'), '', 'Layout updates preserve the open text alternative');
     await verifyPlaygroundSharing(home);
+    // Sharing, the nearby strategy toggle and the readable inspector must
+    // describe one scene after restoration/reset, not independently drift.
+    assert.equal(await inspector.getAttribute('open'), '',
+      'Sharing and reset preserve the open note inspector');
+    assert.equal(await home.locator('#scene-note-list > li').count(), 3);
+    assert.match(await home.locator('#layout-result-summary').innerText(), /Collision-aware: 3 notes/);
+    await home.locator('#toggle-placement').click();
+    assert.match(await home.locator('#layout-result-summary').innerText(), /Fixed offsets: 3 notes/);
+    assert.match(await home.locator('#scene-link').inputValue(), /placement=fixed/);
+    await home.locator('#toggle-placement').click();
+    assert.match(await home.locator('#layout-result-summary').innerText(), /Collision-aware: 3 notes/);
     const audit = await new AxeBuilder({ page: home })
       .withTags(wcagTags)
       .analyze();
