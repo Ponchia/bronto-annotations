@@ -185,6 +185,10 @@ data attributes deliberately.
   when present, with node-side fallback when a handle has not been measured.
   Edge anchors use measured `sourceHandle` and `targetHandle` centers when
   available, while `edgePoints` remains the override for custom routed edges.
+  Extracted edge `point` values use the core path anchor's half-length point,
+  not the middle sampled vertex. Route points and generated annotation anchors
+  remain unchanged. Strict validation rejects routes whose resolved midpoint
+  is nonfinite even when every supplied coordinate is finite.
   Within one `prepareReactFlowAnnotations` call, each needed edge object is
   resolved once, on first use: its custom route, or the endpoint fallback when
   `edgePoints` returns `undefined`, is copied and reused for validation,

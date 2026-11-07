@@ -6,6 +6,7 @@
  * @experimental During `0.x`: low-level node, handle, and edge geometry helper
  * exports.
  */
+import { anchorPoint } from '../core/anchors.js';
 import type {
   Anchor,
   Annotation,
@@ -233,12 +234,13 @@ export function anchorsFromReactFlow<TNode extends ReactFlowNodeLike, TEdge exte
       }
 
       const box = boxFromPoints(points);
+      const anchor: Anchor = { type: 'path', points };
 
       return [{
         id: spec.id,
-        anchor: { type: 'path', points },
+        anchor,
         box,
-        point: points[Math.floor(points.length / 2)] ?? { x: box.x, y: box.y },
+        point: anchorPoint(anchor),
         source: 'react-flow-edge',
         edgeId: edge.id,
         sourceNodeId: edge.source,
@@ -316,7 +318,8 @@ export function validateReactFlowAnchors<TNode extends ReactFlowNodeLike, TEdge 
         : [];
       // Custom routes are already in overlay coordinates and do not use the viewport.
       const validGeometry = points.length > 0 && points.every(isFinitePoint)
-        && isFiniteBox(boxFromPoints(points));
+        && isFiniteBox(boxFromPoints(points))
+        && isFinitePoint(anchorPoint({ type: 'path', points }));
 
       return anchorDiagnostic({
         id: spec.id,
