@@ -292,6 +292,74 @@ try {
     assert.equal(await mode.inputValue(), 'automatic');
     assert.deepEqual(await readMetrics(), automatic,
       'Native reset restores both the placement mode and measured metrics');
+    // The public demo lets visitors reproduce the same resolved geometry,
+    // without introducing invented scores, editor-only code or custom tracking.
+    const compare = home.locator('#comparison-result');
+    assert.match(await compare.innerText(), /Layout scores: automatic/);
+    assert.match(await home.locator('#comparison-method').innerText(),
+      /chart coordinates, not display pixels/);
+    assert.equal(await home.locator('button[data-scene="balanced"]').getAttribute('aria-pressed'), 'true');
+
+    await home.locator('button[data-scene="crowded"]').click();
+    assert.equal(await home.locator('#placed-count').innerText(), '5');
+    assert.equal(await home.locator('#obstacle-display').innerText(), '215');
+    assert.equal(await home.locator('#annotation-overlay').getAttribute('data-scene'), 'crowded');
+    assert.equal(await home.locator('button[data-scene="crowded"]').getAttribute('aria-pressed'), 'true');
+    assert.match(await compare.innerText(), /Layout scores: automatic/);
+
+    const sourceDisclosure = home.locator('details.scene-source');
+    await sourceDisclosure.locator('summary').click();
+    const source = home.locator('#scene-source-code');
+    assert(await source.isVisible(), 'Current scene source must be visible on request');
+    assert((await source.innerText()).includes('@ponchia/annotations'));
+    assert((await source.innerText()).includes('@ponchia/annotations/bronto.css'));
+    assert((await source.innerText()).includes("document.getElementById('chart-annotations')"));
+    assert((await source.innerText()).includes('noteTabIndex: 0'));
+    assert((await source.innerText()).includes('demo-4'));
+    assert((await source.innerText()).includes('"width":215'));
+    await mode.selectOption('fixed');
+    assert((await source.innerText()).includes('"manual"'),
+      'Code reflects the selected fixed-offset recipe');
+    await mode.selectOption('automatic');
+    assert(!(await source.innerText()).includes('"manual"'),
+      'Code updates when the placement strategy changes');
+
+    await home.locator('button[data-scene="sparse"]').click();
+    assert.equal(await home.locator('#placed-count').innerText(), '2');
+    assert.equal(await home.locator('#annotation-overlay').getAttribute('data-route'), 'none');
+    assert.equal(await home.locator('button[data-scene="sparse"]').getAttribute('aria-pressed'), 'true');
+
+    await range.evaluate((el) => {
+      el.value = '4';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    assert.equal(await home.locator('#annotation-overlay').getAttribute('data-scene'), 'custom');
+    assert.match(await home.locator('#scene-preset-hint').innerText(), /Custom scene/);
+    assert.equal(await home.locator('[data-scene][aria-pressed="true"]').count(), 0);
+
+    await home.locator('.reset-control').click();
+    await home.waitForFunction(() =>
+      document.querySelector('#annotation-overlay')?.getAttribute('data-scene') === 'balanced');
+    assert.deepEqual(await readMetrics(), automatic);
+    assert.equal(await home.locator('button[data-scene="balanced"]').getAttribute('aria-pressed'), 'true');
+    if (width < 500) {
+      const chart = home.locator('.chart-viewport');
+      const dimensions = await chart.evaluate((element) => ({
+        visible: element.clientWidth,
+        content: element.scrollWidth
+      }));
+      assert(dimensions.content > dimensions.visible + 100,
+        'Mobile chart must remain readable by allowing horizontal exploration');
+      assert(await home.locator('.chart-scroll-hint').isVisible(),
+        'The mobile chart must advertise its horizontal navigation');
+      await chart.focus();
+      assert(await chart.evaluate((element) => element === document.activeElement),
+        'Scrollable chart region must be reachable by keyboard');
+      await chart.evaluate((element) => { element.scrollLeft = 260; });
+      assert((await chart.evaluate((element) => element.scrollLeft)) >= 250,
+        'Mobile chart must actually scroll horizontally without moving the whole page');
+      await chart.evaluate((element) => { element.scrollLeft = 0; });
+    }
     const audit = await new AxeBuilder({ page: home })
       .withTags(wcagTags)
       .analyze();
@@ -377,6 +445,39 @@ try {
       variants++;
       await guide.context().close();
     }
+  }
+  for (const width of [641, 768, 900]) {
+    const tablet = await visit('/', width);
+    const sourceDetails = tablet.locator('details.scene-source');
+    const sourceCode = tablet.locator('#scene-source-code');
+    await sourceDetails.locator('summary').click();
+    assert(await sourceCode.isVisible(), 'Tablet source disclosure must open');
+    await tablet.locator('button[data-scene="crowded"]').click();
+    await tablet.locator('#placement-mode').selectOption('fixed');
+    const tabletGeometry = await tablet.evaluate(() => {
+      const code = document.querySelector('#scene-source-code');
+      const selector = document.querySelector('#placement-mode');
+      const selectBounds = selector?.getBoundingClientRect();
+      return {
+        overflow: document.documentElement.scrollWidth - innerWidth,
+        selectLeft: selectBounds?.left ?? -1,
+        selectRight: selectBounds?.right ?? Infinity,
+        codeClient: code?.clientWidth,
+        codeScroll: code?.scrollWidth,
+        codeHeight: code?.clientHeight,
+        codeScrollHeight: code?.scrollHeight,
+      };
+    });
+    assert(tabletGeometry.overflow <= 0,
+      'Source disclosure must not overflow tablet document at ' + width + 'px');
+    assert(tabletGeometry.selectLeft >= 0 && tabletGeometry.selectRight <= width,
+      'Opening source code must not push its neighboring placement control off tablet screen');
+    assert((tabletGeometry.codeScroll ?? 0) > (tabletGeometry.codeClient ?? 0)
+      || (tabletGeometry.codeScrollHeight ?? 0) > (tabletGeometry.codeHeight ?? 0),
+      'Long current-scene code must scroll inside its own area instead of overflowing the page');
+    await sourceDetails.locator('summary').click();
+    assert.equal(await tablet.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0);
+    await tablet.context().close();
   }
   for (const width of [390, 1200]) {
     for (const name of publishedExamples) {

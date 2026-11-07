@@ -167,7 +167,8 @@
                   GEOMETRY</span
                 ><span id="plot-mode-label">COLLISION-AWARE</span>
               </div>
-              <div class="chart-stage">
+              <div class="chart-viewport" role="region" tabindex="0" aria-label="Annotation chart, horizontally scrollable on smaller screens">
+                <div class="chart-stage">
                 <svg
                   class="plot-svg"
                   viewBox="0 0 760 430"
@@ -217,11 +218,13 @@
                   class="annotation-overlay"
                   aria-label="Computed annotations"
                 ></div>
+                </div>
               </div>
+              <p class="chart-scroll-hint">Swipe sideways or use the arrow keys to explore the full annotation chart.</p>
               <div class="plot-metrics">
                 <div>
                   <span>LAYOUT SCORE</span
-                  ><strong id="layout-score" aria-live="polite">—</strong>
+                  ><strong id="layout-score">—</strong>
                 </div>
                 <div>
                   <span>NOTES PLACED</span><strong id="placed-count">—</strong>
@@ -233,6 +236,11 @@
                   <span>OBSTACLE OVERLAP</span><strong id="obstacle-overlap-count">—</strong>
                 </div>
               </div>
+              <div class="comparison-panel" aria-describedby="comparison-method">
+                <p class="eyebrow">SAME INPUTS / TWO METHODS</p>
+                <p id="comparison-result" class="comparison-result" role="status" aria-live="polite" aria-atomic="true">Computing the comparison…</p>
+                <p id="comparison-method">Both methods use this engine and the same notes, anchors and obstacle. Scores are relative layout heuristics; overlap area is measured in chart coordinates, not display pixels. Fixed offsets are an illustrative baseline, not another library.</p>
+              </div>
             </div>
             <form class="controls-panel" id="annotation-controls">
               <p class="eyebrow">CONFIGURE THE SCENE</p>
@@ -241,6 +249,15 @@
                 Compare a simple fixed-offset baseline with collision-aware
                 placement using the same chart, notes and measured quality.
               </p>
+              <fieldset class="scene-presets" aria-describedby="scene-preset-hint">
+                <legend>Start with a scene</legend>
+                <div class="scene-preset-options">
+                  <button type="button" data-scene="balanced" aria-pressed="true">Balanced</button>
+                  <button type="button" data-scene="crowded" aria-pressed="false">Crowded</button>
+                  <button type="button" data-scene="sparse" aria-pressed="false">Open space</button>
+                </div>
+                <p id="scene-preset-hint">Balanced: three callouts and a medium obstacle. Change any control to experiment.</p>
+              </fieldset>
               <label class="control-block" for="placement-mode">
                 <span>Placement method</span>
                 <select id="placement-mode" aria-describedby="placement-mode-note">
@@ -286,6 +303,15 @@
                 </select></label
               >
               <button type="reset" class="reset-control">Reset scene ↺</button>
+              <details class="scene-source">
+                <summary>Use this scene in your code</summary>
+                <p>Copy the parameters and annotation objects currently shown. This is the headless layout call; integrate the returned SVG into your own trusted rendering surface.</p>
+                <div class="scene-source-toolbar">
+                  <span>Current playground settings</span>
+                  <button type="button" class="copy-button" data-copy-target="scene-source-code">Copy code</button>
+                </div>
+                <pre id="scene-source-code" tabindex="0" aria-label="TypeScript for the current annotation scene"><code></code></pre>
+              </details>
               <p class="fine-print">
                 Real <code>resolveAnnotationLayout</code> and
                 <code>renderAnnotationsSvg</code>.
@@ -537,7 +563,7 @@
               supports every optional adapter.
             </p>
             <div class="quick-links">
-              <a href="./docs/getting-started.html"
+              <a href="./docs/context-quickstart.html"
                 >Choose your host context ↗</a
               ><a href="./docs/integration-recipes.html"
                 >Integration recipes ↗</a
@@ -563,7 +589,9 @@
   resolveAnnotationLayout,
   renderAnnotationsSvg
 } from '@ponchia/annotations';
+import '@ponchia/annotations/bronto.css';
 
+// Add &lt;div id="chart-annotations"&gt;&lt;/div&gt; inside your chart.
 const layout = resolveAnnotationLayout({
   annotations: [{
     id: 'peak',
@@ -578,8 +606,13 @@ const layout = resolveAnnotationLayout({
 });
 
 const svg = renderAnnotationsSvg(layout, {
-  title: 'Chart notes'
-});</code></pre>
+  title: 'Chart notes',
+  noteTabIndex: 0,
+  preserveAspectRatio: 'xMidYMid meet'
+});
+const target = document.getElementById('chart-annotations');
+if (!target) throw new Error('Missing #chart-annotations mount');
+target.innerHTML = svg;</code></pre>
           </div>
         </div>
       </section>
