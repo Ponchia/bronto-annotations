@@ -185,6 +185,19 @@ data attributes deliberately.
   when present, with node-side fallback when a handle has not been measured.
   Edge anchors use measured `sourceHandle` and `targetHandle` centers when
   available, while `edgePoints` remains the override for custom routed edges.
+  Within one `prepareReactFlowAnnotations` call, each needed edge object is
+  resolved once, on first use: its custom route, or the endpoint fallback when
+  `edgePoints` returns `undefined`, is copied and reused for validation,
+  annotation paths, and included edge obstacles. Empty or nonfinite custom
+  routes remain invalid; they do not select fallback. Callback exceptions
+  propagate. Duplicate edge ids still match the first edge for annotations;
+  obstacles can include each edge object. A new preparation call resolves
+  routes afresh; standalone extraction and validation remain uncached.
+  Keep graph state, specs, and obstacle predicates stable during preparation:
+  this route snapshot is not a transaction over host state or DOM measurements,
+  and does not apply to other adapters. Validation covers requested specs,
+  not obstacle-only edges. Run the executable contract with
+  `npx vitest run test/adapters/react-flow-snapshot.test.ts`.
   Node, measured handle, and optional edge obstacles can be derived from the
   same public state; `prepareReactFlowAnnotations` includes handles and edges
   by default, while `obstaclesFromReactFlow` exposes `includeHandles` and
