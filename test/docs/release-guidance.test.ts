@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 import { fileURLToPath, URL as NodeURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
@@ -13,19 +14,53 @@ const section = (text: string, title: string): string => {
   return text.slice(start, end < 0 ? undefined : end);
 };
 
+function currentGuidance(file: string, text: string): string {
+  if (file.endsWith('release-readiness.md')) return section(text, 'Choose the matching package');
+  if (file.endsWith('migration-guide.md')) return section(text, 'UI helper migration and package versions');
+  const end = text.indexOf('\n## Why change the contract?');
+  expect(end, 'Missing migration introduction delimiter').toBeGreaterThan(0);
+  return text.slice(0, end);
+}
+
+function checkCurrentInstall(file: string, text: string): void {
+  const current = currentGuidance(file, text);
+  const installs = [...current.matchAll(/npm install @ponchia\/annotations@([0-9][0-9A-Za-z.+-]*)/g)]
+    .map(match => match[1]);
+  expect(installs.length).toBeGreaterThan(0);
+  expect([...new Set(installs)]).toEqual([stable]);
+  expect(current).toContain(`/blob/v${stable}/docs/`);
+}
+
 describe('current release guidance and historical scope', () => {
   it.each(['docs/migration-0.7.md', 'docs/migration-guide.md', 'docs/release-readiness.md'])(
     '%s offers the confirmed stable package, not a release candidate', file => {
-      const text = read(file);
-      const current = file.endsWith('migration-guide.md')
-        ? section(text, 'UI helper migration and package versions')
-        : text.slice(0, text.indexOf('\n## Automated acceptance') > 0
-          ? text.indexOf('\n## Automated acceptance') : text.indexOf('\n## Why change'));
-      expect(current).toContain(`npm install @ponchia/annotations@${stable}`);
-      expect(current).not.toMatch(/(?:npm install|Install\s+`)\s*@ponchia\/annotations@\d+\.\d+\.\d+-rc\./);
-      expect(current).toContain(`/blob/v${stable}/docs/`);
+      checkCurrentInstall(file, read(file));
     }
   );
+
+  it('does not accept the current install when it occurs only in historical evidence', () => {
+    const file = 'docs/release-readiness.md';
+    const changed = read(file).replace(`npm install @ponchia/annotations@${stable}`,
+      'npm install @ponchia/annotations@0.8.1').replace(
+      '## Historical 0.8.1 publication evidence',
+      `## Historical 0.8.1 publication evidence\n\nnpm install @ponchia/annotations@${stable}`);
+    expect(() => checkCurrentInstall(file, changed)).toThrow();
+    expect(() => currentGuidance('docs/migration-0.7.md', 'Missing section')).toThrow();
+  });
+
+  it('keeps a historical display title out of current navigation', () => {
+    const source = read('scripts/build-public-site.mjs');
+    const start = source.indexOf('const titles =');
+    const end = source.indexOf('const guideSummaries =');
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    // Execute the actual pure navigation declarations, not a duplicate registry.
+    const navigation = runInNewContext(`${source.slice(start, end)}; ({ titles, primaryDocs })`,
+      {}, { timeout: 1000 }) as { titles: Record<string, string>; primaryDocs: string[] };
+    expect(navigation.titles['e2e-plan']).toContain('Historical');
+    expect(navigation.primaryDocs).not.toContain('e2e-plan');
+    expect(navigation.primaryDocs).toContain('getting-started');
+  });
 
   it('describes the released API while retaining its established contract headings and manifest', () => {
     const stability = read('docs/api-stability.md');
