@@ -7,6 +7,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { resolve } from 'node:path';
 import { verifyAuthoringDefault, openAuthoringDiagram } from './responsive-authoring-scenario.mjs';
 import { offersInstall } from './site-release.mjs';
+import { verifyPlaygroundSharing } from './playground-sharing-scenario.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const publication = JSON.parse(await readFile(resolve(root, '_site/release-status.json'), 'utf8'));
@@ -360,6 +361,7 @@ try {
         'Mobile chart must actually scroll horizontally without moving the whole page');
       await chart.evaluate((element) => { element.scrollLeft = 0; });
     }
+    await verifyPlaygroundSharing(home);
     const audit = await new AxeBuilder({ page: home })
       .withTags(wcagTags)
       .analyze();

@@ -167,6 +167,10 @@
                   GEOMETRY</span
                 ><span id="plot-mode-label">COLLISION-AWARE</span>
               </div>
+              <div class="plot-actions">
+                <button id="toggle-placement" type="button" aria-controls="annotation-overlay" aria-pressed="false">Compare fixed offsets</button>
+                <span>Keep the same scene. Switch the placement method.</span>
+              </div>
               <div class="chart-viewport" role="region" tabindex="0" aria-label="Annotation chart, horizontally scrollable on smaller screens">
                 <div class="chart-stage">
                 <svg
@@ -303,6 +307,13 @@
                 </select></label
               >
               <button type="reset" class="reset-control">Reset scene ↺</button>
+              <div class="scene-share">
+                <button id="copy-scene-link" type="button" class="scene-copy-control">Copy scene link</button>
+                <label for="scene-link">Link to these settings</label>
+                <input id="scene-link" type="text" inputmode="url" spellcheck="false" readonly aria-describedby="scene-link-help" />
+                <p id="scene-link-help">Only the demonstration settings are included. No account or server-side save is required.</p>
+                <p id="scene-link-status" role="status" aria-live="polite" aria-atomic="true"></p>
+              </div>
               <details class="scene-source">
                 <summary>Use this scene in your code</summary>
                 <p>Copy the parameters and annotation objects currently shown. This is the headless layout call; integrate the returned SVG into your own trusted rendering surface.</p>

@@ -7,6 +7,7 @@ import {
 } from '@ponchia/annotations';
 import '@ponchia/annotations/bronto.css';
 import './site.css';
+import { DEFAULT_PLAYGROUND_STATE, parseSceneHash, sceneUrl, type PlaygroundState } from './playground-state.js';
 
 const form = document.querySelector<HTMLFormElement>('#annotation-controls');
 const notesInput = document.querySelector<HTMLInputElement>('#notes-count');
@@ -28,6 +29,10 @@ const plotModeLabel = document.querySelector<HTMLElement>('#plot-mode-label');
 const comparisonResult = document.querySelector<HTMLElement>('#comparison-result');
 const scenePresetHint = document.querySelector<HTMLElement>('#scene-preset-hint');
 const sceneSourceCode = document.querySelector<HTMLElement>('#scene-source-code code');
+const sceneLink = document.querySelector<HTMLInputElement>('#scene-link');
+const shareButton = document.querySelector<HTMLButtonElement>('#copy-scene-link');
+const shareStatus = document.querySelector<HTMLElement>('#scene-link-status');
+const comparisonToggle = document.querySelector<HTMLButtonElement>('#toggle-placement');
 const scenePresetButtons = [
   ...document.querySelectorAll<HTMLButtonElement>('[data-scene]'),
 ];
@@ -94,10 +99,17 @@ function updateLayout() {
   )
     return;
 
-  const count = Math.min(5, Math.max(2, Number(notesInput.value) || 3));
-  const width = Math.min(215, Math.max(80, Number(obstacleInput.value) || 150));
+  const count = Math.min(5, Math.max(2, Math.round(Number(notesInput.value) || 3)));
+  const width = Math.min(215, Math.max(80, Math.round((Number(obstacleInput.value) || 150) / 5) * 5));
   const routing = routeInput.value === 'none' ? 'none' : 'orthogonal';
   const placementMode = placementInput.value === 'fixed' ? 'fixed' : 'automatic';
+  if (sceneLink) sceneLink.value = sceneUrl(window.location.href, {
+    notes: count, obstacle: width, routing, placement: placementMode,
+  });
+  if (comparisonToggle) {
+    comparisonToggle.textContent = placementMode === 'fixed' ? 'Show automatic placement' : 'Compare fixed offsets';
+    comparisonToggle.setAttribute('aria-pressed', String(placementMode === 'fixed'));
+  }
   const obstacle: Box = { x: 350, y: 219, width, height: 90 };
   obstacleRect.setAttribute('width', String(width));
   countOutput.textContent = String(count);
@@ -241,11 +253,62 @@ for (const button of scenePresetButtons) {
   });
 }
 
+function applyState(state: PlaygroundState) {
+  if (!notesInput || !obstacleInput || !routeInput || !placementInput) return;
+  notesInput.value = String(state.notes);
+  obstacleInput.value = String(state.obstacle);
+  routeInput.value = state.routing;
+  placementInput.value = state.placement;
+}
+
+function restoreSceneHash(): boolean {
+  const parsed = parseSceneHash(window.location.hash);
+  if (parsed.kind === 'unrelated') return false;
+  applyState(parsed.kind === 'scene' ? parsed.state : DEFAULT_PLAYGROUND_STATE);
+  if (shareStatus) shareStatus.textContent = parsed.kind === 'scene'
+    ? 'Shared scene restored. The link below follows your current settings.'
+    : 'This scene link is invalid or uses an unsupported version. Default settings restored.';
+  return true;
+}
+
+comparisonToggle?.addEventListener('click', () => {
+  if (!placementInput) return;
+  placementInput.value = placementInput.value === 'fixed' ? 'automatic' : 'fixed';
+  updateLayout();
+});
+
+shareButton?.addEventListener('click', async () => {
+  if (!sceneLink || !shareStatus) return;
+  // Capture the clicked state; changing controls while the permission prompt
+  // is open must not change the link that this copy operation refers to.
+  const link = sceneLink.value;
+  try {
+    await navigator.clipboard.writeText(link);
+    shareStatus.textContent = 'Scene link copied. It restores the settings shown when you clicked.';
+  } catch {
+    sceneLink.focus();
+    sceneLink.select();
+    shareStatus.textContent = 'Clipboard unavailable. The scene link is selected for manual copying.';
+  }
+});
+
+// Enter in the read-only link must not navigate or submit the surrounding form.
+form?.addEventListener('submit', (event) => event.preventDefault());
+window.addEventListener('hashchange', () => {
+  if (restoreSceneHash()) updateLayout();
+});
+const restoredFromLink = restoreSceneHash();
 form?.addEventListener('input', updateLayout);
 form?.addEventListener('change', updateLayout);
 // Native form reset restores the input defaults after the reset event returns.
-form?.addEventListener('reset', () => requestAnimationFrame(updateLayout));
+form?.addEventListener('reset', () => requestAnimationFrame(() => {
+  if (shareStatus) shareStatus.textContent = 'Default scene restored. Copy its link below.';
+  updateLayout();
+}));
 updateLayout();
+if (restoredFromLink) {
+  requestAnimationFrame(() => document.getElementById('playground')?.scrollIntoView());
+}
 
 for (const button of document.querySelectorAll<HTMLButtonElement>(
   '[data-copy],[data-copy-target]',

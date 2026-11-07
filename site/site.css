@@ -306,6 +306,59 @@ select:focus-visible {
 .plot-header span:last-child {
   text-align: right;
 }
+.plot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  border-bottom: 1px solid #e6ebec;
+  padding: 12px 16px;
+}
+.plot-actions button {
+  border: 1px solid #bdcacc;
+  border-radius: 4px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 10px 12px;
+  min-height: 44px;
+}
+.plot-actions button[aria-pressed='true'] { background: #e9f3f1; }
+.plot-actions span { font-size: 0.73rem; color: #52676a; }
+.plot-actions button:focus-visible {
+  outline: 3px solid var(--accent-dark);
+  outline-offset: 2px;
+}
+.scene-share {
+  min-width: 0;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #e6ebec;
+}
+.scene-share button { width: 100%; }
+.scene-share label {
+  display: block;
+  margin: 12px 0 7px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+.scene-share input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  font-size: 0.75rem;
+  padding: 10px;
+  border: 1px solid #c9d3d5;
+  border-radius: 4px;
+  color: var(--ink);
+  background: #fff;
+}
+.scene-share p { font-size: 0.73rem; color: #52676a; line-height: 1.5; margin: 8px 0 0; }
+#scene-link-status { min-height: 1.5em; }
 .chart-viewport {
   max-width: 100%;
   overflow-x: auto;
@@ -580,7 +633,8 @@ select:focus-visible {
   border-radius: 3px;
   color: var(--ink);
 }
-.reset-control {
+.reset-control,
+.scene-copy-control {
   background: transparent;
   border: 1px solid #c9d3d5;
   padding: 10px;
@@ -589,7 +643,8 @@ select:focus-visible {
   font-weight: 730;
   border-radius: 3px;
 }
-.reset-control:hover {
+.reset-control:hover,
+.scene-copy-control:hover {
   background: #f2f5f5;
 }
 .controls-panel .placement-mode-note {
@@ -1189,7 +1244,8 @@ select:focus-visible {
   }
   .controls-panel .fine-print,
   .controls-panel > .scene-presets,
-  .controls-panel > .scene-source {
+  .controls-panel > .scene-source,
+  .controls-panel > .scene-share {
     grid-column: 1/-1;
     min-width: 0;
   }
