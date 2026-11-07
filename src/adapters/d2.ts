@@ -24,6 +24,7 @@ import type {
   PlacementPreference,
   Point
 } from '../core/model.js';
+import { anchorPoint } from '../core/anchors.js';
 import { findElementByText } from './mermaid.js';
 import {
   assertAnchorValidationReportIfRequested,
@@ -201,13 +202,15 @@ export function anchorsFromD2Diagram(diagram: D2DiagramLike, specs: D2DiagramAnc
 
     if (connection?.route?.length) {
       const points = connection.route;
+      const anchor: Anchor = { type: 'path', points };
       const box = boxFromPoints(points);
 
       results.push({
         id: spec.id,
-        anchor: { type: 'path', points },
+        anchor,
         box,
-        point: points[Math.floor(points.length / 2)] ?? { x: box.x, y: box.y },
+        // Match the point the core uses when resolving this same path anchor.
+        point: anchorPoint(anchor),
         source: 'd2-diagram',
         d2Kind: 'connection',
         connectionId: connection.id,
