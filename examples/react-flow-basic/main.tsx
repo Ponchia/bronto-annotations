@@ -83,12 +83,12 @@ function FlowAnnotations({ bounds }: { bounds: LayerBounds }) {
       ]
     };
   }), [flowNodes]);
-  const compact = bounds.box.width < 520;
+  const compact = bounds.box.width < 680;
   const noteSizes = useMemo(() => compact
     ? {
       'flow-review': { width: 148, height: 88 },
       'flow-edge': { width: 180, height: 86 },
-      'flow-handle': { width: 148, height: 88 }
+      'flow-handle': { width: 148, height: 108 }
     }
     : {
       'flow-review': { width: 230, height: 72 },
@@ -138,7 +138,7 @@ function FlowAnnotations({ bounds }: { bounds: LayerBounds }) {
         body: 'Anchored to a measured public handle.'
       },
       placement: compact ? {
-        manual: { x: 182, y: 54, side: 'bottom' as const }
+        manual: { x: 182, y: 24, side: 'bottom' as const }
       } : {
         side: 'right' as const,
         allowedSides: ['right' as const, 'top' as const, 'bottom' as const, 'left' as const],
@@ -333,24 +333,26 @@ function App() {
 
   return (
     <main className="example-shell">
-      <section ref={shellRef} className="flow-shell" aria-label="React Flow annotation example">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          fitView
-          fitViewOptions={{ padding: 0.18 }}
-          nodesDraggable={false}
-          nodesConnectable={false}
-          panOnDrag={false}
-          zoomOnDoubleClick={false}
-          zoomOnPinch={false}
-          zoomOnScroll={false}
-          proOptions={{ hideAttribution: true }}
-        >
-          <Background />
-          <FlowAnnotations bounds={bounds} />
-        </ReactFlow>
-      </section>
+      <div className="graph-scroll" role="region" aria-label="Scrollable React Flow diagram" tabIndex={0}>
+        <section ref={shellRef} className="flow-shell" aria-label="React Flow annotation example">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            fitView
+            fitViewOptions={{ padding: 0.18 }}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            panOnDrag={false}
+            zoomOnDoubleClick={false}
+            zoomOnPinch={false}
+            zoomOnScroll={false}
+            proOptions={{ hideAttribution: true }}
+          >
+            <Background />
+            <FlowAnnotations bounds={bounds} />
+          </ReactFlow>
+        </section>
+      </div>
     </main>
   );
 }
@@ -369,16 +371,19 @@ function useElementBounds(ref: RefObject<HTMLElement | null>): LayerBounds {
     }
 
     const update = () => {
-      const rect = element.getBoundingClientRect();
+      // The overlay uses the shell's inner CSS pixels, not its border box or
+      // screen pixels (which can be scaled by an embedding host).
+      const width = element.clientWidth;
+      const height = element.clientHeight;
 
       setBounds({
         box: {
           x: 0,
           y: 0,
-          width: rect.width,
-          height: rect.height
+          width,
+          height
         },
-        measured: rect.width > 0 && rect.height > 0
+        measured: width > 0 && height > 0
       });
     };
 
