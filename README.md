@@ -169,6 +169,8 @@ every demo's source. No account, API key, or backend is needed.
 [verification](docs/verification.md) and the [completion audit](docs/completion-audit.json)
 describe checks and their evidence. Use [Support](SUPPORT.md)
 for questions and [Security](SECURITY.md) for private vulnerability reports.
+See [Governance](GOVERNANCE.md) for project decisions and the
+[Code of Conduct](CODE_OF_CONDUCT.md) for participation expectations.
 
 ## Funding
 

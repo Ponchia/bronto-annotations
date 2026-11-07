@@ -35,7 +35,9 @@ package artifacts define the API contract if prose disagrees.
 ## Contributor and maintainer reference
 
 [Contributing](../CONTRIBUTING.md) covers setup and pull requests;
-[verification](verification.md) covers checks. [Release](release.md),
+[verification](verification.md) covers checks and
+[property testing](property-testing.md) covers generated cases and replay.
+[Release](release.md),
 [release readiness](release-readiness.md), and [security automation](security-automation.md)
 cover packaging, publishing, and repository safeguards.
 
