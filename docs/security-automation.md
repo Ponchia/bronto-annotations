@@ -26,6 +26,22 @@ require consumer credentials or a long-lived npm token.
   reject mutable tags, short hashes, comment-only pins and mixed pinned/mutable
   executions. Upstream upgrades still require review and the complete CI gates.
 
+## Generated-input testing
+
+`npm test` includes a bounded, deterministic fast-check suite in both supported
+Node CI lanes. The separate `Property tests` workflow runs a larger campaign
+nightly and on manual dispatch: 5,000 cases per property by default, with a
+fresh logged seed, a 10,000-case cap and a 15-minute job timeout. It uses a
+read-only token, GitHub-hosted runners and locked development dependencies;
+there is no publish or deployment step.
+
+Each run retains its seed, source revision, Node version and structured test
+results for 30 days. A failing property must produce a replayable counterexample;
+fix the underlying behavior or a demonstrably incorrect oracle rather than
+removing difficult inputs. See [property testing](property-testing.md) for
+invariants, budgets, negative controls and replay instructions. This is
+property-based fuzzing, not a claim of coverage-guided or exhaustive testing.
+
 ## Version Update Compatibility Policy
 
 Routine Dependabot npm PRs group compatible **minor and patch** updates for
@@ -118,11 +134,12 @@ uses npm already included in the reviewed Node distribution, rather than a
 globally installed registry bundle with known advisories. Privileged publishing
 still uses the independently pinned source-locked CLI and audit gates.
 
-A 2 November 2026 read-only audit of the publisher lock under Node 22/npm 10
-found 31 moderately affected package entries and zero high/critical findings.
-These are mostly transitive consequences of the two glob/minimatch advisories,
-not 31 separate advisories. Keep the reports and blocked PRs until the audited
-upstream source has a compatible fix.
+A 2 November 2026 audit found 31 moderately affected package entries from
+two glob/minimatch advisories, not 31 separate advisories. The reviewed publisher
+fix in [PR #216](https://github.com/Ponchia/bronto-annotations/pull/216) landed on
+7 November. Its replacement policy and qualification are described below;
+use the latest retained audit rather than treating this historical count as
+current vulnerability status.
 
 All external workflow actions use full reviewed commit SHAs. The existing
 security gate validates every executable `uses` entry, including nested action
@@ -206,56 +223,65 @@ regressions for this guard. Normal PR and main CI now require the **actual read-
 audit**, while publication retains independent review, identity and provenance
 gates. The high-advisory registry bundle is still rejected.
 
-### Publisher dependency advisories — 2 November 2026
+### Publisher dependency advisory resolution — 7 November 2026
 
-GitHub reports medium-severity `glob` and `minimatch` findings in
-`tooling/publisher`. The exact upstream npm 11.21.1 source declares
-`glob@^13.0.6` and `minimatch@^10.2.5`; the inspected npm 12.2.1
-upstream source still declares those ranges. Its pinned source checks therefore
-correctly block independently bumping the direct dependencies to 14.0.2 and
-11.0.1. Do not suppress security findings, repack an unknown CLI source, edit
-the manifest without reviewed source, or bypass dependency resolution. These
-are release-tool dependencies, not shipped Annotations runtime code. A source
-upgrade requires a new verified upstream commit, byte inventory, full SHA-512
-and lock regeneration plus guarded version/pack/publish qualification.
+The pinned npm 11.21.1 source remains unchanged. Its reviewed dependency graph
+now selects `glob@14.0.2` and `minimatch@11.0.1`, with explicit
+`reviewedDirectReplacements` in `tooling/publisher/source.json`. The preparation
+script checks each allowed source range and replacement version; unexpected
+manifest changes still fail. [PR #216](https://github.com/Ponchia/bronto-annotations/pull/216)
+records the implementation and tests. These are release-tool dependencies,
+not shipped Annotations runtime dependencies.
 
-### CodeQL alert 88 triage
+Changing that policy requires a reviewed diff, lock regeneration,
+`npm run publisher:readiness` and full CI. Do not apply arbitrary overrides,
+suppress advisories or relax integrity checks to make an audit pass.
 
-The `js/http-to-file-access` alert identifies the source-archive file write
-in `scripts/source-publisher.mjs`. That write follows an exact expected
-codeload URL derived from the pinned commit, redirect refusal, capped size,
-a byte-count assertion, and committed SHA-512 verification. The extractor
-then verifies every allowlisted file SHA-256 and refuses traversal, symlinks,
-oversized members and unreviewed content. These controls constrain the
-network-to-file boundary; static taint analysis may not infer them. Retain
-alert 88 for independent review of policy-file trust and extraction rather
-than automatically dismissing it or claiming that runtime assertions alone
-prove comprehensive security.
+### Source-archive write review
+
+[CodeQL alert 88](https://github.com/Ponchia/bronto-annotations/security/code-scanning/88)
+was dismissed as a by-design source-archive write after review. It is not an
+outstanding package vulnerability or proof of comprehensive safety. The write
+is constrained by the pinned codeload URL, redirect refusal, a size cap and
+committed SHA-512. Extraction separately verifies allowlisted file hashes and
+rejects traversal, symlinks and unreviewed content. Changes to those controls
+require renewed review; the regression suite remains active.
 
 ## Interpreting Scorecard findings
 
-Treat each alert as a specific control or dependency finding, not as a count of
-exploitable defects. Keep the source revision and scanner run with the review.
-The private-reporting link is explicit in `SECURITY.md`; a successful workflow
-run does not itself prove its SARIF findings have been resolved.
+Read the complete report, not only the open-alert count. A finding describes a
+specific control or heuristic; it is not automatically an exploitable defect.
+A successful workflow also does not mean every check scored 10.
 
-Workflow CLI pinning includes the executable dependency graph, not only an npm
-version string. The integrity-locking follow-up is tracked in
-[PR #185](https://github.com/Ponchia/bronto-annotations/pull/185). A high advisory
-in the upstream npm bundle blocks that change under Dependency Review; retain
-the gate and the raw finding until a reviewed upstream fix is available.
+The workflow retains `scorecard.sarif` and the action's full `results.json` for
+30 days as `scorecard-evidence-<run-id>-<attempt>`. Both are written before the
+external results-publication step. The upload runs even after an action failure;
+SARIF is submitted when that file exists. A failed scan or external publication
+still fails its original step. No warning is converted into a clean scan.
 
-The signed release-notes recovery workflow deliberately resolves the requested
-immutable registry version before verifying its bytes and signed provenance.
-That operation is not a source build and cannot be replaced by a single fixed
-consumer version without breaking recovery for other releases. Its remaining
-pinning warning needs contextual review, not an exclusion for all installs.
+```bash
+gh run list --repo Ponchia/bronto-annotations --workflow scorecard.yml --limit 5
+gh run download RUN_ID --repo Ponchia/bronto-annotations \
+  --name scorecard-evidence-RUN_ID-ATTEMPT --dir scorecard-evidence
+jq '{date, repo, scorecard, score, checks: [.checks[] | {name, score, reason}]}' \
+  scorecard-evidence/results.json
+```
 
-Code Review checks require a second human reviewer. Automated review and
-maintainer-authored commits do not satisfy that condition; do not fabricate
-approvals or contributor identities to increase the score. OpenSSF Best
-Practices enrollment is a separate maintainer attestation, not a badge that a
-CI change can award. A Fuzzing warning means no recognized integration was
-detected; ordinary unit and browser tests are not a substitute for a dedicated
-fuzzing campaign. Keep these limitations visible rather than dismissing them
-as fixed dependencies.
+Check `repo.commit`, scan date and tool version before comparing reports. A
+score of `-1` means the check was not assessed; do not turn it into a zero or
+claim that it passed. The [public viewer](https://scorecard.dev/viewer/?uri=github.com/Ponchia/bronto-annotations)
+can lag a new run. Local artifacts and successful external publication are
+separate evidence.
+
+| Check | What improvement actually requires |
+| --- | --- |
+| Fuzzing | Executed generated-input tests with useful invariants, reproducible seeds and minimized failures. See [property testing](property-testing.md); ordinary example tests alone are not a fuzzing campaign. |
+| Code Review / Branch Protection | A workable independent-reviewer process and formal reviews recognized by GitHub. Preserve required CI, administrator enforcement and the ban on force pushes. Automated review is supplementary, not a fabricated human approval. |
+| CII Best Practices | Maintainer assessment and enrollment against the [actual criteria](https://www.bestpractices.dev/en/criteria). Writing documents alone does not award a badge. |
+| Contributors | Genuine external contributions and the public affiliation data used by the scanner. Do not create identities or change authorship for points. |
+| Signed Releases | The scanner's release-asset evidence. An unassessed GitHub-assets check does not invalidate independently verified npm provenance; use the [release verification procedure](release.md#registry-propagation). |
+
+[Issue #232](https://github.com/Ponchia/bronto-annotations/issues/232) retains the
+7 November baseline and owner-dependent follow-ups. Code and documentation
+changes can improve test coverage and transparency; review permissions, badge
+attestations and external participation remain explicit maintainer decisions.
