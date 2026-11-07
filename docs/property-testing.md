@@ -77,7 +77,18 @@ For a larger local or manually scheduled exploration, choose a recorded seed:
 FC_SEED=42 FC_RUNS=2000 npm run test:property
 ```
 
-The repository's normal CI gate executes the default budget. This guide adds
-no nightly workflow. When a property reveals a real defect, retain the shrunk
-input as an example regression test and fix the contract violation; do not
-filter out the counterexample merely to make the property pass.
+The repository's normal CI gate executes the default budget on Node 20 and
+Node 22. The separate `Property tests` workflow runs nightly at 03:23 UTC and
+supports manual dispatch with a seed and a case budget. It defaults to 5,000
+cases per property (30,000 total), generates a fresh signed 32-bit seed when
+none is supplied, and stops the job after 15 minutes.
+
+Download the `property-tests-<run-id>-<attempt>` artifact within 30 days for
+`configuration.json` (seed, budget, source revision and Node version) and the
+Vitest `results.json`, including failure details. The artifact upload runs on
+failure too; a missing result is not a passing campaign. Use the same revision,
+lockfile and seed when replaying it locally.
+
+When a property reveals a real defect, retain the shrunk input as an example
+regression test and fix the contract violation. Do not filter out the
+counterexample merely to make the property pass.

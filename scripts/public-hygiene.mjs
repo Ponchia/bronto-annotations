@@ -10,6 +10,8 @@ const includeFiles = [
   'package.json',
   'CHANGELOG.md',
   'CONTRIBUTING.md',
+  'CODE_OF_CONDUCT.md',
+  'GOVERNANCE.md',
   'SECURITY.md',
   'FUNDING.md',
   'SUPPORT.md',
