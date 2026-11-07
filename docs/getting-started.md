@@ -7,8 +7,8 @@ displays it. This guide starts with one point in a new browser project.
 
 ## Choose your version
 
-The tutorial installs published **0.8.2**. The website and repository examples
-track `main`; use the [tagged guide](https://github.com/Ponchia/bronto-annotations/blob/v0.8.2/docs/getting-started.md)
+The tutorial installs published **0.8.3**. The website and repository examples
+track `main`; use the [tagged guide](https://github.com/Ponchia/bronto-annotations/blob/v0.8.3/docs/getting-started.md)
 for this release or the [0.7 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/getting-started.md)
 for older applications. Read the [migration guide](migration-0.7.md) when
 upgrading from 0.6.
@@ -21,7 +21,7 @@ Use Node 22.12.0 or newer (see [compatibility](compatibility.md)):
 mkdir annotation-demo
 cd annotation-demo
 npm init -y
-npm install @ponchia/annotations@0.8.2
+npm install @ponchia/annotations@0.8.3
 npm install --save-dev vite@8
 ```
 
