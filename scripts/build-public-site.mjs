@@ -52,10 +52,13 @@ const titles = {
   'upstream-consumers': 'Upstream consumer validation',
   'security-automation': 'Security and development',
   release: 'Releases and publishing',
-  'release-readiness': '0.7 release readiness',
+  'release-readiness': 'Release readiness',
+  'e2e-plan': 'Historical end-to-end verification plan',
 };
 const maintainerDocs = new Set(['security-automation', 'release']);
-const primaryDocs = Object.keys(titles).filter((name) => !maintainerDocs.has(name));
+const historicalDocs = new Set(['e2e-plan']);
+const primaryDocs = Object.keys(titles).filter((name) =>
+  !maintainerDocs.has(name) && !historicalDocs.has(name));
 const guideSummaries = {
   'getting-started': 'Install the package, run a complete example, and render your first note in SVG or React.',
   'context-quickstart': 'Choose the entry point that matches the chart, diagram, or DOM content you already render.',

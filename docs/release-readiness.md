@@ -7,46 +7,68 @@ every host integration.
 
 ## Choose the matching package
 
-The confirmed stable release is **0.8.1**, published under `latest` on
-October 29, 2026. Its versioned documentation is at
-[the 0.8.1 guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.8.1/docs/README.md).
-Its actual npm tarball (**352,202 bytes**) was independently downloaded and
-verified against registry SHA-512. A fresh consumer installed that exact version
-from the public registry and passed `scripts/smoke-registry-consumer.mjs`.
-Registry signature and provenance attestation verification passed, and the
-signed source matches the `v0.8.1` tag commit and `release.yml`. 0.8.1 is a
-patch release: in forced-colors mode a callout subject is no longer filled with
-opaque Canvas over the chart it marks. 0.8 only adds to the 0.7 API; the
-previous stable line is **0.7.0**
-([its guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/README.md)).
+The confirmed stable release is **0.8.2**, published under `latest` on
+November 7, 2026. Use the [0.8.2 guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.8.2/docs/README.md)
+with this install:
 
 ```sh
-npm install @ponchia/annotations@0.8.1
+npm install @ponchia/annotations@0.8.2
 ```
 
-[Protected 0.8.1 release](https://github.com/Ponchia/bronto-annotations/actions/runs/40943672445).
-Earlier candidate archives stay immutable: RC1 does not contain RC2's
-oversized-note and invalid-input fixes, and RC2 does not contain RC3's Vega
-helpers.
-Public pages read their build version from `package.json` and confirmed registry
-versions from `site/release-status.json`. The notice is present on the homepage,
-every guide and directly linked example; there is no runtime registry request
-or analytics in the notice.
+The actual **356,165-byte** npm archive was independently downloaded and checked
+against registry SHA-512. A fresh registry consumer passed root-without-DOM or
+optional-peers, SVG/CSS and the corrected D2/React Flow behavior. All seven
+recipes copied from the live playground type-checked and ran against the
+registry-installed package; the six scene/mode geometries matched.
 
-Verified archive SHA-512:
+`npm audit signatures --json --include-attestations` verified the signatures.
+The signed provenance and npm publication attestations were then bound to the
+exact archive, repository, `v0.8.2` tag, source commit
+`bb83813c8d593e0b722ddedf0b0bb66825b2b2e5` and `release.yml`.
+The [publication and consumer record](https://github.com/Ponchia/bronto-annotations/pull/230#issuecomment-6709197576)
+retains these observations and their limits.
+
+Verified 0.8.2 archive SHA-512:
+
+```text
+sha512-+RQGrJ0fAYuzikj2mT5B2zUlBUFB1XJIttaiiqqYj0ytNycZAahnKr+GGwKYlRdFzqk0Z09Wgp+T55EylsLBlQ==
+```
+
+[Release run 42382465752, attempt 2](https://github.com/Ponchia/bronto-annotations/actions/runs/42382465752/attempts/2)
+published the package. Its separate stale-channel cleanup was denied permission;
+[issue #231](https://github.com/Ponchia/bronto-annotations/issues/231) tracks that
+operation. The stable package is available; a stale `next` tag is not a
+recommendation to use an older candidate. Do not republish 0.8.2 to fix cleanup.
+
+0.8 adds to the 0.7 API. The previous stable minor line is **0.7.0**
+([its guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/README.md)).
+Public pages read their build version from `package.json` and confirmed registry
+versions from `site/release-status.json`. The notice appears on every guide and
+directly linked example, without a runtime registry request or analytics.
+
+Before publication, build and pack a clean checkout, then install its tarball
+in a separate disposable consumer. After the protected release and actual
+registry bytes are verified, install that exact version. Candidates use `next`
+and stable releases use `latest`; follow [the release runbook](release.md).
+
+## Historical 0.8.1 publication evidence
+
+The 0.8.1 release was published on October 29, 2026 through
+[run 40943672445](https://github.com/Ponchia/bronto-annotations/actions/runs/40943672445).
+Its **352,202 bytes** and SHA-512 were independently verified. A fresh public
+registry consumer passed `scripts/smoke-registry-consumer.mjs`, and signature
+and provenance verification matched `v0.8.1` and `release.yml`. The patch stopped
+forced-colors subjects from filling opaque Canvas over their host chart.
 
 ```text
 sha512-R70T9q1R96sAwQOEomC72DnpLVZj5F+wI6RwgmqlxCaYuXBPlXumO/L8FbJfpnBSdvky+6/eMRhOdVsFGAjyUQ==
 ```
 
-These are package and automated integration results, not a claim of human
-accessibility acceptance or a production application deployment.
-
-Before publication, build and pack a clean checkout, then install its tarball
-in a separate disposable consumer. After the protected release succeeds and
-the real registry tarball is verified, install the exact version rather than
-silently replacing a live application's dependency. Candidates publish under
-`next` and stable releases under `latest`. Follow [the release runbook](release.md).
+These bytes and observations belong to 0.8.1, not to the current archive.
+Earlier candidate archives also stay immutable: RC1 lacks RC2's oversized-note
+and invalid-input fixes; RC2 lacks RC3's Vega helpers. Historical package and
+automated integration evidence does not establish human accessibility
+acceptance or production deployment.
 
 ## Automated acceptance
 
