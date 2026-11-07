@@ -91,17 +91,20 @@ export async function verifyRangeTransforms(browser) {
       // matrix constructors and scroll geometry rather than global instanceof.
       const iframe = await page.evaluate(async () => {
         const frame = document.createElement('iframe'); document.body.append(frame);
-        frame.contentDocument.body.innerHTML = '<div style="width:200px;height:80px;overflow:auto;padding:10px;border:2px solid"><span>Frame passage</span></div>';
+        frame.contentDocument.body.innerHTML = '<div style="width:200px;height:80px;overflow:auto;padding:10px;border:2px solid"><div style="width:500px;height:300px"><span>Frame passage</span></div></div>';
         const space = frame.contentDocument.querySelector('div');
-        const range = frame.contentDocument.createRange(); range.selectNodeContents(space.firstChild);
+        space.scrollLeft = 13; space.scrollTop = 7;
+        const range = frame.contentDocument.createRange(); range.selectNodeContents(space.querySelector('span'));
         const before = globalThis.measureRangeForTest(range, { coordinateSpace: space });
-        space.style.cssText += ';translate:20px 10px;scale:2 3';
+        space.style.cssText += ';translate:20px 10px;scale:2 3;transform:matrix(1.25,0,0,0.75,5,7)';
         const after = globalThis.measureRangeForTest(range, { coordinateSpace: space });
         space.style.rotate = '30deg';
         const rotated = globalThis.measureRangeForTest(range, { coordinateSpace: space });
-        frame.remove(); return { before, after, rotated };
+        const scroll = { x: space.scrollLeft, y: space.scrollTop };
+        frame.remove(); return { before, after, rotated, scroll };
       });
       assert.equal(iframe.before.status, 'resolved'); assert.equal(iframe.after.status, 'resolved');
+      assert.deepEqual(iframe.scroll, { x: 13, y: 7 });
       for (const key of ['x', 'y', 'width', 'height']) assert(Math.abs(iframe.before.box[key] - iframe.after.box[key]) < 0.1);
       assert.equal(iframe.rotated.status, 'unsupported'); checks++;
       assert.deepEqual(errors, []);
