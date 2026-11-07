@@ -9,6 +9,7 @@ import { verifyAuthoringDefault, openAuthoringDiagram } from './responsive-autho
 import { offersInstall } from './site-release.mjs';
 import { verifyPlaygroundCopy } from './verify-playground-copy.mjs';
 import { verifyPlaygroundSharing } from './playground-sharing-scenario.mjs';
+import { verifyPlaygroundExports } from './playground-export-scenario.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const publication = JSON.parse(await readFile(resolve(root, '_site/release-status.json'), 'utf8'));
@@ -377,6 +378,7 @@ try {
     await mode.selectOption('automatic');
     assert.equal(await inspector.getAttribute('open'), '', 'Layout updates preserve the open text alternative');
     await verifyPlaygroundSharing(home);
+    await verifyPlaygroundExports(home);
     // Sharing, the nearby strategy toggle and the readable inspector must
     // describe one scene after restoration/reset, not independently drift.
     assert.equal(await inspector.getAttribute('open'), '',

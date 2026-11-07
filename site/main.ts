@@ -7,6 +7,7 @@ import {
 } from '@ponchia/annotations';
 import '@ponchia/annotations/bronto.css';
 import { updatePlaygroundInspector } from './playground-inspector.js';
+import { setupPlaygroundExports } from './playground-export.js';
 import './site.css';
 import { DEFAULT_PLAYGROUND_STATE, parseSceneHash, sceneUrl, type PlaygroundState } from './playground-state.js';
 
@@ -312,27 +313,4 @@ if (restoredFromLink) {
   requestAnimationFrame(() => document.getElementById('playground')?.scrollIntoView());
 }
 
-for (const button of document.querySelectorAll<HTMLButtonElement>(
-  '[data-copy],[data-copy-target]',
-)) {
-  button.addEventListener('click', async () => {
-    const targetId = button.dataset.copyTarget;
-    const original = button.textContent;
-    const content = targetId
-      ? (document.getElementById(targetId)?.textContent ?? '')
-      : (button.dataset.copy ?? '');
-    if (!content) return;
-    try {
-      await navigator.clipboard.writeText(content);
-      button.textContent = 'Copied';
-      setTimeout(() => {
-        button.textContent = original;
-      }, 1500);
-    } catch {
-      button.textContent = 'Select and copy';
-      setTimeout(() => {
-        button.textContent = original;
-      }, 1800);
-    }
-  });
-}
+setupPlaygroundExports();
