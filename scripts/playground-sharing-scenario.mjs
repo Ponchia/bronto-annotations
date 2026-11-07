@@ -87,6 +87,9 @@ export async function verifyPlaygroundSharing(home) {
     assert(await recovery.evaluate(element => document.activeElement === element
       && element.selectionStart === 0 && element.selectionEnd === element.value.length),
     'Delayed denial must focus and select the captured URL');
+    // Controls do not rewrite location.hash. Opening the exact same URL here
+    // can be a same-document no-op; open the captured link as a new document.
+    await restored.goto('about:blank');
     await restored.goto(link, { waitUntil: 'networkidle' });
     assert.deepEqual(await read(restored), expected);
 
