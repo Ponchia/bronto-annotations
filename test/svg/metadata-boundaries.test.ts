@@ -1,11 +1,17 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { JSDOM } from 'jsdom';
 import { renderAnnotationsSvg } from '../../src/svg/render.js';
 import { resolveAnnotationLayout } from '../../src/core/layout-resolver.js';
 import type { Annotation, DataAttributes, ResolvedLayout } from '../../src/core/model.js';
 import { PaintedAnnotation } from '../../src/react/annotation-presentation.js';
+
+function parseMarkup(markup: string, type: DOMParserSupportedType = 'text/html'): Document {
+  const parsed = new DOMParser().parseFromString(markup, type);
+  expect(parsed.querySelector('parsererror'), 'SVG must remain well-formed XML').toBeNull();
+  return parsed;
+}
 
 type Location = 'annotation' | 'note' | 'connector';
 const selector = { annotation: '.pa-annotation', note: '[role="note"]', connector: '.pa-annotation__connector' };
@@ -35,14 +41,13 @@ describe('renderer metadata boundaries', () => {
     const before = { ...data };
     const layout = fixture(location, data);
     const svg = renderAnnotationsSvg(layout);
-    const xml = new JSDOM(svg, { contentType: 'image/svg+xml' });
-    const html = new JSDOM(svg);
-    const react = new JSDOM(reactMarkup(layout));
-    for (const window of [xml.window, html.window, react.window]) {
-      const element = window.document.querySelector(selector[location])!;
+    const xml = parseMarkup(svg, 'image/svg+xml');
+    const html = parseMarkup(svg);
+    const react = parseMarkup(reactMarkup(layout));
+    for (const parsed of [xml, html, react]) {
+      const element = parsed.querySelector(selector[location])!;
       expect(element.getAttribute('data-annotation-id')).toBe('owned-note');
       expect(element.getAttribute('data-useful-value')).toBe('retained');
-      window.close();
     }
     expect(data).toEqual(before);
   });
@@ -56,28 +61,25 @@ describe('renderer metadata boundaries', () => {
     const expected = location === 'annotation' ? layout.annotations[0]!.placement.side
       : location === 'note' ? 'center' : layout.annotations[0]!.connector.type;
     for (const markup of [renderAnnotationsSvg(layout), reactMarkup(layout)]) {
-      const dom = new JSDOM(markup);
-      expect(dom.window.document.querySelector(selector[location])!.getAttribute(attribute)).toBe(expected);
-      dom.window.close();
+      const dom = parseMarkup(markup);
+      expect(dom.querySelector(selector[location])!.getAttribute(attribute)).toBe(expected);
     }
-    const xml = new JSDOM(renderAnnotationsSvg(layout), { contentType: 'image/svg+xml' });
-    xml.window.close();
+    const xml = parseMarkup(renderAnnotationsSvg(layout), 'image/svg+xml');
   });
 
   it.each(['annotation', 'note', 'connector'] as const)('normalizes custom aliases once on %s with deterministic last-value precedence', location => {
     const data: DataAttributes = { userLabel: 'first', 'user-label': 'last', ignored: undefined, empty: null, flag: false, count: 0 };
     const layout = fixture(location, data);
     const markup = renderAnnotationsSvg(layout);
-    const xml = new JSDOM(markup, { contentType: 'image/svg+xml' });
-    const react = new JSDOM(reactMarkup(layout));
+    const xml = parseMarkup(markup, 'image/svg+xml');
+    const react = parseMarkup(reactMarkup(layout));
     for (const dom of [xml, react]) {
-      const node = dom.window.document.querySelector(selector[location])!;
+      const node = dom.querySelector(selector[location])!;
       expect(node.getAttribute('data-user-label')).toBe('last');
       expect(node.getAttribute('data-flag')).toBe('false');
       expect(node.getAttribute('data-count')).toBe('0');
       expect(node.hasAttribute('data-ignored')).toBe(false);
       expect(node.hasAttribute('data-empty')).toBe(false);
-      dom.window.close();
     }
   });
 
@@ -86,10 +88,9 @@ describe('renderer metadata boundaries', () => {
     const text = 'center" data-boundary-probe="value & <tag>';
     layout.annotations[0]!.annotation.note.align = text as NonNullable<Annotation['note']['align']>;
     const svg = renderAnnotationsSvg(layout);
-    const xml = new JSDOM(svg, { contentType: 'image/svg+xml' });
-    expect(xml.window.document.querySelector('[data-boundary-probe]')).toBeNull();
-    expect(xml.window.document.querySelector('[role="note"]')!.getAttribute('data-note-align')).toBe(text);
-    xml.window.close();
+    const xml = parseMarkup(svg, 'image/svg+xml');
+    expect(xml.querySelector('[data-boundary-probe]')).toBeNull();
+    expect(xml.querySelector('[role="note"]')!.getAttribute('data-note-align')).toBe(text);
   });
 
   it('does not change ordinary custom metadata order or escaping', () => {
@@ -97,8 +98,7 @@ describe('renderer metadata boundaries', () => {
     const svg = renderAnnotationsSvg(layout);
     expect(svg).toContain('data-first-value="one &amp; two" data-second="false" data-annotation-id="owned-note" data-note-align="center"');
     expect(svg).toContain('data-annotation-id="owned-note" data-annotation-side="');
-    const xml = new JSDOM(svg, { contentType: 'image/svg+xml' });
-    expect(xml.window.document.querySelectorAll('[role="note"]')).toHaveLength(1);
-    xml.window.close();
+    const xml = parseMarkup(svg, 'image/svg+xml');
+    expect(xml.querySelectorAll('[role="note"]')).toHaveLength(1);
   });
 });
