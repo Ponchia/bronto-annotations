@@ -10,7 +10,6 @@ import {
   anchorPoint,
   boxCenter,
   expandBox,
-  isFiniteBox,
   normalizeBox
 } from '../core/anchors.js';
 import {
@@ -18,9 +17,12 @@ import {
   anchorDiagnostic,
   type AdapterAnnotationLayerInput,
   type AnchorValidationAssertInput,
+  type AnchorSpecDiagnostic,
   type AnchorSpecValidationReport,
   validationReport
 } from '../adapters/diagnostics.js';
+
+import { finiteExtractedAnchor } from '../adapters/geometry-validation.js';
 
 export {
   assertAnchorAlignmentReport,
@@ -152,6 +154,10 @@ export function boxFromElement(element: Element, options: ElementAnchorOptions =
 }
 
 export function anchorFromElement(element: Element, options: ElementAnchorOptions = {}): Anchor {
+  return sampledPathAnchor(element, options) ?? anchorFromBox(boxFromElement(element, options), options);
+}
+
+function sampledPathAnchor(element: Element, options: ElementAnchorOptions): Anchor | undefined {
   if (options.kind === 'path') {
     const points = pointsFromSvgPathElement(element, svgCoordinateSpace(options.coordinateSpace ?? element));
 
@@ -163,7 +169,7 @@ export function anchorFromElement(element: Element, options: ElementAnchorOption
     }
   }
 
-  return anchorFromBox(boxFromElement(element, options), options);
+  return undefined;
 }
 
 export function anchorFromSelector(
@@ -214,39 +220,41 @@ export function annotationsFromDomSelectors(root: ParentNode, specs: DomAnnotati
 }
 
 export function validateDomAnchors(root: ParentNode, specs: SelectorAnchorSpec[]): DomAnchorValidationReport {
-  return validationReport(specs.map((spec) => {
-    const element = root.querySelector(spec.selector);
-    const id = spec.id ?? spec.selector;
+  return validationReport(specs.map((spec) => resolveDomSpec(root, spec).diagnostic));
+}
 
-    if (!element) {
-      return anchorDiagnostic({
-        id,
-        source: spec.source ?? 'dom',
-        status: 'missing',
-        expected: `selector "${spec.selector}"`,
-        reason: 'No element matched the selector.'
-      });
-    }
-
-    const box = boxFromElement(element, spec);
-
-    if (!isFiniteBox(box)) {
-      return anchorDiagnostic({
-        id,
-        source: spec.source ?? 'dom',
-        status: 'invalid',
-        expected: `finite geometry for selector "${spec.selector}"`,
-        reason: 'The matched element did not produce finite geometry.'
-      });
-    }
-
-    return anchorDiagnostic({
-      id: spec.id ?? elementId(element) ?? spec.selector,
-      source: spec.source ?? 'dom',
-      status: 'found',
-      expected: `selector "${spec.selector}"`
-    });
-  }));
+// Keep selector/measurement exceptions unchanged. Only missing elements and
+// actually measured invalid geometry become diagnostics.
+function resolveDomSpec(root: ParentNode, spec: SelectorAnchorSpec): {
+  anchor: ExtractedAnchor | undefined;
+  diagnostic: AnchorSpecDiagnostic;
+} {
+  const element = root.querySelector(spec.selector);
+  const id = spec.id ?? spec.selector;
+  if (!element) {
+    return {
+      anchor: undefined,
+      diagnostic: anchorDiagnostic({
+        id, source: spec.source ?? 'dom', status: 'missing',
+        expected: `selector "${spec.selector}"`, reason: 'No element matched the selector.'
+      })
+    };
+  }
+  const anchor = extractedAnchorFromElement(element, {
+    ...spec,
+    id: spec.id ?? elementId(element) ?? spec.selector
+  });
+  const valid = finiteExtractedAnchor(anchor);
+  return {
+    anchor,
+    diagnostic: anchorDiagnostic(valid ? {
+      id: anchor.id, source: spec.source ?? 'dom', status: 'found', expected: `selector "${spec.selector}"`
+    } : {
+      id, source: spec.source ?? 'dom', status: 'invalid',
+      expected: `finite geometry for selector "${spec.selector}"`,
+      reason: 'The matched element did not produce finite geometry.'
+    })
+  };
 }
 
 export function prepareDomAnnotations(
@@ -254,12 +262,15 @@ export function prepareDomAnnotations(
   specs: DomAnnotationSpec[],
   options: DomAnnotationLayerOptions = {}
 ): DomAnnotationLayerInput {
-  const validation = validateDomAnchors(root, specs);
+  // Resolve each spec once: changing host measurements cannot invalidate the
+  // geometry after it has passed validation. Obstacles retain their own read.
+  const resolved = specs.map((spec) => ({ spec, ...resolveDomSpec(root, spec) }));
+  const validation = validationReport(resolved.map((item) => item.diagnostic));
 
   assertAnchorValidationReportIfRequested(validation, options.assert, { label: 'DOM anchors' });
 
   return {
-    annotations: annotationsFromDomSelectors(root, specs),
+    annotations: resolved.flatMap(({ spec, anchor }) => anchor ? [annotationFromExtractedAnchor(anchor, spec)] : []),
     obstacles: options.obstacles === false
       ? []
       : options.obstacles
@@ -274,7 +285,7 @@ export function extractedAnchorFromElement(
   options: ElementAnchorOptions = {}
 ): ExtractedAnchor {
   const box = boxFromElement(element, options);
-  const anchor = anchorFromElement(element, options);
+  const anchor = sampledPathAnchor(element, options) ?? anchorFromBox(box, options);
   const point = anchor.type === 'path'
     ? anchorPoint(anchor)
     : boxCenter(box);

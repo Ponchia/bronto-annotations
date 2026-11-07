@@ -14,7 +14,7 @@ export function validateExtractedAnchor(
     if (!result) {
       return anchorDiagnostic({ id, source, expected, status: 'missing', reason: missingReason });
     }
-    if (!finiteBox(result.box) || !finitePoint(result.point) || !finiteAnchor(result.anchor)) {
+    if (!finiteExtractedAnchor(result)) {
       return anchorDiagnostic({
         id, source, expected, status: 'invalid',
         reason: `Resolved ${source} coordinates or bounds are nonfinite for ${expected}.`
@@ -27,6 +27,11 @@ export function validateExtractedAnchor(
       reason: error instanceof Error ? error.message : String(error)
     });
   }
+}
+
+/** Internal geometry predicate shared with the DOM preparation snapshot. */
+export function finiteExtractedAnchor(result: ExtractedAnchor): boolean {
+  return finiteBox(result.box) && finitePoint(result.point) && finiteAnchor(result.anchor);
 }
 
 function finiteBox(box: Box): boolean {

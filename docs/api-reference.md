@@ -325,6 +325,15 @@ Exports:
   `prepareDomAnnotations` accepts `assert: true` or
   `assert: { label, failOnWarnings }`.
 
+DOM selector validation inspects the selected anchor geometry, including sampled
+path coordinates and finite rectangle edges. `prepareDomAnnotations` measures
+each selector specification once and uses that result for both its report and
+returned annotation. Separate specifications and requested obstacles retain their
+own measurements; this is not an atomic snapshot of the whole document. Re-run
+preparation after host changes. Extraction remains permissive, while `assert`
+rejects invalid selected geometry; malformed selectors and host measurement
+exceptions still propagate.
+
 `measureRangeAnchor(range, options?)` returns a `RangeAnchorMeasurement`: `status`
 (`resolved`, `empty`, or `unsupported`), line `rects`, their union `box`, a
 `truncated` flag, and an optional `reason`. `RangeAnchorOptions.maxRects` defaults
