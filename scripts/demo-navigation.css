@@ -1,0 +1,48 @@
+/* Scope every rule: compiled examples retain their own host presentation. */
+.demo-navigation {
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 24px;
+  max-width: 100%;
+  margin: 0;
+  padding: 8px 20px;
+  border-bottom: 1px solid #a9b9c0;
+  background: #f6f7f6;
+  color: #183540;
+  font: 14px/1.5 system-ui, sans-serif;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.demo-navigation .demo-navigation-title {
+  min-width: 0;
+  font-weight: 650;
+}
+.demo-navigation .demo-navigation-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  min-width: 0;
+}
+.demo-navigation a {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 4px 0;
+  color: #245b70;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.demo-navigation a:hover {
+  color: #183540;
+}
+.demo-navigation a:focus-visible {
+  outline: 2px solid #245b70;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
