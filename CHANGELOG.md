@@ -6,6 +6,30 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.9.1 - 2026-11-07
+
+### Host geometry and DOM measurement
+
+- Preserve opaque annotation IDs in React DOM note measurements, including
+  reserved-looking property names and empty strings. Keep incremental resize
+  reads, hidden-note cleanup and stale-observer isolation unchanged.
+- Validate the selected DOM anchor geometry, including sampled SVG paths and
+  finite rectangle edges. Reuse each specification's measured anchor for its
+  validation report and prepared annotation; preserve permissive extraction,
+  independent obstacle reads and host exceptions.
+- Avoid measuring the same element box twice when extracting a DOM anchor,
+  keeping its reported bounds and actual anchor geometry consistent.
+- Check individual CSS transforms and rendered ancestors when converting text
+  ranges to local coordinates. Preserve positive axis-aligned scale, translation
+  and scrolling; report unsupported rotations, reflections, motion paths and
+  nonidentity 3D transforms instead of returning misleading geometry.
+- Keep range conversions finite, and cover composed shadow/slot ancestors and
+  iframe-owned coordinate spaces with actual browser regressions.
+
+No public exports, type shapes, runtime dependencies or engine requirements
+change. Range conversion remains two-dimensional, and preparation is not a
+transaction across the entire host document.
+
 ## 0.9.0 - 2026-11-07
 
 ### Report evidence and rendering
@@ -40,8 +64,6 @@ reasonable.
 
 No runtime dependencies or public export names are added. Published versions,
 release tags, review requirements and publisher permissions remain unchanged.
-
-## Unreleased
 
 ## 0.8.3 - 2026-11-07
 
