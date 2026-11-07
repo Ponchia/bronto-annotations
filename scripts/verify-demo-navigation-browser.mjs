@@ -38,7 +38,8 @@ let browser;
 let variants = 0;
 try {
   browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage({ reducedMotion: 'reduce' });
+  const context = await browser.newContext({ reducedMotion: 'reduce' });
+  const page = await context.newPage();
   for (const prefix of ['/', '/bronto-annotations/']) {
     for (const [name, example] of Object.entries(catalog)) {
       for (const width of [320, 390, 768, 1200]) {
