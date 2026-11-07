@@ -165,6 +165,51 @@ describe('adapter diagnostics', () => {
     expect(report.diagnostics[0]).toMatchObject({ status: 'misaligned', distance: 50, overlapRatio: 0 });
   });
 
+  it.each([NaN, Infinity, -Infinity].flatMap((invalid) =>
+    (['x', 'y'] as const).flatMap((axis) =>
+      [0, 1, 2].flatMap((index) =>
+        ['target', 'annotation'].map((side) => ({ invalid, axis, index, side }))
+      )
+    )
+  ))('rejects $invalid at $side path point $index.$axis', ({ invalid, axis, index, side }) => {
+    const points = [{ x: 0, y: 0 }, { x: 50, y: 10 }, { x: 100, y: 20 }];
+    points[index]![axis] = invalid;
+    const invalidTarget = side === 'target';
+    const report = evaluateAnchorAlignment([
+      {
+        id: 'path-note',
+        anchor: invalidTarget
+          ? { type: 'point', point: { x: 100, y: 20 } }
+          : { type: 'path', points },
+        note: { title: 'Path' }
+      }
+    ], [
+      { id: 'path-note', ...(invalidTarget ? { points } : { point: { x: 100, y: 20 } }) }
+    ]);
+
+    expect(report.ok).toBe(false);
+    expect(report.aligned).toEqual([]);
+    expect(report.warnings).toEqual([]);
+    expect(report.missing).toHaveLength(1);
+    expect(report.diagnostics[0]).toMatchObject({ status: 'misaligned', found: false });
+    expect(report.diagnostics[0]?.reason).toContain('non-finite');
+    expect(() => assertAnchorAlignmentReport(report)).toThrow(/non-finite/);
+  });
+
+  it('preserves target precedence and the empty-path origin fallback', () => {
+    const report = evaluateAnchorAlignment([
+      { id: 'box', anchor: { type: 'point', point: { x: 0, y: 0 } }, note: {} },
+      { id: 'empty-path', anchor: { type: 'point', point: { x: 0, y: 0 } }, note: {} }
+    ], [
+      { id: 'box', box: { x: 0, y: 0, width: 10, height: 10 }, points: [{ x: NaN, y: Infinity }] },
+      { id: 'empty-path', points: [], point: { x: NaN, y: Infinity } }
+    ]);
+
+    expect(report.ok).toBe(true);
+    expect(report.aligned).toEqual(['box', 'empty-path']);
+    expect(report.diagnostics[1]?.distance).toBe(0);
+  });
+
   it('can fail on near alignment warnings when exact generated target alignment is required', () => {
     const report: AnchorAlignmentReport = {
       ok: true,

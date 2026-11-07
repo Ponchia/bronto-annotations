@@ -218,6 +218,18 @@ export function evaluateAnchorAlignment(
     }
 
     const subject = anchorSubject(annotation.anchor);
+
+    if (!isFiniteAlignmentGeometry(subject) || !isFiniteAlignmentGeometry(targetGeometry)) {
+      return anchorAlignmentDiagnostic({
+        id: target.id,
+        status: 'misaligned',
+        expected,
+        anchorBox: subject.box,
+        targetBox: targetGeometry.box,
+        reason: `Anchor or target geometry contains non-finite coordinates for ${expected}.`
+      });
+    }
+
     const distance = pointDistance(subject.point, targetGeometry.point);
     const overlapRatio = alignmentOverlapRatio(subject.box, targetGeometry.box);
     const tolerance = target.tolerance ?? options.tolerance ?? 1;
@@ -387,6 +399,10 @@ function targetAlignmentGeometry(target: AnchorAlignmentTarget): { box: Box; poi
   }
 
   return undefined;
+}
+
+function isFiniteAlignmentGeometry({ box, point }: { box: Box; point: Point }): boolean {
+  return [box.x, box.y, box.width, box.height, point.x, point.y].every(Number.isFinite);
 }
 
 function alignmentOverlapRatio(anchorBox: Box, targetBox: Box): number {
