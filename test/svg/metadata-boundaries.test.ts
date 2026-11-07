@@ -64,7 +64,7 @@ describe('renderer metadata boundaries', () => {
       const dom = parseMarkup(markup);
       expect(dom.querySelector(selector[location])!.getAttribute(attribute)).toBe(expected);
     }
-    const xml = parseMarkup(renderAnnotationsSvg(layout), 'image/svg+xml');
+    parseMarkup(renderAnnotationsSvg(layout), 'image/svg+xml');
   });
 
   it.each(['annotation', 'note', 'connector'] as const)('normalizes custom aliases once on %s with deterministic last-value precedence', location => {

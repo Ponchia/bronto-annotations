@@ -29,6 +29,8 @@ reasonable.
   snapshot of the clicked text, including when scene controls change afterward.
 - Keep asynchronous copy feedback tied to the latest request and restore the
   original button label after repeated clicks; preserve fallback text on reset.
+  Scene-link copying uses the same captured-text recovery without replacing the
+  live current URL after a delayed permission denial.
 - Announce guide-filter results through a persistent status region, provide
   descriptive guide links, and state that filtering searches guide metadata
   rather than full page content. Keep long queries within narrow viewports.
