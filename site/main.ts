@@ -6,6 +6,7 @@ import {
   type Box,
 } from '@ponchia/annotations';
 import '@ponchia/annotations/bronto.css';
+import { updatePlaygroundInspector } from './playground-inspector.js';
 import './site.css';
 
 const form = document.querySelector<HTMLFormElement>('#annotation-controls');
@@ -146,6 +147,7 @@ function updateLayout() {
   const layouts = { automatic, fixed };
   const layout = layouts[placementMode];
   const quality = evaluateAnnotationLayout(layout);
+  updatePlaygroundInspector(layout.annotations.map(item => item.annotation), quality, placementMode);
   const automaticQuality = evaluateAnnotationLayout(automatic);
   const fixedQuality = evaluateAnnotationLayout(fixed);
 

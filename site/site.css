@@ -486,6 +486,62 @@ select:focus-visible {
   line-height: 1.55;
   margin: 8px 0 0;
 }
+.layout-inspector {
+  min-width: 0;
+  margin-top: 20px;
+  border: 1px solid #d8e1e1;
+  border-radius: 5px;
+  background: #fbfcfc;
+}
+.layout-result-summary {
+  color: #25414b;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  font-weight: 700;
+  margin: 0;
+  padding: 12px 14px;
+}
+.layout-inspector summary {
+  cursor: pointer;
+  padding: 12px 14px;
+  font-size: 0.83rem;
+  font-weight: 700;
+  border-top: 1px solid #e4eaea;
+}
+.layout-inspector summary:focus-visible {
+  outline: 3px solid var(--accent-dark);
+  outline-offset: 3px;
+}
+.layout-inspector-content {
+  padding: 0 14px 14px;
+  overflow-wrap: anywhere;
+}
+.layout-inspector-content h4 {
+  font-size: 0.85rem;
+  margin: 20px 0 10px;
+}
+#scene-note-list {
+  padding-left: 22px;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+#scene-note-list li + li { margin-top: 12px; }
+#scene-note-list p { margin: 3px 0 0; color: #52676a; }
+#scene-note-list small { display: block; font-size: 0.72rem; color: #52676a; }
+#layout-findings {
+  padding-left: 20px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+#layout-findings li + li { margin-top: 9px; }
+#layout-findings-empty, .inspector-limit {
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: #52676a;
+}
+.inspector-limit a { color: #a22e51; }
+
 .scene-source {
   border: 1px solid #d8e1e1;
   border-radius: 5px;
@@ -1189,7 +1245,8 @@ select:focus-visible {
   }
   .controls-panel .fine-print,
   .controls-panel > .scene-presets,
-  .controls-panel > .scene-source {
+  .controls-panel > .scene-source,
+  .controls-panel > .layout-inspector {
     grid-column: 1/-1;
     min-width: 0;
   }

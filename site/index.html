@@ -303,6 +303,20 @@
                 </select></label
               >
               <button type="reset" class="reset-control">Reset scene ↺</button>
+              <section class="layout-inspector" aria-label="Current layout details">
+                <p id="layout-result-summary" class="layout-result-summary"></p>
+                <details id="layout-inspector-details">
+                  <summary>Read notes and inspect placement</summary>
+                  <div class="layout-inspector-content">
+                    <h4>Notes in this scene</h4>
+                    <ol id="scene-note-list" aria-label="Full annotation text"></ol>
+                    <h4>Measured placement findings</h4>
+                    <p id="layout-findings-empty">No findings for this layout.</p>
+                    <ul id="layout-findings" aria-label="Layout quality findings"></ul>
+                    <p class="inspector-limit">These checks measure geometry and connector intersections. They do not certify text readability or accessibility. <a href="./docs/placement-quality.html">How quality is measured</a>.</p>
+                  </div>
+                </details>
+              </section>
               <details class="scene-source">
                 <summary>Use this scene in your code</summary>
                 <p>Copy the parameters and annotation objects currently shown. This is the headless layout call; integrate the returned SVG into your own trusted rendering surface.</p>

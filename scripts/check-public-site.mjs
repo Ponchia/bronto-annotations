@@ -216,6 +216,10 @@ assert(strategyControl?.tagName === 'SELECT'
   && strategyControl.options[0].value === 'automatic'
   && strategyControl.options[1].value === 'fixed',
   'Published playground must expose a labeled automatic/fixed baseline comparison');
+assert(home.window.document.querySelector('#layout-inspector-details #scene-note-list'),
+  'Playground must offer a readable full-text alternative to scaled SVG notes');
+assert(home.window.document.querySelector('#layout-findings'),
+  'Playground should expose actual per-annotation placement findings');
 assert(home.window.document.querySelector('#obstacle-overlap-count'),
   'Published placement comparison must report real obstacle overlap');
 assert.equal(home.window.document.querySelectorAll('[data-scene]').length, 3,
