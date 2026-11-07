@@ -38,6 +38,7 @@ export type LayoutQualityIssue = {
 export type LayoutQualityMetrics = {
   annotationCount: number;
   issueCount: number;
+  /** Invalid note boxes, effective bounds and inspected obstacles. */
   invalidBoxCount: number;
   boundsOverflowArea: number;
   noteOverlapArea: number;
@@ -47,9 +48,9 @@ export type LayoutQualityMetrics = {
 };
 
 export type LayoutQualityReport = {
-  /** Structural placement validity: finite boxes, in-bounds notes, no note overlaps. */
+  /** Structural validity of inspected bounds, obstacles and note boxes, plus placement. */
   geometryValid: boolean;
-  /** Annotation note rectangles do not cover protected host obstacles.
+  /** Inspected host obstacles are valid and are not covered by annotation notes.
    * Connectors may legitimately contact their own subjects.
    */
   hostContentClear: boolean;
@@ -101,8 +102,28 @@ export function evaluateAnnotationLayout(
     connectorNoteHits: 0
   };
 
-  for (const item of layout.annotations) {
-    if (!isFiniteBox(item.noteBox)) {
+  const validBounds = finiteQualityBox(bounds);
+  if (!validBounds) {
+    metrics.invalidBoxCount += 1;
+    issues.push({ type: 'invalid-box', severity: 'error',
+      message: 'The effective placement bounds are invalid.' });
+  }
+
+  // Inspect every supplied obstacle, even in an empty scene. Keep source indices
+  // when excluding invalid geometry from numerical intersection calculations.
+  const validObstacles: Array<{ obstacle: Box; obstacleIndex: number }> = [];
+  for (const [obstacleIndex, obstacle] of obstacles.entries()) {
+    if (finiteQualityBox(obstacle)) {
+      validObstacles.push({ obstacle, obstacleIndex });
+    } else {
+      metrics.invalidBoxCount += 1;
+      issues.push({ type: 'invalid-box', severity: 'error', obstacleIndex,
+        message: `Host obstacle ${obstacleIndex} has an invalid box.` });
+    }
+  }
+
+  const validAnnotations = layout.annotations.filter((item) => {
+    if (!finiteQualityBox(item.noteBox)) {
       metrics.invalidBoxCount += 1;
       issues.push({
         type: 'invalid-box',
@@ -110,9 +131,13 @@ export function evaluateAnnotationLayout(
         annotationId: item.id,
         message: `Annotation "${item.id}" has an invalid note box.`
       });
+      return false;
     }
+    return true;
+  });
 
-    const overflow = overflowArea(item.noteBox, bounds);
+  for (const item of validAnnotations) {
+    const overflow = validBounds ? overflowArea(item.noteBox, bounds) : 0;
 
     if (overflow > 0) {
       metrics.boundsOverflowArea += overflow;
@@ -125,7 +150,7 @@ export function evaluateAnnotationLayout(
       });
     }
 
-    for (const [obstacleIndex, obstacle] of obstacles.entries()) {
+    for (const { obstacleIndex, obstacle } of validObstacles) {
       const area = overlapArea(item.noteBox, obstacle);
 
       if (area > 0) {
@@ -141,7 +166,7 @@ export function evaluateAnnotationLayout(
       }
     }
 
-    for (const [obstacleIndex, obstacle] of obstacles.entries()) {
+    for (const { obstacleIndex, obstacle } of validObstacles) {
       for (const segmentIndex of connectorIntersections(item.connector, obstacle)) {
         metrics.connectorObstacleHits += 1;
         issues.push({
@@ -156,11 +181,11 @@ export function evaluateAnnotationLayout(
     }
   }
 
-  for (let firstIndex = 0; firstIndex < layout.annotations.length; firstIndex += 1) {
-    const first = layout.annotations[firstIndex]!;
+  for (let firstIndex = 0; firstIndex < validAnnotations.length; firstIndex += 1) {
+    const first = validAnnotations[firstIndex]!;
 
-    for (let secondIndex = firstIndex + 1; secondIndex < layout.annotations.length; secondIndex += 1) {
-      const second = layout.annotations[secondIndex]!;
+    for (let secondIndex = firstIndex + 1; secondIndex < validAnnotations.length; secondIndex += 1) {
+      const second = validAnnotations[secondIndex]!;
       const area = overlapArea(first.noteBox, second.noteBox);
 
       if (area > 0) {
@@ -176,8 +201,8 @@ export function evaluateAnnotationLayout(
     }
   }
 
-  for (const connectorOwner of layout.annotations) {
-    for (const noteOwner of layout.annotations) {
+  for (const connectorOwner of validAnnotations) {
+    for (const noteOwner of validAnnotations) {
       if (connectorOwner.id === noteOwner.id && options.ignoreConnectorNoteIds !== false) {
         continue;
       }
@@ -202,7 +227,7 @@ export function evaluateAnnotationLayout(
   metrics.issueCount = issues.length;
 
   const geometryValid = !issues.some((issue) => issue.severity === 'error');
-  const hostContentClear = metrics.obstacleOverlapArea === 0;
+  const hostContentClear = validObstacles.length === obstacles.length && metrics.obstacleOverlapArea === 0;
   return {
     geometryValid,
     hostContentClear,
@@ -273,7 +298,11 @@ export function assertAnnotationLayoutQuality(
 
   const reasons = [
     !report.geometryValid ? 'blocking layout quality errors' : undefined,
-    !report.hostContentClear ? 'annotation notes obscure protected host content' : undefined,
+    !report.hostContentClear
+      ? report.issues.some(issue => issue.type === 'invalid-box' && issue.obstacleIndex !== undefined)
+        ? 'protected host obstacle geometry is invalid'
+        : 'annotation notes obscure protected host content'
+      : undefined,
     belowMinimumScore ? `score ${roundMetric(report.score)} is below required minimum ${roundMetric(options.minScore!)}` : undefined,
     options.failOnWarnings && counts.warning > 0 ? `${counts.warning} warning${counts.warning === 1 ? '' : 's'}` : undefined,
     options.failOnInfo && counts.info > 0 ? `${counts.info} info issue${counts.info === 1 ? '' : 's'}` : undefined
@@ -292,6 +321,13 @@ export function assertAnnotationLayoutQuality(
   const message = formatLayoutQualityReport(report, formatOptions);
 
   throw new Error(`${options.label ?? 'Annotation layout quality'} assertion failed: ${reasons.join('; ')}.\n${message}`);
+}
+
+// Finite fields alone do not guarantee finite rectangle edges.
+function finiteQualityBox(box: Box): boolean {
+  return isFiniteBox(box)
+    && Number.isFinite(box.x + box.width)
+    && Number.isFinite(box.y + box.height);
 }
 
 function qualityScore(metrics: LayoutQualityMetrics): number {
