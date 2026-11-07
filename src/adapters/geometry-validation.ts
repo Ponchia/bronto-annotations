@@ -1,4 +1,5 @@
 import type { Anchor, Box, Point } from '../core/model.js';
+import { anchorSubject } from '../core/anchors.js';
 import type { ExtractedAnchor } from '../dom/index.js';
 import { anchorDiagnostic, type AnchorSpecDiagnostic } from './diagnostics.js';
 
@@ -42,6 +43,12 @@ function finiteAnchor(anchor: Anchor): boolean {
   switch (anchor.type) {
     case 'box': return finiteBox(anchor.box);
     case 'point': return finitePoint(anchor.point);
-    case 'path': return anchor.points.every(finitePoint);
+    case 'path': {
+      if (!anchor.points.every(finitePoint)) return false;
+      // The measured SVG box can be finite while sampled-path arithmetic
+      // overflows. Validate the geometry the core will resolve as well.
+      const subject = anchorSubject(anchor);
+      return finiteBox(subject.box) && finitePoint(subject.point);
+    }
   }
 }

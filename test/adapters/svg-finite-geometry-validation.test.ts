@@ -83,6 +83,16 @@ describe.each(adapters)('$source finite resolved SVG geometry', (adapter) => {
     expectRejected(svg, { ...spec, kind: 'path', inflate: NaN });
   });
 
+  it.each([
+    [{ x: -max, y: 0 }, { x: max, y: 0 }],
+    [{ x: 0, y: 0 }, { x: max, y: max }]
+  ])('rejects overflowing sampled-path geometry despite finite measured bounds', (start, end) => {
+    const { svg, path, spec } = fixture();
+    path.getTotalLength = () => 64;
+    path.getPointAtLength = (distance) => (distance === 0 ? start : end) as DOMPoint;
+    expectRejected(svg, { ...spec, kind: 'path' });
+  });
+
   it('keeps missing targets missing even with invalid geometry options', () => {
     const { svg, spec } = fixture();
     const report = adapter.validate(svg, [{ ...spec, selector: '#missing', inflate: NaN }]);
