@@ -325,6 +325,15 @@ Exports:
   `prepareDomAnnotations` accepts `assert: true` or
   `assert: { label, failOnWarnings }`.
 
+DOM selector validation inspects the selected anchor geometry, including sampled
+path coordinates and finite rectangle edges. `prepareDomAnnotations` measures
+each selector specification once and uses that result for both its report and
+returned annotation. Separate specifications and requested obstacles retain their
+own measurements; this is not an atomic snapshot of the whole document. Re-run
+preparation after host changes. Extraction remains permissive, while `assert`
+rejects invalid selected geometry; malformed selectors and host measurement
+exceptions still propagate.
+
 `measureRangeAnchor(range, options?)` returns a `RangeAnchorMeasurement`: `status`
 (`resolved`, `empty`, or `unsupported`), line `rects`, their union `box`, a
 `truncated` flag, and an optional `reason`. `RangeAnchorOptions.maxRects` defaults
@@ -333,8 +342,13 @@ return `empty`.
 
 Coordinates default to viewport pixels. Set `coordinateSpace` to a containing
 HTML element to get its local padding-space coordinates, accounting for borders,
-scroll, and axis-aligned scale. Rotated, skewed, or invisible local spaces are
-explicitly unsupported. Re-measure after content, layout, scroll, or zoom changes.
+scroll, translation and positive axis-aligned scale. Both `transform` and the
+individual CSS `translate`, `rotate` and `scale` properties are checked, including
+rendered ancestors through shadow hosts and assigned slots. Rotations other than
+identity turns, reflections, skew, motion paths, nonidentity 3D transforms and
+invisible local spaces are explicitly unsupported. No cross-shadow selection or
+3D coordinate inversion is provided. Viewport measurement remains available
+without local conversion. Re-measure after content, layout, scroll, or zoom changes.
 Geometry is transient: persist host-owned text selectors and quotations instead
 of browser `Range` objects or measured rectangles.
 
