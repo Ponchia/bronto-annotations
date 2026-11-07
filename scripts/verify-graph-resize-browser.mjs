@@ -11,6 +11,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const { values } = parseArgs({ options: {
   'site-dir': { type: 'string', default: resolve(root, '_site') },
   host: { type: 'string' },
+  fault: { type: 'string' },
 } });
 const site = resolve(values['site-dir']);
 const hosts = {
@@ -25,6 +26,14 @@ const hosts = {
 };
 assert(!values.host || Object.hasOwn(hosts, values.host), 'Unknown graph host');
 const selected = values.host ? [values.host] : Object.keys(hosts);
+const faultStyles = {
+  hidden: '.pa-annotation__body { visibility: hidden !important; }',
+  transparent: '.pa-annotation__body { opacity: 0 !important; }',
+  clipped: '.pa-annotation__body { max-height: 1px !important; overflow: hidden !important; }',
+  scaled: '.pa-annotation__title,.pa-annotation__body { transform: scale(0.5) !important; transform-origin: top left !important; }',
+};
+assert(!values.fault || (values.host === 'react-flow-basic' && Object.hasOwn(faultStyles, values.fault)),
+  'Fault probes require the React Flow host and a known fault');
 for (const name of selected) await access(resolve(site, 'examples', name, 'index.html'));
 const mime = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript',
   '.json': 'application/json', '.svg': 'image/svg+xml', '.wasm': 'application/wasm' };
@@ -61,6 +70,7 @@ try {
       });
       const response = await page.goto(`${origin}/examples/${name}/`, { waitUntil: 'networkidle' });
       assert.equal(response?.status(), 200, name);
+      if (values.fault) await page.addStyleTag({ content: faultStyles[values.fault] });
       let initialText;
       // No reload between widths: initial rendering must not conceal stale geometry.
       for (const width of [1200, 320, 390, 768, 1200, 320]) {
@@ -83,10 +93,53 @@ try {
           const frame = document.querySelector(frameSelector);
           const bounds = frame.getBoundingClientRect();
           const svg = frame.querySelector('svg.pa-annotation-layer');
+          const containsRect = (outer, inner) => inner.left >= outer.left - 2 && inner.right <= outer.right + 2
+            && inner.top >= outer.top - 2 && inner.bottom <= outer.bottom + 2;
+          const minimumScale = matrix => {
+            if (!matrix) return 0;
+            const sum = matrix.a ** 2 + matrix.b ** 2 + matrix.c ** 2 + matrix.d ** 2;
+            const determinant = matrix.a * matrix.d - matrix.b * matrix.c;
+            return Math.sqrt(Math.max(0, (sum - Math.sqrt(Math.max(0, sum * sum - 4 * determinant * determinant))) / 2));
+          };
+          const visiblePaint = value => value !== 'none' && value !== 'transparent'
+            && !/rgba?\([^)]*[,/]\s*0(?:\.0+)?\s*\)$/i.test(value);
+          const inspectText = (element, noteBox) => {
+            const style = getComputedStyle(element);
+            let visible = element.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
+            visible &&= visiblePaint(element instanceof SVGElement ? style.fill : style.color);
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            const content = range.getBoundingClientRect();
+            let unclipped = content.width > 0 && content.height > 0 && containsRect(noteBox, content);
+            let supportedTransform = true;
+            // This fixture has no text-level HTML transforms. Reject them rather
+            // than confusing a CSS font-size with the final painted glyph size.
+            for (let current = element; current && current !== svg; current = current.parentElement) {
+              const currentStyle = getComputedStyle(current);
+              visible &&= currentStyle.visibility === 'visible' && Number(currentStyle.opacity) > 0;
+              if (current instanceof HTMLElement) {
+                supportedTransform &&= currentStyle.transform === 'none'
+                  && (currentStyle.scale === 'none' || currentStyle.scale === '1')
+                  && (currentStyle.rotate === 'none' || currentStyle.rotate === '0deg');
+                const clipX = /hidden|clip|scroll|auto/.test(currentStyle.overflowX);
+                const clipY = /hidden|clip|scroll|auto/.test(currentStyle.overflowY);
+                if (clipX || clipY) {
+                  const clip = current.getBoundingClientRect();
+                  if (clipX) unclipped &&= content.left >= clip.left - 2 && content.right <= clip.right + 2;
+                  if (clipY) unclipped &&= content.top >= clip.top - 2 && content.bottom <= clip.bottom + 2;
+                }
+              }
+            }
+            const matrix = typeof element.getScreenCTM === 'function'
+              ? element.getScreenCTM() : element.closest('svg')?.getScreenCTM();
+            return { visible, unclipped, readable: supportedTransform
+              && parseFloat(style.fontSize) * minimumScale(matrix) >= 11 };
+          };
           const notes = [...frame.querySelectorAll('.pa-annotation__note')].map(note => {
             const box = note.querySelector('.pa-annotation__note-box').getBoundingClientRect();
             const semanticNote = note.getAttribute('role') === 'note' ? note : note.querySelector('[role="note"]');
             const text = [...note.querySelectorAll('.pa-annotation__title,.pa-annotation__body')];
+            const textEvidence = text.map(element => inspectText(element, box));
             return {
               id: semanticNote?.getAttribute('data-annotation-id') ?? null,
               text: text.map(el => el.textContent).join(' ').replace(/\s+/g, ' ').trim(),
@@ -97,12 +150,9 @@ try {
                 return b.left >= box.left - 2 && b.right <= box.right + 2
                   && b.top >= box.top - 2 && b.bottom <= box.bottom + 2;
               }),
-              readable: text.every(el => {
-                const matrix = typeof el.getScreenCTM === 'function'
-                  ? el.getScreenCTM() : el.closest('svg')?.getScreenCTM();
-                const scale = matrix ? Math.hypot(matrix.a, matrix.b) : 0;
-                return parseFloat(getComputedStyle(el).fontSize) * scale >= 11;
-              }),
+              textVisible: textEvidence.length > 0 && textEvidence.every(item => item.visible),
+              textUnclipped: textEvidence.length > 0 && textEvidence.every(item => item.unclipped),
+              readable: textEvidence.length > 0 && textEvidence.every(item => item.readable),
               focusable: semanticNote?.getAttribute('tabindex') === '0'
                 && Boolean(semanticNote.getAttribute('aria-label')),
             };
@@ -136,7 +186,8 @@ try {
         assert(result.notes.every(note => typeof note.id === 'string' && note.id.length > 0), `${name} must retain note identities`);
         assert.equal(result.quality, true, `${name} quality assertions must remain effective`);
         assert(result.notes.every(note => note.contained), `${name} has clipped notes at ${width}px`);
-        assert(result.notes.every(note => note.textContained), `${name} has clipped text at ${width}px`);
+        assert(result.notes.every(note => note.textContained && note.textUnclipped), `${name} has clipped text at ${width}px`);
+        assert(result.notes.every(note => note.textVisible), `${name} has hidden or transparent text at ${width}px`);
         assert(result.notes.every(note => note.readable), `${name} shrinks note text at ${width}px`);
         assert(result.notes.every(note => note.focusable), `${name} loses focusable note semantics`);
         // Subjects include a deliberate 4-unit border around their target.
@@ -177,7 +228,7 @@ try {
           }, host.frame);
           failures.push({ host: name, viewport: width, message: error.message, runtimeErrors: [...errors], snapshot });
           // A fatal host crash will not recover from another viewport change.
-          if (errors.length && !snapshot.noteCount) break;
+          if (values.fault || (errors.length && !snapshot.noteCount)) break;
         }
       }
     } catch (error) {
@@ -188,7 +239,7 @@ try {
   try { await browser?.close(); }
   finally { if (server.listening) await new Promise(done => server.close(done)); }
 }
-const evidence = resolve(root, 'browser-evidence/graph-resize');
+const evidence = resolve(root, 'browser-evidence/graph-resize', values.fault ?? 'normal');
 await mkdir(evidence, { recursive: true });
 await writeFile(resolve(evidence, 'results.json'), JSON.stringify({ observations, failures }, null, 2) + '\n');
 assert.deepEqual(failures, [], 'Graph resize regressions: ' + JSON.stringify(failures));
