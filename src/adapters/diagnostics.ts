@@ -2,7 +2,6 @@ import {
   anchorSubject,
   boxCenter,
   boxForPoint,
-  boxFromPoints,
   expandBox,
   overlapArea
 } from '../core/anchors.js';
@@ -377,12 +376,7 @@ function targetAlignmentGeometry(target: AnchorAlignmentTarget): { box: Box; poi
   }
 
   if (target.points) {
-    const box = boxFromPoints(target.points);
-
-    return {
-      box,
-      point: boxCenter(box)
-    };
+    return anchorSubject({ type: 'path', points: target.points });
   }
 
   if (target.point) {
