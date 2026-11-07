@@ -43,12 +43,16 @@ Keep personal information and incident details out of public reports. You do
 not need to confront the person involved before seeking help.
 
 For harassment, threats, exposure of personal information, or other violations
-of GitHub's policies, use [GitHub's private abuse-reporting form](https://support.github.com/contact/report-abuse)
-or the affected content's **Report content** menu. This sends the report to
-GitHub Support, not to the project maintainer. The
-[GitHub reporting guide](https://docs.github.com/en/communities/maintaining-your-safety-on-github/reporting-abuse-or-spam)
-explains the available routes. Use this independent route for reports involving
-the maintainer as well.
+of GitHub's policies, use [GitHub's private abuse-reporting form](https://support.github.com/contact/report-abuse).
+Alternatively, open the affected content's **Report content** menu and choose
+**Report abuse to GitHub Support**. These routes send the report to
+GitHub Support, not to the project maintainer. Use this independent route for
+reports involving the maintainer as well.
+
+The menu may also offer **Report to repository admins**. That is a different
+route to the project maintainers, not an independent report to GitHub Support.
+The [GitHub reporting guide](https://docs.github.com/en/communities/maintaining-your-safety-on-github/reporting-abuse-or-spam)
+explains the options; check the recipient before submitting.
 
 There is no dedicated confidential project mailbox at present. A public issue
 is not a substitute for a confidential report. The maintainer reviews reports

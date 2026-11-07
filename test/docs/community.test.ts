@@ -20,6 +20,9 @@ describe('public contribution and community routes', () => {
     expect(conduct).toContain('https://github.com/Ponchia');
     expect(conduct).toContain('https://support.github.com/contact/report-abuse');
     expect(conduct).toContain('GitHub Support, not to the project maintainer');
+    expect(conduct).toContain('**Report abuse to GitHub Support**');
+    expect(conduct).toContain('**Report to repository admins**');
+    expect(conduct).toContain('route to the project maintainers, not an independent report to GitHub Support');
     expect(conduct).toContain('no dedicated confidential project mailbox');
     expect(conduct).not.toContain('/security/advisories/new');
     const security = read('SECURITY.md');
