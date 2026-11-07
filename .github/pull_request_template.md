@@ -1,10 +1,20 @@
 ## Summary
 
-- 
+Describe the problem and the change. Link an issue when relevant.
 
 ## Verification
 
-- [ ] `npm run check`
+- [ ] `npm run check` passed locally or in CI on this exact revision.
+
+List the commands or CI run, relevant results, and anything not tested. Include
+before/after evidence and viewport details for visual changes.
+
+## Compatibility and documentation
+
+Describe any public API or compatibility impact and the guide/tests updated.
+Automated checks and reviews are evidence, not independent human approval.
+See [contribution guidance](https://github.com/Ponchia/bronto-annotations/blob/main/CONTRIBUTING.md)
+and [governance](https://github.com/Ponchia/bronto-annotations/blob/main/GOVERNANCE.md).
 
 ## Product Boundary
 

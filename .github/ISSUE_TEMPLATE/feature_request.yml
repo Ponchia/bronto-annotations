@@ -15,10 +15,10 @@ body:
     id: proposal
     attributes:
       label: Proposed API or behavior
-      description: Include the public subpath and a small usage sketch when possible.
+      description: Optional. Describe the behavior you would like; an API design or code sketch is not required.
       render: ts
     validations:
-      required: true
+      required: false
   - type: dropdown
     id: boundary
     attributes:

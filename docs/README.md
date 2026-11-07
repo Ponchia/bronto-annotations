@@ -5,28 +5,19 @@
 
 ## Start here
 
-This branch documents 0.8.2 and subsequent development. Users upgrading from 0.6 should read the
-[0.7 migration guide](migration-0.7.md) and [release readiness](release-readiness.md);
-0.8 only adds to the 0.7 API. The [0.8.2 guide index](https://github.com/Ponchia/bronto-annotations/blob/v0.8.2/docs/README.md)
-is the version-matched entry for the confirmed stable npm release.
+[Your first annotation](getting-started.md) walks from install to a visible note
+in a browser or React app. Already render a chart or diagram? Use the
+[adapter chooser](context-quickstart.md) to attach the first note to it.
 
-
-Read [Your first annotation](getting-started.md) for a complete browser or React
-example. Then use the [adapter chooser](context-quickstart.md) to connect the
-engine to the surface you already render. Start with a few notes; Workers and
-incremental sessions are advanced, optional paths.
-
-Already have a surface? Start with one note on an
-[SVG figure](context-quickstart.md#first-note-on-a-figure),
-[DOM report](context-quickstart.md#first-note-on-a-report), or
-[React Flow graph](context-quickstart.md#first-note-on-a-graph).
+These guides follow `main`. Use the
+[0.8.2 index](https://github.com/Ponchia/bronto-annotations/blob/v0.8.2/docs/README.md)
+for that release, or the [migration guide](migration-0.7.md) when upgrading
+from 0.6.
 
 ## Current consumer guides
 
 | Question | Guide |
 | --- | --- |
-| How do I install it and see a note? | [Getting started](getting-started.md) |
-| Which import fits my chart or diagram? | [Choose an adapter](context-quickstart.md) |
 | How do placement, manual positions, and diagnostics work? | [Core layout and geometry](core-guide.md) |
 | Which callout types exist? How do I migrate d3-style input? | [Presets and migration](presets-guide.md) |
 | How do I render, measure, or edit notes in React? | [React guide](react-guide.md) |
@@ -35,43 +26,36 @@ Already have a surface? Start with one note on an
 | Why are notes missing, shifted, or overlapping? | [Troubleshooting](troubleshooting.md) |
 | Where is a complete host integration? | [Examples](../examples/README.md) and [integration recipes](integration-recipes.md) |
 | What is the API contract? | [API reference](api-reference.md), [stability](api-stability.md), and [compatibility](compatibility.md) |
-| What should I know before shipping? | [Accessibility](accessibility.md), [performance](performance.md), and [placement quality](placement-quality.md), and [upstream consumer proof](upstream-consumers.md) |
-| How can a host run layouts off the main thread? | [Experimental Worker recipe](worker-layout.md) |
+| What should I check before shipping? | [Accessibility](accessibility.md), [performance](performance.md), and [placement quality](placement-quality.md) |
+| Which advanced paths are experimental? | [Worker recipe](worker-layout.md) and [pin placement](pin-placement.md) |
 
-The site and these guides track `main`. Consult the installed package's
-[release notes](https://github.com/Ponchia/bronto-annotations/releases) when
-using a published npm version. The source, public exports, tests, and package
-artifacts remain authoritative if prose disagrees.
+For help, use [Support](../SUPPORT.md). The source, public exports, tests, and
+package artifacts define the API contract if prose disagrees.
 
 ## Contributor and maintainer reference
 
-[Contributing](../CONTRIBUTING.md) describes setup and pull requests.
-[Development and verification](verification.md) explains the complete check
-pipeline. [Release](release.md) and [security automation](security-automation.md)
-cover publishing and repository safeguards. For help or optional funding, read
-[SUPPORT.md](../SUPPORT.md) and [FUNDING.md](../FUNDING.md).
+[Contributing](../CONTRIBUTING.md) covers setup and pull requests;
+[verification](verification.md) covers checks and
+[property testing](property-testing.md) covers generated cases and replay.
+[Release](release.md),
+[release readiness](release-readiness.md), and [security automation](security-automation.md)
+cover packaging, publishing, and repository safeguards.
 
-Accepted [architecture decisions](adr/) explain the standalone package boundary.
-The current [quality-first decision](adr/0002-quality-before-api-expansion.md)
-prioritizes common consumer workloads and exact output before API expansion.
-The API, parity, readiness, and completion JSON manifests are generated/reference
-material: their owning verification commands live in `package.json` and
-`scripts/`. They are not a substitute for a consumer guide or usability evidence.
+[Architecture decisions](adr/) record the package boundary and
+[quality-first policy](adr/0002-quality-before-api-expansion.md).
+The [completion audit](completion-audit.json) and other API, parity, and readiness
+manifests map claims to checks; their generators and verifiers live in `scripts/`.
 
 ## Historical evidence and open proposals
 
-`dogfood-*`, `*-report`, `*-proof`, `*-plan`, and `*-roadmap` documents retain
-integration evidence or proposals from earlier development. Their scope is the
-recorded fixture and revision, not a claim of current independent adoption or
-universal support. Historical `0.1.x` release planning does not mean `0.1.x` is
-the current npm release. Use current guides above for installation and API use.
+The [original hardening program](verification.md#pre-release-hardening) links
+retained integration reports, proofs, and release plans. [Upstream consumer evidence](upstream-consumers.md)
+records integration scope and limits. These records describe their fixture and
+revision; they do not establish current support or independent adoption.
+Plans and roadmaps are proposals, not installation instructions.
 
 ## Documentation lifecycle
 
-**Current** guides change with the implementation. **Generated/reference**
-material changes through its generator or verifier. **Archive** material is
-historical evidence, not current instructions. **Proposals** describe open work,
-not missing functionality. A retired path should retain a **tombstone** link to
-its replacement instead of silently breaking existing references.
-
-For experimental small-target geometry, see [pin placement](pin-placement.md). Its omissions and optional leaders stay separate from explanatory-note layout and host discussion state.
+Update current guides with the implementation and generated/reference material
+through its owning command. Retain historical evidence and label proposals.
+When retiring a path, leave a tombstone link to its replacement.

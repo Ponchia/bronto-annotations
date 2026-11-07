@@ -107,7 +107,11 @@ for (const term of [
   'persist-credentials: false',
   'results_format: sarif',
   'publish_results: true',
-  'github/codeql-action/upload-sarif@'
+  'github/codeql-action/upload-sarif@',
+  'name: Retain Scorecard evidence',
+  'actions/upload-artifact@',
+  'results.json',
+  "if: always() && hashFiles('scorecard.sarif') != ''"
 ]) {
   assertIncludes(scorecard, term, '.github/workflows/scorecard.yml');
 }

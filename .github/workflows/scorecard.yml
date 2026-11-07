@@ -39,7 +39,22 @@ jobs:
           results_format: sarif
           publish_results: true
 
+      # The pinned action writes both files before signing/publishing results.
+      # Retain the local scan even if the external publication service fails.
+      # Keep this job limited to Scorecard's approved actions (no run steps).
+      - name: Retain Scorecard evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: scorecard-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            scorecard.sarif
+            results.json
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Upload Scorecard SARIF
+        if: always() && hashFiles('scorecard.sarif') != ''
         uses: github/codeql-action/upload-sarif@1fc58d04a4d4374f921bdac573c3811c240f9c26 # v4
         with:
           sarif_file: scorecard.sarif

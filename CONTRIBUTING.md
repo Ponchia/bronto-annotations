@@ -1,130 +1,134 @@
 # Contributing
 
-`@ponchia/annotations` is a public, headless annotation engine. Keep
-changes focused on annotation models, anchors, placement, collision handling,
-connector geometry, render helpers, and adapter contracts.
+Bug reproductions, clearer documentation, and small examples from real
+integrations are welcome. You do not need to propose an API to describe a
+problem. For usage help, start with [SUPPORT.md](SUPPORT.md); report suspected
+vulnerabilities privately through [SECURITY.md](SECURITY.md).
 
-Small documentation fixes, reproducible bug reports, and examples from real
-integrations are welcome. For usage questions, start with [SUPPORT.md](SUPPORT.md).
+Participation follows the [Code of Conduct](CODE_OF_CONDUCT.md).
+[Governance](GOVERNANCE.md) explains maintenance, review, and release decisions.
 Financial support is optional and separate from contribution in [FUNDING.md](FUNDING.md).
 
-## Find your way around
+## Start a change
 
-| Area | Start here |
-| --- | --- |
-| Consumer guides and troubleshooting | [Documentation index](docs/README.md) |
-| Runnable hosts and expected behavior | [Example catalog](examples/README.md) |
-| Models, placement, connectors, and layout quality | `src/core/` |
-| Renderers and integrations | `src/svg/`, `src/react/`, `src/dom/`, `src/adapters/` |
-| Behavior, package consumers, and documentation regressions | `test/` |
-| Build, browser, release, and compatibility checks | [Verification guide](docs/verification.md) |
+For a small fix, fork the repository and create a branch from current `main`.
+For a new API, changed compatibility promise, or larger refactor, first open an
+issue describing the problem, a small example, and the alternatives considered.
+Keep each pull request focused on one reviewable change.
 
-## Product Boundaries
-
-This package must not become:
-
-- a chart engine
-- a diagram or graph layout engine
-- an app-state, routing, persistence, or workflow layer
-- a design system
-- a hard dependency on React, Vega, Mermaid, D2, React Flow, or `@ponchia/ui`
-
-Root imports must stay DOM-free and free of optional peer runtime imports.
-Adapter packages are optional peers and should use public host geometry APIs or
-rendered SVG/DOM geometry.
-
-## Development
+Use a Node version from the [compatibility matrix](docs/compatibility.md).
+Run commands from your checkout's root:
 
 ```bash
 npm ci
-npx playwright install chromium
-npm run check
+npm run check:fast
 ```
 
-On Linux, Playwright may also need system libraries; CI installs them with
-`npx playwright install --with-deps chromium`. The ordinary examples do not
-require a Playwright browser download.
+To explore an existing host:
 
-`npm run check` is the required gate. It builds the package, runs whole-repo
-type checks, unit tests, dead-code/dependency checks, validates public exports
-and docs, runs parity checks, builds examples, performs packed-consumer smokes,
-verifies examples in a browser, checks screenshots, and enforces
-readiness/completion/repository hygiene.
+```bash
+npm run example -- examples/svg-basic
+```
 
-### Verified build reuse
+The browser suites also need `npx playwright install chromium`; Linux may need
+`npx playwright install --with-deps chromium`. Ordinary examples do not need
+that download. Before marking a pull request ready, run `npm run check` or
+confirm its complete successful CI run for the exact proposed revision.
 
-The full `npm run check` pipeline performs an initial full TypeScript build,
-then reuses the **same byte-verified** `dist` artifact across its remaining
-checks instead of recompiling it for every fixture. This preserves packed
-consumer installations, screenshot coverage, compatibility lanes, and all
-existing verification stages. It only changes redundant build work.
+## Choose focused checks while iterating
 
-Every standalone command, including `npm run build`, `npm run test:pack`,
-`npm run test:browser`, and `npm run test:performance`, still builds freshly.
-Inside `npm run check`, `PONCHIA_ANNOTATIONS_REUSE_BUILD=1` enables a no-op
-build **only** when both source inputs and compiled outputs match the fingerprints
-recorded after a successful compile. The fingerprint lives in ignored `.tmp`
-and is never published with the package. Changed/missing artifacts stop the
-check rather than silently publishing or testing stale JavaScript.
+| Change | Start with |
+| --- | --- |
+| Core, adapter, or renderer behavior | `npm test -- path/to/changed.test.ts` and `npm run check:fast` |
+| First-use examples or documentation | `npm run test:docs-snippets` |
+| Public pages, navigation, or demos | `npm run test:site` |
+| Package exports or installation | `npm run test:exports` and `npm run test:pack` |
 
-Run `npm run test:build-reuse` to verify that fresh output is reused unchanged,
-while an added source or dist file is correctly rejected. To repair a failed
-reuse check, run `npm run build` without the reuse environment variable.
+Focused checks shorten iteration; they do not replace the full merge gate.
+The [verification guide](docs/verification.md) explains browser, compatibility,
+performance and release checks. Keep useful failure output and report skipped
+checks honestly. Never remove an assertion merely to get a green run.
+
+## Find the owning code or guide
+
+| Area | Start here |
+| --- | --- |
+| Installation and consumer documentation | [Documentation index](docs/README.md) |
+| Runnable integrations and host ownership | [Example catalog](examples/README.md) |
+| Models, anchors, placement and layout quality | `src/core/` |
+| SVG, React and rendered DOM output | `src/svg/`, `src/react/`, `src/dom/` |
+| Optional integrations | `src/adapters/` |
+| Behavior, consumer and documentation regressions | `test/` |
+
+## Implementation and tests
+
+Follow the surrounding TypeScript style, use explicit public types, and keep
+changes compatible with the supported Node and optional-peer versions. Public
+exports, tests and the implementation are the contract; update the relevant
+current guide and API reference when behavior changes.
+
+Add a focused regression for a bug, ideally showing the failure before the fix.
+New behavior needs automated tests for its contract and relevant boundaries.
+Use deterministic fixtures or retain the seed and minimized counterexample of a
+generated test. Check input immutability and invalid input where relevant. Avoid
+new dependencies unless they solve a concrete problem the existing tools do not.
+
+### Product Boundaries
+
+The package owns annotation models, anchors, placement, collision handling,
+connector geometry, render helpers, and adapter contracts. The host owns charts,
+diagram parsing/layout, application state, persistence, routing, and design.
+Root imports must remain DOM-free and free of optional peer runtime imports.
+Bronto UI styling and host libraries remain optional.
+
+### Adapter Changes
+
+Use public host geometry or rendered SVG/DOM geometry. Keep anchor, annotation,
+obstacle and validation helpers consistent with each other. Preserve manual
+placements, target-alignment diagnostics and provenance in `annotation.data`.
+Keep extraction and strict-validation semantics explicit; report a limitation
+rather than silently broadening a contract.
 
 ## Documentation and examples
 
-Keep the root README focused on adoption. Put detailed options in the relevant
-current guide and link it from `docs/README.md`. Preserve useful historical
-records, but label their scope instead of presenting them as current setup.
+Keep the root README focused on first use. Put detailed options in the owning
+current guide and route it from `docs/README.md`. First-use code blocks have
+executable fixtures in `test/docs/`; update both together. Runnable examples have
+setup and ownership information in their README and `examples/catalog.json`.
 
-The first-use code blocks are synchronized with executable, typechecked fixtures
-in `test/docs/`. Update the fixture and guide together. Each runnable example
-has a README with setup, expected behavior, and the host/package ownership
-boundary; its catalog entry lives in `examples/catalog.json`. The public site
-uses that catalog, and documentation tests check it against the source tree.
+Retain useful historical evidence with its revision and scope; do not present a
+past proposal as a current feature. Update readiness/completion manifests only
+when their capability or verification claims change. Check links and named
+anchors after moving documentation.
 
-For an initial focused check use `npm run test:docs-snippets`; changes to the
-published site also need `npm run test:site`. These do not replace the full
-`npm run check` gate before a PR is ready to merge.
+## Submit a pull request
 
-## Pull Requests
+Describe the problem, the change, and the evidence. Link the related issue when
+one exists. Record the exact commands or CI run and explain anything not tested.
+For a visual change, include the relevant viewport and before/after evidence;
+for a public behavior change, include compatibility and migration impact.
 
-Before opening a PR:
+Keep credentials, private project names, customer data, internal URLs and local
+absolute paths out of public code, fixtures, screenshots and reports. Contributions
+use the existing [MIT license](LICENSE); preserve third-party notices.
 
-- Run `npm run check`.
-- Add or update focused tests for changed behavior.
-- Update README, `docs/api-reference.md`, and examples when public APIs change.
-- Update `docs/readiness-matrix.json` or `docs/completion-audit.json` when a
-  capability or verification claim changes.
-- Keep public hygiene intact: no private project names, personal data, local
-  absolute paths, internal URLs, credentials, or consumer-specific details.
+### Contribution attribution
 
-## Contribution attribution
+Use the configured Git identity and retain genuine human co-author credit.
+Do not add AI-tool or model trailers, generated-by footers, or session URLs to
+commits or pull requests. `.claude/settings.json` disables automatic attribution;
+it does not change identity or permissions. Start tool sessions from the root.
+This affects new work; historical commits and published release tags stay intact.
 
-Keep the contributor's configured Git identity and genuine human co-author
-credit. AI-tool or model attribution trailers and generated-by footers are not
-part of this project's commit or pull request format. The shared
-`.claude/settings.json` disables automatic commit/PR attribution and session
-links; it contains no permissions, hooks, or identity overrides. Start tool
-sessions from the repository root so its project settings are read.
+### Verified build reuse
 
-This setting affects new work. It does not edit previous commits, remove human
-contributors, or move published release tags. Historical changes require a
-separate maintainer decision. See the [Claude Code attribution settings](https://code.claude.com/docs/en/settings-reference#attribution)
-for the supported configuration and precedence rules.
-
-## Adapter Changes
-
-Adapters should expose lower-level anchor/annotation/obstacle/validation
-helpers plus a `prepare*Annotations` helper where useful. Generated-surface
-adapters should support:
-
-- validation diagnostics
-- obstacles from the same host geometry used for anchors
-- manual placement preservation
-- target-alignment diagnostics when a host can provide expected geometry
-- provenance in `annotation.data`
+`npm run check` compiles once and reuses only byte-verified output. Its internal
+`PONCHIA_ANNOTATIONS_REUSE_BUILD=1` mode requires matching source and output
+fingerprints in ignored `.tmp`; changed or missing artifacts fail closed.
+Standalone commands build freshly. To reset stale output, run `npm run build`
+without that environment variable; `npm run test:build-reuse` checks the contract.
 
 ## Releases
 
-See `docs/release.md`.
+Only the maintainer follows [docs/release.md](docs/release.md). A documentation or
+test change does not by itself require publishing a new runtime package.
