@@ -20,7 +20,7 @@ helper to check all included prepared and additional obstacles as well as the
 resolved placement.
 
 The helper normalizes negative obstacle dimensions just as the solver does,
-but evaluates quality before invalid obstacles can disappear from the report.
+but passes the full original list to quality instead of the solver's filtered list.
 Its `invalid-box` errors identify the original combined `obstacleIndex`;
 `invalidBoxCount` also covers invalid effective bounds and note boxes. Invalid
 obstacles make `hostContentClear` false: unknown geometry is not evidence that

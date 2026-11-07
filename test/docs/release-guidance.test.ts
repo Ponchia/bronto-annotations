@@ -40,6 +40,8 @@ describe('current release guidance and historical scope', () => {
     expect(runbook).not.toContain('Use the GitHub Packages canary workflow before publishing');
     expect(runbook).not.toContain('source of truth for the package name');
     expect(runbook).toContain('(../GOVERNANCE.md)');
+    expect(runbook).toContain('manifest and fresh audit determine readiness');
+    expect(runbook).not.toContain('registry npm\nbundle still ships');
   });
 
   it('keeps denied channel cleanup and accepted publication distinct', () => {

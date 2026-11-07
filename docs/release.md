@@ -44,10 +44,11 @@ from `origin/main`.
 
 ## Tag-Driven Public Release
 
-Publishing uses npm built from its unchanged upstream source, with a
-separately locked and patched dependency graph, because the registry npm
-bundle still ships a high-severity `undici` advisory. Every publishing job
-prepares and audits that publisher before it runs. Check it before tagging
+Publishing uses npm built from pinned, unchanged upstream source with a
+separately locked and reviewed dependency graph. The checked-in publisher
+manifest and fresh audit determine readiness; do not assume that a bundled or
+newer CLI has the same reviewed dependencies. Every publishing job prepares
+and audits that publisher before it runs. Check it before tagging
 with `npm run publisher:readiness`. A failed audit blocks publication: do not
 approve around it. See [the security guide](security-automation.md#publishing-tooling-preflight)
 for the design, the update procedure and the separate library support policy.
