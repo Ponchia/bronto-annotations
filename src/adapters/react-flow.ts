@@ -256,6 +256,9 @@ export function validateReactFlowAnchors<TNode extends ReactFlowNodeLike, TEdge 
   input: ReactFlowAnchorInput<TNode, TEdge>,
   specs: ReactFlowAnchorSpec[]
 ): ReactFlowAnchorValidationReport {
+  const finiteViewport = !input.viewport
+    || [input.viewport.x, input.viewport.y, input.viewport.zoom].every(Number.isFinite);
+
   return validationReport(specs.map((spec) => {
     const expected = reactFlowSpecExpectation(spec);
 
@@ -263,14 +266,17 @@ export function validateReactFlowAnchors<TNode extends ReactFlowNodeLike, TEdge 
       const node = input.nodes.find((item) => item.id === spec.nodeId);
       const box = node ? nodeBox(node, input.viewport, input.nodeOrigin) : undefined;
       const validSize = box ? box.width > 0 && box.height > 0 : false;
+      const validGeometry = finiteViewport && !!box && isFiniteBox(box);
 
       return anchorDiagnostic({
         id: spec.id,
         source: 'react-flow-node',
-        status: !node ? 'missing' : validSize ? 'found' : 'invalid',
+        status: !node ? 'missing' : validSize && validGeometry ? 'found' : 'invalid',
         expected,
         ...(!node ? { reason: `No React Flow node matched ${expected}.` } : {}),
-        ...(node && !validSize ? { reason: `React Flow node matched ${expected}, but it has no measured width/height.` } : {})
+        ...(node && !validGeometry
+          ? { reason: `React Flow node matched ${expected}, but its geometry or viewport is nonfinite.` }
+          : node && !validSize ? { reason: `React Flow node matched ${expected}, but it has no measured width/height.` } : {})
       });
     }
 
@@ -288,13 +294,19 @@ export function validateReactFlowAnchors<TNode extends ReactFlowNodeLike, TEdge 
       }
 
       const resolved = resolveHandleAnchor(node, spec.handle, input.viewport, input.nodeOrigin);
+      const box = resolved?.box ?? nodeBox(node, input.viewport, input.nodeOrigin);
+      const point = resolved?.point ?? handlePoint(box, spec.handle.side ?? 'right');
+      const validGeometry = finiteViewport && isFiniteBox(box) && box.width >= 0 && box.height >= 0
+        && isFinitePoint(point);
 
       return anchorDiagnostic({
         id: spec.id,
         source: 'react-flow-handle',
-        status: resolved ? 'found' : 'fallback',
+        status: !validGeometry ? 'invalid' : resolved ? 'found' : 'fallback',
         expected,
-        ...(resolved ? {} : { reason: `React Flow handle matched ${expected} was not measured; the adapter will fall back to the node side midpoint.` })
+        ...(!validGeometry
+          ? { reason: `React Flow handle matched ${expected}, but its geometry or viewport is nonfinite or its dimensions are negative.` }
+          : resolved ? {} : { reason: `React Flow handle matched ${expected} was not measured; the adapter will fall back to the node side midpoint.` })
       });
     }
 
@@ -303,14 +315,18 @@ export function validateReactFlowAnchors<TNode extends ReactFlowNodeLike, TEdge 
       const points = edge
         ? input.edgePoints?.(edge, input.nodes) ?? edgePoints(edge, input.nodes, input.viewport, input.nodeOrigin)
         : [];
+      const validGeometry = finiteViewport && points.length > 0 && points.every(isFinitePoint)
+        && isFiniteBox(boxFromPoints(points));
 
       return anchorDiagnostic({
         id: spec.id,
         source: 'react-flow-edge',
-        status: !edge ? 'missing' : points.length > 0 ? 'found' : 'invalid',
+        status: !edge ? 'missing' : validGeometry ? 'found' : 'invalid',
         expected,
         ...(!edge ? { reason: `No React Flow edge matched ${expected}.` } : {}),
-        ...(edge && points.length === 0 ? { reason: `React Flow edge matched ${expected}, but its endpoint nodes or route points were unavailable.` } : {})
+        ...(edge && points.length === 0
+          ? { reason: `React Flow edge matched ${expected}, but its endpoint nodes or route points were unavailable.` }
+          : edge && !validGeometry ? { reason: `React Flow edge matched ${expected}, but its route geometry or viewport is nonfinite.` } : {})
       });
     }
 
@@ -322,6 +338,15 @@ export function validateReactFlowAnchors<TNode extends ReactFlowNodeLike, TEdge 
       reason: 'React Flow anchor spec needs nodeId, handle, or edgeId.'
     });
   }));
+}
+
+function isFinitePoint(point: Point): boolean {
+  return Number.isFinite(point.x) && Number.isFinite(point.y);
+}
+
+function isFiniteBox(box: Box): boolean {
+  return isFinitePoint(box) && Number.isFinite(box.width) && Number.isFinite(box.height)
+    && Number.isFinite(box.x + box.width) && Number.isFinite(box.y + box.height);
 }
 
 export function annotationsFromReactFlow<TNode extends ReactFlowNodeLike, TEdge extends ReactFlowEdgeLike>(
