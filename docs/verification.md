@@ -13,6 +13,9 @@ a replacement for the full CI suite. It compiles once, then reuses the existing
 byte-verified build for declaration/export checks. Changed source or compiled
 output still refuses reuse; standalone `npm run build` remains a fresh build.
 
+See [property testing](property-testing.md) for the tested invariants and how to
+replay a failing generated case.
+
 `npm run test:quality` checks authored wide/narrow host geometry, exact retained
 placement parity, measured collision budgets, and expected impossible layouts.
 Its JSON and SVG gallery default to `.tmp/placement-quality`; pass
