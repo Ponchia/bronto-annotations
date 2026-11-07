@@ -8,6 +8,7 @@ import { resolve } from 'node:path';
 import { verifyAuthoringDefault, openAuthoringDiagram } from './responsive-authoring-scenario.mjs';
 import { offersInstall } from './site-release.mjs';
 import { verifyPlaygroundCopy } from './verify-playground-copy.mjs';
+import { verifyPlaygroundSharing } from './playground-sharing-scenario.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const publication = JSON.parse(await readFile(resolve(root, '_site/release-status.json'), 'utf8'));
@@ -375,6 +376,7 @@ try {
     assert.equal(await home.locator('#layout-findings-empty').isVisible(), false);
     await mode.selectOption('automatic');
     assert.equal(await inspector.getAttribute('open'), '', 'Layout updates preserve the open text alternative');
+    await verifyPlaygroundSharing(home);
     const audit = await new AxeBuilder({ page: home })
       .withTags(wcagTags)
       .analyze();

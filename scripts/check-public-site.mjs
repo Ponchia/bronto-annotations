@@ -232,6 +232,12 @@ assert(home.window.document.querySelector('.chart-viewport[tabindex="0"][role="r
   'Narrow screens need a keyboard-navigable chart viewport');
 assert(home.window.document.querySelector('.chart-scroll-hint'),
   'The chart must explain horizontal navigation on small screens');
+assert(home.window.document.querySelector('#copy-scene-link[type="button"]'),
+  'The playground must expose an explicit share action');
+assert(home.window.document.querySelector('#scene-link[readonly][aria-describedby="scene-link-help"]'),
+  'Scene links need a copyable labeled fallback');
+assert(home.window.document.querySelector('#toggle-placement[aria-controls="annotation-overlay"]'),
+  'A comparison action must be available beside the chart');
 assert(home.window.document.querySelector('.quick-links a[href="./docs/context-quickstart.html"]'),
   'Host chooser must lead directly to its actual guide');
 const starter = home.window.document.querySelector('#starter-code')?.textContent ?? '';
