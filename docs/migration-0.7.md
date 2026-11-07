@@ -1,12 +1,12 @@
 # Migrating to the 0.7 API
 
-This guide moves 0.6 code to the 0.7 API, which 0.8 and 0.9 retain with additive capabilities. The confirmed stable npm release is **0.9.0** on `latest`:
+This guide moves 0.6 code to the 0.7 API, which 0.8 and 0.9 retain with additive capabilities. The confirmed stable npm release is **0.9.1** on `latest`:
 
 ```sh
-npm install @ponchia/annotations@0.9.0
+npm install @ponchia/annotations@0.9.1
 ```
 
-Use the [0.9.0 API reference](https://github.com/Ponchia/bronto-annotations/blob/v0.9.0/docs/api-reference.md)
+Use the [0.9.1 API reference](https://github.com/Ponchia/bronto-annotations/blob/v0.9.1/docs/api-reference.md)
 for that package's API. Its archive and signed provenance were verified; see
 [release readiness](release-readiness.md) for the publication evidence.
 A future source commit or tag alone does not establish registry publication.
