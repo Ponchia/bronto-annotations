@@ -83,6 +83,18 @@ immediately. Pointer release, cancellation, or unmount drops any pending
 visual frame so a stale preview cannot reappear after the gesture ends.
 The host remains responsible for persisting the final `onEditEnd` suggestion.
 
+## DOM-measured note identities
+
+Annotation IDs are unique, opaque strings. DOM measurement uses the same IDs as
+layout and editing, including reserved-looking names such as `__proto__` and
+`constructor`, or an empty string. Resize notifications update only the changed
+notes; removing or hiding a measured note discards its old measurement.
+
+Use stable IDs for the lifetime of a note. Replacing the annotation collection
+reconciles the full visible measurement set, while disconnected observers cannot
+write measurements back into a newer collection. This does not change the
+host-controlled `layout` mode, where the host supplies final note dimensions.
+
 ## Validate edits before committing
 
 The first example above shows the minimal *single-note* edit path. When a host

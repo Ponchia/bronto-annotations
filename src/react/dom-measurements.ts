@@ -62,7 +62,8 @@ export function useDomNoteMeasurementObserver({
     };
 
     const updateAll = () => {
-      const next: Record<string, Size> = {};
+      // Annotation IDs are opaque, including names from Object.prototype.
+      const next: MeasuredSizes = Object.create(null);
       for (const [id, node] of measureNodes.current.entries()) {
         const size = measureNode(node);
         if (size) next[id] = size;
@@ -85,7 +86,7 @@ export function useDomNoteMeasurementObserver({
       const changed = new Set<string>();
       for (const entry of entries) {
         const id = idsByNode.get(entry.target);
-        if (id) changed.add(id);
+        if (id !== undefined) changed.add(id);
       }
       if (changed.size === 0) return;
 
@@ -98,13 +99,13 @@ export function useDomNoteMeasurementObserver({
       setMeasuredSizes((current) => {
         let next: Record<string, Size> | undefined;
         for (const [id, size] of updates) {
-          const previous = current[id];
+          const previous = Object.hasOwn(current, id) ? current[id] : undefined;
           if (size) {
             if (previous?.width === size.width && previous.height === size.height) continue;
-            next ??= { ...current };
+            next ??= Object.assign(Object.create(null) as MeasuredSizes, current);
             next[id] = size;
           } else if (previous) {
-            next ??= { ...current };
+            next ??= Object.assign(Object.create(null) as MeasuredSizes, current);
             delete next[id];
           }
         }
