@@ -11,7 +11,7 @@ import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { isAbsolute, join } from 'node:path';
+import { basename, dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { verifyPublishedTarballFile } from './verify-published-tarball.mjs';
@@ -43,16 +43,26 @@ export function releaseCertificatePolicy(tag, commit) {
 export async function loadCertificateVerifier(npmCli) {
   assert.ok(typeof npmCli === 'string' && isAbsolute(npmCli),
     'Set ANNOTATIONS_PUBLISHER_NPM_CLI to the audited publisher npm-cli.js');
+  assert.equal(basename(npmCli), 'npm-cli.js', 'Expected the audited npm CLI entry');
+  assert.equal(basename(dirname(npmCli)), 'bin', 'Unexpected audited publisher layout');
   const require = createRequire(npmCli);
   const lock = JSON.parse(await readFile(new URL('../tooling/publisher/package-lock.json', import.meta.url), 'utf8'));
   const expected = lock.packages['node_modules/sigstore'].version;
-  const actual = require('sigstore/package.json').version;
+  // This dependency belongs to the external, audited publisher installation,
+  // not to the annotation package or its development node_modules. Resolve its
+  // explicit installation directory, so analysis does not mistake it for a new
+  // dependency of the annotation runtime.
+  const verifierRoot = join(dirname(dirname(npmCli)), 'node_modules', 'sigstore');
+  const manifest = JSON.parse(await readFile(join(verifierRoot, 'package.json'), 'utf8'));
+  assert.equal(manifest.name, 'sigstore');
+  const actual = manifest.version;
+  const verifierEntry = require.resolve(verifierRoot);
   assert.equal(actual, expected, 'Certificate verifier differs from the audited publisher lock');
   // 4.1.1 fixed ignored certificateOIDs; a lower version cannot enforce SHA.
   const [major, minor, patch] = actual.split('.').map(Number);
   assert.ok(major > 4 || (major === 4 && (minor > 1 || (minor === 1 && patch >= 1))),
     'Certificate verifier must enforce the source-commit OID policy');
-  const { verify } = require('sigstore');
+  const { verify } = require(verifierEntry);
   // DSSE's options are the SECOND argument. Passing undefined as a second
   // data argument would silently discard the third-argument policy.
   return (bundle, policy) => verify(bundle, policy);

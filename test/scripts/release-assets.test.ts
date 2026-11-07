@@ -308,14 +308,14 @@ describe('expected original certificate identity before asset preparation', () =
   it('passes DSSE identity options as the second argument, never a discarded third argument', async () => {
     const { directory } = await fixture();
     const module = join(directory, 'node_modules/sigstore');
-    await mkdir(module, { recursive: true });
+    await mkdir(join(module, 'dist'), { recursive: true });
     const lock = JSON.parse(await readFile(new URL('../../tooling/publisher/package-lock.json', import.meta.url), 'utf8'));
-    await writeFile(join(module, 'package.json'), JSON.stringify({ name: 'sigstore', version: lock.packages['node_modules/sigstore'].version }));
-    await writeFile(join(module, 'index.js'), `exports.verify = function(bundle, options) {
+    await writeFile(join(module, 'package.json'), JSON.stringify({ name: 'sigstore', main: 'dist/index.js', version: lock.packages['node_modules/sigstore'].version }));
+    await writeFile(join(module, 'dist/index.js'), `exports.verify = function(bundle, options) {
       if (arguments.length !== 2 || !options.certificateIdentityURI || !options.certificateOIDs) throw new Error('policy discarded');
       return Promise.resolve({ options, bundle });
     };`);
-    const verifier = await loadCertificateVerifier(join(directory, 'npm-cli.js'));
+    const verifier = await loadCertificateVerifier(join(directory, 'bin/npm-cli.js'));
     const policy = releaseCertificatePolicy(tag, commit);
     expect(await verifier({ test: true }, policy)).toEqual({ bundle: { test: true }, options: policy });
   });
