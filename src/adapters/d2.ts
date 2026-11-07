@@ -26,6 +26,7 @@ import type {
 } from '../core/model.js';
 import { anchorPoint } from '../core/anchors.js';
 import { findElementByText } from './mermaid.js';
+import { validateExtractedAnchor } from './geometry-validation.js';
 import {
   assertAnchorValidationReportIfRequested,
   anchorDiagnostic,
@@ -319,16 +320,14 @@ export function anchorsFromD2Svg(root: ParentNode, specs: D2SvgAnchorSpec[]): D2
 
 export function validateD2SvgAnchors(root: ParentNode, specs: D2SvgAnchorSpec[]): D2AnchorValidationReport {
   return validationReport(specs.map((spec) => {
-    const element = findD2SvgElement(root, spec);
     const expected = d2SvgSpecExpectation(spec);
 
-    return anchorDiagnostic({
+    return validateExtractedAnchor({
       id: spec.id,
       source: 'd2-svg',
-      status: element ? 'found' : 'missing',
       expected,
-      ...(element ? {} : { reason: `No rendered D2 SVG element matched ${expected}.` })
-    });
+      missingReason: `No rendered D2 SVG element matched ${expected}.`
+    }, () => anchorsFromD2Svg(root, [spec])[0]);
   }));
 }
 

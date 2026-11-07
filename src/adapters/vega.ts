@@ -27,13 +27,13 @@ import type {
 } from '../core/model.js';
 import {
   assertAnchorValidationReportIfRequested,
-  anchorDiagnostic,
   validationReport,
   type AnchorSpecDiagnostic,
   type AdapterAnnotationLayerInput,
   type AnchorValidationAssertInput,
   type AnchorSpecValidationReport
 } from './diagnostics.js';
+import { validateExtractedAnchor } from './geometry-validation.js';
 
 export {
   assertAnchorAlignmentReport,
@@ -607,16 +607,14 @@ export function anchorsFromVegaSvg(root: ParentNode, specs: VegaSvgAnchorSpec[])
 
 export function validateVegaSvgAnchors(root: ParentNode, specs: VegaSvgAnchorSpec[]): VegaAnchorValidationReport {
   return validationReport(specs.map((spec) => {
-    const element = findVegaSvgElement(root, spec);
     const expected = vegaSvgSpecExpectation(spec);
 
-    return anchorDiagnostic({
+    return validateExtractedAnchor({
       id: spec.id,
       source: 'vega-svg',
-      status: element ? 'found' : 'missing',
       expected,
-      ...(element ? {} : { reason: `No rendered Vega SVG element matched ${expected}.` })
-    });
+      missingReason: `No rendered Vega SVG element matched ${expected}.`
+    }, () => anchorsFromVegaSvg(root, [spec])[0]);
   }));
 }
 
@@ -900,35 +898,9 @@ function validateVegaSpec(
   expected: string,
   resolve: () => ExtractedAnchor | undefined
 ): VegaAnchorDiagnostic {
-  try {
-    const result = resolve();
-
-    if (result) {
-      const { box, point } = result;
-      // Check the resolved geometry, preserving callback/offset precedence and
-      // existing extraction coercions. Finite negative dimensions remain valid.
-      if (![box.x, box.y, box.width, box.height,
-        box.x + box.width, box.y + box.height, point.x, point.y].every(Number.isFinite)) {
-        throw new Error(`Resolved ${source} coordinates or bounds are nonfinite for ${expected}.`);
-      }
-    }
-
-    return anchorDiagnostic({
-      id,
-      source,
-      status: result ? 'found' : 'missing',
-      expected,
-      ...(result ? {} : { reason: `No ${source} anchor matched ${expected}.` })
-    });
-  } catch (error) {
-    return anchorDiagnostic({
-      id,
-      source,
-      status: 'invalid',
-      expected,
-      reason: error instanceof Error ? error.message : String(error)
-    });
-  }
+  return validateExtractedAnchor({
+    id, source, expected, missingReason: `No ${source} anchor matched ${expected}.`
+  }, resolve);
 }
 
 function vegaViewSpecExpectation<TDatum>(spec: VegaViewAnchorSpec<TDatum>): string {
