@@ -51,7 +51,8 @@ export async function verifyPlaygroundSharing(home) {
     });
     await restored.locator('#copy-scene-link').click();
     assert.match(await restored.locator('#scene-link-status').innerText(), /Clipboard unavailable/);
-    const selected = await restored.locator('#scene-link').evaluate((element) => ({
+    const recovery = restored.locator('.scene-share .copy-feedback textarea');
+    const selected = await recovery.evaluate((element) => ({
       focused: element === document.activeElement,
       start: element.selectionStart,
       end: element.selectionEnd,
@@ -59,11 +60,34 @@ export async function verifyPlaygroundSharing(home) {
     }));
     assert(selected.focused, 'Denied clipboard access must focus the manually copyable link');
     assert.equal(selected.start, 0);
-    assert.equal(selected.end, selected.length, 'Manual copy fallback must select the entire current link');
+    assert.equal(selected.end, selected.length, 'Manual copy fallback must select the entire captured link');
+    assert.equal(await recovery.inputValue(), link);
     assert.equal(await restored.locator('#scene-link').inputValue(), link);
+    await restored.locator('#scene-link').focus();
     await restored.keyboard.press('Enter');
     await restored.waitForLoadState('networkidle');
     assert.equal(restored.url(), link, 'Enter in the scene-link field must not submit the form');
+    assert.deepEqual(await read(restored), expected);
+
+    await restored.evaluate(() => {
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: { writeText: () => new Promise((_resolve, reject) => { window.__rejectSceneCopy = reject; }) },
+      });
+    });
+    await restored.locator('#copy-scene-link').click();
+    await restored.locator('[data-scene="sparse"]').click();
+    const currentLink = await restored.locator('#scene-link').inputValue();
+    assert.notEqual(currentLink, link, 'The pending-copy scene must actually change');
+    await restored.evaluate(() => window.__rejectSceneCopy(new Error('Delayed permission denial')));
+    await recovery.waitFor({ state: 'visible' });
+    assert.equal(await recovery.inputValue(), link, 'Recovery must retain the clicked URL');
+    assert.equal(await restored.locator('#scene-link').inputValue(), currentLink,
+      'Recovery must not replace the live current URL');
+    assert(await recovery.evaluate(element => document.activeElement === element
+      && element.selectionStart === 0 && element.selectionEnd === element.value.length),
+    'Delayed denial must focus and select the captured URL');
+    await restored.goto(link, { waitUntil: 'networkidle' });
     assert.deepEqual(await read(restored), expected);
 
     const alternative = '#playground?v=1&notes=2&obstacle=80&routing=orthogonal&placement=automatic';

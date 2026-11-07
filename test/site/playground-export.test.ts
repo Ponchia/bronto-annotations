@@ -18,7 +18,9 @@ beforeEach(() => {
   document.body.innerHTML = '<div class="scene-source-toolbar"><button data-copy-target="scene-source-code">Copy code</button>' +
     '<button id="download-scene-code">Download .ts</button></div>' +
     '<p id="scene-download-status" role="status"></p><pre id="scene-source-code"></pre>' +
-    '<div class="install"><button data-copy="npm install @ponchia/annotations@0.8.3">Copy</button></div>';
+    '<div class="install"><button data-copy="npm install @ponchia/annotations@0.8.3">Copy</button></div>' +
+    '<div class="scene-share"><button id="copy-scene-link" data-copy-value="scene-link" data-copy-status="scene-link-status" data-copy-success="Scene link copied.">Copy scene link</button>' +
+    '<input id="scene-link" readonly value="https://example.com/#old"><p id="scene-link-status" role="status">Shared scene restored.</p></div>';
   document.querySelector('#scene-source-code')!.textContent = recipe;
   setupPlaygroundExports();
 });
@@ -144,6 +146,58 @@ describe('site copy recovery', () => {
     await flush();
     expect(manual().parentElement?.hidden).toBe(true);
     expect(status().textContent).toContain('Copied the text');
+  });
+});
+
+describe('scene-link copy through the shared controller', () => {
+  const share = () => document.querySelector<HTMLButtonElement>('#copy-scene-link')!;
+  const live = () => document.querySelector<HTMLInputElement>('#scene-link')!;
+  const recovery = () => document.querySelector<HTMLTextAreaElement>('.scene-share textarea')!;
+  const shareStatus = () => document.querySelector('#scene-link-status')!;
+
+  it('recovers the clicked input value after denial while preserving the live current URL', async () => {
+    expect(shareStatus().textContent).toBe('Shared scene restored.');
+    let reject!: (error: Error) => void;
+    const write = vi.fn(() => new Promise<void>((_resolve, fail) => { reject = fail; }));
+    clipboard(write);
+    share().click();
+    live().value = 'https://example.com/#new';
+    reject(new Error('Denied'));
+    await flush();
+    expect(write).toHaveBeenCalledExactlyOnceWith('https://example.com/#old');
+    expect(live().value).toBe('https://example.com/#new');
+    expect(recovery().value).toBe('https://example.com/#old');
+    expect(document.activeElement).toBe(recovery());
+    expect([recovery().selectionStart, recovery().selectionEnd]).toEqual([0, recovery().value.length]);
+    expect(document.querySelectorAll('.scene-share [role="status"]')).toHaveLength(1);
+    expect(shareStatus().textContent).toContain('Clipboard unavailable');
+  });
+
+  it.each(['success', 'failure'])('keeps the latest %s when an older copy finishes later', async (latest) => {
+    const requests: Array<{ resolve: () => void; reject: (error: Error) => void }> = [];
+    clipboard(() => new Promise<void>((resolve, reject) => { requests.push({ resolve, reject }); }));
+    share().click();
+    live().value = 'https://example.com/#new';
+    share().focus();
+    share().click();
+    if (latest === 'success') requests[1]!.resolve();
+    else requests[1]!.reject(new Error('Latest denied'));
+    await flush();
+    if (latest === 'success') requests[0]!.reject(new Error('Old denied'));
+    else requests[0]!.resolve();
+    await flush();
+    expect(live().value).toBe('https://example.com/#new');
+    if (latest === 'success') {
+      expect(shareStatus().textContent).toBe('Scene link copied.');
+      expect(recovery().parentElement?.hidden).toBe(true);
+      expect(document.activeElement).toBe(share());
+      vi.advanceTimersByTime(1500);
+      expect(share().textContent).toBe('Copy scene link');
+    } else {
+      expect(shareStatus().textContent).toContain('Clipboard unavailable');
+      expect(recovery().value).toBe('https://example.com/#new');
+      expect(document.activeElement).toBe(recovery());
+    }
   });
 });
 

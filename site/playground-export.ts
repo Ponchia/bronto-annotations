@@ -1,13 +1,14 @@
 /** Site-only export controls. Recipes stay text; no package serialization API. */
 export function setupPlaygroundExports(root: Document = document): void {
-  const buttons = root.querySelectorAll<HTMLButtonElement>('[data-copy],[data-copy-target]');
+  const buttons = root.querySelectorAll<HTMLButtonElement>('[data-copy],[data-copy-target],[data-copy-value]');
   for (const [index, button] of [...buttons].entries()) {
     const originalLabel = button.textContent;
     let operation = 0;
     let feedbackTimer: ReturnType<typeof setTimeout> | undefined;
     const feedback = root.createElement('div');
     feedback.className = 'copy-feedback';
-    const status = root.createElement('p');
+    const existingStatus = button.dataset.copyStatus ? root.getElementById(button.dataset.copyStatus) : null;
+    const status = existingStatus ?? root.createElement('p');
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
     status.setAttribute('aria-atomic', 'true');
@@ -22,12 +23,17 @@ export function setupPlaygroundExports(root: Document = document): void {
     label.htmlFor = input.id;
     label.textContent = 'Text captured when you clicked — copy manually';
     manual.append(label, input);
-    feedback.append(status, manual);
-    (button.closest('.scene-source-toolbar, .code-toolbar, .install') ?? button).after(feedback);
+    if (!existingStatus) feedback.append(status);
+    feedback.append(manual);
+    const share = button.closest('.scene-share');
+    if (share) share.append(feedback);
+    else (button.closest('.scene-source-toolbar, .code-toolbar, .install') ?? button).after(feedback);
 
     button.addEventListener('click', async () => {
       const targetId = button.dataset.copyTarget;
-      const content = targetId
+      const valueId = button.dataset.copyValue;
+      const valueSource = valueId ? root.getElementById(valueId) as HTMLInputElement | HTMLTextAreaElement | null : null;
+      const content = valueId ? valueSource?.value ?? '' : targetId
         ? root.getElementById(targetId)?.textContent ?? ''
         : button.dataset.copy ?? '';
       if (!content) return;
@@ -42,7 +48,7 @@ export function setupPlaygroundExports(root: Document = document): void {
         await clipboard.writeText(content);
         if (current !== operation) return;
         button.textContent = 'Copied';
-        status.textContent = 'Copied the text shown when you clicked.';
+        status.textContent = button.dataset.copySuccess ?? 'Copied the text shown when you clicked.';
         feedbackTimer = setTimeout(() => { button.textContent = originalLabel; }, 1500);
       } catch {
         if (current !== operation) return;

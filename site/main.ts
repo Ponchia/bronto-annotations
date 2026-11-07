@@ -32,7 +32,6 @@ const comparisonResult = document.querySelector<HTMLElement>('#comparison-result
 const scenePresetHint = document.querySelector<HTMLElement>('#scene-preset-hint');
 const sceneSourceCode = document.querySelector<HTMLElement>('#scene-source-code code');
 const sceneLink = document.querySelector<HTMLInputElement>('#scene-link');
-const shareButton = document.querySelector<HTMLButtonElement>('#copy-scene-link');
 const shareStatus = document.querySelector<HTMLElement>('#scene-link-status');
 const comparisonToggle = document.querySelector<HTMLButtonElement>('#toggle-placement');
 const scenePresetButtons = [
@@ -278,21 +277,6 @@ comparisonToggle?.addEventListener('click', () => {
   if (!placementInput) return;
   placementInput.value = placementInput.value === 'fixed' ? 'automatic' : 'fixed';
   updateLayout();
-});
-
-shareButton?.addEventListener('click', async () => {
-  if (!sceneLink || !shareStatus) return;
-  // Capture the clicked state; changing controls while the permission prompt
-  // is open must not change the link that this copy operation refers to.
-  const link = sceneLink.value;
-  try {
-    await navigator.clipboard.writeText(link);
-    shareStatus.textContent = 'Scene link copied. It restores the settings shown when you clicked.';
-  } catch {
-    sceneLink.focus();
-    sceneLink.select();
-    shareStatus.textContent = 'Clipboard unavailable. The scene link is selected for manual copying.';
-  }
 });
 
 // Enter in the read-only link must not navigate or submit the surrounding form.
