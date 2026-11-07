@@ -1,56 +1,21 @@
 # Your first annotation
 
-> This guide follows `main`. [Choose your version](#choose-your-version) before
-> installing: stable, previous stable, and source are separate choices.
-
 [Documentation index](README.md) · [Choose an adapter](context-quickstart.md)
 
-The smallest integration has three parts: your host supplies an anchor, the
-engine places a note, and a renderer displays the resolved geometry. Begin with
-one or two notes before adding measurements, editable state, or a Worker.
+Your application supplies an anchor, the engine places a note, and a renderer
+displays it. This guide starts with one point in a new browser project.
 
 ## Choose your version
 
-| You want | Install and matching guidance |
-| --- | --- |
-| The stable release | `npm install @ponchia/annotations@0.8.2` and the [0.8.2 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.8.2/docs/getting-started.md) |
-| The previous stable line | `npm install @ponchia/annotations@0.7.0` and the [0.7.0 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/getting-started.md) |
-| The exact source shown here | Clone `main` and run the examples below |
-
-0.8.2 is the stable release on `latest`, and its actual npm bytes were verified.
-The standalone setup below pins it. Its first-point API also exists in this
-checkout, but newer source features may differ. Use the
-[migration guide](migration-0.7.md) when upgrading and
-[release readiness](release-readiness.md) when building and packing source for
-an isolated consumer. A Git tag does not establish publication of later source
-versions.
-
-## Try the existing examples
-
-Use a Node version supported by [the compatibility matrix](compatibility.md).
-From a terminal:
-
-```bash
-git clone https://github.com/Ponchia/bronto-annotations.git
-cd bronto-annotations
-npm ci
-npm run example -- examples/svg-basic
-```
-
-Open the local URL printed by Vite, normally `http://localhost:5173`.
-The example draws a host figure and its annotation layer. Its
-[source](../examples/svg-basic/main.ts) uses the same public imports as an
-application outside the repository. Stop the server with Ctrl+C.
-
-For React, run `npm run example -- examples/react-basic` instead. The
-[example catalog](../examples/README.md) explains the more advanced demos.
-Examples are source fixtures, not separate npm packages; install dependencies
-and run commands at the repository root.
+The tutorial installs published **0.8.2**. The website and repository examples
+track `main`; use the [tagged guide](https://github.com/Ponchia/bronto-annotations/blob/v0.8.2/docs/getting-started.md)
+for this release or the [0.7 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/getting-started.md)
+for older applications. Read the [migration guide](migration-0.7.md) when
+upgrading from 0.6.
 
 ## Start a new application without cloning this repository
 
-For a small independent browser project, use the Vite 8 major tested by this
-repository and a Node version from the [compatibility matrix](compatibility.md):
+Use Node 22.12.0 or newer (see [compatibility](compatibility.md)):
 
 ```bash
 mkdir annotation-demo
@@ -77,27 +42,10 @@ Create `index.html` with:
 </html>
 ```
 
-Create `main.ts` next to it using the complete browser example below. Then run:
-
-```bash
-npx vite --host 127.0.0.1
-```
-
-Open the printed local URL. This project installs the **published npm package**,
-not a link to this repository. To produce a static build, run `npx vite build`;
-`npx vite preview --host 127.0.0.1` serves that build for a local check.
-Vite transforms TypeScript for the browser; it does not replace a separate
-TypeScript typecheck in your application's CI.
-
 ## Use it in a browser application
 
-In an existing TypeScript application whose bundler handles CSS imports:
-
-```bash
-npm install @ponchia/annotations@0.8.2
-```
-
-Put this in a browser entry point that runs after the document body exists:
+Create `main.ts` next to `index.html`. In an existing TypeScript app with CSS
+imports, use an entry point that runs after the document body exists:
 
 ```ts
 import {
@@ -131,30 +79,23 @@ container.innerHTML = renderAnnotationsSvg(layout, {
 document.body.append(container);
 ```
 
-You should see one SVG annotation with the title **Peak response** and its
-connector. This deliberately small example does not render a chart; the point
-coordinates are the geometry your chart would supply. The CSS import styles the
-output but does not install or require BrontoUI. The container keeps the same
-aspect ratio as the 400 × 240 coordinate space and scales down on narrow screens.
-In an existing application, mount it inside your own surface rather than
-appending a second overlay to the document body.
+Run `npx vite --host 127.0.0.1` and open the printed URL. You should see a
+**Peak response** note and connector. Stop the server with Ctrl+C.
+The point coordinates stand in for your chart's geometry. The CSS import styles
+the output without requiring BrontoUI, and the container scales to narrow screens.
 
-`renderAnnotationsSvg` returns a complete SVG element. Do not put a complete
-SVG overlay inside a chart's data group accidentally. Mount it in its own
-container, or follow the layering pattern in the [SVG example](../examples/svg-basic/).
-Keep the same `viewBox` coordinate system and `preserveAspectRatio` as the host.
+Run `npx vite build` for a static build and `npx vite preview --host 127.0.0.1`
+to preview it. Vite transforms TypeScript; add a separate type check to your
+app's CI.
+
+`renderAnnotationsSvg` returns a complete SVG element. For an existing chart,
+follow the [SVG example's layering pattern](../examples/svg-basic/) and match
+the host's `viewBox` and `preserveAspectRatio`.
 
 ## Use it in React
 
-In an existing React application, install the annotation package:
-
-```bash
-npm install @ponchia/annotations@0.8.2
-```
-
-React and React DOM remain peer dependencies: keep the application's existing
-supported versions rather than installing another React copy. No D3, Vega,
-Mermaid, or other host library is required for this component:
+Use the same package install in an existing React application. Keep its supported
+`react` and `react-dom` peer dependencies. This component needs no chart library:
 
 ```tsx
 import { AnnotationLayer } from '@ponchia/annotations/react';
@@ -178,24 +119,16 @@ export function AnnotatedPoint() {
 }
 ```
 
-Render `<AnnotatedPoint />` from your application. `AnnotationLayer` creates
-its own SVG and wrapper. The `style` above overrides the wrapper's default
-fixed dimensions so this example scales within a narrow parent. For an overlay
-on an existing chart, align its bounds and transform with the host; the [React example](../examples/react-basic/) includes that setup.
-
-Start without editing or custom measurements. When you need them, read
-[React rendering and editing](react-guide.md). The application owns the note
-state; it decides when an edit becomes a persisted change.
-
-To attach this first note to your existing surface, continue with the
-[SVG, DOM report, or React Flow quickstart](context-quickstart.md). Each starts
-with one target before introducing advanced diagnostics or editing.
+Render `<AnnotatedPoint />` from your application. It creates an SVG and wrapper;
+the style makes the wrapper responsive. The [React example](../examples/react-basic/)
+shows alignment with a host chart. Continue with [rendering and editing](react-guide.md)
+when you need measurements or edit callbacks; your app owns note state and persistence.
 
 ## Coordinate and layout basics
 
 `bounds`, anchors, obstacles, manual positions, and note sizes use one coordinate
-space. A screen-pixel rectangle is not automatically a viewBox rectangle. Use the
-[DOM or host adapter](context-quickstart.md) when measuring rendered content.
+space. A screen-pixel rectangle is not automatically a `viewBox` rectangle.
+Use the [DOM or host adapter](context-quickstart.md) when measuring rendered content.
 
 All note IDs must be stable and unique within a layer. Give independent layers
 distinct `markerIdPrefix` values so their SVG connector definitions do not collide.
@@ -207,12 +140,14 @@ or reduce the visible notes when a layout is crowded. See the
 
 ## Version and ownership boundaries
 
-The website and repository examples follow `main`, which can be ahead of npm.
-Match your installed version to its [release notes](https://github.com/Ponchia/bronto-annotations/releases).
-The [compatibility](compatibility.md) and [API stability](api-stability.md) guides
-separate tested support from experimental features.
+See [API stability](api-stability.md) before adopting experimental features.
+Chart rendering, graph layout, selection, undo/redo, Worker lifetime, and
+persistence belong to your application.
 
-Chart rendering, graph layout, selection state, undo/redo, Worker lifetime,
-serialization validation, and persistence belong to the host application.
-The examples demonstrate these integration choices; they do not add them to
-the package's public API.
+## Try the existing examples
+
+The [example catalog](../examples/README.md) has clone-and-run instructions for
+complete host integrations. To connect your own surface, start with one note on
+an [SVG figure](context-quickstart.md#first-note-on-a-figure),
+[DOM report](context-quickstart.md#first-note-on-a-report), or
+[React Flow graph](context-quickstart.md#first-note-on-a-graph).

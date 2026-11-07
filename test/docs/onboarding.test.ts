@@ -38,7 +38,9 @@ describe('executable first-use documentation', () => {
 
   it('keeps the standalone Vite HTML entry synchronized with the executable consumer', () => {
     const entry = read('./browser-entry.html').trim();
-    expect(read('../../docs/getting-started.md')).toContain(`\`\`\`html\n${entry}\n\`\`\``);
+    for (const path of ['../../README.md', '../../docs/getting-started.md']) {
+      expect(read(path)).toContain(`\`\`\`html\n${entry}\n\`\`\``);
+    }
     expect(entry).toContain('name="viewport"');
     expect(entry).toContain('src="/main.ts"');
   });
