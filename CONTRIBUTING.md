@@ -99,6 +99,20 @@ Before opening a PR:
 - Keep public hygiene intact: no private project names, personal data, local
   absolute paths, internal URLs, credentials, or consumer-specific details.
 
+## Contribution attribution
+
+Keep the contributor's configured Git identity and genuine human co-author
+credit. AI-tool or model attribution trailers and generated-by footers are not
+part of this project's commit or pull request format. The shared
+`.claude/settings.json` disables automatic commit/PR attribution and session
+links; it contains no permissions, hooks, or identity overrides. Start tool
+sessions from the repository root so its project settings are read.
+
+This setting affects new work. It does not edit previous commits, remove human
+contributors, or move published release tags. Historical changes require a
+separate maintainer decision. See the [Claude Code attribution settings](https://code.claude.com/docs/en/settings-reference#attribution)
+for the supported configuration and precedence rules.
+
 ## Adapter Changes
 
 Adapters should expose lower-level anchor/annotation/obstacle/validation

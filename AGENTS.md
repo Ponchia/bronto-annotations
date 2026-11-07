@@ -8,6 +8,15 @@ Keep code, docs, examples, and commit messages free of credentials, private
 project names, internal URLs, and consumer-specific information. Name a
 downstream integration only when it is explicitly public.
 
+## Contribution attribution
+
+Use the configured Git identity. Preserve original authorship when applying
+someone else's commits and retain genuine human co-author credit. Do not append
+AI-tool or model co-author trailers, generated-by footers, or session URLs to
+commit messages or pull request descriptions. `.claude/settings.json` disables
+automatic tool attribution for this repository; it does not change Git authors.
+Published history and release tags require separate explicit approval to rewrite.
+
 ## Product Boundary
 
 This package owns annotation models, anchors, placement, collision handling,
