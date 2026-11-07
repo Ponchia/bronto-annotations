@@ -342,8 +342,13 @@ return `empty`.
 
 Coordinates default to viewport pixels. Set `coordinateSpace` to a containing
 HTML element to get its local padding-space coordinates, accounting for borders,
-scroll, and axis-aligned scale. Rotated, skewed, or invisible local spaces are
-explicitly unsupported. Re-measure after content, layout, scroll, or zoom changes.
+scroll, translation and positive axis-aligned scale. Both `transform` and the
+individual CSS `translate`, `rotate` and `scale` properties are checked, including
+rendered ancestors through shadow hosts and assigned slots. Rotations other than
+identity turns, reflections, skew, motion paths, nonidentity 3D transforms and
+invisible local spaces are explicitly unsupported. No cross-shadow selection or
+3D coordinate inversion is provided. Viewport measurement remains available
+without local conversion. Re-measure after content, layout, scroll, or zoom changes.
 Geometry is transient: persist host-owned text selectors and quotations instead
 of browser `Range` objects or measured rectangles.
 
