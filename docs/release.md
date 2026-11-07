@@ -5,9 +5,10 @@ deliberate release shape as the public Ponchia package lane: local prep, merge
 to `main`, tag from `main`, CI gates, protected environment approval, npm
 publish with provenance, then GitHub Release notes from `CHANGELOG.md`.
 
-`0.1.0` was bootstrapped manually before this tag-driven lane existed. Do not
-push a fresh `v0.1.0` tag to publish it again; use this runbook for `0.1.1` or
-later.
+This is the current maintainer runbook. Package consumers should start with
+[the first-annotation guide](getting-started.md). Older launch decisions and
+canary records are retained below as historical evidence, not current release
+prerequisites.
 
 ## Preconditions
 
@@ -19,8 +20,8 @@ later.
 - `package.json` and `package-lock.json` versions match.
 - `README.md`, `docs/api-reference.md`, examples, readiness matrix, and
   completion audit reflect any public API change.
-- `docs/public-release-decisions.md` still matches package metadata, npm
-  access, README positioning, examples hosting, and release ownership.
+- Current package metadata, [governance](../GOVERNANCE.md), compatibility
+  guidance and the checked-in release workflow agree on the release contract.
 - NPM Trusted Publishing is configured for `Ponchia/bronto-annotations`,
   workflow `release.yml`, environment `npm-publish`, and action `npm publish`.
 
@@ -40,25 +41,6 @@ screenshots, or local caches.
 Commit the version, lockfile, changelog, and template updates from
 `release:prep`, open a PR, merge it to `main`, and tag only a commit reachable
 from `origin/main`.
-
-## Canary / Private Registry
-
-Use the GitHub Packages canary workflow before publishing `0.1.0` publicly:
-
-```bash
-gh workflow run canary.yml -f publish=true
-```
-
-The workflow publishes a unique `0.1.0-canary.*` version to GitHub Packages
-with the `canary` tag, then installs that exact version from a clean registry
-consumer. See `docs/canary-release.md` for the full runbook and
-`docs/canary-publish-report.md` for the latest verified publish evidence.
-
-## Public Release Decisions
-
-`docs/public-release-decisions.md` is the source of truth for the package name,
-ownership, repository visibility policy, npm access, README positioning, and
-examples hosting decision for the `0.1.x` lane.
 
 ## Tag-Driven Public Release
 
@@ -98,7 +80,16 @@ dist-tags, so nobody moves them by hand. After publication, the separately
 approved `sync-dist-tags` job runs `scripts/sync-dist-tags.mjs` with the same
 audited publisher, authenticated by the trusted publisher's
 **Allow npm dist-tag** permission (`release.yml`, environment `npm-publish`).
-It applies one policy:
+This permission is separate from direct publication and is
+[disabled by default](https://docs.npmjs.com/trusted-publishers/#managing-dist-tags-with-trusted-publishing).
+A configured publishing identity does not prove that channel cleanup is enabled.
+The repository's recorded permission denial is tracked in
+[issue #231](https://github.com/Ponchia/bronto-annotations/issues/231). An `E403`
+requires a maintainer permission decision, not repeated retries, another
+credential or weaker protection. Successful package publication remains valid
+when only this separate cleanup is denied.
+
+When legitimately enabled, the job applies one policy:
 
 - A prerelease channel tag (`next`, `beta`, `rc`, `alpha`, `canary`) that points
   below `latest` is removed, so a stable release clears a `next` left on an
@@ -194,6 +185,28 @@ It cannot recover a failed npm upload or publish a missing package. Its audit
 requires signed attestations from the original protected release; if those are
 missing or differ from the immutable tag, recovery fails closed.
 
+### Failed publication versus failed follow-through
+
+First identify the failed step. A failed overall workflow does not establish
+that npm rejected the package.
+
+- **Before upload:** a provenance-generation failure can occur before the
+  registry write. Confirm that boundary using the job logs and the exact audited
+  publisher implementation, and check fresh registry state. Only then consider
+  a bounded retry of the failed publish job through the same protected workflow.
+- **After acceptance:** delayed metadata or archive reads are observation
+  failures. Do not republish an immutable version. Verify the actual archive and
+  signatures before updating install guidance.
+- **After publication:** release-note, download-mirror and channel-cleanup jobs
+  have their own recovery paths. Recover only the failed follow-through; do not
+  rerun the npm publication step.
+
+A missing registry read alone is not proof that upload never occurred. Preserve
+provenance, the audited publisher, tag identity and protected reviews throughout.
+[Issue #78](https://github.com/Ponchia/bronto-annotations/issues/78) retains the
+observed pre-upload and post-acceptance cases; general automatic publish retries
+remain outside the verified contract.
+
 ## Publication status on the website
 
 `site/release-status.json` records only confirmed immutable registry versions.
@@ -230,3 +243,23 @@ retains its original Sigstore provenance, and adds only missing matching assets
 to the existing GitHub Release. It never rebuilds, republishes, re-signs, changes
 a tag, or overwrites a conflicting asset. Use verification-only mode before
 approving an upload; the existing protected review and publisher audit apply.
+
+## Canary / Private Registry
+
+**Historical bootstrap path.** GitHub Packages canaries originally qualified the
+package before its first public release. [The canary runbook](canary-release.md)
+(`docs/canary-release.md`) and [its publication report](canary-publish-report.md)
+(`docs/canary-publish-report.md`) preserve those inputs and results. They are not
+a requirement to republish old canaries before a current stable patch.
+
+Current public prereleases follow the tag-driven workflow above and use `next`;
+stable releases use `latest`. The manually bootstrapped `0.1.0` package and its
+published history must not be recreated or overwritten.
+
+## Public Release Decisions
+
+**Historical launch record.** `docs/public-release-decisions.md` preserves the
+original `0.1.x` naming, ownership and hosting decisions. Its initial README and
+example-hosting choices describe that launch, not the current site. Use current
+`package.json`, [governance](../GOVERNANCE.md), [API stability](api-stability.md)
+and this runbook for present-day maintenance. Keep the original record intact.
