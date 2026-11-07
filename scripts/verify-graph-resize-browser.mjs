@@ -85,9 +85,10 @@ try {
           const svg = frame.querySelector('svg.pa-annotation-layer');
           const notes = [...frame.querySelectorAll('.pa-annotation__note')].map(note => {
             const box = note.querySelector('.pa-annotation__note-box').getBoundingClientRect();
+            const semanticNote = note.getAttribute('role') === 'note' ? note : note.querySelector('[role="note"]');
             const text = [...note.querySelectorAll('.pa-annotation__title,.pa-annotation__body')];
             return {
-              id: note.getAttribute('data-annotation-id'),
+              id: semanticNote?.getAttribute('data-annotation-id') ?? null,
               text: text.map(el => el.textContent).join(' ').replace(/\s+/g, ' ').trim(),
               contained: box.left >= bounds.left - 2 && box.right <= bounds.right + 2
                 && box.top >= bounds.top - 2 && box.bottom <= bounds.bottom + 2,
@@ -102,7 +103,8 @@ try {
                 const scale = matrix ? Math.hypot(matrix.a, matrix.b) : 0;
                 return parseFloat(getComputedStyle(el).fontSize) * scale >= 11;
               }),
-              focusable: note.getAttribute('tabindex') === '0',
+              focusable: semanticNote?.getAttribute('tabindex') === '0'
+                && Boolean(semanticNote.getAttribute('aria-label')),
             };
           });
           const target = document.querySelector(targetSelector)?.getBoundingClientRect();
@@ -131,6 +133,7 @@ try {
         observations.push({ host: name, viewport: width, ...result });
         assert.equal(result.documentOverflow, 0, `${name} document overflow at ${width}px`);
         assert.equal(result.notes.length, host.count, `${name} must retain every note`);
+        assert(result.notes.every(note => typeof note.id === 'string' && note.id.length > 0), `${name} must retain note identities`);
         assert.equal(result.quality, true, `${name} quality assertions must remain effective`);
         assert(result.notes.every(note => note.contained), `${name} has clipped notes at ${width}px`);
         assert(result.notes.every(note => note.textContained), `${name} has clipped text at ${width}px`);
