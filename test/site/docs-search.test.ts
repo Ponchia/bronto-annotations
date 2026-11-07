@@ -15,7 +15,7 @@ function filter(value: string) {
 }
 const visibleCards = () => [...document.querySelectorAll<HTMLElement>('[data-doc-card]')]
   .filter((card) => !card.hidden).map((card) => card.textContent);
-const status = () => document.querySelector('#docs-filter-status')!;
+const status = () => document.querySelector<HTMLElement>('#docs-filter-status')!;
 
 beforeEach(() => {
   lifecycle = new EventTarget();

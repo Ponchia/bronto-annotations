@@ -51,7 +51,7 @@ Quality measurements use JavaScript numbers. Finite box fields and far edges do
 not guarantee finite area products, distance differences, or accumulated totals.
 For example, the intersection of two identical `1e200` by `1e200` boxes is
 `Infinity`; enough individually finite intersections can also overflow a total.
-Representability depends on dimensions, intermediate operations, and the number
+Finite results depend on dimensions, intermediate operations, and the number
 of contributions, as well as coordinate magnitude. Use values whose arithmetic and
 reported totals remain finite when you need finite measurements. The evaluator
 does not provide arbitrary precision, detect all precision loss or underflow, or
