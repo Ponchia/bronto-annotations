@@ -26,14 +26,15 @@ For a single fixed label or tooltip, your chart library may already be enough.
 ## Install
 
 ```bash
-npm install @ponchia/annotations@0.8.2
+npm install @ponchia/annotations
 ```
 
 ES modules only; the root import is DOM-free with no runtime dependencies.
 React and adapter peer packages are optional. See [compatibility](docs/compatibility.md)
-for tested versions. These docs and demos follow `main`; the
-[0.8.2 guides](https://github.com/Ponchia/bronto-annotations/blob/v0.8.2/docs/README.md)
-match this install. [Upgrading from 0.6?](docs/migration-0.7.md)
+for tested versions. The command installs the latest published stable release.
+For an exact version, use the [version chooser](docs/getting-started.md#choose-your-version)
+and its matching release documentation. These docs and demos follow `main`;
+they can be ahead of npm. [Upgrading from 0.6?](docs/migration-0.7.md)
 
 ## Core Usage
 
@@ -44,7 +45,7 @@ To try it in a new project, use Node 22.12.0 or newer:
 mkdir annotation-demo
 cd annotation-demo
 npm init -y
-npm install @ponchia/annotations@0.8.2
+npm install @ponchia/annotations
 npm install --save-dev vite@8
 ```
 
