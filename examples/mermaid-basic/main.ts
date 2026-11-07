@@ -62,6 +62,23 @@ async function render() {
   tagFlowchartSvg(flowchartSvg);
   tagSequenceSvg(sequenceSvg);
 
+  const update = () => renderAnnotations(diagramHost, layer, flowchartSvg, sequenceSvg, shell);
+  update();
+  // Reuse the generated diagrams. Their SVG transforms change on resize, so
+  // resolve anchors again in the overlay's coordinate space after layout.
+  const observer = new ResizeObserver(update);
+  observer.observe(shell);
+  observer.observe(flowchartSvg);
+  observer.observe(sequenceSvg);
+}
+
+function renderAnnotations(
+  diagramHost: HTMLElement,
+  layer: HTMLElement,
+  flowchartSvg: SVGSVGElement,
+  sequenceSvg: SVGSVGElement,
+  shell: HTMLElement
+) {
   const bounds = boundsFromElement(shell);
   const coordinateSpace = createCoordinateSpace(bounds);
   const compact = bounds.width < 560;
@@ -151,7 +168,7 @@ async function render() {
         body: 'Participant from rendered SVG.'
       },
       placement: compact
-        ? { manual: { x: 12, y: sequenceTop - 76, side: 'right' as const } }
+        ? { manual: { x: 12, y: sequenceTop - 100, side: 'right' as const } }
         : { side: 'left' as const, allowedSides: ['left' as const, 'right' as const], offset: [18, 30] },
       subject: { shape: 'rect' as const, padding: 4 },
       tone: 'info' as const
@@ -165,7 +182,7 @@ async function render() {
         body: 'Message label hook.'
       },
       placement: compact
-        ? { manual: { x: bounds.width - 162, y: bounds.height - 74, side: 'top' as const } }
+        ? { manual: { x: bounds.width - 162, y: bounds.height - 104, side: 'top' as const } }
         : { manual: { x: bounds.width - 186, y: 230, side: 'bottom' as const } },
       subject: { shape: 'rect' as const, padding: 3 },
       priority: 2
@@ -180,8 +197,8 @@ async function render() {
         body: 'Anchored to a message line.'
       },
       placement: compact
-        ? { manual: { x: 12, y: bounds.height - 74, side: 'top' as const } }
-        : { manual: { x: bounds.width - 186, y: bounds.height - 70, side: 'top' as const } },
+        ? { manual: { x: 12, y: bounds.height - 104, side: 'top' as const } }
+        : { manual: { x: bounds.width - 186, y: bounds.height - 104, side: 'top' as const } },
       subject: { shape: 'path' as const }
     }
   ];
@@ -213,11 +230,11 @@ async function render() {
     noteSizes: {
       'mermaid-api': { width: 128, height: 54 },
       'mermaid-report': { width: 144, height: 54 },
-      'mermaid-translated-data': { width: compact ? 150 : 168, height: 58 },
-      'mermaid-edge': { width: 154, height: 58 },
-      'mermaid-sequence-api': { width: compact ? 142 : 160, height: 58 },
-      'mermaid-sequence-message': { width: compact ? 150 : 168, height: 58 },
-      'mermaid-sequence-route': { width: compact ? 150 : 168, height: 58 }
+      'mermaid-translated-data': { width: compact ? 150 : 168, height: 88 },
+      'mermaid-edge': { width: 154, height: 88 },
+      'mermaid-sequence-api': { width: compact ? 142 : 160, height: 88 },
+      'mermaid-sequence-message': { width: compact ? 150 : 168, height: 88 },
+      'mermaid-sequence-route': { width: compact ? 150 : 168, height: 88 }
     },
     targetAlignmentTargets,
     targetAlignmentOptions: {
@@ -315,13 +332,11 @@ function createCoordinateSpace(bounds: Box): SVGSVGElement {
 }
 
 function boundsFromElement(element: HTMLElement): Box {
-  const rect = element.getBoundingClientRect();
-
   return {
     x: 0,
     y: 0,
-    width: Math.max(1, Math.ceil(rect.width)),
-    height: Math.max(1, Math.ceil(rect.height))
+    width: Math.max(1, element.clientWidth),
+    height: Math.max(1, element.clientHeight)
   };
 }
 
