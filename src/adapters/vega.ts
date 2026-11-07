@@ -347,7 +347,7 @@ export function validateVegaViewAnchors<TDatum>(
     spec.id,
     'vega-view',
     vegaViewSpecExpectation(spec),
-    () => anchorsFromVegaView(view, [spec]).length > 0
+    () => anchorsFromVegaView(view, [spec])[0]
   )));
 }
 
@@ -442,7 +442,7 @@ export function validateVegaScaleAnchors<TDatum>(
     spec.id,
     'vega-scale',
     vegaScaleSpecExpectation(spec),
-    () => anchorsFromVegaScales(view, [spec]).length > 0
+    () => anchorsFromVegaScales(view, [spec])[0]
   )));
 }
 
@@ -534,7 +534,7 @@ export function validateVegaScenegraphAnchors<TDatum>(
     spec.id,
     'vega-scenegraph',
     vegaScenegraphSpecExpectation(spec),
-    () => anchorsFromVegaScenegraph(view, [spec]).length > 0
+    () => anchorsFromVegaScenegraph(view, [spec])[0]
   )));
 }
 
@@ -898,17 +898,27 @@ function validateVegaSpec(
   id: string,
   source: string,
   expected: string,
-  resolve: () => boolean
+  resolve: () => ExtractedAnchor | undefined
 ): VegaAnchorDiagnostic {
   try {
-    const found = resolve();
+    const result = resolve();
+
+    if (result) {
+      const { box, point } = result;
+      // Check the resolved geometry, preserving callback/offset precedence and
+      // existing extraction coercions. Finite negative dimensions remain valid.
+      if (![box.x, box.y, box.width, box.height,
+        box.x + box.width, box.y + box.height, point.x, point.y].every(Number.isFinite)) {
+        throw new Error(`Resolved ${source} coordinates or bounds are nonfinite for ${expected}.`);
+      }
+    }
 
     return anchorDiagnostic({
       id,
       source,
-      status: found ? 'found' : 'missing',
+      status: result ? 'found' : 'missing',
       expected,
-      ...(found ? {} : { reason: `No ${source} anchor matched ${expected}.` })
+      ...(result ? {} : { reason: `No ${source} anchor matched ${expected}.` })
     });
   } catch (error) {
     return anchorDiagnostic({
