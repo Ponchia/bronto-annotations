@@ -365,15 +365,35 @@ export function prepareReactFlowAnnotations<TNode extends ReactFlowNodeLike, TEd
   specs: ReactFlowAnchorSpec[],
   options: ReactFlowAnnotationLayerOptions<TNode, TEdge> = {}
 ): ReactFlowAnnotationLayerInput {
-  const validation = validateReactFlowAnchors(input, specs);
+  // Resolve lazily by object identity: duplicate ids still select the first
+  // edge for anchors, while obstacle collection can visit every edge object.
+  const routes = new Map<TEdge, Point[]>();
+  const snapshot: ReactFlowAnchorInput<TNode, TEdge> = {
+    ...input,
+    edgePoints: (edge, nodes) => {
+      let points = routes.get(edge);
+
+      if (!points) {
+        const resolved = input.edgePoints?.(edge, nodes)
+          ?? edgePoints(edge, nodes, input.viewport, input.nodeOrigin);
+        // Cache the fallback too, and detach both the array and its points
+        // before another callback can mutate a host-owned route.
+        points = resolved.map(({ x, y }) => ({ x, y }));
+        routes.set(edge, points);
+      }
+
+      return points;
+    }
+  };
+  const validation = validateReactFlowAnchors(snapshot, specs);
 
   assertAnchorValidationReportIfRequested(validation, options.assert, { label: 'React Flow anchors' });
 
   return {
-    annotations: annotationsFromReactFlow(input, specs),
+    annotations: annotationsFromReactFlow(snapshot, specs),
     obstacles: options.obstacles === false
       ? []
-      : obstaclesFromReactFlow(input, { includeHandles: true, includeEdges: true, ...(options.obstacles ?? {}) }),
+      : obstaclesFromReactFlow(snapshot, { includeHandles: true, includeEdges: true, ...(options.obstacles ?? {}) }),
     validation
   };
 }
