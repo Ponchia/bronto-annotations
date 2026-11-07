@@ -171,7 +171,11 @@ source archive pinned by commit, byte count and SHA-512 in
 exactly the listed files and refuses links or anything unexpected. It installs
 the CLI's production dependencies with lifecycle scripts off, from the
 separately committed `tooling/publisher/package-lock.json`, which overrides
-only `undici` 6.29.1 and `ip-address` 10.7.4. `audit` checks each installed
+`undici` 6.29.1, `ip-address` 10.7.4, and the security-fixed major
+versions `glob` 14.0.2 and `minimatch` 11.0.1. The latter replace npm
+source-declared ranges `^13.0.6` and `^10.2.5` only through explicit
+`source.json` `reviewedDirectReplacements` with GHSA references and
+graph-wide exact overrides; the original npm source remains unchanged. `audit` checks each installed
 manifest against that lock and audits the complete graph, development
 dependencies included, through `scripts/audit-publishing-tooling.mjs`. Nothing
 is repacked, no bundled metadata is edited, and no advisory is waived. On
