@@ -97,6 +97,10 @@ describe('current release guidance and historical scope', () => {
   it('keeps earlier archive proof explicitly historical rather than relabeling its bytes', () => {
     const readiness = read('docs/release-readiness.md');
     expect(readiness).toContain(`confirmed stable release is **${stable}**`);
+    const lastStable = section(readiness, 'Historical 0.8.3 publication evidence');
+    expect(lastStable).toContain('363,251-byte');
+    expect(lastStable).toContain('sha512-qk4uhVBf4y6RCSAykMZP3rAsJkbSJE2CrocPBXFKnvu0pN6jvrET/2S4vC05bmre4ZEKp7BpG4C1cheST4rAGA==');
+    expect(lastStable).toContain('42401260630');
     const previous = section(readiness, 'Historical 0.8.2 publication evidence');
     expect(previous).toContain('356,165-byte');
     expect(previous).toContain('sha512-+RQGrJ0fAYuzikj2mT5B2zUlBUFB1XJIttaiiqqYj0ytNycZAahnKr+GGwKYlRdFzqk0Z09Wgp+T55EylsLBlQ==');

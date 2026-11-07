@@ -14,12 +14,12 @@ selections, own chart scales, parse diagram source, or depend on `@ponchia/ui`.
 Use the confirmed stable package and its version-matched guide:
 
 ```sh
-npm install @ponchia/annotations@0.8.3
+npm install @ponchia/annotations@0.9.0
 ```
 
-The [0.8.3 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.8.3/docs/migration-guide.md)
+The [0.9.0 API reference](https://github.com/Ponchia/bronto-annotations/blob/v0.9.0/docs/api-reference.md)
 contains this migration API. Read the separate [0.7 API migration](migration-0.7.md)
-when moving from 0.6; 0.8 carries that contract forward. Current publication
+when moving from 0.6; 0.8 and 0.9 carry that contract forward. Current publication
 and consumer checks are recorded in [release readiness](release-readiness.md).
 
 **Historical RC2 evidence:** the 20-test legacy UI geometry contract was added

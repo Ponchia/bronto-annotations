@@ -1,13 +1,54 @@
 # Release readiness
 
-This document separates implementation, publication, automated compatibility,
-and human usability. The 0.8 API (the 0.7 API plus experimental pin layout) is
-the stable npm release; that does not prove
-every host integration.
+This document separates implementation, immutable publication, automated
+compatibility and human usability. A published package and a passing browser
+suite do not certify every host integration or physical input device.
 
 ## Choose the matching package
 
-The confirmed stable release is **0.8.3**. Install its verified npm archive:
+The confirmed stable release is **0.9.0**. Install its verified npm archive:
+
+```bash
+npm install @ponchia/annotations@0.9.0
+```
+
+Use the [0.9.0 API reference](https://github.com/Ponchia/bronto-annotations/blob/v0.9.0/docs/api-reference.md)
+for the immutable source matching the archive. The
+[release run](https://github.com/Ponchia/bronto-annotations/actions/runs/42413855991)
+published `v0.9.0` from `818e53b604902fb3c751b4c260cdc1c68c350278`.
+
+- The official **367,645-byte** archive matched registry SHA-512:
+  `sha512-ucyjKXKkGgpbgV4saCHB4U0/mZZfC95fHRldfl199Lg381psNc+cetKeemkG8Mkrpa+NXqDHHfq/jHfCYZY4Yg==`.
+- A fresh-cache registry consumer verified the DOM-free root, SVG/CSS and
+  optional-peer isolation; numerical report evidence survives JSON as explicit
+  path/value tags, ordinary reports keep their shape, and generated renderer
+  metadata remains authoritative without duplicate custom attribute aliases.
+- npm verified the original signed publication and provenance statements. The
+  [canonical asset verification run](https://github.com/Ponchia/bronto-annotations/actions/runs/42414755335)
+  separately enforced the original certificate identity, issuer and source
+  commit before preparing the GitHub download mirror.
+
+0.9 adds optional numerical evidence to the retained 0.7/0.8 public surface.
+It does not introduce arbitrary-precision geometry, a general saved-layout
+serializer or a package persistence API. [Placement quality](placement-quality.md)
+and [styling guidance](styling-guide.md#custom-data-attributes) describe the
+numeric and metadata contracts. The scene download and clipboard recovery are
+website features; physical screen-reader/device and independent human-consumer
+acceptance remain separate.
+
+The older preview channel remains a separate
+[permission decision](https://github.com/Ponchia/bronto-annotations/issues/231).
+The immutable publication and `latest=0.9.0` do not depend on that cleanup.
+Do not republish an accepted package to repair channel tags or documentation.
+
+Public pages distinguish source `package.json` from the confirmed registry
+record in `site/release-status.json`. Follow [the release runbook](release.md)
+for normal release preparation and guarded recovery. Earlier archive evidence
+is retained below without changing its version, bytes or provenance.
+
+## Historical 0.8.3 publication evidence
+
+The earlier stable release **0.8.3** was verified on November 7, 2026. Install its verified npm archive:
 
 ```bash
 npm install @ponchia/annotations@0.8.3
@@ -29,7 +70,7 @@ published the package from `v0.8.3` at
   additionally enforced the original certificate identity, issuer and source
   commit policy before producing its dry-run plan.
 
-The new release does not claim arbitrary-precision geometry or a transaction
+That release did not claim arbitrary-precision geometry or a transaction
 across all mutable host state. [Placement quality](placement-quality.md) and
 [adapter guidance](adapter-guide.md) state the supported validation and snapshot
 boundaries. Physical-input/screen-reader and independent human-consumer
