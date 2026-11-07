@@ -6,6 +6,7 @@
  * @experimental During `0.x`: low-level node, handle, and edge geometry helper
  * exports.
  */
+import { anchorPoint } from '../core/anchors.js';
 import type {
   Anchor,
   Annotation,
@@ -233,12 +234,13 @@ export function anchorsFromReactFlow<TNode extends ReactFlowNodeLike, TEdge exte
       }
 
       const box = boxFromPoints(points);
+      const anchor: Anchor = { type: 'path', points };
 
       return [{
         id: spec.id,
-        anchor: { type: 'path', points },
+        anchor,
         box,
-        point: points[Math.floor(points.length / 2)] ?? { x: box.x, y: box.y },
+        point: anchorPoint(anchor),
         source: 'react-flow-edge',
         edgeId: edge.id,
         sourceNodeId: edge.source,
@@ -316,7 +318,8 @@ export function validateReactFlowAnchors<TNode extends ReactFlowNodeLike, TEdge 
         : [];
       // Custom routes are already in overlay coordinates and do not use the viewport.
       const validGeometry = points.length > 0 && points.every(isFinitePoint)
-        && isFiniteBox(boxFromPoints(points));
+        && isFiniteBox(boxFromPoints(points))
+        && isFinitePoint(anchorPoint({ type: 'path', points }));
 
       return anchorDiagnostic({
         id: spec.id,
@@ -365,15 +368,41 @@ export function prepareReactFlowAnnotations<TNode extends ReactFlowNodeLike, TEd
   specs: ReactFlowAnchorSpec[],
   options: ReactFlowAnnotationLayerOptions<TNode, TEdge> = {}
 ): ReactFlowAnnotationLayerInput {
-  const validation = validateReactFlowAnchors(input, specs);
+  // Resolve lazily by object identity: duplicate ids still select the first
+  // edge for anchors, while obstacle collection can visit every edge object.
+  const routes = new Map<TEdge, Point[]>();
+  // Structural inputs may expose these properties through prototype getters
+  // or non-enumerable fields, so an object spread would lose their geometry.
+  const { nodes, edges, viewport, nodeOrigin } = input;
+  const snapshot: ReactFlowAnchorInput<TNode, TEdge> = {
+    nodes,
+    ...(edges === undefined ? {} : { edges }),
+    ...(viewport === undefined ? {} : { viewport }),
+    ...(nodeOrigin === undefined ? {} : { nodeOrigin }),
+    edgePoints: (edge, nodes) => {
+      let points = routes.get(edge);
+
+      if (!points) {
+        const resolved = input.edgePoints?.(edge, nodes)
+          ?? edgePoints(edge, nodes, viewport, nodeOrigin);
+        // Cache the fallback too, and detach both the array and its points
+        // before another callback can mutate a host-owned route.
+        points = resolved.map(({ x, y }) => ({ x, y }));
+        routes.set(edge, points);
+      }
+
+      return points;
+    }
+  };
+  const validation = validateReactFlowAnchors(snapshot, specs);
 
   assertAnchorValidationReportIfRequested(validation, options.assert, { label: 'React Flow anchors' });
 
   return {
-    annotations: annotationsFromReactFlow(input, specs),
+    annotations: annotationsFromReactFlow(snapshot, specs),
     obstacles: options.obstacles === false
       ? []
-      : obstaclesFromReactFlow(input, { includeHandles: true, includeEdges: true, ...(options.obstacles ?? {}) }),
+      : obstaclesFromReactFlow(snapshot, { includeHandles: true, includeEdges: true, ...(options.obstacles ?? {}) }),
     validation
   };
 }

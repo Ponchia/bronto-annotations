@@ -1,3 +1,4 @@
+import { normalizeBox } from '../core/anchors.js';
 import type {
   Box,
   LayoutOptions,
@@ -132,7 +133,9 @@ export function resolvePreparedAnnotationLayout<
     ...(options.refinement !== undefined ? { refinement: options.refinement } : {}),
     ...(options.diagnostics !== undefined ? { diagnostics: options.diagnostics } : {})
   });
-  const quality = evaluateAnnotationLayout(layout);
+  // The permissive solver filters malformed obstacles. Quality must inspect
+  // the original selected inputs, normalized by the same rule but not filtered.
+  const quality = evaluateAnnotationLayout(layout, { obstacles: obstacles.map(normalizeBox) });
 
   if (options.assertQuality) {
     assertAnnotationLayoutQuality(

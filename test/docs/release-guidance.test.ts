@@ -32,6 +32,29 @@ function checkCurrentInstall(file: string, text: string): void {
 }
 
 describe('current release guidance and historical scope', () => {
+  it('separates the current release runbook from retained launch procedures', () => {
+    const runbook = read('docs/release.md');
+    expect(runbook).toContain('current maintainer runbook');
+    expect(section(runbook, 'Canary / Private Registry')).toContain('**Historical bootstrap path.**');
+    expect(section(runbook, 'Public Release Decisions')).toContain('**Historical launch record.**');
+    expect(runbook).not.toContain('Use the GitHub Packages canary workflow before publishing');
+    expect(runbook).not.toContain('source of truth for the package name');
+    expect(runbook).toContain('(../GOVERNANCE.md)');
+    expect(runbook).toContain('manifest and fresh audit determine readiness');
+    expect(runbook).not.toContain('registry npm\nbundle still ships');
+  });
+
+  it('keeps denied channel cleanup and accepted publication distinct', () => {
+    const runbook = read('docs/release.md');
+    expect(runbook).toContain('disabled by default');
+    expect(runbook).toContain('/issues/231');
+    expect(runbook).toContain('An `E403`');
+    expect(runbook).toContain('maintainer permission decision');
+    expect(runbook).toContain('do not\n  rerun the npm publication step');
+    expect(runbook).toContain('missing registry read alone is not proof');
+    expect(runbook).toContain('/issues/78');
+  });
+
   it.each(['docs/migration-0.7.md', 'docs/migration-guide.md', 'docs/release-readiness.md'])(
     '%s offers the confirmed stable package, not a release candidate', file => {
       checkCurrentInstall(file, read(file));

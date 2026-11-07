@@ -8,6 +8,33 @@ reasonable.
 
 ## Unreleased
 
+## 0.8.3 - 2026-11-07
+
+### Correctness
+
+- Inspect original prepared and additional obstacle geometry in layout quality
+  reports before permissive solver filtering can hide invalid inputs. Preserve
+  obstacle indices, negative-dimension normalization and explicit exclusions.
+- Report invalid effective bounds, obstacles and note boxes through the existing
+  `invalid-box` diagnostic, including nonfinite far edges. Strict quality checks
+  reject these inputs; standalone extraction and raw solver behavior are unchanged.
+- Resolve React Flow edge routes once per preparation call and detach returned
+  points so validation, annotations and included edge obstacles use the same
+  geometry. Preserve custom-route precedence, fallback routes, callback receivers,
+  prototype getters and non-enumerable structural input fields.
+- Align extracted React Flow edge points with the core half-length path point;
+  reject selected routes whose resolved midpoint overflows to nonfinite values.
+
+### Documentation and verification
+
+- Separate current release operations from historical launch/canary procedures,
+  and distinguish pre-upload failures, accepted publication and later cleanup.
+- Clarify the separate dist-tag permission and bind publisher readiness claims
+  to the checked-in tooling manifest and current audit evidence.
+- Add regression and generated-input coverage for invalid geometry, route
+  snapshots, structural host inputs and representative points without changing
+  public exports or runtime dependencies.
+
 ## 0.8.2 - 2026-11-07
 
 ### Correctness

@@ -10,6 +10,41 @@ These are synthetic fixtures authored for this package. They are **not independe
 adoption evidence, upstream examples, or an external competitor comparison**.
 Consumer adoption requires independent human use and review in a real host.
 
+## Runtime quality and original inputs
+
+Anchor validation and placement quality answer different questions. An adapter's
+`assert: true` validates its selected annotation targets; it does not certify
+unselected host obstacles. For a prepared adapter result, use the existing
+`resolvePreparedAnnotationLayout(prepared, { bounds, assertQuality: true })`
+helper to check all included prepared and additional obstacles as well as the
+resolved placement.
+
+The helper normalizes negative obstacle dimensions just as the solver does,
+but passes the full original list to quality instead of the solver's filtered list.
+Its `invalid-box` errors identify the original combined `obstacleIndex`;
+`invalidBoxCount` also covers invalid effective bounds and note boxes. Invalid
+obstacles make `hostContentClear` false: unknown geometry is not evidence that
+host content is unobscured. Invalid boxes are excluded from numerical overlap
+calculations without being hidden from the diagnostics.
+
+Direct `resolveAnnotationLayout` remains permissive: it normalizes obstacles and
+filters malformed boxes. A report created only from that resolved layout cannot
+recover discarded inputs. To inspect the original input list explicitly, pass
+it to the evaluator:
+
+```ts
+const layout = resolveAnnotationLayout({ annotations, bounds, obstacles });
+const quality = evaluateAnnotationLayout(layout, { obstacles });
+assertAnnotationLayoutQuality(quality);
+```
+
+For the direct evaluator, supplied boxes must already have nonnegative dimensions;
+finite zero-size boxes remain valid. Bounds and rectangle far edges must be
+finite. `includePreparedObstacles: false` intentionally excludes prepared
+obstacles from both placement and inspection; any `additionalObstacles` are
+still inspected. Reports describe the geometry supplied to them, not a fresh
+measurement of host state or an accessibility certification.
+
 ## Reproduce
 
 Use the repository's existing dependency and build workflow. From the checkout:

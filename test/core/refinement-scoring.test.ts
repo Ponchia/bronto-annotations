@@ -75,6 +75,24 @@ describe('bounded exact refinement scoring', () => {
       expect(workspace.scoreReplacement(0, item)).toBe(fullQualityRefinementScore({ ...layout, annotations }));
     }
   });
+  it('matches invalid input reports and recovers after committing an invalid trial', () => {
+    const clean = resolveAnnotationLayout(fixture(17, 4));
+    const layout = { ...clean,
+      placementBounds: { ...clean.placementBounds, width: NaN },
+      obstacles: [...clean.obstacles, { x: 0, y: 0, width: Infinity, height: 10 }]
+    };
+    const workspace = createRefinementScoreWorkspace(layout)!;
+    const invalid = { ...layout.annotations[0]!, noteBox: {
+      x: Number.MAX_VALUE, y: 0, width: Number.MAX_VALUE, height: 40
+    } };
+    const next = { ...layout, annotations: [...layout.annotations] };
+    next.annotations[0] = invalid;
+    expect(workspace.scoreReplacement(0, invalid)).toBe(fullQualityRefinementScore(next));
+    workspace.commit(0, invalid);
+    expect(workspace.scoreReplacement(1, next.annotations[1]!)).toBe(fullQualityRefinementScore(next));
+    workspace.commit(0, clean.annotations[0]!);
+    expect(workspace.scoreReplacement(1, clean.annotations[1]!)).toBe(fullQualityRefinementScore(layout));
+  });
   it('falls back above the fixed scratch budget and keeps zero-score clone behavior', () => {
     const small = resolveAnnotationLayout({ annotations: [], bounds: { x: 0, y: 0, width: 100, height: 100 } });
     const large = { ...small, annotations: new Array(400) } as ResolvedLayout;
