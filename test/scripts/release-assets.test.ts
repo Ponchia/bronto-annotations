@@ -315,9 +315,13 @@ describe('expected original certificate identity before asset preparation', () =
       if (arguments.length !== 2 || !options.certificateIdentityURI || !options.certificateOIDs) throw new Error('policy discarded');
       return Promise.resolve({ options, bundle });
     };`);
-    const verifier = await loadCertificateVerifier(join(directory, 'bin/npm-cli.js'));
+    const verifier = await loadCertificateVerifier(join(directory, 'source/bin/npm-cli.js'));
     const policy = releaseCertificatePolicy(tag, commit);
     expect(await verifier({ test: true }, policy)).toEqual({ bundle: { test: true }, options: policy });
+  });
+  it('does not confuse an ordinary global npm layout with the audited publisher prefix', async () => {
+    const { directory } = await fixture();
+    await expect(loadCertificateVerifier(join(directory, 'bin/npm-cli.js'))).rejects.toThrow(/source\/bin layout/);
   });
   it('rejects an absent or relative verifier path', async () => {
     await expect(loadCertificateVerifier(undefined)).rejects.toThrow(/audited publisher/);

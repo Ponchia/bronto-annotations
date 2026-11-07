@@ -52,7 +52,9 @@ export async function loadCertificateVerifier(npmCli) {
   // not to the annotation package or its development node_modules. Resolve its
   // explicit installation directory, so analysis does not mistake it for a new
   // dependency of the annotation runtime.
-  const verifierRoot = join(dirname(dirname(npmCli)), 'node_modules', 'sigstore');
+  const sourceDirectory = dirname(dirname(npmCli));
+  assert.equal(basename(sourceDirectory), 'source', 'Expected the audited publisher source/bin layout');
+  const verifierRoot = join(dirname(sourceDirectory), 'node_modules', 'sigstore');
   const manifest = JSON.parse(await readFile(join(verifierRoot, 'package.json'), 'utf8'));
   assert.equal(manifest.name, 'sigstore');
   const actual = manifest.version;
