@@ -8,6 +8,42 @@ reasonable.
 
 ## Unreleased
 
+## 0.8.2 - 2026-11-07
+
+### Correctness
+
+- Resolve React Flow absolute positions without applying node origins twice;
+  retain per-node origin precedence and consistent node, handle and obstacle
+  coordinates.
+- Reject nonfinite selected React Flow geometry during validation, preserving
+  missing targets, valid fallbacks and authoritative custom routes.
+- Use the core half-length path point consistently in alignment diagnostics,
+  compiled D2 results and sampled DOM/SVG representative points. Path samples,
+  bounds and existing generated annotation layout remain unchanged.
+- Reject nonfinite resolved D2 and Vega geometry during strict preparation,
+  including rendered SVG adapter validation; permissive extraction and public
+  types remain unchanged.
+
+### Public examples and first use
+
+- Add real playground scene presets, measured fixed/automatic placement
+  comparison, versioned shareable settings and a readable note/quality inspector.
+- Verify the exact copied playground recipes in isolated packed consumers,
+  including TypeScript, geometry parity, package-only styling and focus semantics.
+- Add catalog-derived return and integration-guide navigation to every published
+  demo, with required browser verification under both hosting prefixes.
+- Keep narrow graph examples readable in keyboard-accessible local scroll
+  regions, retain all annotations and remeasure Mermaid anchors on resize.
+- Extend required regression checks for narrow viewports, transformed host
+  coordinates, live resizing and integrated inspector/share/reset behavior.
+
+### Maintenance
+
+- Disable automatic tool credit for new repository contributions while preserving
+  genuine authorship and previously published release tags.
+- Preserve the source-locked, separately audited publication toolchain and
+  existing package/runtime compatibility boundaries.
+
 - The release workflow now owns the npm dist-tags. A separately approved
   `sync-dist-tags` job runs after publication, through the trusted publisher's
   new "Allow npm dist-tag" permission and the same audited publisher. A `next`,
