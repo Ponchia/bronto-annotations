@@ -3,6 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
 import { createServer } from 'vite';
+import { verifyRangeTransforms } from './range-transform-scenario.mjs';
 import {
   verifyAuthoringDefault, openAuthoringDiagram, verifyResponsiveAuthoring
 } from './responsive-authoring-scenario.mjs';
@@ -151,6 +152,7 @@ const baseUrl = `http://127.0.0.1:${address.port}`;
 const browser = await chromium.launch();
 
 try {
+  await verifyRangeTransforms(browser);
   for (const viewport of viewports) {
     for (const example of examples) {
       const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } });
