@@ -1,6 +1,6 @@
 /** Private, per-refinement scratch. Never retained in returned layouts. */
-import { isFiniteBox, overlapArea } from './anchors.js';
-import { connectorIntersections, overflowArea } from './quality-geometry.js';
+import { overlapArea } from './anchors.js';
+import { connectorIntersections, finiteQualityBox, overflowArea } from './quality-geometry.js';
 import type { ResolvedAnnotation, ResolvedLayout } from './model.js';
 
 // Bound both quadratic scratch and obstacle storage. Larger layouts retain the
@@ -26,37 +26,45 @@ export function createRefinementScoreWorkspace(layout: ResolvedLayout): Refineme
   const noteArea = new Float64Array(count * count);
   const connectorNoteHits = new Float64Array(count * count);
   const positive = (value: number) => value > 0 ? value : 0;
+  const bounds = layout.placementBounds ?? layout.bounds;
+  const validBounds = finiteQualityBox(bounds);
+  const validObstacles = layout.obstacles.map(finiteQualityBox);
+  const invalidInputCount = Number(!validBounds) + validObstacles.filter(valid => !valid).length;
 
   function update(index: number, annotation: ResolvedAnnotation): void {
     annotations[index] = annotation;
-    invalid[index] = Number(!isFiniteBox(annotation.noteBox));
-    overflow[index] = positive(overflowArea(annotation.noteBox, layout.placementBounds ?? layout.bounds));
+    const valid = finiteQualityBox(annotation.noteBox);
+    invalid[index] = Number(!valid);
+    overflow[index] = valid && validBounds ? positive(overflowArea(annotation.noteBox, bounds)) : 0;
     let hits = 0;
     for (let obstacleIndex = 0; obstacleIndex < obstacleCount; obstacleIndex++) {
       const obstacle = layout.obstacles[obstacleIndex]!;
-      obstacleArea[index * obstacleCount + obstacleIndex] = positive(overlapArea(annotation.noteBox, obstacle));
-      hits += connectorIntersections(annotation.connector, obstacle).length;
+      const inspect = valid && validObstacles[obstacleIndex];
+      obstacleArea[index * obstacleCount + obstacleIndex] = inspect
+        ? positive(overlapArea(annotation.noteBox, obstacle)) : 0;
+      if (inspect) hits += connectorIntersections(annotation.connector, obstacle).length;
     }
     connectorObstacleHits[index] = hits;
     for (let otherIndex = 0; otherIndex < count; otherIndex++) {
       const other = annotations[otherIndex]!;
+      const inspect = valid && finiteQualityBox(other.noteBox);
       if (otherIndex !== index) {
         const first = Math.min(index, otherIndex);
         const second = Math.max(index, otherIndex);
         // Keep argument order identical to the full evaluator as well as
         // addition order. This matters for exact floating-point parity.
-        noteArea[first * count + second] = positive(overlapArea(
-          annotations[first]!.noteBox, annotations[second]!.noteBox));
+        noteArea[first * count + second] = inspect ? positive(overlapArea(
+          annotations[first]!.noteBox, annotations[second]!.noteBox)) : 0;
       }
-      connectorNoteHits[index * count + otherIndex] = annotation.id === other.id
+      connectorNoteHits[index * count + otherIndex] = !inspect || annotation.id === other.id
         ? 0 : connectorIntersections(annotation.connector, other.noteBox).length;
-      connectorNoteHits[otherIndex * count + index] = annotation.id === other.id
+      connectorNoteHits[otherIndex * count + index] = !inspect || annotation.id === other.id
         ? 0 : connectorIntersections(other.connector, annotation.noteBox).length;
     }
   }
 
   function score(): number {
-    let invalidCount = 0;
+    let invalidCount = invalidInputCount;
     let overflowTotal = 0;
     let obstacleTotal = 0;
     let connectorObstacleTotal = 0;

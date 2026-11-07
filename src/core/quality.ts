@@ -1,8 +1,7 @@
 import {
-  isFiniteBox,
   overlapArea
 } from './anchors.js';
-import { overflowArea, connectorIntersections } from './quality-geometry.js';
+import { overflowArea, connectorIntersections, finiteQualityBox } from './quality-geometry.js';
 import { connectorReadability, type ConnectorReadabilityReport } from './connector-readability.js';
 
 /** @experimental Polyline readability evidence; separate from layout validity. */
@@ -321,13 +320,6 @@ export function assertAnnotationLayoutQuality(
   const message = formatLayoutQualityReport(report, formatOptions);
 
   throw new Error(`${options.label ?? 'Annotation layout quality'} assertion failed: ${reasons.join('; ')}.\n${message}`);
-}
-
-// Finite fields alone do not guarantee finite rectangle edges.
-function finiteQualityBox(box: Box): boolean {
-  return isFiniteBox(box)
-    && Number.isFinite(box.x + box.width)
-    && Number.isFinite(box.y + box.height);
 }
 
 function qualityScore(metrics: LayoutQualityMetrics): number {

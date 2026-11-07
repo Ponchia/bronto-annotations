@@ -1,5 +1,13 @@
+import { isFiniteBox } from './anchors.js';
 import { segmentIntersectsBox } from './segment-intersection.js';
 import type { Box, ConnectorPath } from './model.js';
+
+/** Private shared contract for quality reports and their exact-score fast path. */
+export function finiteQualityBox(box: Box): boolean {
+  return isFiniteBox(box)
+    && Number.isFinite(box.x + box.width)
+    && Number.isFinite(box.y + box.height);
+}
 
 export function overflowArea(box: Box, bounds: Box): number {
   const outsideLeft = Math.max(0, bounds.x - box.x);
