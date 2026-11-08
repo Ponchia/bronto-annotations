@@ -222,6 +222,38 @@ async function verifyPublicWorkerDemo(width) {
 }
 
 try {
+  // Long public package names in API headings must reflow, while fenced
+  // source remains unwrapped and scrolls inside its own keyboard region.
+  let narrowGuideCases = 0;
+  for (const width of [320, 360, 390, 1200]) {
+    for (const path of ['/docs/api-reference.html', '/docs/react-guide.html']) {
+      const guide = await visit(path, width);
+      try {
+        if (path === '/docs/api-reference.html') {
+          const heading = guide.locator('h2').filter({ hasText: '@ponchia/annotations/bronto.css' });
+          assert.equal(await heading.count(), 1, 'The real long package heading must remain present');
+          assert.equal(await heading.locator('code').innerText(), '@ponchia/annotations/bronto.css');
+          const id = await heading.getAttribute('id');
+          assert(id, 'Wrapped headings must retain their deep-link targets');
+          assert.equal(await guide.locator(`.docs-contents a[href="#${id}"]`).count(), 1);
+        }
+        const codeBlocks = await guide.locator('.docs-prose pre').evaluateAll(nodes => nodes.map(node => ({
+          scrollWidth: node.scrollWidth,
+          clientWidth: node.clientWidth,
+          overflow: getComputedStyle(node).overflowX,
+          tabIndex: node.tabIndex,
+          whiteSpace: getComputedStyle(node.querySelector('code')).whiteSpace
+        })));
+        assert(codeBlocks.length > 0, 'Published guide code must remain available');
+        assert(codeBlocks.every(block => block.whiteSpace === 'pre'), 'Fenced source must keep its whitespace');
+        if (width < 500) assert(codeBlocks.some(block => block.scrollWidth > block.clientWidth
+          && block.overflow === 'auto' && block.tabIndex === 0),
+        'Long source must scroll in a keyboard-reachable code block rather than widening the document');
+        narrowGuideCases++;
+      } finally { await guide.context().close(); }
+    }
+  }
+  console.log(`Reference guide reflow verified: ${narrowGuideCases} browser cases; heading text, deep links and local code scrolling preserved.`);
   for (const width of [390, 1200]) {
     const home = await visit('/', width);
     await verifyVersionDisclosure(home, width);
