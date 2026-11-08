@@ -1180,6 +1180,7 @@ select:focus-visible {
   color: var(--ink);
   margin-top: 30px;
 }
+.docs-prose :is(h1, h2, h3, h4, h5, h6),
 .docs-prose p,
 .docs-prose li {
   overflow-wrap: anywhere;
