@@ -6,7 +6,49 @@ suite do not certify every host integration or physical input device.
 
 ## Choose the matching package
 
-The confirmed stable release is **0.9.0**. Install its verified npm archive:
+The confirmed stable release is **0.9.1**. Install its verified npm archive:
+
+```bash
+npm install @ponchia/annotations@0.9.1
+```
+
+Use the [0.9.1 API reference](https://github.com/Ponchia/bronto-annotations/blob/v0.9.1/docs/api-reference.md)
+for the immutable source matching the archive. The
+[release run](https://github.com/Ponchia/bronto-annotations/actions/runs/42425299625)
+published `v0.9.1` from `4d9873945a31ca62c44f0c7fbb3dc984d8228658`.
+
+- The official **371,360-byte** archive matched its registry SHA-512:
+  `sha512-imSoKvBJKarQ0rmrUtDXTmm+kRiI850MCP5D4SJiQ55g0U0/YkfXLtvqivY08rC/zY/QHD3bpPiWQVB37RUUGA==`.
+- Fresh registry consumers exercised the published DOM-free root, SVG/CSS,
+  coherent DOM selector preparation, invalid sampled-path validation and the
+  supported text-range transform boundary. A separate React consumer checked
+  opaque note IDs and actual browser resize notifications.
+- npm verified the original publication and provenance statements. The
+  [canonical asset verification run](https://github.com/Ponchia/bronto-annotations/actions/runs/42426866285)
+  separately enforced the original certificate identity, issuer and source
+  commit before preparing the unchanged GitHub download mirror.
+
+This patch retains the 0.9 public surface and dependency boundary. DOM preparation
+reuses each specification's measured anchor; separate specifications and requested
+obstacles retain separate reads. Text-range local conversion remains two-dimensional:
+unsupported transforms are reported rather than inverted. See the
+[API reference](api-reference.md) and [React guide](react-guide.md).
+Automated browser evidence does not replace physical-device, screen-reader or
+independent human-consumer acceptance.
+
+The older preview channel remains a separate
+[permission decision](https://github.com/Ponchia/bronto-annotations/issues/231).
+The immutable publication and `latest=0.9.1` do not depend on that cleanup.
+Do not republish an accepted package to repair channel tags or documentation.
+
+Public pages distinguish source `package.json` from the confirmed registry
+record in `site/release-status.json`. Follow [the release runbook](release.md)
+for normal release preparation and guarded recovery. Earlier archive evidence
+is retained below without changing its version, bytes or provenance.
+
+## Historical 0.9.0 publication evidence
+
+The earlier stable release **0.9.0** was verified as recorded below. Install its verified npm archive:
 
 ```bash
 npm install @ponchia/annotations@0.9.0

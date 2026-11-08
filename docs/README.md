@@ -10,7 +10,7 @@ in a browser or React app. Already render a chart or diagram? Use the
 [adapter chooser](context-quickstart.md) to attach the first note to it.
 
 These guides follow `main`. Use the
-[0.9.0 API reference](https://github.com/Ponchia/bronto-annotations/blob/v0.9.0/docs/api-reference.md)
+[0.9.1 API reference](https://github.com/Ponchia/bronto-annotations/blob/v0.9.1/docs/api-reference.md)
 for that release, or the [migration guide](migration-0.7.md) when upgrading
 from 0.6.
 
