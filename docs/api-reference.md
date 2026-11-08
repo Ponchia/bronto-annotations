@@ -325,6 +325,20 @@ Exports:
   `prepareDomAnnotations` accepts `assert: true` or
   `assert: { label, failOnWarnings }`.
 
+`clientBoxToSvgBox(svg, box)` transforms all four client-rectangle corners
+through one captured screen matrix and returns their axis-aligned enclosure in
+SVG user coordinates. It supports affine rotation, skew and reflection as well
+as translation and scale; the enclosure does not reconstruct an element's
+original shape from its screen bounding box. A later call reads a fresh mapping.
+
+When the screen matrix is unavailable, the existing viewport/viewBox and
+`preserveAspectRatio` fallback is used. That fallback describes an axis-aligned
+viewport, not arbitrary CSS transforms; with no usable fallback, client
+coordinates are retained. An available but non-invertible matrix is never replaced
+with that approximation: host inversion/transform exceptions propagate, and
+nonfinite results remain nonfinite. Check geometry before using it. No general
+3D or perspective inversion is provided.
+
 DOM selector validation inspects the selected anchor geometry, including sampled
 path coordinates and finite rectangle edges. `prepareDomAnnotations` measures
 each selector specification once and uses that result for both its report and

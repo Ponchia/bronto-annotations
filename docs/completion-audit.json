@@ -1032,7 +1032,7 @@
         {
           "file": "package.json",
           "terms": [
-            "\"version\": \"0.9.1\"",
+            "\"version\": \"0.9.2\"",
             "\"repository\"",
             "\"publishConfig\"",
             "\"test:repo\"",
