@@ -337,7 +337,9 @@ viewport, not arbitrary CSS transforms; with no usable fallback, client
 coordinates are retained. An available but non-invertible matrix is never replaced
 with that approximation: host inversion/transform exceptions propagate, and
 nonfinite results remain nonfinite. Check geometry before using it. No general
-3D or perspective inversion is provided.
+3D or perspective inversion is provided. Measure rendered surfaces: these helpers
+rely on the host's reported matrix and do not detect an invertible placeholder
+returned by a browser for a collapsed or non-rendered surface.
 
 DOM selector validation inspects the selected anchor geometry, including sampled
 path coordinates and finite rectangle edges. `prepareDomAnnotations` measures

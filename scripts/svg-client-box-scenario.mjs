@@ -9,7 +9,14 @@ export async function verifySvgClientBoxes(browser, baseUrl, modulePath = '/dist
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     try {
-      await page.goto(baseUrl, { waitUntil: 'networkidle' });
+      // The repository need not serve an index document at '/'. Fulfill only
+      // this isolated HTML fixture; modules and SVG geometry remain native.
+      const fixtureUrl = new URL('/__annotation-svg-box-fixture__', baseUrl).href;
+      await page.route(fixtureUrl, route => route.fulfill({
+        contentType: 'text/html', body: '<!doctype html><html><body></body></html>'
+      }));
+      const response = await page.goto(fixtureUrl);
+      assert.equal(response?.status(), 200, 'SVG fixture document must load');
       await page.setContent('<style>body{margin:0}svg{position:absolute;left:200px;top:200px;transform-origin:0 0}</style><svg width="200" height="150" viewBox="-20 10 100 75"></svg>');
       const results = await page.evaluate(async url => {
         const { clientBoxToSvgBox, svgPointFromClient } = await import(url);
@@ -46,22 +53,43 @@ export async function verifySvgClientBoxes(browser, baseUrl, modulePath = '/dist
           }
         }
         svg.style.transform = 'scale(0,1)';
-        let singular;
+        // Compare with the actual SVG API, not an assumption that every browser
+        // reports a singular CSS transform as a singular matrix. Some hosts
+        // report an invertible placeholder for non-rendered/collapsed surfaces.
+        const screen = svg.getScreenCTM();
+        let nativeBox, nativeError;
         try {
-          const actual = clientBoxToSvgBox(svg, boxes[0]);
-          singular = { kind: 'nonfinite', passed: Object.values(actual).some(value => !Number.isFinite(value)) };
-        } catch (error) {
-          // SVGPoint implementations can reject a noninvertible matrix instead
-          // of returning NaN. Preserve the host behavior, never approximate it.
-          singular = { kind: 'exception', passed: error instanceof Error };
-        }
+          if (screen) {
+            const inverse = screen.inverse();
+            const nativePoints = [[200,200],[300,200],[300,300],[200,300]].map(([x,y]) => {
+              const point = svg.createSVGPoint(); point.x=x; point.y=y;
+              return point.matrixTransform(inverse);
+            });
+            const b = new DOMQuad(...nativePoints).getBounds();
+            nativeBox = {x:b.x,y:b.y,width:b.width,height:b.height};
+          } else {
+            // A zero-width viewport has no usable fallback; retained client
+            // coordinates are the existing documented missing-mapping policy.
+            nativeBox = boxes[0];
+          }
+        } catch (error) { nativeError = error.name; }
+        let actualBox, actualError;
+        try { actualBox = clientBoxToSvgBox(svg, boxes[0]); }
+        catch (error) { actualError = error.name; }
+        const singular = {
+          hostReportsInvertibleMatrix: Boolean(screen && screen.a * screen.d - screen.b * screen.c),
+          nativeError: nativeError ?? null,
+          passed: nativeError ? actualError === nativeError : !actualError &&
+            Object.keys(nativeBox).every(key => Object.is(actualBox[key], nativeBox[key])
+              || Math.abs(actualBox[key] - nativeBox[key]) < 0.0001)
+        };
         // Keep the public single-point API aligned with the box conversion.
         svg.style.transform = 'rotate(45deg)';
         const expectedPoint = new DOMPoint(220, 230).matrixTransform(svg.getScreenCTM().inverse());
         const point = svgPointFromClient(svg, { x: 220, y: 230 });
         outcomes.push({ name: 'single-point compatibility', passed:
           Math.abs(point.x - expectedPoint.x) < 0.0001 && Math.abs(point.y - expectedPoint.y) < 0.0001 });
-        outcomes.push({ name: 'noninvertible matrix is not approximated', ...singular });
+        outcomes.push({ name: 'native collapsed-surface mapping and failure policy', ...singular });
         return outcomes;
       }, new URL(modulePath, baseUrl).href);
       for (const result of results) assert(result.passed, JSON.stringify({ width, ...result }));
