@@ -370,17 +370,23 @@ function annotationFromExtractedAnchor(anchor: ExtractedAnchor, spec: DomAnnotat
 }
 
 export function svgPointFromClient(svg: SVGSVGElement, point: Point): Point {
+  return createClientToSvgMapper(svg)(point);
+}
+
+// Capture one host mapping for a whole rectangle. Re-reading getScreenCTM or
+// the viewport for each corner can combine different coordinate systems.
+function createClientToSvgMapper(svg: SVGSVGElement): (point: Point) => Point {
   if (typeof svg.createSVGPoint === 'function') {
     const svgPoint = svg.createSVGPoint();
-    svgPoint.x = point.x;
-    svgPoint.y = point.y;
     const matrix = svg.getScreenCTM?.();
 
     if (matrix) {
-      const transformed = svgPoint.matrixTransform(matrix.inverse());
-      return {
-        x: transformed.x,
-        y: transformed.y
+      const inverse = matrix.inverse();
+      return (point) => {
+        svgPoint.x = point.x;
+        svgPoint.y = point.y;
+        const transformed = svgPoint.matrixTransform(inverse);
+        return { x: transformed.x, y: transformed.y };
       };
     }
   }
@@ -390,29 +396,19 @@ export function svgPointFromClient(svg: SVGSVGElement, point: Point): Point {
 
   if (viewBox && rect.width > 0 && rect.height > 0) {
     const transform = svgClientTransform(svg, rect, viewBox);
-
-    return {
-      x: viewBox.x + (point.x - transform.x) / transform.scaleX,
-      y: viewBox.y + (point.y - transform.y) / transform.scaleY
-    };
+    const { x, y } = viewBox;
+    return (point) => ({
+      x: x + (point.x - transform.x) / transform.scaleX,
+      y: y + (point.y - transform.y) / transform.scaleY
+    });
   }
 
-  return point;
+  return (point) => point;
 }
 
+/** Axis-aligned enclosure of the client rectangle in SVG user coordinates. */
 export function clientBoxToSvgBox(svg: SVGSVGElement, box: Box): Box {
-  const topLeft = svgPointFromClient(svg, { x: box.x, y: box.y });
-  const bottomRight = svgPointFromClient(svg, {
-    x: box.x + box.width,
-    y: box.y + box.height
-  });
-
-  return normalizeBox({
-    x: topLeft.x,
-    y: topLeft.y,
-    width: bottomRight.x - topLeft.x,
-    height: bottomRight.y - topLeft.y
-  });
+  return boxFromTransformedCorners(box, createClientToSvgMapper(svg));
 }
 
 export function annotationFrameFromSvg(

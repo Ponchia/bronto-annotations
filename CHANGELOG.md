@@ -6,6 +6,23 @@ This project follows SemVer. Until the package reaches `1.0.0`, minor versions
 may include API changes while preserving the documented migration path whenever
 reasonable.
 
+## 0.9.2 - 2026-11-08
+
+### SVG coordinate conversion
+
+- Enclose all four client-rectangle corners when converting to SVG user units,
+  including rotated, skewed and reflected coordinate systems. Preserve fractional,
+  negative-dimension and degenerate rectangles.
+- Capture one screen mapping and inverse per box instead of mixing host reads
+  from different corners. Refresh that mapping on each later call.
+- Retain the single-point API, axis-aligned viewport fallback and host failure
+  behavior. An enclosure is not a reconstruction of an element's original shape;
+  non-invertible matrices are not replaced with apparently valid approximations.
+- Add native SVG matrix/DOMQuad browser coverage to the standard browser gate,
+  alongside independent affine-enclosure and mapping-lifetime regression tests.
+
+No public exports, type shapes, runtime dependencies or engine requirements change.
+
 ## 0.9.1 - 2026-11-07
 
 ### Host geometry and DOM measurement
