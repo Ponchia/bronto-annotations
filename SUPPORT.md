@@ -29,6 +29,13 @@ agreement attached to the open-source package.
 
 ## Share a real integration
 
+Use the [first-integration feedback form](https://github.com/Ponchia/bronto-annotations/issues/new?template=integration_feedback.yml)
+to report a successful first use, integration friction, or an attempt that did
+not reach a visible annotation. The
+[trial protocol](https://github.com/Ponchia/bronto-annotations/blob/main/docs/adoption-evidence.md)
+explains which outcomes are useful and distinguishes independent use from
+maintainer-run examples.
+
 An issue describing what worked, what needed configuration, and where the
 public guide was unclear is welcome. Include a public link only when you have
 permission to share it. Do not disclose private downstream applications.

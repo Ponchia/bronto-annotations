@@ -114,6 +114,21 @@ describe('public contribution and community routes', () => {
     }
   });
 
+  it('collects independent first-use evidence without asking for private code', () => {
+    const form = read('.github/ISSUE_TEMPLATE/integration_feedback.yml');
+    expect(form).toContain('id: integration');
+    expect(form).toContain('Independent application or library integration');
+    for (const id of ['surface', 'version', 'starting_point', 'first_success', 'manual', 'friction', 'result']) {
+      expect(form).toContain(`id: ${id}`);
+    }
+    const ids = [...form.matchAll(/^    id: (.+)$/gm)].map((match) => match[1]);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(form).toContain('Do not post customer data');
+    expect(read('SUPPORT.md')).toContain('template=integration_feedback.yml');
+    expect(read('docs/README.md')).toContain('(adoption-evidence.md)');
+    expect(read('docs/adoption-evidence.md')).toContain('not upstream adoption');
+  });
+
   it('offers documentation reports without demanding a code reproduction', () => {
     const form = read('.github/ISSUE_TEMPLATE/documentation.yml');
     expect(form).toMatch(/^name: .+/m);

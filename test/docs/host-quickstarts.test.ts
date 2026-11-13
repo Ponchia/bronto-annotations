@@ -5,6 +5,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { annotateReport } from './dom-report-example.js';
+import { annotateExistingSvg } from './svg-host-example.js';
 import { FlowNotes } from './react-flow-example.js';
 
 const flow = vi.hoisted(() => ({
@@ -21,10 +22,41 @@ const guide = () => read('../../docs/context-quickstart.md');
 
 describe('first-success host quickstarts', () => {
   it.each([
+    ['svg-host-example.ts', 'ts'],
     ['dom-report-example.ts', 'ts'],
     ['react-flow-example.tsx', 'tsx']
   ])('executes the exact %s snippet printed in the adapter chooser', (file, language) => {
     expect(guide()).toContain(`\`\`\`${language}\n${read(`./${file}`).trim()}\n\`\`\``);
+  });
+
+  it('anchors an existing SVG mark by measured geometry and reflects chart changes', () => {
+    document.body.innerHTML = '<div id="wrapper"><svg id="sales-chart" viewBox="0 0 600 320"><rect id="peak-mark" /></svg><div id="chart-notes"></div></div>';
+    const svg = document.querySelector<SVGSVGElement>('#sales-chart')!;
+    const mark = svg.querySelector<SVGGraphicsElement>('#peak-mark')!;
+    const overlay = document.querySelector<HTMLElement>('#chart-notes')!;
+    const currentBox = { x: 350, y: 100, width: 20, height: 80 };
+    mark.getBBox = vi.fn(() => ({ ...currentBox }) as DOMRect);
+
+    const first = annotateExistingSvg(svg, overlay);
+    expect(first.bounds).toEqual({ x: 0, y: 0, width: 600, height: 320 });
+    expect(first.annotations[0]?.annotation.anchor).toEqual({ type: 'box', box: currentBox });
+    expect(overlay.querySelectorAll('.pa-annotation')).toHaveLength(1);
+    expect(overlay.querySelector('svg')?.getAttribute('viewBox')).toBe('0 0 600 320');
+    expect(overlay.querySelector('.pa-annotation__title')?.textContent).toBe('Peak response');
+
+    currentBox.x = 420;
+    const next = annotateExistingSvg(svg, overlay);
+    expect(next.annotations[0]?.annotation.anchor).toEqual({ type: 'box', box: currentBox });
+    expect(overlay.querySelectorAll('svg')).toHaveLength(1);
+
+    currentBox.width = 0;
+    expect(() => annotateExistingSvg(svg, overlay)).toThrow('valid geometry');
+    currentBox.width = 20;
+
+    mark.getBBox = vi.fn(() => ({ ...currentBox, x: Number.NaN }) as DOMRect);
+    expect(() => annotateExistingSvg(svg, overlay)).toThrow('valid geometry');
+    mark.remove();
+    expect(() => annotateExistingSvg(svg, overlay)).toThrow('not found');
   });
 
   it('measures a DOM target relative to its report surface and remeasures changes', () => {
