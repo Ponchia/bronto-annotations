@@ -30,6 +30,7 @@ const required = [
   'index.html',
   'docs/index.html',
   'docs/context-quickstart.html',
+  'docs/adoption-evidence.html',
   'docs/getting-started.html',
   'docs/troubleshooting.html',
   'docs/core-guide.html',
@@ -83,6 +84,14 @@ const fragmentLinks = [];
 for (const rel of pages) {
   const doc = new JSDOM(await readFile(join(target, rel), 'utf8'));
   const html = doc.window.document;
+  if (rel === 'docs/index.html') {
+    const current = html.querySelector('[data-doc-group][aria-label="Current package guides"]');
+    const historical = html.querySelector('[data-doc-group][aria-label="Reference and historical evidence"]');
+    assert(current?.querySelector('a[href="./adoption-evidence.html"]'),
+      'Current first-use adoption guide must be discoverable among active guides');
+    assert(!historical?.querySelector('a[href="./adoption-evidence.html"]'),
+      'Current adoption guide must not be mislabeled as historical evidence');
+  }
   anchors.set(rel, new Set([...html.querySelectorAll('[id]')].map((node) => node.id)));
   assert(
     html.querySelector('html[lang="en"]'),

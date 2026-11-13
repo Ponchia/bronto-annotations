@@ -33,6 +33,7 @@ const exampleNames = Object.keys(exampleCatalog);
 const titles = {
   'getting-started': 'Start here: your first annotation',
   'context-quickstart': 'Choose your host',
+  'adoption-evidence': 'Measure first-use integration',
   'core-guide': 'Core layout and geometry',
   'presets-guide': 'Presets and d3-style migration',
   'react-guide': 'React rendering and editing',
@@ -62,6 +63,7 @@ const primaryDocs = Object.keys(titles).filter((name) =>
 const guideSummaries = {
   'getting-started': 'Install the package, run a complete example, and render your first note in SVG or React.',
   'context-quickstart': 'Choose the entry point that matches the chart, diagram, or DOM content you already render.',
+  'adoption-evidence': 'Measure integration effort and share independent adoption feedback, including failed attempts.',
   'core-guide': 'Automatic and manual placement, coordinate geometry, connector options, and layout diagnostics.',
   'presets-guide': 'Callout types and the migration bridge for d3-style annotation inputs.',
   'react-guide': 'Render SVG layers, measure notes, and commit host-owned editing changes.',
