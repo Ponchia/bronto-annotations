@@ -28,6 +28,7 @@ from 0.6.
 | What is the API contract? | [API reference](api-reference.md), [stability](api-stability.md), and [compatibility](compatibility.md) |
 | What should I check before shipping? | [Accessibility](accessibility.md), [performance](performance.md), and [placement quality](placement-quality.md) |
 | Which advanced paths are experimental? | [Worker recipe](worker-layout.md) and [pin placement](pin-placement.md) |
+| How can I evaluate first-use friction or share a real integration? | [Adoption evidence and trial protocol](adoption-evidence.md) |
 
 For help, use [Support](../SUPPORT.md). The source, public exports, tests, and
 package artifacts define the API contract if prose disagrees.

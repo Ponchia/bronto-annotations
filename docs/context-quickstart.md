@@ -27,18 +27,84 @@ Run demo commands from the repository root after the
 
 ## First note on a figure
 
-If your chart already supplies `viewBox` coordinates, use the
-[complete browser snippet](getting-started.md#use-it-in-a-browser-application).
-Start with a single point and the default placement. Then run the host-rendered
-[SVG example](../examples/svg-basic/) with:
+For an **existing SVG chart**, measure a real rendered mark rather than copying
+pixel coordinates into the annotation model. Give a chart mark the ID
+`peak-mark`, and place an empty overlay beside the chart SVG inside the same
+positioned container:
 
-```bash
-npm run example -- examples/svg-basic
+```html
+<div class="chart-with-notes">
+  <svg id="sales-chart" viewBox="0 0 600 320" aria-label="Sales chart">
+    <!-- Your chart's existing marks; for example: -->
+    <rect id="peak-mark" x="350" y="100" width="20" height="80" />
+  </svg>
+  <div id="chart-notes"></div>
+</div>
 ```
 
-You should see a teal chart line and separate annotation connectors. The host
-renders the chart; the package renders the note layer. Keep both layers in the
-same `viewBox`. No DOM adapter or generated-surface defaults are needed here.
+```css
+.chart-with-notes { position: relative; aspect-ratio: 600 / 320; }
+.chart-with-notes > svg,
+.chart-with-notes > #chart-notes { position: absolute; inset: 0; width: 100%; height: 100%; }
+#chart-notes { pointer-events: none; }
+```
+
+Call this browser module **after the chart has rendered**:
+
+```ts
+import { renderAnnotationsSvg, resolveAnnotationLayout } from '@ponchia/annotations';
+import { annotationFrameFromSvg, boxFromSvgElement } from '@ponchia/annotations/dom';
+import '@ponchia/annotations/bronto.css';
+
+export function annotateExistingSvg(svg: SVGSVGElement, overlay: HTMLElement) {
+  const mark = svg.querySelector<SVGGraphicsElement>('#peak-mark');
+  if (!mark) throw new Error('SVG target #peak-mark not found');
+
+  const box = boxFromSvgElement(mark, svg);
+  if (!box || ![box.x, box.y, box.width, box.height].every(Number.isFinite)) {
+    throw new Error('SVG target #peak-mark has no valid geometry');
+  }
+
+  const frame = annotationFrameFromSvg(svg);
+  const layout = resolveAnnotationLayout({
+    annotations: [{
+      id: 'peak',
+      anchor: { type: 'box', box },
+      note: { title: 'Peak response' }
+    }],
+    bounds: frame.bounds,
+    padding: 16
+  });
+
+  overlay.innerHTML = renderAnnotationsSvg(layout, {
+    title: 'Chart annotations',
+    preserveAspectRatio: frame.preserveAspectRatio,
+    markerIdPrefix: 'existing-chart-notes'
+  });
+  return layout;
+}
+```
+
+```ts
+annotateExistingSvg(
+  document.querySelector<SVGSVGElement>('#sales-chart')!,
+  document.querySelector<HTMLElement>('#chart-notes')!
+);
+```
+
+The SVG and overlay now use the same `viewBox`, aspect-ratio policy and
+geometry from `getBBox()`. The library does not need the chart's data or
+rendering framework. Re-run the function after the chart changes its marks or
+`viewBox`; a CSS-only resize preserving the same `viewBox` needs no re-solve.
+For real charts, keep the overlay outside any transformed SVG group and ensure
+the target is rendered and measurable; missing targets or invalid measurements
+are explicit errors instead of silently placing at the origin.
+
+Try the full [SVG example](../examples/svg-basic/) with
+`npm run example -- examples/svg-basic` for several notes and diagnostics.
+If you already have trusted host-supplied coordinates, the smaller
+[point-only example](getting-started.md#use-it-in-a-browser-application)
+does not require the DOM adapter.
 
 ## First note on a report
 

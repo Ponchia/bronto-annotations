@@ -155,6 +155,7 @@ const browser = await chromium.launch();
 try {
   await verifyRangeTransforms(browser);
   await verifySvgClientBoxes(browser, baseUrl);
+  await verifyExistingSvgFirstUse(browser, baseUrl);
   for (const viewport of viewports) {
     for (const example of examples) {
       const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } });
@@ -1699,4 +1700,64 @@ function formatBrowserErrors(consoleErrors, pageErrors) {
 
 function distance(point, other) {
   return Math.hypot(point.x - other.x, point.y - other.y);
+}
+
+
+// The documentation's real-mark quickstart must also work in a native SVG
+// browser, including transformed groups and a changed host viewBox. The normal
+// jsdom docs test cannot exercise browser getBBox/getScreenCTM behavior.
+async function verifyExistingSvgFirstUse(browser, baseUrl) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  try {
+    await page.goto(`${baseUrl}/examples/svg-basic/`, { waitUntil: 'networkidle' });
+    const result = await page.evaluate(async () => {
+      document.body.innerHTML = [
+        '<div style="position:relative;width:min(100%,600px);aspect-ratio:600/320">',
+        '<svg id="sales-chart" viewBox="0 0 600 320" style="position:absolute;inset:0;width:100%;height:100%">',
+        '<g transform="translate(30 20)"><rect id="peak-mark" x="350" y="80" width="20" height="40"></rect></g>',
+        '</svg><div id="chart-notes" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></div></div>'
+      ].join('');
+      const { annotateExistingSvg } = await import('/test/docs/svg-host-example.ts');
+      const host = document.querySelector('#sales-chart');
+      const mark = document.querySelector('#peak-mark');
+      const overlay = document.querySelector('#chart-notes');
+      const anchorBox = () => annotateExistingSvg(host, overlay).annotations[0].annotation.anchor.box;
+      const first = { ...anchorBox() };
+      const subject = overlay.querySelector('.pa-annotation__subject')?.getBoundingClientRect();
+      const target = mark.getBoundingClientRect();
+      const centerDelta = subject ? Math.hypot(
+        subject.x + subject.width / 2 - target.x - target.width / 2,
+        subject.y + subject.height / 2 - target.y - target.height / 2
+      ) : Number.POSITIVE_INFINITY;
+
+      mark.setAttribute('x', '400');
+      const moved = { ...anchorBox() };
+      host.setAttribute('viewBox', '0 0 720 420');
+      const changedBounds = annotateExistingSvg(host, overlay).bounds;
+      const changedViewBox = overlay.querySelector('svg')?.getAttribute('viewBox');
+      const layerCount = overlay.querySelectorAll('svg').length;
+      mark.remove();
+      let missing = false;
+      try { annotateExistingSvg(host, overlay); } catch (error) { missing = /not found/.test(String(error)); }
+
+      return { first, moved, changedBounds, changedViewBox, layerCount, missing, centerDelta };
+    });
+    for (const [name, expected] of [
+      ['first', { x: 380, y: 100, width: 20, height: 40 }],
+      ['moved', { x: 430, y: 100, width: 20, height: 40 }]
+    ]) {
+      for (const field of ['x', 'y', 'width', 'height']) {
+        assert.ok(Math.abs(result[name][field] - expected[field]) < 1e-6,
+          `${name}.${field}: expected ${expected[field]}, observed ${result[name][field]}`);
+      }
+    }
+    assert.deepEqual(result.changedBounds, { x: 0, y: 0, width: 720, height: 420 });
+    assert.equal(result.changedViewBox, '0 0 720 420');
+    assert.equal(result.layerCount, 1);
+    assert.equal(result.missing, true);
+    assert.ok(result.centerDelta < 1, `Measured SVG subject not aligned: ${result.centerDelta}px`);
+    console.log('Existing SVG first-use: native transformed mark, resize and missing target passed');
+  } finally {
+    await page.close();
+  }
 }

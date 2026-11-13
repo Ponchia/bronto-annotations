@@ -1,0 +1,78 @@
+name: First Integration Feedback
+description: Share what happened when you tried annotations in an existing chart, diagram, graph or report, even if no bug occurred.
+title: "[Integration]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We want to measure real first-use friction, including successful integrations.
+        Do not post customer data, credentials, private source or screenshots you cannot share.
+        Source examples and package versions may differ; report what you actually installed.
+        Reporting a trial does not imply that you have adopted the package in production.
+  - type: dropdown
+    id: integration
+    attributes:
+      label: What kind of use was this?
+      options:
+        - Independent application or library integration
+        - Maintainer or collaborator dogfood
+        - Exploratory evaluation
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Host surface
+      options:
+        - Existing SVG chart
+        - DOM/report
+        - React Flow
+        - Mermaid
+        - Vega/Vega-Lite
+        - D2
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Installed package version
+      description: Use the package version from your lockfile or package manager.
+      placeholder: 0.9.1
+    validations:
+      required: true
+  - type: textarea
+    id: starting_point
+    attributes:
+      label: What were you already rendering?
+      description: Host library and version, initial chart/diagram and target element. Please omit private data.
+      placeholder: React Flow 12, five nodes, annotate one node.
+    validations:
+      required: true
+  - type: input
+    id: first_success
+    attributes:
+      label: Time to first visible, correctly anchored annotation (optional)
+      description: Only share an actual measurement. Say "not reached" if the first note never worked.
+      placeholder: 15 minutes, or not reached
+  - type: dropdown
+    id: manual
+    attributes:
+      label: Did you need to position notes manually?
+      options:
+        - No
+        - Yes, for layout quality
+        - Yes, for editorial intent
+        - Not yet evaluated
+  - type: textarea
+    id: friction
+    attributes:
+      label: What required extra work or surprised you?
+      description: Coordinate transforms, readiness, overlays, styling, responsiveness, validation, missing helpers or anything else.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Outcome and missing pieces
+      description: Would you keep using it? What single change would make integration simpler? Public link or minimal reproduction optional.
