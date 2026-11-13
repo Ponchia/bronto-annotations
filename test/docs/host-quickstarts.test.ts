@@ -49,6 +49,10 @@ describe('first-success host quickstarts', () => {
     expect(next.annotations[0]?.annotation.anchor).toEqual({ type: 'box', box: currentBox });
     expect(overlay.querySelectorAll('svg')).toHaveLength(1);
 
+    currentBox.width = 0;
+    expect(() => annotateExistingSvg(svg, overlay)).toThrow('valid geometry');
+    currentBox.width = 20;
+
     mark.getBBox = vi.fn(() => ({ ...currentBox, x: Number.NaN }) as DOMRect);
     expect(() => annotateExistingSvg(svg, overlay)).toThrow('valid geometry');
     mark.remove();

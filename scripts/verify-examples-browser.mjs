@@ -1717,7 +1717,10 @@ async function verifyExistingSvgFirstUse(browser, baseUrl) {
         '<g transform="translate(30 20)"><rect id="peak-mark" x="350" y="80" width="20" height="40"></rect></g>',
         '</svg><div id="chart-notes" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></div></div>'
       ].join('');
-      const { annotateExistingSvg } = await import('/test/docs/svg-host-example.ts');
+      // Resolve from the served browser origin; this code executes inside
+      // Playwright page.evaluate, not as a Node import from this script's path.
+      const sourceUrl = new URL('/test/docs/svg-host-example.ts', window.location.origin);
+      const { annotateExistingSvg } = await import(sourceUrl.href);
       const host = document.querySelector('#sales-chart');
       const mark = document.querySelector('#peak-mark');
       const overlay = document.querySelector('#chart-notes');
@@ -1736,11 +1739,14 @@ async function verifyExistingSvgFirstUse(browser, baseUrl) {
       const changedBounds = annotateExistingSvg(host, overlay).bounds;
       const changedViewBox = overlay.querySelector('svg')?.getAttribute('viewBox');
       const layerCount = overlay.querySelectorAll('svg').length;
+      mark.setAttribute('width', '0');
+      let empty = false;
+      try { annotateExistingSvg(host, overlay); } catch (error) { empty = /valid geometry/.test(String(error)); }
       mark.remove();
       let missing = false;
       try { annotateExistingSvg(host, overlay); } catch (error) { missing = /not found/.test(String(error)); }
 
-      return { first, moved, changedBounds, changedViewBox, layerCount, missing, centerDelta };
+      return { first, moved, changedBounds, changedViewBox, layerCount, empty, missing, centerDelta };
     });
     for (const [name, expected] of [
       ['first', { x: 380, y: 100, width: 20, height: 40 }],
@@ -1754,6 +1760,7 @@ async function verifyExistingSvgFirstUse(browser, baseUrl) {
     assert.deepEqual(result.changedBounds, { x: 0, y: 0, width: 720, height: 420 });
     assert.equal(result.changedViewBox, '0 0 720 420');
     assert.equal(result.layerCount, 1);
+    assert.equal(result.empty, true);
     assert.equal(result.missing, true);
     assert.ok(result.centerDelta < 1, `Measured SVG subject not aligned: ${result.centerDelta}px`);
     console.log('Existing SVG first-use: native transformed mark, resize and missing target passed');

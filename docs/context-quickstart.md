@@ -61,7 +61,8 @@ export function annotateExistingSvg(svg: SVGSVGElement, overlay: HTMLElement) {
   if (!mark) throw new Error('SVG target #peak-mark not found');
 
   const box = boxFromSvgElement(mark, svg);
-  if (!box || ![box.x, box.y, box.width, box.height].every(Number.isFinite)) {
+  if (!box || box.width <= 0 || box.height <= 0
+    || ![box.x, box.y, box.width, box.height].every(Number.isFinite)) {
     throw new Error('SVG target #peak-mark has no valid geometry');
   }
 
