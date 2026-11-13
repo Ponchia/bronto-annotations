@@ -167,9 +167,10 @@
                   GEOMETRY</span
                 ><span id="plot-mode-label">COLLISION-AWARE</span>
               </div>
-              <div class="plot-actions">
+              <div class="plot-actions" role="group" aria-label="Chart comparison controls">
+                <button id="toggle-annotation-layer" type="button" aria-controls="annotation-overlay" aria-pressed="true">Show annotations</button>
                 <button id="toggle-placement" type="button" aria-controls="annotation-overlay" aria-pressed="false">Compare fixed offsets</button>
-                <span>Keep the same scene. Switch the placement method.</span>
+                <span>See the original chart, then compare placement methods. Hiding notes does not change the measured layout.</span>
               </div>
               <div class="chart-viewport" role="region" tabindex="0" aria-label="Annotation chart, horizontally scrollable on smaller screens">
                 <div class="chart-stage">

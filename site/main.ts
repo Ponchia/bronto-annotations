@@ -34,6 +34,7 @@ const sceneSourceCode = document.querySelector<HTMLElement>('#scene-source-code 
 const sceneLink = document.querySelector<HTMLInputElement>('#scene-link');
 const shareStatus = document.querySelector<HTMLElement>('#scene-link-status');
 const comparisonToggle = document.querySelector<HTMLButtonElement>('#toggle-placement');
+const annotationVisibilityToggle = document.querySelector<HTMLButtonElement>('#toggle-annotation-layer');
 const scenePresetButtons = [
   ...document.querySelectorAll<HTMLButtonElement>('[data-scene]'),
 ];
@@ -272,6 +273,14 @@ function restoreSceneHash(): boolean {
     : 'This scene link is invalid or uses an unsupported version. Default settings restored.';
   return true;
 }
+
+// This is a presentation-only before/after view. Preserve the computed
+// geometry, quality metrics, source export and shareable scene settings.
+annotationVisibilityToggle?.addEventListener('click', () => {
+  if (!overlay) return;
+  overlay.hidden = !overlay.hidden;
+  annotationVisibilityToggle.setAttribute('aria-pressed', String(!overlay.hidden));
+});
 
 comparisonToggle?.addEventListener('click', () => {
   if (!placementInput) return;

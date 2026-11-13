@@ -280,6 +280,27 @@ try {
     const automatic = await readMetrics();
     assert.equal(automatic.mode, 'automatic');
     assert.equal(automatic.noteCount, 3);
+
+    // Before/after is presentation-only: the original host chart remains
+    // visible and neither quality evidence nor the share URL is rewritten.
+    const annotationsToggle = home.locator('#toggle-annotation-layer');
+    const sceneLinkBefore = await home.locator('#scene-link').inputValue();
+    assert.equal(await annotationsToggle.getAttribute('aria-pressed'), 'true');
+    await annotationsToggle.click();
+    assert.equal(await annotationsToggle.getAttribute('aria-pressed'), 'false');
+    assert.equal(await overlay.isVisible(), false);
+    assert.equal(await home.locator('.plot-svg').isVisible(), true);
+    assert.deepEqual(await readMetrics(), automatic);
+    assert.equal(await home.locator('#scene-link').inputValue(), sceneLinkBefore);
+    await mode.selectOption('fixed');
+    assert.equal(await overlay.isVisible(), false,
+      'Changing the computed placement must not silently reveal annotations');
+    await mode.selectOption('automatic');
+    await annotationsToggle.click();
+    assert.equal(await annotationsToggle.getAttribute('aria-pressed'), 'true');
+    assert.equal(await overlay.isVisible(), true);
+    assert.deepEqual(await readMetrics(), automatic);
+    assert.equal(await home.locator('#scene-link').inputValue(), sceneLinkBefore);
     await mode.selectOption('fixed');
     const fixed = await readMetrics();
     assert.equal(fixed.mode, 'fixed');
