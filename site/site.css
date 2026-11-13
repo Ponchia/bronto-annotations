@@ -420,6 +420,9 @@ select:focus-visible {
   letter-spacing: 1px;
   fill: #90a0a5;
 }
+.annotation-overlay[hidden] {
+  display: none;
+}
 .annotation-overlay {
   position: absolute;
   z-index: 2;
