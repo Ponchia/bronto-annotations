@@ -50,3 +50,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Keep CodeQL init/analyze/upload on the same reviewed revision.
+    # Major actions upgrades stay separate; security alerts remain enabled.
+    groups:
+      actions:
+        update-types: [minor, patch]
+        patterns: ["*"]
