@@ -15,3 +15,17 @@ export function assertImmutableAction(workflow, action, label) {
       `${label}: ${action} must use a full immutable commit SHA`);
   }
 }
+
+/** Check our single block-style browser container against the locked tool.
+ * This is a static version/pin check; CI verifies the actual image metadata.
+ */
+export function assertMatchingPlaywrightImage(workflow, version, label) {
+  assert.match(version ?? '', /^\d+\.\d+\.\d+$/, `${label}: missing exact Playwright version`);
+  const images = [...workflow.matchAll(/^\s*image:\s*(.*?)\s*$/gm)]
+    .map((match) => match[1].replace(/\s+#.*$/, '').trim())
+    .map((value) => value.replace(/^(['"])(.*)\1$/, '$2'));
+  assert.equal(images.length, 1, `${label}: expected exactly one browser image`);
+  const match = /^mcr\.microsoft\.com\/playwright:v(\d+\.\d+\.\d+)-noble@sha256:[a-f0-9]{64}$/.exec(images[0]);
+  assert.ok(match, `${label}: require the official versioned image and immutable digest`);
+  assert.equal(match[1], version, `${label}: update Playwright and its browser image together`);
+}

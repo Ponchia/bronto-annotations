@@ -15,7 +15,6 @@ updates:
           - typescript
           - vite
           - vitest
-          - playwright
       optional-peers:
         update-types:
           - minor
@@ -27,6 +26,8 @@ updates:
           - mermaid
           - "@terrastruct/d2"
           - "@xyflow/react"
+    # Playwright stays a separate proposal: its exact version must be reviewed
+    # together with the digest-pinned cross-browser image, not a tooling group.
     # Major tooling updates remain separate from the Node 20-compatible
     # default verification stack. Mermaid 12, TypeScript 7, Vitest 5 and
     # jsdom 30 have isolated newer-runtime lanes; merging their versions into
@@ -50,3 +51,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Keep CodeQL init/analyze/upload on the same reviewed revision.
+    # Major actions upgrades stay separate; security alerts remain enabled.
+    groups:
+      actions:
+        update-types: [minor, patch]
+        patterns: ["*"]

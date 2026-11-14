@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
 import { writeLine } from './log.mjs';
-import { assertImmutableAction } from './workflow-action-pin.mjs';
+import { assertImmutableAction, assertMatchingPlaywrightImage } from './workflow-action-pin.mjs';
 
 const pkg = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 const lock = JSON.parse(await readFile(new URL('../package-lock.json', import.meta.url), 'utf8'));
@@ -28,6 +28,14 @@ const featureTemplate = await read('.github/ISSUE_TEMPLATE/feature_request.yml')
 const codeowners = await read('.github/CODEOWNERS');
 const securityAutomationDocs = await read('docs/security-automation.md');
 const pagesWorkflow = await read('.github/workflows/pages.yml');
+
+const crossBrowser = await read('.github/workflows/cross-browser.yml');
+const playwrightVersion = lock.packages?.['node_modules/playwright']?.version;
+assert.equal(pkg.devDependencies?.playwright, playwrightVersion,
+  'Playwright must be exact-pinned with its cross-browser image');
+assert.equal(lock.packages?.['node_modules/playwright-core']?.version, playwrightVersion,
+  'Playwright and playwright-core must stay aligned');
+assertMatchingPlaywrightImage(crossBrowser, playwrightVersion, 'Cross-browser qualification');
 
 assert.notEqual(pkg.version, '0.0.0', 'package version must be release-shaped, not 0.0.0');
 assert.equal(lock.version, pkg.version, 'package-lock root version must match package.json');
