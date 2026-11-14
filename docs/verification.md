@@ -31,6 +31,22 @@ Vega/Mermaid inputs in a real browser without network requests. See the
 historical readiness and release manifests remain available; passing them does
 not establish independent adoption or visual quality.
 
+## Coordinated browser-tool updates
+
+Playwright is exact-pinned in the development manifest and lockfile. Update
+`playwright`, `playwright-core` and the version/digest in
+`.github/workflows/cross-browser.yml` together. Read the digest from the official
+Microsoft registry; do not substitute a mutable image tag. Routine Dependabot
+proposals for Playwright stay separate from the general development-tool group
+so this coupling is visible during review.
+
+`npm run test:repo` checks the declared versions and immutable image reference
+without downloading browsers. The cross-browser job additionally verifies the
+installed package against the image's actual driver metadata before exercising
+Firefox and WebKit. Neither check may be removed to accept an update. All
+existing browser, screenshot and packed-consumer checks must pass against the
+new toolchain; a registry digest alone is not behavioral qualification.
+
 ## Examples And Checks
 
 ```bash

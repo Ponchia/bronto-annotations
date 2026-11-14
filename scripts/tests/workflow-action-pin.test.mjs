@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
-import { assertImmutableAction } from '../workflow-action-pin.mjs';
+import { assertImmutableAction, assertMatchingPlaywrightImage } from '../workflow-action-pin.mjs';
 
 const action = 'ossf/scorecard-action';
 const oldSha = '2d1146689b8cda280b9bc96326124645441f03bc';
@@ -40,3 +40,37 @@ for (const name of ['readiness-matrix.json', 'completion-audit.json']) {
     assert.ok(!/ossf\/scorecard-action@[a-f0-9]{40}/.test(text));
   });
 }
+
+const browserVersion = '1.65.0';
+const browserImage = `mcr.microsoft.com/playwright:v${browserVersion}-noble@sha256:${'a'.repeat(64)}`;
+const browserCheck = (text, version = browserVersion) =>
+  assertMatchingPlaywrightImage(text, version, 'cross-browser.yml');
+
+test('accepts a matching version and digest, including quoted workflow values', () => {
+  browserCheck(`      image: ${browserImage}`);
+  browserCheck(`      image: '${browserImage}' # reviewed registry digest`);
+  browserCheck(`      image: "${browserImage}"`);
+});
+test('rejects the package/image drift that broke cross-browser CI', () => {
+  assert.throws(() => browserCheck(`image: ${browserImage}`, '1.64.1'), /together/);
+});
+for (const image of [
+  `mcr.microsoft.com/playwright:v${browserVersion}-noble`,
+  `mcr.microsoft.com/playwright:latest@sha256:${'a'.repeat(64)}`,
+  browserImage.replace('mcr.microsoft.com', 'untrusted.example'),
+  browserImage.slice(0, -1),
+  `${browserImage} extra`,
+]) {
+  test(`rejects mutable or malformed browser reference ${image.slice(0, 70)}`, () => {
+    assert.throws(() => browserCheck(`image: ${image}`));
+  });
+}
+test('a commented or second image cannot satisfy the browser pin check', () => {
+  assert.throws(() => browserCheck(`# image: ${browserImage}`));
+  assert.throws(() => browserCheck(`image: ${browserImage}\nimage: untrusted:latest`));
+});
+test('unknown or floating package versions cannot pass the browser pin check', () => {
+  for (const version of ['', '^1.65.0', 'latest']) {
+    assert.throws(() => browserCheck(`image: ${browserImage}`, version));
+  }
+});
