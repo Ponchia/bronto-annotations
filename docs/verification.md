@@ -107,7 +107,14 @@ generated Vega marks, Mermaid nodes/edges, D2 shapes/routes, and React Flow node
 handles, or edges, verifies the style gallery covers every variant/tone/motion class, and
 captures screenshots in `.tmp/screenshots`. Packed-consumer browser
 smoke also captures clean-installed package screenshots in
-`.tmp-packed-screenshots`.
+`.tmp-packed-screenshots`. The public-site graph gate reuses each mounted
+Mermaid/React Flow page while resizing and transforming its host, then checks
+rendered note text for hidden, clipped or shrunk content and validates accessible
+note semantics. Four deliberate React Flow text faults (zero opacity, hidden
+visibility, clipped content and half-scale text) must be detected and rejected;
+their removal must restore the passing scene. This retains the useful failure
+controls from the older standalone graph-resize probe without adding a second
+full browser traversal to CI.
 
 After `npm run test:pack` and `npm run test:browser`, screenshot verification
 checks every expected desktop/mobile PNG for all examples plus the packed

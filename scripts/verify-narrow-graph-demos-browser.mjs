@@ -62,6 +62,27 @@ export async function verifyNarrowGraphDemos(page, baseUrl, output) {
           return r.x < note.x - 1 || r.y < note.y - 1 || r.right > note.right + 1 || r.bottom > note.bottom + 1;
         }).map(text => `${group.dataset.annotationId}: ${text.textContent}`);
       });
+      // Geometry alone cannot prove note readability: transparent, hidden,
+      // clipped or deliberately shrunken content can fit inside its bounds.
+      const unreadableText = groups.flatMap(group =>
+        [...group.querySelectorAll('.pa-annotation__title, .pa-annotation__body')].flatMap(element => {
+          const style = getComputedStyle(element);
+          const hidden = !element.checkVisibility({ opacityProperty: true, visibilityProperty: true });
+          const clipped = element instanceof HTMLElement
+            && ['hidden', 'clip'].includes(style.overflowY)
+            && element.scrollHeight > element.clientHeight + 1;
+          const matrix = style.transform === 'none' ? null : new DOMMatrixReadOnly(style.transform);
+          const shrunk = matrix && Math.min(Math.hypot(matrix.a, matrix.b), Math.hypot(matrix.c, matrix.d)) < 0.75;
+          return hidden || clipped || shrunk
+            ? [`${group.dataset.annotationId}: ${element.textContent?.trim()} (hidden=${hidden}, clipped=${clipped}, shrunk=${!!shrunk})`]
+            : [];
+        })
+      );
+      const inaccessibleNotes = groups.flatMap(group => {
+        const note = group.getAttribute('role') === 'note' ? group : group.querySelector('[role="note"]');
+        return note && note.getAttribute('tabindex') === '0' && note.getAttribute('aria-label')
+          ? [] : [group.dataset.annotationId];
+      });
       const overlaps = notes.flatMap((a, i) => notes.slice(i + 1).filter(b =>
         Math.min(a.right, b.right) - Math.max(a.x, b.x) > 0.5 &&
         Math.min(a.bottom, b.bottom) - Math.max(a.y, b.y) > 0.5
@@ -87,7 +108,7 @@ export async function verifyNarrowGraphDemos(page, baseUrl, output) {
       });
       const scroller = document.querySelector('.graph-scroll');
       return {
-        notes: notes.length, textOverflow, overlaps, alignment,
+        notes: notes.length, textOverflow, unreadableText, inaccessibleNotes, overlaps, alignment,
         quality: data?.quality, targetAlignment: data?.targetAlignment?.ok,
         documentWidth: document.documentElement.scrollWidth, viewportWidth: innerWidth,
         scrollWidth: scroller?.scrollWidth, clientWidth: scroller?.clientWidth,
@@ -104,6 +125,8 @@ export async function verifyNarrowGraphDemos(page, baseUrl, output) {
     check(evidence.documentWidth <= evidence.viewportWidth, `${label}: global horizontal overflow`);
     check(evidence.overlaps.length === 0, `${label}: rendered note overlap ${JSON.stringify(evidence.overlaps)}`);
     check(evidence.textOverflow.length === 0, `${label}: text escapes note boxes ${evidence.textOverflow.join(', ')}`);
+    check(evidence.unreadableText.length === 0, `${label}: unreadable note text ${evidence.unreadableText.join(', ')}`);
+    check(evidence.inaccessibleNotes.length === 0, `${label}: missing accessible note semantics ${evidence.inaccessibleNotes.join(', ')}`);
     check(evidence.alignment.every(target => target.distance !== null && target.distance < 2), `${label}: stale rendered anchor ${JSON.stringify(evidence.alignment)}`);
     if (name === 'react-flow-basic') check(evidence.viewportTransformActive, `${label}: graph viewport was not transformed`);
     results.push({ name, prefix, phase, width, ...evidence });
@@ -174,6 +197,29 @@ export async function verifyNarrowGraphDemos(page, baseUrl, output) {
         const after = await note.boundingBox();
         check(Math.abs(after.x - before.x - 8) < 1 && Math.abs(after.y - before.y + 8) < 1, `Scaled host drag did not preserve client-space movement: ${JSON.stringify({ before, after })}`);
         await inspect(name, 'host-transform-edit', 1200);
+      }
+      // Negative controls prove that readability checks reject invisible,
+      // clipped and scaled text rather than only validating bounding boxes.
+      if (name === 'react-flow-basic') {
+        for (const [fault, rule] of Object.entries({
+          transparent: '.pa-annotation__body { opacity: 0 !important; }',
+          hidden: '.pa-annotation__body { visibility: hidden !important; }',
+          clipped: '.pa-annotation__body { max-height: 1px !important; overflow: hidden !important; }',
+          shrunk: '.pa-annotation__body { transform: scale(0.5) !important; }'
+        })) {
+          const injected = await page.addStyleTag({ content: rule });
+          let rejected = false;
+          try {
+            await inspect(name, `negative-${fault}`, 1200);
+          } catch (error) {
+            if (!String(error).includes('unreadable note text')) throw error;
+            rejected = true;
+          } finally {
+            await injected.evaluate(element => element.remove());
+          }
+          check(rejected, `${name}: ${fault} text fault escaped browser checks`);
+        }
+        await inspect(name, 'negative-controls-restored', 1200);
       }
     }
     return results;
