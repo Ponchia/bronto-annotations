@@ -62,6 +62,7 @@ export function setupPlaygroundExports(root: Document = document): void {
         status.textContent = 'Clipboard unavailable. The text from your click is selected below. Copy it manually.';
       }
     });
+    button.hidden = false;
   }
 
   root.getElementById('download-scene-code')?.addEventListener('click', () => {

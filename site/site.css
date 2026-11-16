@@ -17,12 +17,15 @@
     sans-serif;
   color: var(--ink);
   background: var(--paper);
-  font-size: 16px;
+  font-size: 100%;
 }
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+[hidden] {
+  display: none !important;
 }
 html {
   scroll-behavior: smooth;
@@ -31,6 +34,7 @@ body {
   margin: 0;
   min-width: 0;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 a {
   color: inherit;
@@ -280,6 +284,13 @@ select:focus-visible {
   border: 1px solid #d3dcde;
   box-shadow: 0 22px 55px #1b30300c;
 }
+.playground-fallback {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: 24px;
+  overflow-wrap: anywhere;
+}
+.playground-fallback h3 { margin-top: 0; }
 .plot-panel {
   background: white;
   min-width: 0;
@@ -292,7 +303,7 @@ select:focus-visible {
   align-items: center;
   gap: 15px;
   color: #63767b;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   letter-spacing: 0.07em;
   font-weight: 720;
   font-family: ui-monospace, monospace;
@@ -460,7 +471,8 @@ select:focus-visible {
   border-right: 0;
 }
 .plot-metrics span {
-  font-size: 0.63rem;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
 }
 .plot-metrics strong {
   font-size: 1.3rem;
@@ -1421,7 +1433,7 @@ select:focus-visible {
   }
   .plot-header {
     padding: 14px 12px;
-    font-size: 0.54rem;
+    font-size: 0.75rem;
   }
   .plot-header > span:last-child {
     max-width: 130px;
@@ -1459,7 +1471,7 @@ select:focus-visible {
     padding: 18px 16px;
   }
   .plot-metrics span {
-    font-size: 0.52rem;
+    font-size: 0.75rem;
   }
   .plot-metrics strong {
     font-size: 1.1rem;

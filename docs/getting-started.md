@@ -7,8 +7,8 @@ displays it. This guide starts with one point in a new browser project.
 
 ## Choose your version
 
-The tutorial installs published **0.9.1**. The website and repository examples
-track `main`; use the [tagged API reference](https://github.com/Ponchia/bronto-annotations/blob/v0.9.1/docs/api-reference.md)
+The tutorial installs published **0.9.2**. The website and repository examples
+track `main`; use the [tagged API reference](https://github.com/Ponchia/bronto-annotations/blob/v0.9.2/docs/api-reference.md)
 for this release or the [0.7 guide](https://github.com/Ponchia/bronto-annotations/blob/v0.7.0/docs/getting-started.md)
 for older applications. Read the [migration guide](migration-0.7.md) when
 upgrading from 0.6.
@@ -21,7 +21,7 @@ Use Node 22.12.0 or newer (see [compatibility](compatibility.md)):
 mkdir annotation-demo
 cd annotation-demo
 npm init -y
-npm install @ponchia/annotations@0.9.1
+npm install @ponchia/annotations@0.9.2
 npm install --save-dev vite@8
 ```
 
@@ -87,6 +87,23 @@ the output without requiring BrontoUI, and the container scales to narrow screen
 Run `npx vite build` for a static build and `npx vite preview --host 127.0.0.1`
 to preview it. Vite transforms TypeScript; add a separate type check to your
 app's CI.
+
+## If the first run fails
+
+| What you see | What to check |
+| --- | --- |
+| `EBADENGINE` during installation | Run `node --version` in the same terminal. This Vite 8 tutorial needs Node 22.12.0 or newer; the package's own minimum is listed in [compatibility](compatibility.md). |
+| A registry or network error | Confirm the failed package name and your configured npm registry. Retry the failed install after access is restored; do not skip a failed install and continue to Vite. |
+| A blank page | Open the URL printed by Vite rather than opening `index.html` directly. Keep both files in the same directory and check the browser console for an import error. |
+| A note with no styling | Keep `import '@ponchia/annotations/bronto.css'` in `main.ts`. Vite processes this CSS import. |
+| A missing or shifted note on your own chart | First confirm that the standalone **Peak response** example works. Then match the chart's coordinates and layer bounds; see [troubleshooting](troubleshooting.md). |
+
+The website's Copy buttons fall back to selected text if clipboard access is
+unavailable. You can also select any command or code block directly, including
+when JavaScript is disabled. Run one shell command at a time so an install error
+remains visible.
+
+## Attach the result to a chart
 
 `renderAnnotationsSvg` returns a complete SVG element. For an existing chart,
 follow the [SVG example's layering pattern](../examples/svg-basic/) and match

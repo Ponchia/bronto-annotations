@@ -159,7 +159,12 @@
               animation. Change the conditions and watch it recalculate.
             </p>
           </div>
-          <div class="playground-layout">
+          <aside id="playground-fallback" class="playground-fallback" aria-labelledby="fallback-heading">
+            <h3 id="fallback-heading">The interactive playground has not loaded.</h3>
+            <p>The controls need JavaScript. You can still install the package and follow the complete browser or React example in the <a href="./docs/getting-started.html">first annotation guide</a>.</p>
+            <p>See <a href="#examples">screenshots from the runnable examples</a> below, or reload this page to try the playground again.</p>
+          </aside>
+          <div id="playground-layout" class="playground-layout" hidden>
             <div class="plot-panel">
               <div class="plot-header">
                 <span
@@ -582,13 +587,16 @@
                 data-copy="npm install @ponchia/annotations"
                 class="copy-button"
                 type="button"
+                hidden
               >
                 Copy
               </button>
             </div>
             <p>
-              Start with an existing SVG or a measured DOM box. The same model
-              supports every optional adapter.
+              New project? The <a href="./docs/getting-started.html">first annotation guide</a>
+              includes installation, both files to create, the command to run,
+              and the note you should see. Already have a chart or diagram?
+              Choose your host below.
             </p>
             <div class="quick-links">
               <a href="./docs/context-quickstart.html"
@@ -605,6 +613,7 @@
                 data-copy-target="starter-code"
                 class="copy-button"
                 type="button"
+                hidden
               >
                 Copy code
               </button>
