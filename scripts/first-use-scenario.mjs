@@ -38,7 +38,7 @@ export async function verifyFirstUse({ browser, siteUrl, evidence, stableInstall
         `Text enlarged to 200% must reflow at ${width}px`);
       assert(await page.locator('#placement-mode').isVisible());
       for (const scene of ['balanced', 'crowded']) {
-        assert.equal(await page.locator(`[data-scene="${scene}"]`).evaluate(button => {
+        assert.equal(await page.locator(`button[data-scene="${scene}"]`).evaluate(button => {
           const range = document.createRange();
           range.selectNodeContents(button);
           return range.getClientRects().length;
