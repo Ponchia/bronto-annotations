@@ -309,3 +309,14 @@ those behaviors are corrected in the published 0.7.0-rc.2 tarball, whose
 verified npm bytes also pass all 20 tests in a clean consumer. The immutable
 0.6.10 version is not retroactively modified. This test is stronger than checking export names,
 but covers only that historical test set, not all rendering or human usability.
+
+## Single-file first use
+
+`site/first-annotation.html` imports the version-pinned published package from
+jsDelivr. `test/site/first-note.test.ts` checks its release identities, fallback,
+accessible control wiring and screenshot hash. Build the site and run
+`scripts/check-first-note-browser.js` through the documented Playwright CLI
+`run-code --filename` flow on `/first-annotation/` to exercise title changes,
+hide/reset, the download and enlarged text at four widths. This verification
+needs network access to the CDN. It is not a screen-reader or physical-device
+qualification. The captured fixture uses synthetic chart data, never user data.

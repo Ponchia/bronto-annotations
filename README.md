@@ -3,6 +3,7 @@
 **Explain an existing chart, diagram, or interface without rebuilding it.**
 
 [Website](https://ponchia.github.io/bronto-annotations/) ·
+[First note](https://ponchia.github.io/bronto-annotations/first-annotation/) ·
 [Try placement](https://ponchia.github.io/bronto-annotations/#playground) ·
 [Try editing](https://ponchia.github.io/bronto-annotations/examples/react-incremental/) ·
 [Documentation](https://ponchia.github.io/bronto-annotations/docs/) ·
@@ -22,6 +23,13 @@ or through the optional React layer.
 It does not render charts or provide a design system. Your app owns graph
 layout, state, and persistence.
 For a single fixed label or tooltip, your chart library may already be enough.
+
+## Try it before installing
+
+Open the [one-note example](https://ponchia.github.io/bronto-annotations/first-annotation/),
+change its title, and hide or reset the note. Save the HTML to keep a working
+example. It uses published 0.9.2 from a version-pinned CDN, so the saved file
+needs JavaScript and an internet connection. No clone, build or account is needed.
 
 ## Install
 

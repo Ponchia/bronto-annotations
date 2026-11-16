@@ -5,6 +5,18 @@
 Your application supplies an anchor, the engine places a note, and a renderer
 displays it. This guide starts with one point in a new browser project.
 
+## Try one note before installing
+
+Open the [single-file example](https://ponchia.github.io/bronto-annotations/first-annotation/).
+Change its title, hide the annotation, and reset it. The page uses the published
+**0.9.2** package, not a source checkout. It keeps the chart, input field and
+state in the host; the library places the note and renders its SVG.
+
+Choose **Save this HTML file** to keep an editable copy. The file needs
+JavaScript and an internet connection to load the pinned package and stylesheet
+from jsDelivr. It uses no account, API key or analytics. The application setup
+below installs the package locally instead.
+
 ## Choose your version
 
 The tutorial installs published **0.9.2**. The website and repository examples

@@ -297,7 +297,9 @@ await cp(join(root, 'site/media'), join(out, 'media'), { recursive: true });
 await copyFile(join(root, 'site/docs.js'), join(out, 'docs.js'));
 await copyFile(join(root, 'scripts/demo-navigation.css'), join(out, 'demo-navigation.css'));
 
-const pages = [];
+await mkdir(join(out, 'first-annotation'), { recursive: true });
+await copyFile(join(root, 'site/first-annotation.html'), join(out, 'first-annotation/index.html'));
+const pages = ['first-annotation/'];
 for (const name of exampleNames) {
   await run('npx', [
     'vite',
@@ -590,6 +592,9 @@ async function stampVersions(directory) {
   }
 }
 await stampVersions(out);
+// The first-use page is also downloadable: its documentation links must work from file://.
+const firstUsePath = join(out, 'first-annotation/index.html');
+await writeFile(firstUsePath, (await readFile(firstUsePath, 'utf8')).replaceAll('href="../docs/', 'href="' + baseUrl + 'docs/'));
 // Add navigation last so every demo starts with the same return links, even
 // when its version notice lives inside a static main or beside a React root.
 for (const name of exampleNames) {

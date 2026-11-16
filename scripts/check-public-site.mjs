@@ -28,6 +28,7 @@ const examples = [
 ];
 const required = [
   'index.html',
+  'first-annotation/index.html',
   'docs/index.html',
   'docs/context-quickstart.html',
   'docs/adoption-evidence.html',
@@ -326,3 +327,14 @@ console.log(
     links +
     ' internal links (' + fragmentLinks.length + ' checked fragments), twelve compiled examples, docs search, social assets and a live engine playground.',
 );
+
+const firstUse = new JSDOM(await readFile(join(target, 'first-annotation/index.html'), 'utf8'));
+const firstUseHtml = firstUse.window.document;
+assert.equal(firstUseHtml.querySelector('main')?.dataset.packageVersion, '0.9.2');
+assert(firstUseHtml.querySelector('a[download="first-annotation.html"]'));
+assert(firstUseHtml.querySelector('#controls[hidden]'));
+assert(firstUseHtml.querySelector('noscript'));
+assert(firstUseHtml.querySelector('#status[role="status"]'));
+assert.match(firstUseHtml.querySelector('script[type="module"]').textContent, /annotations@0\.9\.2\/dist\/index\.js/);
+assert.doesNotMatch(firstUseHtml.documentElement.outerHTML, /cloudflareinsights/);
+firstUse.window.close();

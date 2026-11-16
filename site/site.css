@@ -1576,3 +1576,11 @@ select:focus-visible {
 [data-doc-card][hidden] {
   display: none;
 }
+
+.hero-art.hero-example { margin:0 0 0 auto; width:100%; padding:18px; transform:none; box-shadow:12px 12px 0 #e9eeed; }
+.hero-example > a { display:block; margin-block:18px; }
+.hero-example img { width:100%; border:1px solid var(--line); border-radius:6px; }
+.hero-example figcaption { font-size:.85rem; line-height:1.65; color:#4c5b63; }
+.hero-example figcaption a { text-underline-offset:.2em; }
+
+.hero-example > span { color:#526168; font-size:.75rem; }

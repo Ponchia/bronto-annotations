@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A complete, editable first annotation using the published Bronto Annotations package. One HTML file, no build step.">
+<title>Your first annotation — Bronto Annotations</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ponchia/annotations@0.9.2/dist/bronto.css">
+<style>
+*{box-sizing:border-box}html{color-scheme:light;background:#f6f7f6;color:#202a30;font:16px/1.6 system-ui,sans-serif}body{margin:0}main{overflow-wrap:anywhere;width:min(100% - 40px,780px);margin:32px auto 56px}a{color:#8d2449;text-underline-offset:3px}header p{max-width:62ch}h1{font-size:clamp(1.8rem,5vw,2.8rem);line-height:1.15;letter-spacing:-.04em;margin:18px 0 16px}h2{font-size:1.15rem}.meta{font-size:.9rem;color:#56636c}.stage{position:relative;height:340px;background:white;border:1px solid #cbd5d9;border-radius:8px;overflow:hidden}.stage>svg,.stage>#notes{position:absolute;inset:0;width:100%;height:100%}#notes>svg{width:100%;height:100%}.stage text{font-family:system-ui,sans-serif}.controls{display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin-top:20px}.field{flex:1 1 220px;min-width:0}label{display:block;margin-bottom:5px;font-weight:600}input,button{font:inherit;min-height:44px;border:1px solid #8b9aa2;border-radius:5px;background:white;color:#202a30;padding:8px 12px}input{width:100%;max-width:100%}button{cursor:pointer}button[aria-pressed=true]{background:#273d43;border-color:#273d43;color:white}:focus-visible{outline:3px solid #9d2850;outline-offset:3px}[hidden]{display:none!important}pre{overflow:auto;padding:16px;background:#e9efee;border-radius:6px;white-space:pre-wrap;overflow-wrap:anywhere}code{font-size:.9rem}.note-text{font-size:.95rem;margin-block:12px}.guide{border-top:1px solid #cbd5d9;margin-top:28px;padding-top:16px}.pa-annotation__title{font-size:15px}.pa-annotation__body{font-size:14px}.pa-annotation__connector,.pa-annotation__subject{stroke:#a32f53}.pa-annotation__note-box{fill:#fff;stroke:#cbd5d9}.pa-annotation__title{fill:#202a30}.pa-annotation__body{fill:#44515a}.pa-annotation__note-line{stroke:#a32f53}.status{font-size:.9rem;color:#44515a;min-height:1.6em}.error{color:#8f2032}footer{margin-top:32px;font-size:.9rem}@media(max-width:400px){main{width:calc(100% - 24px);margin-top:22px}.controls{align-items:stretch}.controls button{flex:1 1 auto}}
+.skip-link{position:absolute;top:-100px;left:12px;background:white;padding:12px;z-index:10}.skip-link:focus{top:12px}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to example</a>
+<main id="main" data-package-version="0.9.2">
+<header>
+<a href="https://ponchia.github.io/bronto-annotations/">← Bronto Annotations</a>
+<p class="meta">Published package 0.9.2 · one HTML file · no build step</p>
+<h1>Add an explanation to an existing chart.</h1>
+<p>The curve belongs to this page. Bronto Annotations places the note and its connector. Change the title, or hide the note to see the original chart.</p>
+</header>
+<div class="stage" id="stage">
+<svg id="chart" viewBox="0 0 640 340" role="img" aria-labelledby="chart-title chart-description"><title id="chart-title">A synthetic response-time chart</title><desc id="chart-description">Illustrative data with one point selected for an explanatory note. These are not production measurements.</desc><path d="M24 290H616M24 220H616M24 150H616" fill="none" stroke="#e3e8e9"/><path id="trend" d="M24 270L142 245L260 252L378 205L496 215L616 170" fill="none" stroke="#287c71" stroke-width="3"/><text x="24" y="320" fill="#56636c" font-size="13">Earlier</text><text id="later" x="570" y="320" fill="#56636c" font-size="13">Later</text></svg>
+<div id="notes" aria-hidden="true"></div>
+</div>
+<p id="note-summary" class="note-text">Selected point: deployment starts. An explanation can be attached here without changing the chart.</p>
+<div class="controls" id="controls" hidden>
+<div class="field"><label for="note-title">Note title</label><input id="note-title" value="Deployment starts" maxlength="28" autocomplete="off"></div>
+<button id="toggle" type="button" aria-pressed="true" aria-controls="notes">Show annotation</button>
+<button id="reset" type="button">Reset</button>
+</div>
+<p id="status" class="status" role="status">The chart is available without scripts. Enable JavaScript to add and edit its annotation.</p>
+<noscript><p>This interactive example needs JavaScript. The chart above is still available; the <a href="https://ponchia.github.io/bronto-annotations/docs/getting-started.html">first-annotation guide</a> explains the code.</p></noscript>
+<p><a id="save-example" href="./index.html" download="first-annotation.html">Save this HTML file</a> · <a href="https://ponchia.github.io/bronto-annotations/#playground">Explore the full placement playground</a></p>
+<section class="guide" aria-labelledby="use-heading"><h2 id="use-heading">Make it yours</h2>
+<p>Save this HTML file and edit the <code>annotation</code> object in its module script. Open it in a browser with an internet connection: the package and stylesheet load from a version-pinned CDN. No repository clone, framework or API key is needed.</p>
+<p>For an existing application, install the same release:</p>
+<pre tabindex="0" aria-label="Install the package"><code>npm install @ponchia/annotations@0.9.2</code></pre>
+<p>Your application owns the chart, the input field and the saved note state. The package handles the annotation geometry and SVG. Continue with the <a href="https://ponchia.github.io/bronto-annotations/docs/getting-started.html">complete application guide</a> or <a href="https://ponchia.github.io/bronto-annotations/docs/context-quickstart.html">choose an adapter for your existing surface</a>.</p></section>
+<footer>Synthetic example · <a href="https://github.com/Ponchia/bronto-annotations/blob/v0.9.2/LICENSE">MIT-licensed package</a> · <a href="https://github.com/Ponchia/bronto-annotations">Source</a></footer>
+</main>
+<script type="module">
+document.getElementById('save-example').href = location.href;
+const status = document.getElementById('status');
+status.textContent = 'Loading the published annotation package…';
+try {
+  const { resolveAnnotationLayout, renderAnnotationsSvg } = await import('https://cdn.jsdelivr.net/npm/@ponchia/annotations@0.9.2/dist/index.js');
+  const stage = document.getElementById('stage');
+  const chart = document.getElementById('chart');
+  const notes = document.getElementById('notes');
+  const title = document.getElementById('note-title');
+  const toggle = document.getElementById('toggle');
+  let visible = true;
+  function render() {
+    // Coordinates are CSS-pixel sized at each width, so notes remain readable.
+    const width = stage.clientWidth;
+    const points = [270,245,252,205,215,170].map((y,i) => ({x:24+i*(width-48)/5,y}));
+    chart.setAttribute('viewBox', `0 0 ${width} 340`);
+    document.getElementById('trend').setAttribute('d',points.map((p,i)=>`${i?'L':'M'}${p.x} ${p.y}`).join(''));
+    chart.querySelector('path').setAttribute('d',`M24 290H${width-24}M24 220H${width-24}M24 150H${width-24}`);
+    document.getElementById('later').setAttribute('x',String(width-66));
+    const annotation = {
+      id:'deployment',
+      anchor:{type:'point',point:points[3]},
+      note:{title:title.value.trim()||'Deployment starts',body:'An explanation attached to this point.',wrap:24},
+      subject:{type:'circle',radius:6},
+      connector:{type:'elbow'},
+      placement:{side:'top',offset:28}
+    };
+    const layout = resolveAnnotationLayout({annotations:[annotation],bounds:{x:0,y:0,width,height:340},padding:16});
+    notes.innerHTML = renderAnnotationsSvg(layout,{title:'An explanatory note',markerIdPrefix:'first-annotation'});
+    notes.hidden = !visible;
+    toggle.setAttribute('aria-pressed',String(visible));
+    document.getElementById('note-summary').textContent = visible ? `Annotation: ${annotation.note.title}. ${annotation.note.body}` : 'Original chart: the annotation is hidden. The underlying data is unchanged.';
+  }
+  title.addEventListener('input',()=>{render();status.textContent='The note title changed. The chart is unchanged.'});
+  toggle.addEventListener('click',()=>{visible=!visible;render();status.textContent=visible?'Annotation shown.':'Annotation hidden.'});
+  document.getElementById('reset').addEventListener('click',()=>{title.value='Deployment starts';visible=true;render();status.textContent='Example reset.'});
+  new ResizeObserver(render).observe(stage);
+  render();document.getElementById('controls').hidden=false;status.textContent='Ready. Change the title or toggle the annotation.';
+} catch(error) {
+  status.classList.add('error');
+  status.textContent='The annotation package could not load. This file needs an internet connection to jsDelivr. The chart is still visible; use the application guide for a locally installed package.';
+  console.error(error);
+}
+</script>
+</body>
+</html>

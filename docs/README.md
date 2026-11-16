@@ -3,6 +3,8 @@
 [Published guides](https://ponchia.github.io/bronto-annotations/docs/) ·
 [Runnable examples](../examples/README.md) · [Repository](../README.md)
 
+Try the [one-note browser example](https://ponchia.github.io/bronto-annotations/first-annotation/) before installing. Its downloadable HTML uses the pinned published package and needs an internet connection.
+
 ## Start here
 
 [Your first annotation](getting-started.md) walks from install to a visible note
