@@ -30,6 +30,9 @@ export async function verifyFirstUse({ browser, siteUrl, evidence, stableInstall
       // It enlarges rem-based UI text; pixel-sized SVG text, browser zoom and
       // physical-device font settings require separate evidence.
       await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+      // Reduced-motion CSS still has a 0.01ms transition. Wait for the actual
+      // computed size rather than sampling its first, unpainted frame.
+      await page.waitForFunction(() => getComputedStyle(document.documentElement).fontSize === '32px');
       assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).fontSize), '32px');
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0,
         `Text enlarged to 200% must reflow at ${width}px`);
@@ -60,6 +63,7 @@ export async function verifyFirstUse({ browser, siteUrl, evidence, stableInstall
       assert(await page.locator('#if-the-first-run-fails').isVisible());
       assert(await page.locator('pre').first().isVisible());
       await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+      await page.waitForFunction(() => getComputedStyle(document.documentElement).fontSize === '32px');
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0,
         'The first-use guide must remain readable without JavaScript and with enlarged text');
     } finally { await context.close(); }
