@@ -1,10 +1,11 @@
+// @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { JSDOM } from 'jsdom';
-const root = new URL('../../', import.meta.url);
-const html = readFileSync(new URL('site/first-annotation.html', root), 'utf8');
-const document = new JSDOM(html).window.document;
+import { URL as NodeURL } from 'node:url';
+const root = new NodeURL('../../', import.meta.url);
+const html = readFileSync(new NodeURL('site/first-annotation.html', root), 'utf8');
+const document = new DOMParser().parseFromString(html, 'text/html');
 describe('single-file first annotation', () => {
   it('uses one verified release for the module, stylesheet and install command', () => {
     const version = document.querySelector('main')?.getAttribute('data-package-version');
@@ -25,8 +26,8 @@ describe('single-file first annotation', () => {
     expect(html).toContain('internet connection');
   });
   it('retains a genuine screenshot with reproducible package identity', () => {
-    const evidence = JSON.parse(readFileSync(new URL('site/media/first-note.json', root), 'utf8'));
-    const bytes = readFileSync(new URL('site/media/first-note.png', root));
+    const evidence = JSON.parse(readFileSync(new NodeURL('site/media/first-note.json', root), 'utf8'));
+    const bytes = readFileSync(new NodeURL('site/media/first-note.png', root));
     expect(createHash('sha256').update(bytes).digest('hex')).toBe(evidence.sha256);
     expect(evidence.package).toBe('@ponchia/annotations');
     expect(evidence.version).toBe('0.9.2');
