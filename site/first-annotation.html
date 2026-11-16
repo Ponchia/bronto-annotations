@@ -5,11 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="A complete, editable first annotation using the published Bronto Annotations package. One HTML file, no build step.">
 <title>Your first annotation — Bronto Annotations</title>
+<link rel="canonical" href="https://ponchia.github.io/bronto-annotations/first-annotation/">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ponchia/annotations@0.9.2/dist/bronto.css">
 <style>
 *{box-sizing:border-box}html{color-scheme:light;background:#f6f7f6;color:#202a30;font:16px/1.6 system-ui,sans-serif}body{margin:0}main{overflow-wrap:anywhere;width:min(100% - 40px,780px);margin:32px auto 56px}a{color:#8d2449;text-underline-offset:3px}header p{max-width:62ch}h1{font-size:clamp(1.8rem,5vw,2.8rem);line-height:1.15;letter-spacing:-.04em;margin:18px 0 16px}h2{font-size:1.15rem}.meta{font-size:.9rem;color:#56636c}.stage{position:relative;height:340px;background:white;border:1px solid #cbd5d9;border-radius:8px;overflow:hidden}.stage>svg,.stage>#notes{position:absolute;inset:0;width:100%;height:100%}#notes>svg{width:100%;height:100%}.stage text{font-family:system-ui,sans-serif}.controls{display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin-top:20px}.field{flex:1 1 220px;min-width:0}label{display:block;margin-bottom:5px;font-weight:600}input,button{font:inherit;min-height:44px;border:1px solid #8b9aa2;border-radius:5px;background:white;color:#202a30;padding:8px 12px}input{width:100%;max-width:100%}button{cursor:pointer}button[aria-pressed=true]{background:#273d43;border-color:#273d43;color:white}:focus-visible{outline:3px solid #9d2850;outline-offset:3px}[hidden]{display:none!important}pre{overflow:auto;padding:16px;background:#e9efee;border-radius:6px;white-space:pre-wrap;overflow-wrap:anywhere}code{font-size:.9rem}.note-text{font-size:.95rem;margin-block:12px}.guide{border-top:1px solid #cbd5d9;margin-top:28px;padding-top:16px}.pa-annotation__title{font-size:15px}.pa-annotation__body{font-size:14px}.pa-annotation__connector,.pa-annotation__subject{stroke:#a32f53}.pa-annotation__note-box{fill:#fff;stroke:#cbd5d9}.pa-annotation__title{fill:#202a30}.pa-annotation__body{fill:#44515a}.pa-annotation__note-line{stroke:#a32f53}.status{font-size:.9rem;color:#44515a;min-height:1.6em}.error{color:#8f2032}footer{margin-top:32px;font-size:.9rem}@media(max-width:400px){main{width:calc(100% - 24px);margin-top:22px}.controls{align-items:stretch}.controls button{flex:1 1 auto}}
 .skip-link{position:absolute;top:-100px;left:12px;background:white;padding:12px;z-index:10}.skip-link:focus{top:12px}
+.chart-labels{position:absolute;left:24px;right:24px;bottom:14px;display:flex;justify-content:space-between;gap:12px;color:#56636c;font-size:.85rem;line-height:1.5}
 </style>
 </head>
 <body>
@@ -22,8 +24,9 @@
 <p>The curve belongs to this page. Bronto Annotations places the note and its connector. Change the title, or hide the note to see the original chart.</p>
 </header>
 <div class="stage" id="stage">
-<svg id="chart" viewBox="0 0 640 340" role="img" aria-labelledby="chart-title chart-description"><title id="chart-title">A synthetic response-time chart</title><desc id="chart-description">Illustrative data with one point selected for an explanatory note. These are not production measurements.</desc><path d="M24 290H616M24 220H616M24 150H616" fill="none" stroke="#e3e8e9"/><path id="trend" d="M24 270L142 245L260 252L378 205L496 215L616 170" fill="none" stroke="#287c71" stroke-width="3"/><text x="24" y="320" fill="#56636c" font-size="13">Earlier</text><text id="later" x="570" y="320" fill="#56636c" font-size="13">Later</text></svg>
+<svg id="chart" viewBox="0 0 640 340" role="img" aria-labelledby="chart-title chart-description"><title id="chart-title">A synthetic response-time chart</title><desc id="chart-description">Illustrative data with one point selected for an explanatory note. These are not production measurements.</desc><path d="M24 290H616M24 220H616M24 150H616" fill="none" stroke="#e3e8e9"/><path id="trend" d="M24 270L142 245L260 252L378 205L496 215L616 170" fill="none" stroke="#287c71" stroke-width="3"/></svg>
 <div id="notes" aria-hidden="true"></div>
+<div class="chart-labels" aria-hidden="true"><span>Earlier</span><span>Later</span></div>
 </div>
 <p id="note-summary" class="note-text">Selected point: deployment starts. An explanation can be attached here without changing the chart.</p>
 <div class="controls" id="controls" hidden>
@@ -60,7 +63,6 @@ try {
     chart.setAttribute('viewBox', `0 0 ${width} 340`);
     document.getElementById('trend').setAttribute('d',points.map((p,i)=>`${i?'L':'M'}${p.x} ${p.y}`).join(''));
     chart.querySelector('path').setAttribute('d',`M24 290H${width-24}M24 220H${width-24}M24 150H${width-24}`);
-    document.getElementById('later').setAttribute('x',String(width-66));
     const annotation = {
       id:'deployment',
       anchor:{type:'point',point:points[3]},

@@ -19,6 +19,9 @@ describe('single-file first annotation', () => {
     expect(document.querySelector('#controls')?.hasAttribute('hidden')).toBe(true);
     expect(document.querySelector('noscript')?.textContent).toContain('first-annotation guide');
     expect(document.querySelector('#status')?.getAttribute('role')).toBe('status');
+    expect(document.querySelector('svg text')).toBeNull();
+    expect(document.querySelector('.chart-labels')?.textContent).toContain('Earlier');
+    expect(document.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://ponchia.github.io/bronto-annotations/first-annotation/');
     expect(document.querySelector('#note-title')?.getAttribute('maxlength')).toBe('28');
     expect(document.querySelector('#save-example')?.getAttribute('download')).toBe('first-annotation.html');
     expect(document.querySelector('#toggle')?.getAttribute('aria-pressed')).toBe('true');
