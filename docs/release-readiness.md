@@ -6,7 +6,27 @@ suite do not certify every host integration or physical input device.
 
 ## Choose the matching package
 
-The confirmed stable release is **0.9.1**. Install its verified npm archive:
+The confirmed stable release is **0.9.2**. Install the published package:
+
+```bash
+npm install @ponchia/annotations@0.9.2
+```
+
+Use the [0.9.2 API reference](https://github.com/Ponchia/bronto-annotations/blob/v0.9.2/docs/api-reference.md)
+for the matching release. The npm registry metadata identifies source commit
+`93c5d7594459813100e1a94e7264ed34bf386453` and archive integrity
+`sha512-5UNUFvQ780mD2zYJi55+GKxx51BRtNa6ij7m5VYAmoT6rcYrPV5rHXoMgv5pFtsc6kr3Kg29jiovCzZghEyAKw==`.
+
+This registry identity does not establish acceptance for every integration,
+physical device or assistive technology. Public pages distinguish the source
+`package.json` version from the confirmed publication record in
+`site/release-status.json`; docs and demos follow `main` and may be newer than
+the registry package. Follow [the release runbook](release.md) for publication
+and guarded recovery. Earlier archive evidence remains unchanged below.
+
+## Historical 0.9.1 publication evidence
+
+The earlier stable release **0.9.1** was verified as recorded below:
 
 ```bash
 npm install @ponchia/annotations@0.9.1
