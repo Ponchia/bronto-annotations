@@ -21,6 +21,7 @@ import { JSDOM } from 'jsdom';
 import createDOMPurify from 'dompurify';
 import { injectReleaseNotice, siteReleaseStatus } from './site-release.mjs';
 import { injectDemoNavigation } from './demo-navigation.mjs';
+import { injectDemoMetadata } from './demo-metadata.mjs';
 
 const exec = promisify(execFile);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -595,12 +596,13 @@ await stampVersions(out);
 // The first-use page is also downloadable: its documentation links must work from file://.
 const firstUsePath = join(out, 'first-annotation/index.html');
 await writeFile(firstUsePath, (await readFile(firstUsePath, 'utf8')).replaceAll('href="../docs/', 'href="' + baseUrl + 'docs/'));
-// Add navigation last so every demo starts with the same return links, even
-// when its version notice lives inside a static main or beside a React root.
+// Add publication metadata and navigation after compilation; independent
+// example sources keep their own layout and portable hosting contract.
 for (const name of exampleNames) {
   const demoPath = join(out, 'examples', name, 'index.html');
   const demoHtml = await readFile(demoPath, 'utf8');
-  await writeFile(demoPath, injectDemoNavigation(demoHtml, exampleCatalog[name]));
+  const metadata = injectDemoMetadata(demoHtml, exampleCatalog[name], baseUrl + 'examples/' + name + '/');
+  await writeFile(demoPath, injectDemoNavigation(metadata, exampleCatalog[name]));
 }
 await writeFile(join(out, 'release-status.json'), JSON.stringify(releaseStatus, null, 2) + '\n');
 console.log(
