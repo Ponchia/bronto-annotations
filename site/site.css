@@ -456,7 +456,7 @@ select:focus-visible {
 .plot-metrics {
   border-top: 1px solid #e6ebec;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
   gap: 0;
   padding: 19px 14px;
 }
@@ -502,11 +502,13 @@ select:focus-visible {
   margin-bottom: 11px;
 }
 .scene-preset-options {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 .scene-preset-options button {
+  flex: 1 1 auto;
+  overflow-wrap: normal;
   cursor: pointer;
   font: inherit;
   font-size: 0.74rem;
@@ -714,9 +716,12 @@ select:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 11px;
 }
 .control-block output {
+  flex-shrink: 0;
+  white-space: nowrap;
   font-family: ui-monospace, monospace;
   color: var(--accent-dark);
 }
@@ -1452,7 +1457,6 @@ select:focus-visible {
     line-height: 1.5;
   }
   .plot-metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 15px 2px;
     row-gap: 13px;
   }

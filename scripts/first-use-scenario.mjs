@@ -37,6 +37,18 @@ export async function verifyFirstUse({ browser, siteUrl, evidence, stableInstall
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0,
         `Text enlarged to 200% must reflow at ${width}px`);
       assert(await page.locator('#placement-mode').isVisible());
+      for (const scene of ['balanced', 'crowded']) {
+        assert.equal(await page.locator(`[data-scene="${scene}"]`).evaluate(button => {
+          const range = document.createRange();
+          range.selectNodeContents(button);
+          return range.getClientRects().length;
+        }), 1, 'Single-word scene labels must stay intact with enlarged text');
+      }
+      assert.equal(await page.locator('#obstacle-display').evaluate(output => {
+        const range = document.createRange();
+        range.selectNodeContents(output);
+        return range.getClientRects().length;
+      }), 1, 'The obstacle width must remain one readable number');
       await page.locator('#placement-mode').selectOption('fixed');
       assert.equal(await page.locator('#annotation-overlay').getAttribute('data-mode'), 'fixed');
       await page.locator('#playground').screenshot({ path: resolve(evidence, `text-200-${width}.png`) });
