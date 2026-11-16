@@ -90,13 +90,21 @@ app's CI.
 
 ## If the first run fails
 
-| What you see | What to check |
-| --- | --- |
-| `EBADENGINE` during installation | Run `node --version` in the same terminal. This Vite 8 tutorial needs Node 22.12.0 or newer; the package's own minimum is listed in [compatibility](compatibility.md). |
-| A registry or network error | Confirm the failed package name and your configured npm registry. Retry the failed install after access is restored; do not skip a failed install and continue to Vite. |
-| A blank page | Open the URL printed by Vite rather than opening `index.html` directly. Keep both files in the same directory and check the browser console for an import error. |
-| A note with no styling | Keep `import '@ponchia/annotations/bronto.css'` in `main.ts`. Vite processes this CSS import. |
-| A missing or shifted note on your own chart | First confirm that the standalone **Peak response** example works. Then match the chart's coordinates and layer bounds; see [troubleshooting](troubleshooting.md). |
+- **`EBADENGINE` during installation:** run `node --version` in the same
+  terminal. This Vite 8 tutorial needs Node 22.12.0 or newer; the package's own
+  minimum is listed in [compatibility](compatibility.md).
+- **A registry or network error:** confirm the failed package name and your
+  configured npm registry. Retry the failed install after access is restored;
+  do not skip a failed install and continue to Vite.
+- **A blank page:** open the URL printed by Vite rather than opening
+  `index.html` directly. Keep both files in the same directory and check the
+  browser console for an import error.
+- **A note with no styling:** keep
+  `import '@ponchia/annotations/bronto.css'` in `main.ts`. Vite processes this
+  CSS import.
+- **A missing or shifted note on your own chart:** first confirm that the
+  standalone **Peak response** example works. Then match the chart's coordinates
+  and layer bounds; see [troubleshooting](troubleshooting.md).
 
 The website's Copy buttons fall back to selected text if clipboard access is
 unavailable. You can also select any command or code block directly, including
