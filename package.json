@@ -190,7 +190,7 @@
     "@types/node": "^26.0.0",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "@xyflow/react": "^12.11.0",
+    "@xyflow/react": "^13.0.1",
     "dompurify": "3.4.17",
     "fast-check": "4.10.2",
     "jsdom": "^29.1.1",
