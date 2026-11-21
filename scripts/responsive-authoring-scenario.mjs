@@ -205,6 +205,58 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
     check(await inputs() === stable && await select() === 'signal', 'Invalid import preserves data and selection');
     await page.locator('.annotation-source summary').click();
 
+    // Creating a note is an explicit selection change. Do not keep editing
+    // the older note or silently commit its unapplied text.
+    const beforeCreate = await inputs();
+    const originalNotes = JSON.parse(beforeCreate);
+    await page.locator('#text-editor-title').fill('Unapplied title before creating');
+    await page.locator('#text-editor-body').fill('An old draft that must not be committed.');
+    await page.locator('#append-note').click();
+    await page.waitForFunction(count => document.querySelectorAll('.note-list li').length === count,
+      originalNotes.length + 1);
+    const createdInputs = await inputs();
+    const createdNotes = JSON.parse(createdInputs);
+    const addedNote = createdNotes.at(-1);
+    check(!originalNotes.some(note => note.id === addedNote.id), 'Add creates a fresh note ID');
+    check(await select() === addedNote.id, 'Add annotation selects the newly created note');
+    check(await page.locator('.note-list button[aria-pressed="true"]').getAttribute('data-note-id') === addedNote.id,
+      'The reading list selects the newly created note');
+    await page.waitForFunction(() => document.activeElement?.id === 'text-editor-title');
+    check(await page.locator('#text-editor-title').inputValue() === addedNote.note.title
+      && await page.locator('#text-editor-body').inputValue() === addedNote.note.body,
+    'Selecting the new note replaces the previous unapplied draft with its authored text');
+    check(JSON.stringify(createdNotes.slice(0, -1)) === JSON.stringify(originalNotes),
+      'Adding a note must not commit or change the previous note draft');
+
+    await page.locator('#text-editor-title').fill('My newly added note');
+    await page.locator('#apply-note-text').click();
+    await page.waitForFunction(id => {
+      const notes = JSON.parse(document.querySelector('#annotation-json').textContent);
+      return notes.find(note => note.id === id)?.note.title === 'My newly added note';
+    }, addedNote.id);
+    const editedCreatedInputs = await inputs();
+    check(JSON.stringify(JSON.parse(editedCreatedInputs).slice(0, -1)) === JSON.stringify(originalNotes),
+      'Applying the new note title must leave all older notes unchanged');
+    await noOverflow('added note ' + width);
+    await page.locator('.note-text-editor').screenshot({ path: screenshotsDir + '/' + width + '-added-note.png' });
+
+    await page.locator('#undo-edit').click();
+    await page.waitForFunction(expected => document.querySelector('#annotation-json').textContent === expected,
+      createdInputs);
+    check(await select() === addedNote.id, 'Undoing new text keeps the added note selected');
+    await page.locator('#undo-edit').click();
+    await page.waitForFunction(expected => document.querySelector('#annotation-json').textContent === expected,
+      beforeCreate);
+    check(await select() === originalNotes[0].id, 'Undoing Add recovers the first remaining note');
+    await page.locator('#redo-edit').click();
+    await page.waitForFunction(expected => document.querySelector('#annotation-json').textContent === expected,
+      createdInputs);
+    check(await select() === originalNotes[0].id, 'Redoing Add does not resurrect the removed selection');
+    await page.locator('#redo-edit').click();
+    await page.waitForFunction(expected => document.querySelector('#annotation-json').textContent === expected,
+      editedCreatedInputs);
+    check(await select() === originalNotes[0].id, 'Redoing new text preserves the recovered selection');
+
     // Fresh host policy: ten deliberately overlapping notes, long text,
     // arbitrary IDs, a hidden high-priority note and a selected low priority.
     await page.reload({ waitUntil: 'networkidle' });
@@ -226,6 +278,19 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
         && element.scrollWidth <= element.clientWidth + 1)), 'Crowded note bodies must remain visible and unclipped');
     await noOverflow(`crowded ${width}`);
     await page.locator('.note-list').screenshot({ path: `${screenshotsDir}/${width}-crowded.png` });
+    const beforeBlockedAdd = await inputs();
+    const blockedSelection = await select();
+    const blockedChanges = await page.evaluate(() => window.__annotationsExample.changes);
+    await page.locator('#text-editor-title').fill('Keep my draft at the note limit');
+    check(await page.locator('#append-note').isDisabled(), 'Add is unavailable at the note limit');
+    await page.locator('#append-note').evaluate(button => button.click());
+    check(await inputs() === beforeBlockedAdd && await select() === blockedSelection
+      && await page.evaluate(() => window.__annotationsExample.changes) === blockedChanges,
+    'A blocked Add must not change authored state, selection or history');
+    check(await page.locator('#text-editor-title').inputValue() === 'Keep my draft at the note limit'
+      && await page.locator('#text-editor-title').evaluate(el => el === document.activeElement),
+    'A blocked Add preserves the unapplied draft and its focus');
+
     await page.locator('#remove-note').click();
     await page.waitForFunction(() => document.querySelector('#text-editor-note')?.value === '__proto__');
     check(await page.locator('.note-list button[aria-pressed="true"]').getAttribute('data-note-id') === '__proto__', 'Removal recovers list and editor selection');
@@ -239,6 +304,6 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
     await noOverflow(`replacement ${width}`);
   }
   check(errors.length === 0, `Browser errors: ${errors.join('\n')}`);
-  return { passed: true, widths: [1200, 390], checks: 'full text, crowded fallback, selection, keyboard edit/undo/redo, drag, invalid import, recovery, overflow',
+  return { passed: true, widths: [1200, 390], checks: 'full text, crowded fallback, selection, create/edit/undo/redo, blocked add, keyboard edit/undo/redo, drag, invalid import, recovery, overflow',
     acceptance: 'Automated Chromium viewport checks; screen reader and physical device acceptance remain unperformed.' };
 }
