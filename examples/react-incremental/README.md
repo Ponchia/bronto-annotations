@@ -37,6 +37,12 @@ and focuses the stage directly; **Back to selected note** restores list focus. Y
 persists while editing and resizing. Fixed diagram boxes may clip long text;
 the list is the reading surface for the complete authored text.
 
+Text drafts survive moving the same note or its anchor. **Apply text** commits
+them; **Discard draft** restores the current note's text without a history entry.
+The status below the fields identifies unapplied text. Selecting another note,
+importing different text, or undoing a text edit loads the current authored text;
+this small example does not keep drafts for multiple selections.
+
 Drag a note handle, use Move final anchor, edit a note title and apply it, then
 Undo and Redo. Copy the current JSON and load it back. Invalid JSON must leave
 the current state untouched. Presentation and selection changes do not create

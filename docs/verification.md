@@ -24,14 +24,15 @@ base or unreadable Git state fails instead of producing a clean verdict.
 | --- | --- |
 | Markdown guides and top-level Markdown | Documentation snippets, public site and hygiene |
 | Public site or examples | Fast source checks, public site and hygiene |
-| Source or test code and fixtures | Fast source checks, placement quality, example browsers and hygiene |
+| Vitest test files (`test/**/*.test.ts` or `.test.tsx`, outside `test/fixtures/`) | Fast source checks and hygiene |
+| Source, shared test helpers and fixtures | Fast source checks, placement quality, example browsers and hygiene |
 | Package, lockfile, tooling, configuration, unknown paths or removals | Complete `npm run check` |
 
-Combined changes combine checks without duplicates. Renames include their old
-and new paths, so a removal cannot silently narrow the plan. Narrow selections
-build once, then use the existing byte-verified build reuse; they do not cache
-test verdicts. Execution stops at the first failing command and prints each
-command's duration.
+Combined changes combine checks without duplicates. Paths use a stable order
+independent of the host locale. Renames include their old and new paths, so a
+removal cannot silently narrow the plan. Narrow selections build once, then use
+the existing byte-verified build reuse; they do not cache test verdicts.
+Execution stops at the first failing command and prints each command's duration.
 
 Inspect the plan before using `--run`; source and site checks can launch
 browsers, and a full fallback can be expensive. Follow your machine's resource

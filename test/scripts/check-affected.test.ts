@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 describe('affected verification planning', () => {
-  it('does not miss committed, staged, unstaged or untracked changes', () => {
+  it('collects committed, staged, unstaged and untracked changes in ordinal path order', () => {
     const { root, git, write } = fixture();
     write('README.md', 'committed\n');
     git('add', 'README.md');
@@ -37,10 +37,12 @@ describe('affected verification planning', () => {
     git('add', 'src/core/model.ts');
     write('site/index.html', 'unstaged\n');
     write('docs/a space\nand newline.md', 'new\n');
+    write('docs/Z-uppercase.md', 'new\n');
     const result = readChanges(root, 'base');
     expect(result.changes).toEqual([
-      { path: 'docs/a space\nand newline.md', status: '?' },
       { path: 'README.md', status: 'M' },
+      { path: 'docs/Z-uppercase.md', status: '?' },
+      { path: 'docs/a space\nand newline.md', status: '?' },
       { path: 'site/index.html', status: 'M' },
       { path: 'src/core/model.ts', status: 'M' }
     ]);
@@ -84,15 +86,39 @@ describe('affected verification planning', () => {
     const combined = planChecks([
       { path: 'site/main.ts', status: 'M' },
       { path: 'src/core/placement.ts', status: 'M' },
-      { path: 'README.md', status: 'M' }
+      { path: 'README.md', status: 'M' },
+      { path: 'test/scripts/check-affected.test.ts', status: 'M' }
     ]);
     expect(combined.commands).toEqual(['build', 'check:fast', 'test:quality', 'test:browser', 'test:site', 'test:hygiene']);
     expect(combined.qualification).toContain('exact proposed revision');
     expect(combined.deferred.join(' ')).toContain('Other full-check stages');
   });
 
+  it('uses fast checks for exact Vitest test files and retains source checks when combined', () => {
+    for (const change of [
+      { path: 'test/model.test.ts', status: 'A' },
+      { path: 'test/scripts/check-affected.test.ts', status: 'M' },
+      { path: 'test/react/note.test.tsx', status: '?' }
+    ]) {
+      expect(planChecks([change]).commands).toEqual(['build', 'check:fast', 'test:hygiene']);
+      expect(planChecks([change, { path: 'src/core/placement.ts', status: 'M' }]).commands)
+        .toEqual(['build', 'check:fast', 'test:quality', 'test:browser', 'test:hygiene']);
+    }
+  });
+
+  it('keeps fixtures, shared helpers and non-ordinary test changes conservative', () => {
+    for (const path of ['test/fixtures/component.test.ts', 'test/fixtures/placement-quality/corpus.json',
+      'test/setup.ts', 'src/core/model.test.ts']) {
+      expect(planChecks([{ path, status: 'M' }]).commands)
+        .toEqual(['build', 'check:fast', 'test:quality', 'test:browser', 'test:hygiene']);
+    }
+    for (const status of ['D', 'T']) {
+      expect(planChecks([{ path: 'test/model.test.ts', status }]).commands).toEqual(['check']);
+    }
+  });
+
   it.each(['package.json', 'package-lock.json', 'tsconfig.json', '.github/workflows/ci.yml',
-    'scripts/check-affected.mjs', 'new-area/config.toml'])('does not guess narrow ownership for %s', (path) => {
+    'scripts/check-affected.mjs', 'new-area/config.toml', 'test/model.test.mts', 'test/model.test.ts.snap'])('does not guess narrow ownership for %s', (path) => {
     const plan = planChecks([{ path, status: 'M' }]);
     expect(plan.commands).toEqual(['check']);
     expect(plan.mode).toBe('full');

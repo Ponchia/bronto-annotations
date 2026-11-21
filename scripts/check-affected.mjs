@@ -36,7 +36,7 @@ export function readChanges(cwd, base = 'origin/main') {
     base,
     mergeBase,
     head: git(cwd, ['rev-parse', 'HEAD']).trim(),
-    changes: [...paths.values()].sort((a, b) => a.path.localeCompare(b.path))
+    changes: [...paths.values()].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0)
   };
 }
 
@@ -51,6 +51,8 @@ export function planChecks(changes) {
       categories.add('documentation');
     } else if (/^(?:site|examples)\//.test(path)) {
       categories.add('site');
+    } else if (/^test\/(?!fixtures\/).+\.test\.(?:ts|tsx)$/.test(path)) {
+      categories.add('unit-tests');
     } else if (/^(?:src|test)\/.+\.(?:ts|tsx|css|html|json)$/.test(path)) {
       categories.add('source');
     } else {
@@ -62,7 +64,7 @@ export function planChecks(changes) {
     commands = ['check'];
   } else if (categories.size) {
     commands.push('build');
-    if (categories.has('source') || categories.has('site')) commands.push('check:fast');
+    if (categories.has('source') || categories.has('site') || categories.has('unit-tests')) commands.push('check:fast');
     else commands.push('test:docs-snippets');
     if (categories.has('source')) commands.push('test:quality', 'test:browser');
     if (categories.has('documentation') || categories.has('site')) commands.push('test:site');

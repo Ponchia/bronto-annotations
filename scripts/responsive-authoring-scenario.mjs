@@ -118,6 +118,39 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
 
     const beforeSelection = await inputs();
     const rows = page.locator('.note-list button');
+
+    // A geometry update replaces the selected annotation object. Its unapplied
+    // text must survive; discarding the draft must not undo that geometry edit.
+    await rows.last().focus();
+    const savedTitle = await page.locator('#text-editor-title').inputValue();
+    const savedBody = await page.locator('#text-editor-body').inputValue();
+    await page.locator('#text-editor-title').fill('Draft survives movement');
+    await page.locator('#text-editor-body').fill('Unapplied explanation.');
+    const beforeDraftMove = await page.evaluate(() => window.__annotationsExample.changes);
+    await page.locator('#move-note').click();
+    await page.waitForFunction(() => window.__annotationsExample?.action === 'Moved the final anchor');
+    check(await page.locator('#text-editor-title').inputValue() === 'Draft survives movement'
+      && await page.locator('#text-editor-body').inputValue() === 'Unapplied explanation.',
+    'Moving the selected anchor must preserve its unapplied text');
+    const movedInputs = await inputs();
+    check(movedInputs !== beforeSelection, 'The draft check must exercise a real geometry update');
+    check(JSON.parse(movedInputs).find(note => note.id === 'signal').note.title === savedTitle,
+      'Draft text must remain outside the committed annotation inputs');
+    check(await page.locator('#text-editor-draft-status').innerText().then(value => value.includes('Unapplied text')),
+      'The draft status must identify unapplied changes');
+    await page.locator('.note-text-editor').screenshot({ path: `${screenshotsDir}/${width}-unapplied-draft.png` });
+    await page.locator('#discard-note-text').click();
+    check(await page.locator('#text-editor-title').inputValue() === savedTitle
+      && await page.locator('#text-editor-body').inputValue() === savedBody,
+    'Discard restores the current authored text');
+    check(await page.locator('#text-editor-title').evaluate(el => el === document.activeElement),
+      'Discard restores keyboard focus to the title');
+    check(await inputs() === movedInputs
+      && await page.evaluate(() => window.__annotationsExample.changes) === beforeDraftMove + 1,
+    'Discarding a text draft must preserve committed geometry and history');
+    await page.locator('#undo-edit').click();
+    check(await inputs() === beforeSelection, 'Undo after discard must undo the geometry move');
+
     await rows.first().focus();
     await page.keyboard.press('End');
     check(await select() === 'signal', 'End selects final note');
