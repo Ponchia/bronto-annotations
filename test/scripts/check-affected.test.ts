@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -107,9 +107,14 @@ describe('affected verification planning', () => {
   });
 
   it('plans without running commands and rejects ambiguous execution options', () => {
-    const cli = resolve('scripts/check-affected.mjs');
+    // Compatibility lanes copy source without .git; the CLI owns a Git fixture too.
+    const { root } = fixture();
+    mkdirSync(join(root, 'scripts'));
+    for (const name of ['check-affected.mjs', 'log.mjs'])
+      copyFileSync(resolve('scripts', name), join(root, 'scripts', name));
+    const cli = join(root, 'scripts/check-affected.mjs');
     const plan = spawnSync(process.execPath, [cli, '--base', 'HEAD'], { encoding: 'utf8' });
-    expect(plan.status).toBe(0);
+    expect(plan.status, plan.stderr).toBe(0);
     expect(plan.stdout).toContain('Plan only; no build or tests ran.');
     expect(plan.stdout).not.toContain('Selected checks passed.');
     const invalid = spawnSync(process.execPath, [cli, '--plan', '--run'], { encoding: 'utf8' });
