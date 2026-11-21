@@ -42,7 +42,7 @@ export async function openAuthoringDiagram(page) {
 }
 
 // Shared real-Playwright scenario, exercised by the mandatory test:browser gate.
-export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }) {
+export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir, widths = [1200, 390] }) {
   const check = (condition, message) => { if (!condition) throw new Error(message); };
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -64,7 +64,7 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
     check(sizes.scroll <= sizes.width + 1, `${label}: page overflows ${JSON.stringify(sizes)}`);
   };
 
-  for (const width of [1200, 390]) {
+  for (const width of widths) {
     await page.setViewportSize({ width, height: 844 });
     await page.goto(`${origin}/examples/react-incremental/`, { waitUntil: 'networkidle' });
     await page.waitForFunction(() => Boolean(window.__annotationsExample));
@@ -158,20 +158,41 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
     check(await select() === 'intake', 'ArrowDown wraps selection');
     await page.keyboard.press('Home');
     check(await inputs() === beforeSelection, 'Selection must not rewrite geometry or history');
-    await page.getByRole('link', { name: 'Edit selected note' }).click();
-    check(await page.locator('#text-editor-title').evaluate(el => el === document.activeElement), 'Edit link focuses title');
+    await page.keyboard.press('ArrowDown');
+    check(await select() === 'triage', 'ArrowDown selects a middle note');
+    await page.keyboard.press('Tab');
+    const tabHandoff = await page.evaluate(() => ({
+      selectedId: document.querySelector('#text-editor-note').value,
+      focusedNoteId: document.activeElement?.getAttribute('data-note-id'),
+      inEditor: document.querySelector('.note-text-editor').contains(document.activeElement)
+    }));
+    check(tabHandoff.selectedId === 'triage' && tabHandoff.inEditor,
+      'Tab reaches the editor without selecting a later note: ' + JSON.stringify(tabHandoff));
+    await page.keyboard.press('Shift+Tab');
+    check(await rows.nth(1).evaluate(el => el === document.activeElement) && await select() === 'triage',
+      'Shift+Tab returns to the selected middle note');
+    await page.keyboard.press('Shift+Tab');
+    check(await page.getByRole('link', { name: 'Edit selected note' }).evaluate(el => el === document.activeElement)
+      && await select() === 'triage', 'Shift+Tab reaches the edit link without selecting an earlier note');
+    await page.keyboard.press('Enter');
+    check(await page.locator('#text-editor-title').evaluate(el => el === document.activeElement)
+      && await select() === 'triage', 'Keyboard edit link focuses the selected middle note title');
     await page.locator('#text-editor-title').fill('Keyboard revision');
     await page.locator('#text-editor-title').press('Enter');
-    await page.waitForFunction(() => window.__annotationsExample?.action === 'Edited intake text');
+    await page.waitForFunction(() => window.__annotationsExample?.action === 'Edited triage text');
     check(await page.locator('#text-editor-title').evaluate(el => el === document.activeElement), 'Apply preserves title focus');
-    check(await rows.first().textContent().then(text => text.includes('Keyboard revision')), 'List follows committed text');
+    check(await rows.nth(1).textContent().then(text => text.includes('Keyboard revision')), 'List follows committed text');
+    check(JSON.stringify(JSON.parse(await inputs()).filter(note => note.id !== 'triage'))
+      === JSON.stringify(JSON.parse(beforeSelection).filter(note => note.id !== 'triage')),
+    'Keyboard editing changes only the chosen middle note');
+    await page.locator('.note-text-editor').screenshot({ path: `${screenshotsDir}/${width}-keyboard-edit.png` });
     await page.getByRole('button', { name: 'Return to selected note' }).click();
-    check(await rows.first().evaluate(el => el === document.activeElement), 'Return restores selected row focus');
+    check(await rows.nth(1).evaluate(el => el === document.activeElement), 'Return restores selected row focus');
     await page.keyboard.press('ControlOrMeta+z');
-    await page.waitForFunction(() => window.__annotationsExample?.action === 'Undid: Edited intake text');
+    await page.waitForFunction(() => window.__annotationsExample?.action === 'Undid: Edited triage text');
     check(await inputs() === beforeSelection, 'Keyboard undo restores authored input');
     await page.keyboard.press('ControlOrMeta+Shift+z');
-    await page.waitForFunction(() => window.__annotationsExample?.action === 'Redid: Edited intake text');
+    await page.waitForFunction(() => window.__annotationsExample?.action === 'Redid: Edited triage text');
 
     if (await page.locator('#diagram-disclosure').getAttribute('aria-expanded') === 'false') {
       await page.locator('#diagram-disclosure').click();
@@ -313,6 +334,6 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
     await noOverflow(`replacement ${width}`);
   }
   check(errors.length === 0, `Browser errors: ${errors.join('\n')}`);
-  return { passed: true, widths: [1200, 390], checks: 'full text, crowded fallback, selection, create/edit/undo/redo, blocked add, keyboard edit/undo/redo, drag, invalid import, recovery, overflow',
+  return { passed: true, widths, checks: 'full text, crowded fallback, selection, create/edit/undo/redo, blocked add, keyboard selection handoff and edit/undo/redo, drag, invalid import, recovery, overflow',
     acceptance: 'Automated Chromium viewport checks; screen reader and physical device acceptance remain unperformed.' };
 }

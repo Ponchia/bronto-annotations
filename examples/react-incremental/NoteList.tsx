@@ -29,10 +29,12 @@ export function NoteList({ annotations, selectedId, onSelect }: {
         document.getElementById('text-editor-title')?.focus();
       }}>Edit selected note</a>
     </div>
-    <p id="note-list-help">Read every note here. Select a title to edit it; use ↑ / ↓, Home or End to move between titles.</p>
+    <p id="note-list-help">Read every note here. Select a title to edit it.
+      Use ↑ / ↓, Home or End between titles; Tab enters and leaves the list.</p>
     <ol ref={list} aria-describedby="note-list-help">
       {annotations.map((note, index) => <li key={note.id} data-selected={note.id === selectedId}>
         <button type="button" data-note-id={note.id}
+          tabIndex={note.id === selectedId ? 0 : -1}
           aria-pressed={note.id === selectedId}
           onFocus={() => { focusedId.current = note.id; onSelect(note.id); }}
           onClick={() => onSelect(note.id)}
