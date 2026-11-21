@@ -21,8 +21,14 @@ the engine places notes and connectors around it. Render the result as SVG
 or through the optional React layer.
 
 It does not render charts or provide a design system. Your app owns graph
-layout, state, and persistence.
+layout, state, and persistence. Explanatory callouts are authored content;
+review comments, conversations, and accepting a change belong to your app.
 For a single fixed label or tooltip, your chart library may already be enough.
+
+Already rendering a chart or diagram? Start with the
+[existing-surface quickstart](docs/context-quickstart.md) and attach one note to
+a real mark. Use the [first-time trial](docs/adoption-evidence.md#run-a-first-time-trial)
+to record what worked and where setup stopped.
 
 ## Try it before installing
 

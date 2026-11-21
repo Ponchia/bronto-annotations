@@ -5,58 +5,101 @@
 Render annotation layers in React and integrate optional measurements and
 editing while your application owns state.
 
-## React
+<a id="react"></a>
+
+## Start with an editable figure
+
+Copy this component into an existing React app. Its chart and annotation layer
+share one coordinate system. Move the note with its handle or focus the handle
+and use the arrow keys; **Undo last move** restores the last accepted position.
+Try Shift+Up from the initial position: it would cover the protected chart
+card, so the host rejects the move and announces why.
+
+The same `resolve` function supplies geometry for both rendering and edit
+validation. No persistence API or additional editor package is required.
 
 ```tsx
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   applyAnnotationEdits,
-  generatedSurfaceLayoutDefaults
+  evaluateAnnotationLayout,
+  resolveAnnotationLayout,
+  type Annotation
 } from '@ponchia/annotations';
 import { AnnotationLayer } from '@ponchia/annotations/react';
-import type { Annotation } from '@ponchia/annotations';
+import '@ponchia/annotations/bronto.css';
 
-const initialAnnotations: Annotation[] = [
-  {
-    id: 'step',
-    anchor: { type: 'box', box: { x: 120, y: 80, width: 160, height: 72 } },
-    note: { title: 'Step', body: 'Rendered by the React adapter.' }
-  }
-];
-const qualityDefaults = generatedSurfaceLayoutDefaults({
-  layoutLabel: 'Figure annotations'
-});
+const bounds = { x: 0, y: 0, width: 560, height: 320 };
+const protectedContent = { x: 120, y: 60, width: 125, height: 98 };
+const initialAnnotations: Annotation[] = [{
+  id: 'peak',
+  anchor: { type: 'point', point: { x: 90, y: 135 } },
+  note: { title: 'Peak response', body: 'Drag the handle.' },
+  placement: { manual: { x: 40, y: 200 } }
+}];
+function resolve(annotations: Annotation[]) {
+  return resolveAnnotationLayout({
+    annotations, bounds, padding: 12,
+    obstacles: [protectedContent],
+    noteSizes: { peak: { width: 150, height: 60 } }
+  });
+}
 
 export function FigureAnnotations() {
   const [annotations, setAnnotations] = useState(initialAnnotations);
+  const [previous, setPrevious] = useState<Annotation[] | null>(null);
+  const [notice, setNotice] = useState('Drag the note handle or use its arrow keys.');
+  const layout = useMemo(() => resolve(annotations), [annotations]);
 
   return (
-    <AnnotationLayer
-      annotations={annotations}
-      assertQuality={qualityDefaults.assertQuality}
-      bounds={{ x: 0, y: 0, width: 640, height: 360 }}
-      measure="dom"
-      markerIdPrefix="figure-annotations"
-      editHandleTabIndex={0}
-      noteTabIndex={0}
-      preserveAspectRatio="xMidYMid meet"
-      editable={{
-        includeAnchor: true,
-        noteHandlePosition: 'bottom-right',
-        keyboardStep: 2,
-        keyboardLargeStep: 12
-      }}
-      previewEdits
-      onEditEnd={(event) => {
-        setAnnotations((current) => applyAnnotationEdits(current, event));
-      }}
-      onQuality={(event) => console.log(event.summary)}
-      qualityFormat={qualityDefaults.qualityFormat}
-      onLayout={(layout) => console.log(layout.annotations.length)}
-    />
+    <section aria-label="Editable figure" style={{ fontFamily: 'system-ui, sans-serif' }}>
+      <div role="region" aria-label="Figure surface" tabIndex={0} style={{ overflowX: 'auto' }}>
+        <div style={{ position: 'relative', width: 560, height: 320 }}>
+          <svg viewBox="0 0 560 320" role="img" aria-label="Chart with protected content">
+            <rect {...protectedContent} fill="#e7edeb" />
+            <text x="132" y="88" fontSize="16">Chart data</text>
+            <circle cx="90" cy="135" r="4" fill="#287c71" />
+          </svg>
+          <AnnotationLayer
+            layout={layout}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+            label="Figure callouts"
+            markerIdPrefix="editable-figure"
+            editable={{ keyboardStep: 10, keyboardLargeStep: 130 }}
+            editHandleTabIndex={0}
+            previewEdits
+            onEditEnd={(event) => {
+              const proposed = applyAnnotationEdits(annotations, event, { missing: 'throw' });
+              const candidate = resolve(proposed);
+              if (!evaluateAnnotationLayout(candidate).ok) {
+                setNotice('Move rejected: keep the note inside the figure and clear of chart content.');
+                return;
+              }
+              setPrevious(annotations);
+              setAnnotations(proposed);
+              setNotice('Move saved. Undo is available.');
+            }}
+          />
+        </div>
+      </div>
+      <button type="button" style={{ minHeight: 44, padding: '8px 12px' }} disabled={!previous} onClick={() => {
+        if (!previous) return;
+        setAnnotations(previous);
+        setPrevious(null);
+        setNotice('Previous move restored.');
+      }}>Undo last move</button>
+      <p role="status">{notice}</p>
+    </section>
   );
 }
 ```
+
+This example keeps the figure at its native width in a horizontal scroller so
+its text remains readable on a narrow screen. The fixed note size suits these
+short strings. For different text, fonts, or host geometry, update the sizing
+inputs or use the measured-note guidance below. The one-step undo stores only
+accepted annotation inputs; previews and rejected moves never replace it.
+Your application can extend that policy to its existing history and storage.
 
 `AnnotationLayer` and `useAnnotations` use the same headless layout path as the
 SVG renderer. The component supports `ResizeObserver` note measurement,
@@ -97,12 +140,12 @@ host-controlled `layout` mode, where the host supplies final note dimensions.
 
 ## Validate edits before committing
 
-The first example above shows the minimal *single-note* edit path. When a host
-has protected chart/diagram content, an edit can be visually previewed over
-that content. `previewEdits` does not certify layout quality, and
-`assertQuality` is a throwing development assertion, **not** an interactive
-edit admission policy. Applying every patch blindly can therefore crash a
-host's next render.
+The first example checks the proposed layout before changing authored state.
+A drag preview can temporarily cover protected chart/diagram content;
+`previewEdits` does not certify layout quality. `assertQuality` is a throwing
+development assertion, **not** an interactive edit admission policy. Use it
+for diagnostics after defining how the host handles rejected edits, rather
+than applying every patch and throwing on the next render.
 
 Before changing authored state, resolve the *proposed* annotations with the
 same geometry inputs as the renderer, check `evaluateAnnotationLayout`, and
@@ -146,19 +189,14 @@ When the host resolves its own layout, pass exactly that result:
 ```tsx
 <AnnotationLayer
   layout={layout}
-  previewEdits
-  editable={{ includeAnchor: true }}
-  onEditEnd={(edit) => {
-    const next = applyAnnotationEdits(annotations, edit);
-    setAnnotations(next);
-    setLayout(layoutSession.update({ annotations: next, bounds, noteSizes }));
-  }}
+  markerIdPrefix="host-owned-annotations"
 />
 ```
 
-`layoutSession` is a host-owned incremental session; `layout` state starts from
-its layout and updates on accepted commits. The host owns persistence and undo.
-The renderer derives annotations, note sizes and bounds from this result. It
+The first example uses this mode for editing too: enable `editable` and
+`previewEdits`, then validate and commit through `onEditEnd`. The host owns
+persistence and undo. The renderer derives annotations, note sizes and bounds
+from this result. It
 never solves or self-measures in this mode. Do not also pass `annotations`,
 `bounds`, `placement`, `noteSizes`, `refinement`, `diagnostics`, or `measure`.
 TypeScript and runtime validation reject such mixed modes, and the removed

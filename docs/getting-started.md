@@ -4,6 +4,12 @@
 
 Your application supplies an anchor, the engine places a note, and a renderer
 displays it. This guide starts with one point in a new browser project.
+If your chart already renders, go straight to the
+[existing-surface quickstart](context-quickstart.md) to measure a real mark.
+
+These notes explain authored content. A review thread needs application-owned
+authors, messages, target identity, persistence, and acceptance; adding a
+callout alone does not create that workflow.
 
 ## Try one note before installing
 
@@ -159,7 +165,9 @@ export function AnnotatedPoint() {
 Render `<AnnotatedPoint />` from your application. It creates an SVG and wrapper;
 the style makes the wrapper responsive. The [React example](../examples/react-basic/)
 shows alignment with a host chart. Continue with [rendering and editing](react-guide.md)
-when you need measurements or edit callbacks; your app owns note state and persistence.
+when you need measurements or edit callbacks. Its complete editable figure
+shows accepted moves, rejected overlaps, and undo; your app owns note state
+and persistence.
 
 ## Coordinate and layout basics
 
