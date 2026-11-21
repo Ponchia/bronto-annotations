@@ -42,7 +42,7 @@ export async function openAuthoringDiagram(page) {
 }
 
 // Shared real-Playwright scenario, exercised by the mandatory test:browser gate.
-export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }) {
+export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir, widths = [1200, 390] }) {
   const check = (condition, message) => { if (!condition) throw new Error(message); };
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -64,7 +64,7 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
     check(sizes.scroll <= sizes.width + 1, `${label}: page overflows ${JSON.stringify(sizes)}`);
   };
 
-  for (const width of [1200, 390]) {
+  for (const width of widths) {
     await page.setViewportSize({ width, height: 844 });
     await page.goto(`${origin}/examples/react-incremental/`, { waitUntil: 'networkidle' });
     await page.waitForFunction(() => Boolean(window.__annotationsExample));
@@ -118,6 +118,39 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
 
     const beforeSelection = await inputs();
     const rows = page.locator('.note-list button');
+
+    // A geometry update replaces the selected annotation object. Its unapplied
+    // text must survive; discarding the draft must not undo that geometry edit.
+    await rows.last().focus();
+    const savedTitle = await page.locator('#text-editor-title').inputValue();
+    const savedBody = await page.locator('#text-editor-body').inputValue();
+    await page.locator('#text-editor-title').fill('Draft survives movement');
+    await page.locator('#text-editor-body').fill('Unapplied explanation.');
+    const beforeDraftMove = await page.evaluate(() => window.__annotationsExample.changes);
+    await page.locator('#move-note').click();
+    await page.waitForFunction(() => window.__annotationsExample?.action === 'Moved the final anchor');
+    check(await page.locator('#text-editor-title').inputValue() === 'Draft survives movement'
+      && await page.locator('#text-editor-body').inputValue() === 'Unapplied explanation.',
+    'Moving the selected anchor must preserve its unapplied text');
+    const movedInputs = await inputs();
+    check(movedInputs !== beforeSelection, 'The draft check must exercise a real geometry update');
+    check(JSON.parse(movedInputs).find(note => note.id === 'signal').note.title === savedTitle,
+      'Draft text must remain outside the committed annotation inputs');
+    check(await page.locator('#text-editor-draft-status').innerText().then(value => value.includes('Unapplied text')),
+      'The draft status must identify unapplied changes');
+    await page.locator('.note-text-editor').screenshot({ path: `${screenshotsDir}/${width}-unapplied-draft.png` });
+    await page.locator('#discard-note-text').click();
+    check(await page.locator('#text-editor-title').inputValue() === savedTitle
+      && await page.locator('#text-editor-body').inputValue() === savedBody,
+    'Discard restores the current authored text');
+    check(await page.locator('#text-editor-title').evaluate(el => el === document.activeElement),
+      'Discard restores keyboard focus to the title');
+    check(await inputs() === movedInputs
+      && await page.evaluate(() => window.__annotationsExample.changes) === beforeDraftMove + 1,
+    'Discarding a text draft must preserve committed geometry and history');
+    await page.locator('#undo-edit').click();
+    check(await inputs() === beforeSelection, 'Undo after discard must undo the geometry move');
+
     await rows.first().focus();
     await page.keyboard.press('End');
     check(await select() === 'signal', 'End selects final note');
@@ -125,20 +158,41 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
     check(await select() === 'intake', 'ArrowDown wraps selection');
     await page.keyboard.press('Home');
     check(await inputs() === beforeSelection, 'Selection must not rewrite geometry or history');
-    await page.getByRole('link', { name: 'Edit selected note' }).click();
-    check(await page.locator('#text-editor-title').evaluate(el => el === document.activeElement), 'Edit link focuses title');
+    await page.keyboard.press('ArrowDown');
+    check(await select() === 'triage', 'ArrowDown selects a middle note');
+    await page.keyboard.press('Tab');
+    const tabHandoff = await page.evaluate(() => ({
+      selectedId: document.querySelector('#text-editor-note').value,
+      focusedNoteId: document.activeElement?.getAttribute('data-note-id'),
+      inEditor: document.querySelector('.note-text-editor').contains(document.activeElement)
+    }));
+    check(tabHandoff.selectedId === 'triage' && tabHandoff.inEditor,
+      'Tab reaches the editor without selecting a later note: ' + JSON.stringify(tabHandoff));
+    await page.keyboard.press('Shift+Tab');
+    check(await rows.nth(1).evaluate(el => el === document.activeElement) && await select() === 'triage',
+      'Shift+Tab returns to the selected middle note');
+    await page.keyboard.press('Shift+Tab');
+    check(await page.getByRole('link', { name: 'Edit selected note' }).evaluate(el => el === document.activeElement)
+      && await select() === 'triage', 'Shift+Tab reaches the edit link without selecting an earlier note');
+    await page.keyboard.press('Enter');
+    check(await page.locator('#text-editor-title').evaluate(el => el === document.activeElement)
+      && await select() === 'triage', 'Keyboard edit link focuses the selected middle note title');
     await page.locator('#text-editor-title').fill('Keyboard revision');
     await page.locator('#text-editor-title').press('Enter');
-    await page.waitForFunction(() => window.__annotationsExample?.action === 'Edited intake text');
+    await page.waitForFunction(() => window.__annotationsExample?.action === 'Edited triage text');
     check(await page.locator('#text-editor-title').evaluate(el => el === document.activeElement), 'Apply preserves title focus');
-    check(await rows.first().textContent().then(text => text.includes('Keyboard revision')), 'List follows committed text');
+    check(await rows.nth(1).textContent().then(text => text.includes('Keyboard revision')), 'List follows committed text');
+    check(JSON.stringify(JSON.parse(await inputs()).filter(note => note.id !== 'triage'))
+      === JSON.stringify(JSON.parse(beforeSelection).filter(note => note.id !== 'triage')),
+    'Keyboard editing changes only the chosen middle note');
+    await page.locator('.note-text-editor').screenshot({ path: `${screenshotsDir}/${width}-keyboard-edit.png` });
     await page.getByRole('button', { name: 'Return to selected note' }).click();
-    check(await rows.first().evaluate(el => el === document.activeElement), 'Return restores selected row focus');
+    check(await rows.nth(1).evaluate(el => el === document.activeElement), 'Return restores selected row focus');
     await page.keyboard.press('ControlOrMeta+z');
-    await page.waitForFunction(() => window.__annotationsExample?.action === 'Undid: Edited intake text');
+    await page.waitForFunction(() => window.__annotationsExample?.action === 'Undid: Edited triage text');
     check(await inputs() === beforeSelection, 'Keyboard undo restores authored input');
     await page.keyboard.press('ControlOrMeta+Shift+z');
-    await page.waitForFunction(() => window.__annotationsExample?.action === 'Redid: Edited intake text');
+    await page.waitForFunction(() => window.__annotationsExample?.action === 'Redid: Edited triage text');
 
     if (await page.locator('#diagram-disclosure').getAttribute('aria-expanded') === 'false') {
       await page.locator('#diagram-disclosure').click();
@@ -172,6 +226,67 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
     check(await inputs() === stable && await select() === 'signal', 'Invalid import preserves data and selection');
     await page.locator('.annotation-source summary').click();
 
+    // Creating a note is an explicit selection change. Do not keep editing
+    // the older note or silently commit its unapplied text.
+    const beforeCreate = await inputs();
+    const originalNotes = JSON.parse(beforeCreate);
+    await page.locator('#text-editor-title').fill('Unapplied title before creating');
+    await page.locator('#text-editor-body').fill('An old draft that must not be committed.');
+    await page.locator('#append-note').click();
+    await page.waitForFunction(count => document.querySelectorAll('.note-list li').length === count,
+      originalNotes.length + 1);
+    const createdInputs = await inputs();
+    const createdNotes = JSON.parse(createdInputs);
+    const addedNote = createdNotes.at(-1);
+    check(!originalNotes.some(note => note.id === addedNote.id), 'Add creates a fresh note ID');
+    check(await select() === addedNote.id, 'Add annotation selects the newly created note');
+    check(await page.locator('.note-list button[aria-pressed="true"]').getAttribute('data-note-id') === addedNote.id,
+      'The reading list selects the newly created note');
+    await page.waitForFunction(() => document.activeElement?.id === 'text-editor-title');
+    const addedEditor = await page.evaluate(() => ({
+      selectedId: document.querySelector('#text-editor-note').value,
+      title: document.querySelector('#text-editor-title').value,
+      body: document.querySelector('#text-editor-body').value,
+      focusedId: document.activeElement?.id
+    }));
+    check(addedEditor.title === addedNote.note.title && addedEditor.body === addedNote.note.body,
+      'Selecting the new note replaces the previous unapplied draft with its authored text: '
+      + JSON.stringify({ actual: addedEditor, expected: {
+        selectedId: addedNote.id, title: addedNote.note.title, body: addedNote.note.body,
+        focusedId: 'text-editor-title'
+      } }));
+    check(JSON.stringify(createdNotes.slice(0, -1)) === JSON.stringify(originalNotes),
+      'Adding a note must not commit or change the previous note draft');
+
+    await page.locator('#text-editor-title').fill('My newly added note');
+    await page.locator('#apply-note-text').click();
+    await page.waitForFunction(id => {
+      const notes = JSON.parse(document.querySelector('#annotation-json').textContent);
+      return notes.find(note => note.id === id)?.note.title === 'My newly added note';
+    }, addedNote.id);
+    const editedCreatedInputs = await inputs();
+    check(JSON.stringify(JSON.parse(editedCreatedInputs).slice(0, -1)) === JSON.stringify(originalNotes),
+      'Applying the new note title must leave all older notes unchanged');
+    await noOverflow('added note ' + width);
+    await page.locator('.note-text-editor').screenshot({ path: screenshotsDir + '/' + width + '-added-note.png' });
+
+    await page.locator('#undo-edit').click();
+    await page.waitForFunction(expected => document.querySelector('#annotation-json').textContent === expected,
+      createdInputs);
+    check(await select() === addedNote.id, 'Undoing new text keeps the added note selected');
+    await page.locator('#undo-edit').click();
+    await page.waitForFunction(expected => document.querySelector('#annotation-json').textContent === expected,
+      beforeCreate);
+    check(await select() === originalNotes[0].id, 'Undoing Add recovers the first remaining note');
+    await page.locator('#redo-edit').click();
+    await page.waitForFunction(expected => document.querySelector('#annotation-json').textContent === expected,
+      createdInputs);
+    check(await select() === originalNotes[0].id, 'Redoing Add does not resurrect the removed selection');
+    await page.locator('#redo-edit').click();
+    await page.waitForFunction(expected => document.querySelector('#annotation-json').textContent === expected,
+      editedCreatedInputs);
+    check(await select() === originalNotes[0].id, 'Redoing new text preserves the recovered selection');
+
     // Fresh host policy: ten deliberately overlapping notes, long text,
     // arbitrary IDs, a hidden high-priority note and a selected low priority.
     await page.reload({ waitUntil: 'networkidle' });
@@ -193,6 +308,19 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
         && element.scrollWidth <= element.clientWidth + 1)), 'Crowded note bodies must remain visible and unclipped');
     await noOverflow(`crowded ${width}`);
     await page.locator('.note-list').screenshot({ path: `${screenshotsDir}/${width}-crowded.png` });
+    const beforeBlockedAdd = await inputs();
+    const blockedSelection = await select();
+    const blockedChanges = await page.evaluate(() => window.__annotationsExample.changes);
+    await page.locator('#text-editor-title').fill('Keep my draft at the note limit');
+    check(await page.locator('#append-note').isDisabled(), 'Add is unavailable at the note limit');
+    await page.locator('#append-note').evaluate(button => button.click());
+    check(await inputs() === beforeBlockedAdd && await select() === blockedSelection
+      && await page.evaluate(() => window.__annotationsExample.changes) === blockedChanges,
+    'A blocked Add must not change authored state, selection or history');
+    check(await page.locator('#text-editor-title').inputValue() === 'Keep my draft at the note limit'
+      && await page.locator('#text-editor-title').evaluate(el => el === document.activeElement),
+    'A blocked Add preserves the unapplied draft and its focus');
+
     await page.locator('#remove-note').click();
     await page.waitForFunction(() => document.querySelector('#text-editor-note')?.value === '__proto__');
     check(await page.locator('.note-list button[aria-pressed="true"]').getAttribute('data-note-id') === '__proto__', 'Removal recovers list and editor selection');
@@ -206,6 +334,6 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
     await noOverflow(`replacement ${width}`);
   }
   check(errors.length === 0, `Browser errors: ${errors.join('\n')}`);
-  return { passed: true, widths: [1200, 390], checks: 'full text, crowded fallback, selection, keyboard edit/undo/redo, drag, invalid import, recovery, overflow',
+  return { passed: true, widths, checks: 'full text, crowded fallback, selection, create/edit/undo/redo, blocked add, keyboard selection handoff and edit/undo/redo, drag, invalid import, recovery, overflow',
     acceptance: 'Automated Chromium viewport checks; screen reader and physical device acceptance remain unperformed.' };
 }

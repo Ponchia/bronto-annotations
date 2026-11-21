@@ -1,0 +1,10 @@
+{
+  "package": "@ponchia/annotations",
+  "version": "0.9.2",
+  "fixture": "site/first-annotation.html",
+  "capture": "Chromium element screenshot of the synthetic chart and real SVG annotation; 390px viewport. The published package was served locally from a clean npm install during verification.",
+  "sha256": "9188682d7185d68fd83772a016872d36f2f227801938da913bc6fbabb32e2474",
+  "viewport": 390,
+  "width": 366,
+  "height": 340
+}

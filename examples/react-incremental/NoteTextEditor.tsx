@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Annotation } from '@ponchia/annotations';
 import {
@@ -19,20 +19,31 @@ export function NoteTextEditor({
   onApply: (id: string, title: string, body: string) => void;
   onReturn: () => void;
 }) {
-  // Draft changes never affect the authoritative layout or editor history
-  // until the author presses Apply. Refresh drafts from committed inputs
-  // without remounting the form and dropping keyboard focus.
-  const [title, setTitle] = useState(annotation.note.title ?? '');
-  const [body, setBody] = useState(annotation.note.body ?? '');
+  // Geometry edits can replace the annotation object while its authored text
+  // is unchanged. Only a different selection or committed text replaces a
+  // draft; neither requires remounting the form or dropping keyboard focus.
+  const committedTitle = annotation.note.title ?? '';
+  const committedBody = annotation.note.body ?? '';
+  const [title, setTitle] = useState(committedTitle);
+  const [body, setBody] = useState(committedBody);
   const [error, setError] = useState('');
   const titleInput = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    setTitle(annotation.note.title ?? '');
-    setBody(annotation.note.body ?? '');
+  // Finish selection/text resets before paint; Add focuses this form in a
+  // layout effect, while geometry-only updates must preserve the draft.
+  useLayoutEffect(() => {
+    setTitle(committedTitle);
+    setBody(committedBody);
     setError('');
-  }, [annotation]);
-  const changed = title !== (annotation.note.title ?? '') || body !== (annotation.note.body ?? '');
+  }, [annotation.id, committedTitle, committedBody]);
+  const changed = title !== committedTitle || body !== committedBody;
   const missingContent = !title.trim() && !body.trim();
+
+  function discard() {
+    setTitle(committedTitle);
+    setBody(committedBody);
+    setError('');
+    titleInput.current?.focus();
+  }
 
   function apply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -69,19 +80,30 @@ export function NoteTextEditor({
           <div>
             <label htmlFor="text-editor-title">Title</label>
             <input ref={titleInput} id="text-editor-title" type="text" value={title}
+              aria-describedby="text-editor-draft-status"
               maxLength={EDITOR_TITLE_MAX_LENGTH}
               onChange={(event) => { setTitle(event.target.value); setError(''); }} />
           </div>
           <div className="note-text-editor-body">
             <label htmlFor="text-editor-body">Body</label>
             <textarea id="text-editor-body" value={body}
+              aria-describedby="text-editor-draft-status"
               maxLength={EDITOR_BODY_MAX_LENGTH} rows={2}
               onChange={(event) => { setBody(event.target.value); setError(''); }} />
           </div>
-          <button id="apply-note-text" type="submit" disabled={!changed || missingContent}>
-            Apply text
-          </button>
+          <div className="note-text-editor-actions">
+            <button id="apply-note-text" type="submit" disabled={!changed || missingContent}>
+              Apply text
+            </button>
+            <button id="discard-note-text" className="discard-note-text" type="button"
+              disabled={!changed} onClick={discard}>Discard draft</button>
+          </div>
         </div>
+        <p id="text-editor-draft-status" className="note-text-editor-status" role="status">
+          {changed
+            ? 'Unapplied text. Apply to update this note, or discard the draft. Selecting another note replaces this draft.'
+            : 'Text matches the current note.'}
+        </p>
         {missingContent ? (
           <p className="note-text-editor-error" role="alert">
             Enter a title or body before applying.
