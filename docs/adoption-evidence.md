@@ -44,6 +44,61 @@ The current source and website may be ahead of npm. Public trial reports must
 record the **installed archive version**, not only the Git revision used for
 internal development.
 
+## Run a first-time trial
+
+Use an existing host and a developer who has not integrated this package.
+Reserve **30 minutes**; stop when time runs out and keep the failed attempt.
+That timebox is a way to bound the trial, not a promised setup time or a pass
+threshold. An internal agent run can check instructions and fixtures, but it
+must be recorded as automated or maintainer evidence rather than an unfamiliar
+human's experience.
+
+Give the participant the [existing-surface quickstart](context-quickstart.md),
+the package version, and the tasks below. Let them choose the relevant path.
+For the first attempt, observe without supplying code or directing clicks.
+Record when help starts and exactly what help was needed; assisted success
+remains useful, but is a separate milestone.
+
+| Task | What to observe | Record before helping |
+| --- | --- | --- |
+| Attach one note to an existing mark | The connector meets the intended rendered target, and the note is visible and readable | Installation start, first visible note, first correctly anchored note, or `not reached`; record interruptions separately |
+| Resize or pan the host and change the target's data | The note follows the intended target, or a clear stale/missing-target state is handled by the app | Lifecycle hooks, transforms and manual coordinate changes required |
+| Add five useful notes | Every requested note remains accounted for; chart content and note text stay readable | First untouched layout, overlap/missing-note counts, then the tuning required |
+| Edit if the application needs it | A permitted move commits, a rejected move explains why, and undo restores the last accepted state | Setup code and whether keyboard editing, rejection and undo worked; mark `not attempted` if out of scope |
+| Decide whether to continue | The participant explains the value and largest remaining obstacle in their own words | Continue, try again after a named change, or stop; this is not a production-adoption claim |
+
+### Trial record
+
+Copy this record into local notes or the
+[integration feedback form](https://github.com/Ponchia/bronto-annotations/issues/new?template=integration_feedback.yml).
+The form is optional; share only material you have permission to publish.
+Use `not measured`, `not reached`, and `not attempted` instead of filling gaps
+with estimates.
+
+```text
+Trial kind: unfamiliar human / returning user / maintainer / automated
+Prior familiarity with the package:
+Installed package and host versions:
+Existing surface and intended target:
+Date, browser, viewport, device, and assistive tools actually used:
+Install start / interruptions:
+First visible note / first correctly anchored note:
+Unassisted outcome:
+Assistance start, help supplied, and assisted outcome:
+Five-note first attempt: notes requested / rendered / missing; overlaps:
+Tuning: placement overrides, measurement and lifecycle code:
+Resize or data-change outcome:
+Editing, rejection, and undo outcome (if attempted):
+Code or reproduction and before/after images (safe to share):
+Decision to continue and the largest remaining obstacle:
+```
+
+The intended target must be checked against the original host. A screenshot of
+a note somewhere on the figure, or a quality score computed from the same
+incorrect geometry, does not establish correct anchoring. Keep the initial
+attempt separate from the tuned result. Repeating this trial as an automated
+check does not create another independent consumer.
+
 ## Next independent trials
 
 Seek real integrations in an existing SVG/chart host, a generated diagram

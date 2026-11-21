@@ -12,6 +12,7 @@ import { offersInstall } from './site-release.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const target = join(root, '_site');
 const hostname = 'https://ponchia.github.io/bronto-annotations/';
+const exampleCatalog = JSON.parse(await readFile(join(root, 'examples/catalog.json'), 'utf8'));
 const examples = [
   'index',
   'svg-basic',
@@ -28,6 +29,7 @@ const examples = [
 ];
 const required = [
   'index.html',
+  'first-annotation/index.html',
   'docs/index.html',
   'docs/context-quickstart.html',
   'docs/adoption-evidence.html',
@@ -98,6 +100,21 @@ for (const rel of pages) {
     'Missing document language: ' + rel,
   );
   assert(html.querySelector('title')?.textContent, 'Missing title: ' + rel);
+  const canonicalPath = rel === 'index.html' ? '' : rel.replace(/\/index\.html$/, '/');
+  const canonicals = html.head.querySelectorAll('link[rel~="canonical" i]');
+  assert.equal(canonicals.length, 1, 'Exactly one canonical URL required: ' + rel);
+  assert.equal(canonicals[0].getAttribute('href'), hostname + canonicalPath,
+    'Canonical must identify the exact public page: ' + rel);
+  const descriptions = html.head.querySelectorAll('meta[name="description" i]');
+  assert.equal(descriptions.length, 1, 'Exactly one description required: ' + rel);
+  assert(descriptions[0].getAttribute('content')?.trim(), 'Empty description: ' + rel);
+  const demoName = /^examples\/([^/]+)\/index\.html$/.exec(rel)?.[1];
+  if (demoName) {
+    assert.equal(html.title, exampleCatalog[demoName].title + ' — Bronto Annotations',
+      'Demo title must describe its catalog example: ' + rel);
+    assert.equal(descriptions[0].getAttribute('content'), exampleCatalog[demoName].summary,
+      'Demo description must match its catalog summary: ' + rel);
+  }
   const published = JSON.parse(await readFile(join(target, 'release-status.json'), 'utf8'));
   const notices = html.querySelectorAll('[data-release-notice]');
   assert.equal(notices.length, 1, 'Every direct entry needs a version notice: ' + rel);
@@ -326,3 +343,14 @@ console.log(
     links +
     ' internal links (' + fragmentLinks.length + ' checked fragments), twelve compiled examples, docs search, social assets and a live engine playground.',
 );
+
+const firstUse = new JSDOM(await readFile(join(target, 'first-annotation/index.html'), 'utf8'));
+const firstUseHtml = firstUse.window.document;
+assert.equal(firstUseHtml.querySelector('main')?.dataset.packageVersion, '0.9.2');
+assert(firstUseHtml.querySelector('a[download="first-annotation.html"]'));
+assert(firstUseHtml.querySelector('#controls[hidden]'));
+assert(firstUseHtml.querySelector('noscript'));
+assert(firstUseHtml.querySelector('#status[role="status"]'));
+assert.match(firstUseHtml.querySelector('script[type="module"]').textContent, /annotations@0\.9\.2\/dist\/index\.js/);
+assert.doesNotMatch(firstUseHtml.documentElement.outerHTML, /cloudflareinsights/);
+firstUse.window.close();

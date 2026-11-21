@@ -243,6 +243,12 @@ function updateLayout() {
   overlay.dataset.route = routing;
   overlay.dataset.score = String(Math.round(quality.score));
   overlay.dataset.scene = activePreset ?? 'custom';
+  // Reveal usable controls only after the first real solve and render succeed.
+  // Static guidance also survives blocked modules or initialization failures.
+  const playground = document.getElementById('playground-layout');
+  const fallback = document.getElementById('playground-fallback');
+  if (playground) playground.hidden = false;
+  if (fallback) fallback.hidden = true;
 }
 
 for (const button of scenePresetButtons) {

@@ -108,6 +108,7 @@ function App() {
   const diagramToggle = useRef<HTMLButtonElement>(null);
   const diagramStage = useRef<HTMLDivElement>(null);
   const pendingDiagramFocus = useRef(false);
+  const pendingAddedNoteFocus = useRef<string | null>(null);
   const [availableWidth, setAvailableWidth] = useState(0);
   const [diagramOverride, setDiagramOverride] = useState<boolean | null>(null);
   // This is an example-host policy, not a solver rule: crowded/unavailable
@@ -147,6 +148,15 @@ function App() {
   const canRemoveLastNote = view.annotations.length > 1;
   const recoveredSelection = recoverNoteSelection(view.annotations, selectedNoteId);
   const selectedTextNote = view.annotations.find((item) => item.id === recoveredSelection)!;
+  useLayoutEffect(() => {
+    const addedId = pendingAddedNoteFocus.current;
+    if (addedId === null) return;
+    pendingAddedNoteFocus.current = null;
+    // Only explicit creation requests focus, not geometry edits or history replay.
+    if (recoveredSelection === addedId) {
+      card.current?.querySelector<HTMLInputElement>('#text-editor-title')?.focus();
+    }
+  }, [recoveredSelection]);
   useEffect(() => {
     // Forget IDs removed by import/removal so undo cannot resurrect a stale
     // selection after the author has moved on to another note.
@@ -303,6 +313,9 @@ function App() {
     const next = appendDemoNote(previous);
     if (next === previous) return;
     commit(next, 'Appended an annotation');
+    const addedId = next[next.length - 1]!.id;
+    pendingAddedNoteFocus.current = addedId;
+    setSelectedNoteId(addedId);
   }
 
   function removeAnnotation() {

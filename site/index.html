@@ -54,7 +54,7 @@
         ><span>bronto<span class="accent">/</span>annotations</span></a
       >
       <nav aria-label="Main navigation">
-        <a href="#playground">Playground</a><a href="#examples">Examples</a
+        <a href="./first-annotation/">Start here</a><a href="#playground">Playground</a><a href="#examples">Examples</a
         ><a href="./docs/">Documentation</a
         ><a href="https://github.com/Ponchia/bronto-annotations">GitHub ↗</a>
       </nav>
@@ -75,12 +75,12 @@
             control of rendering or application state.
           </p>
           <div class="hero-actions">
-            <a class="button button-primary" href="#playground"
-              >Try the engine ↗</a
+            <a class="button button-primary" href="./first-annotation/"
+              >Create your first note ↗</a
             ><a
               class="button button-outline"
-              href="./docs/getting-started.html"
-              >Get started</a
+              href="#playground"
+              >Explore placement</a
             >
           </div>
           <p class="hero-micro">
@@ -88,60 +88,11 @@
             <span>·</span> Optional adapters
           </p>
         </div>
-        <div class="hero-art" aria-hidden="true">
-          <span>SUBJECT → CONNECTOR → NOTE</span>
-          <svg viewBox="0 0 380 260" role="presentation">
-            <rect
-              x="22"
-              y="35"
-              width="336"
-              height="188"
-              rx="6"
-              fill="#fff"
-              stroke="#d0d9dc"
-            />
-            <g stroke="#e9edf0">
-              <path d="M22 82H358M22 129H358M22 176H358" />
-            </g>
-            <path
-              d="M39 187Q97 181 145 133T226 116T340 69"
-              fill="none"
-              stroke="#627d80"
-              stroke-width="3"
-            />
-            <circle
-              cx="226"
-              cy="116"
-              r="6"
-              stroke="#d14c70"
-              fill="#fff"
-              stroke-width="3"
-            />
-            <path
-              d="M226 116L269 64L315 64"
-              fill="none"
-              stroke="#d14c70"
-              stroke-width="2"
-            />
-            <rect
-              x="240"
-              y="17"
-              width="126"
-              height="53"
-              rx="5"
-              fill="#fff"
-              stroke="#b4c3c9"
-            />
-            <path
-              d="M250 31H353M250 42H330M250 51H345"
-              stroke="#b0bdc4"
-              stroke-width="3"
-            />
-          </svg>
-          <p>
-            The host supplies geometry.<br />The engine places the explanation.
-          </p>
-        </div>
+        <figure class="hero-art hero-example">
+          <span>ONE NOTE / YOUR EXISTING CHART</span>
+          <a href="./first-annotation/" aria-label="Open the one-note example shown in this real capture"><img src="./media/first-note.png" width="366" height="340" alt="Deployment starts: a note rendered by Bronto Annotations, connected to a point on a synthetic chart" fetchpriority="high" /></a>
+          <figcaption>A real note from the published package.<br /><a href="./first-annotation/">Change its title and keep the example ↗</a></figcaption>
+        </figure>
       </section>
       <section
         id="playground"
@@ -159,7 +110,12 @@
               animation. Change the conditions and watch it recalculate.
             </p>
           </div>
-          <div class="playground-layout">
+          <aside id="playground-fallback" class="playground-fallback" aria-labelledby="fallback-heading">
+            <h3 id="fallback-heading">The interactive playground has not loaded.</h3>
+            <p>The controls need JavaScript. You can still install the package and follow the complete browser or React example in the <a href="./docs/getting-started.html">first annotation guide</a>.</p>
+            <p>See <a href="#examples">screenshots from the runnable examples</a> below, or reload this page to try the playground again.</p>
+          </aside>
+          <div id="playground-layout" class="playground-layout" hidden>
             <div class="plot-panel">
               <div class="plot-header">
                 <span
@@ -582,15 +538,20 @@
                 data-copy="npm install @ponchia/annotations"
                 class="copy-button"
                 type="button"
+                hidden
               >
                 Copy
               </button>
             </div>
             <p>
-              Start with an existing SVG or a measured DOM box. The same model
-              supports every optional adapter.
+              New project? The <a href="./docs/getting-started.html">first annotation guide</a>
+              includes installation, both files to create, the command to run,
+              and the note you should see. Already have a chart or diagram?
+              Choose your host below.
             </p>
             <div class="quick-links">
+              <a href="./first-annotation/">Try one note without installing anything ↗</a>
+              <a href="./docs/getting-started.html">Complete application guide ↗</a>
               <a href="./docs/context-quickstart.html"
                 >Choose your host context ↗</a
               ><a href="./docs/integration-recipes.html"
@@ -605,6 +566,7 @@
                 data-copy-target="starter-code"
                 class="copy-button"
                 type="button"
+                hidden
               >
                 Copy code
               </button>

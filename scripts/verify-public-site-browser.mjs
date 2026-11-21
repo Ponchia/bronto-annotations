@@ -10,6 +10,7 @@ import { offersInstall } from './site-release.mjs';
 import { verifyPlaygroundCopy } from './verify-playground-copy.mjs';
 import { verifyPlaygroundSharing } from './playground-sharing-scenario.mjs';
 import { verifyPlaygroundExports } from './playground-export-scenario.mjs';
+import { verifyFirstUse } from './first-use-scenario.mjs';
 
 const root = resolve(new URL('..', import.meta.url).pathname);
 const publication = JSON.parse(await readFile(resolve(root, '_site/release-status.json'), 'utf8'));
@@ -222,6 +223,8 @@ async function verifyPublicWorkerDemo(width) {
 }
 
 try {
+  await verifyFirstUse({ browser, siteUrl: url, stableInstall: publication.stableInstall,
+    evidence: resolve(onboardingEvidence, 'first-use') });
   // Long public package names in API headings must reflow, while fenced
   // source remains unwrapped and scrolls inside its own keyboard region.
   let narrowGuideCases = 0;

@@ -7,6 +7,43 @@ guides instead. Repository-relative paths in commands are run from the root.
 
 ## Choose the check for the work
 
+### Plan the affected checks
+
+```bash
+npm run check:affected
+npm run check:affected -- --base origin/main --plan
+npm run check:affected -- --base origin/main --run
+```
+
+The default is a plan only. It reads the common ancestor with the selected base,
+then includes committed, staged, unstaged and untracked changes. It never fetches
+or updates a Git ref. Fetch the intended base separately when needed. A missing
+base or unreadable Git state fails instead of producing a clean verdict.
+
+| Changed area | Iteration checks |
+| --- | --- |
+| Markdown guides and top-level Markdown | Documentation snippets, public site and hygiene |
+| Public site or examples | Fast source checks, public site and hygiene |
+| Vitest test files (`test/**/*.test.ts` or `.test.tsx`, outside `test/fixtures/`) | Fast source checks and hygiene |
+| Source, shared test helpers and fixtures | Fast source checks, placement quality, example browsers and hygiene |
+| Package, lockfile, tooling, configuration, unknown paths or removals | Complete `npm run check` |
+
+Combined changes combine checks without duplicates. Paths use a stable order
+independent of the host locale. Renames include their old and new paths, so a
+removal cannot silently narrow the plan. Narrow selections build once, then use
+the existing byte-verified build reuse; they do not cache test verdicts.
+Execution stops at the first failing command and prints each command's duration.
+
+Inspect the plan before using `--run`; source and site checks can launch
+browsers, and a full fallback can be expensive. Follow your machine's resource
+policy and run broad suites in CI when required. The plan records which evidence
+remains deferred. It does not infer exact dependencies or qualify a release:
+the complete CI suite, security and publication gates remain unchanged and must
+pass for the exact proposed revision. A no-change plan runs no checks and makes
+no verification claim.
+
+### Fast source feedback
+
 `npm run check:fast` covers compilation, unit tests, dead-code checks, declarations,
 package exports and the existing API contract. Use it while iterating; it is not
 a replacement for the full CI suite. It compiles once, then reuses the existing
@@ -309,3 +346,14 @@ those behaviors are corrected in the published 0.7.0-rc.2 tarball, whose
 verified npm bytes also pass all 20 tests in a clean consumer. The immutable
 0.6.10 version is not retroactively modified. This test is stronger than checking export names,
 but covers only that historical test set, not all rendering or human usability.
+
+## Single-file first use
+
+`site/first-annotation.html` imports the version-pinned published package from
+jsDelivr. `test/site/first-note.test.ts` checks its release identities, fallback,
+accessible control wiring and screenshot hash. Build the site and run
+`scripts/check-first-note-browser.js` through the documented Playwright CLI
+`run-code --filename` flow on `/first-annotation/` to exercise title changes,
+hide/reset, the download and enlarged text at four widths. This verification
+needs network access to the CDN. It is not a screen-reader or physical-device
+qualification. The captured fixture uses synthetic chart data, never user data.

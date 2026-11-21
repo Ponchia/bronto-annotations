@@ -20,6 +20,15 @@ body:
     validations:
       required: true
   - type: dropdown
+    id: familiarity
+    attributes:
+      label: Prior familiarity with this package (optional)
+      options:
+        - First integration, unfamiliar with this repository
+        - Returning user
+        - Maintainer or collaborator
+        - Automated or agent-run check
+  - type: dropdown
     id: surface
     attributes:
       label: Host surface
@@ -38,7 +47,7 @@ body:
     attributes:
       label: Installed package version
       description: Use the package version from your lockfile or package manager.
-      placeholder: 0.9.1
+      placeholder: 0.9.2
     validations:
       required: true
   - type: textarea
@@ -55,6 +64,16 @@ body:
       label: Time to first visible, correctly anchored annotation (optional)
       description: Only share an actual measurement. Say "not reached" if the first note never worked.
       placeholder: 15 minutes, or not reached
+  - type: textarea
+    id: assistance
+    attributes:
+      label: Unassisted attempt and help needed (optional)
+      description: Separate the initial outcome from later help. Record when assistance started and what changed; do not count agent or maintainer checks as unfamiliar human trials.
+  - type: textarea
+    id: host_changes
+    attributes:
+      label: What happened after resize, pan, or a data change? (optional)
+      description: Did the note still point at the intended target? Include actual lifecycle or coordinate work, or say not attempted.
   - type: dropdown
     id: manual
     attributes:

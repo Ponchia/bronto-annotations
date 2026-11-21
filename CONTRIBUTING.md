@@ -39,6 +39,24 @@ confirm its complete successful CI run for the exact proposed revision.
 
 ## Choose focused checks while iterating
 
+Start with a plan for your branch and local edits:
+
+```bash
+npm run check:affected
+npm run check:affected -- --base origin/main --plan
+```
+
+The default only lists checks; it runs no build or tests. It includes committed,
+staged, unstaged and untracked paths since the common ancestor with the selected
+base. Review the commands and cost, then add `--run` to execute them. Package,
+tooling, unknown paths and removals conservatively select the complete check.
+Use CI for that full fallback when your machine's resource policy requires it.
+
+Changes confined to `test/**/*.test.ts` or `test/**/*.test.tsx` outside
+`test/fixtures/` select the fast checks and hygiene. Shared test helpers and
+fixtures retain the source checks; combining test and source changes also keeps
+the placement-quality and browser checks.
+
 | Change | Start with |
 | --- | --- |
 | Core, adapter, or renderer behavior | `npm test -- path/to/changed.test.ts` and `npm run check:fast` |

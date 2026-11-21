@@ -3,6 +3,7 @@
 **Explain an existing chart, diagram, or interface without rebuilding it.**
 
 [Website](https://ponchia.github.io/bronto-annotations/) ·
+[First note](https://ponchia.github.io/bronto-annotations/first-annotation/) ·
 [Try placement](https://ponchia.github.io/bronto-annotations/#playground) ·
 [Try editing](https://ponchia.github.io/bronto-annotations/examples/react-incremental/) ·
 [Documentation](https://ponchia.github.io/bronto-annotations/docs/) ·
@@ -20,8 +21,21 @@ the engine places notes and connectors around it. Render the result as SVG
 or through the optional React layer.
 
 It does not render charts or provide a design system. Your app owns graph
-layout, state, and persistence.
+layout, state, and persistence. Explanatory callouts are authored content;
+review comments, conversations, and accepting a change belong to your app.
 For a single fixed label or tooltip, your chart library may already be enough.
+
+Already rendering a chart or diagram? Start with the
+[existing-surface quickstart](docs/context-quickstart.md) and attach one note to
+a real mark. Use the [first-time trial](docs/adoption-evidence.md#run-a-first-time-trial)
+to record what worked and where setup stopped.
+
+## Try it before installing
+
+Open the [one-note example](https://ponchia.github.io/bronto-annotations/first-annotation/),
+change its title, and hide or reset the note. Save the HTML to keep a working
+example. It uses published 0.9.2 from a version-pinned CDN, so the saved file
+needs JavaScript and an internet connection. No clone, build or account is needed.
 
 ## Install
 
