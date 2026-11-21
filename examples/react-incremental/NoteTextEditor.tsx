@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Annotation } from '@ponchia/annotations';
 import {
@@ -28,7 +28,9 @@ export function NoteTextEditor({
   const [body, setBody] = useState(committedBody);
   const [error, setError] = useState('');
   const titleInput = useRef<HTMLInputElement>(null);
-  useEffect(() => {
+  // Finish selection/text resets before paint; Add focuses this form in a
+  // layout effect, while geometry-only updates must preserve the draft.
+  useLayoutEffect(() => {
     setTitle(committedTitle);
     setBody(committedBody);
     setError('');

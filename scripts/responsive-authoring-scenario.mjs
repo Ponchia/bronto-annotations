@@ -222,9 +222,18 @@ export async function verifyResponsiveAuthoring(page, { origin, screenshotsDir }
     check(await page.locator('.note-list button[aria-pressed="true"]').getAttribute('data-note-id') === addedNote.id,
       'The reading list selects the newly created note');
     await page.waitForFunction(() => document.activeElement?.id === 'text-editor-title');
-    check(await page.locator('#text-editor-title').inputValue() === addedNote.note.title
-      && await page.locator('#text-editor-body').inputValue() === addedNote.note.body,
-    'Selecting the new note replaces the previous unapplied draft with its authored text');
+    const addedEditor = await page.evaluate(() => ({
+      selectedId: document.querySelector('#text-editor-note').value,
+      title: document.querySelector('#text-editor-title').value,
+      body: document.querySelector('#text-editor-body').value,
+      focusedId: document.activeElement?.id
+    }));
+    check(addedEditor.title === addedNote.note.title && addedEditor.body === addedNote.note.body,
+      'Selecting the new note replaces the previous unapplied draft with its authored text: '
+      + JSON.stringify({ actual: addedEditor, expected: {
+        selectedId: addedNote.id, title: addedNote.note.title, body: addedNote.note.body,
+        focusedId: 'text-editor-title'
+      } }));
     check(JSON.stringify(createdNotes.slice(0, -1)) === JSON.stringify(originalNotes),
       'Adding a note must not commit or change the previous note draft');
 
